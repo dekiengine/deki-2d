@@ -1,0 +1,14 @@
+build/
+*.o
+*.obj
+*.a
+*.lib
+*.dll
+*.pdb
+*.tmp
+*.log
+.vs/
+.vscode/
+.claude/
+CMakeFiles/
+cmake-build-*/

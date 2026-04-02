@@ -1,0 +1,105 @@
+#pragma once
+
+#ifdef DEKI_EDITOR
+
+#include <string>
+#include <vector>
+#include <cstdint>
+#include "modules/2d/Deki2DModule.h"
+#include "modules/2d/BitmapFont.h"  // For GlyphInfo
+
+namespace Deki2D
+{
+
+/**
+ * @brief Font compilation service for converting TTF fonts to bitmap fonts
+ *
+ * This service extracts shared font compilation logic used by both:
+ * - RuntimeFontCache (on-demand font compilation for editor preview)
+ * - FontImporterPanel (manual font import tool)
+ * - FontSyncHandler (automatic font baking on asset sync)
+ *
+ * Usage:
+ *   FontCompiler::CompileOptions options;
+ *   options.fontSize = 16;
+ *   FontCompiler::CompileResult result;
+ *   if (FontCompiler::CompileTrueTypeFont(ttfPath, options, result)) {
+ *       // Use result.atlasRGBA, result.glyphs, etc.
+ *   }
+ */
+class DEKI_2D_API FontCompiler
+{
+public:
+    /**
+     * @brief Compilation options
+     */
+    struct CompileOptions
+    {
+        int fontSize = 16;
+        int firstChar = 32;   // ASCII space
+        int lastChar = 126;   // ASCII tilde
+        int padding = 2;      // Padding around each glyph
+        int maxAtlasSize = 2048;
+    };
+
+    /**
+     * @brief Compilation result containing atlas and glyph data
+     */
+    struct CompileResult
+    {
+        std::vector<uint8_t> atlasRGBA;  // RGBA pixel data
+        std::vector<GlyphInfo> glyphs;   // Glyph metrics
+        uint32_t atlasWidth = 0;
+        uint32_t atlasHeight = 0;
+        uint8_t firstChar = 32;
+        uint8_t lastChar = 126;
+        uint8_t lineHeight = 0;
+        uint8_t baseline = 0;
+    };
+
+    /**
+     * @brief Compile a TrueType font to bitmap font data
+     * @param ttfPath Path to the TTF/OTF file
+     * @param options Compilation options (size, char range, padding)
+     * @param outResult Output containing atlas and glyph data
+     * @return true on success, false on failure
+     */
+    static bool CompileTrueTypeFont(
+        const std::string& ttfPath,
+        const CompileOptions& options,
+        CompileResult& outResult
+    );
+
+    /**
+     * @brief Generate glyph info for a monospace/grid-based font
+     * @param glyphWidth Width of each glyph cell
+     * @param glyphHeight Height of each glyph cell
+     * @param firstChar First character code
+     * @param charCount Number of characters
+     * @param charsPerRow Characters per row in the atlas
+     * @param outGlyphs Output glyph info array
+     * @return true on success
+     */
+    static bool GenerateMonospaceGlyphs(
+        int glyphWidth, int glyphHeight,
+        int firstChar, int charCount, int charsPerRow,
+        std::vector<GlyphInfo>& outGlyphs
+    );
+
+    /**
+     * @brief Write DFONT file from compilation result
+     * @param path Output path for .dfont file
+     * @param result Compilation result
+     * @param atlasFilename Filename of the atlas (stored in header)
+     * @return true on success
+     */
+    static bool WriteDfontFile(
+        const std::string& path,
+        const CompileResult& result,
+        const std::string& atlasFilename
+    );
+};
+
+} // namespace Deki2D
+
+#endif // DEKI_EDITOR

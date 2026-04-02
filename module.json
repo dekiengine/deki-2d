@@ -1,0 +1,99 @@
+{
+  "id": "deki:2d",
+  "displayName": "2D",
+  "buildDefine": "DEKI_MODULE_2D",
+  "features": [
+    {
+      "id": "sprite",
+      "displayName": "Sprites",
+      "buildDefine": "DEKI_FEATURE_SPRITE",
+      "defaultEnabled": true,
+      "componentGuids": [
+        "ca17ba76-f46d-484d-97ff-6e8e5497ef8d"
+      ]
+    },
+    {
+      "id": "text",
+      "displayName": "Text",
+      "buildDefine": "DEKI_FEATURE_TEXT",
+      "defaultEnabled": true,
+      "componentGuids": [
+        "5447ea24-d11f-4161-ae10-2f11e0a18d09"
+      ]
+    },
+    {
+      "id": "animation",
+      "displayName": "Animation",
+      "buildDefine": "DEKI_FEATURE_ANIMATION",
+      "defaultEnabled": true,
+      "componentGuids": [
+        "05f70a7a-334f-492f-9779-f3e351f64d9a"
+      ]
+    },
+    {
+      "id": "gradient",
+      "displayName": "Gradients",
+      "buildDefine": "DEKI_FEATURE_GRADIENT",
+      "defaultEnabled": true,
+      "componentGuids": [
+        "8d84cca3-7eb9-4b92-ba49-968ceec203c8"
+      ]
+    },
+    {
+      "id": "button",
+      "displayName": "Buttons",
+      "buildDefine": "DEKI_FEATURE_BUTTON",
+      "defaultEnabled": true,
+      "componentGuids": [
+        "e6bb6f32-be31-4af1-a152-32cd21f490f3",
+        "0c34e973-6cd1-45d2-b2c6-f010ba320707"
+      ]
+    },
+    {
+      "id": "scroll",
+      "displayName": "Scrolling",
+      "buildDefine": "DEKI_FEATURE_SCROLL",
+      "defaultEnabled": true,
+      "componentGuids": [
+        "2d1b84cb-8881-4457-8361-98dec7a84498",
+        "dcc9b892-ec9b-4eae-90d5-561b5591860a"
+      ]
+    },
+    {
+      "id": "roller",
+      "displayName": "Rollers",
+      "buildDefine": "DEKI_FEATURE_ROLLER",
+      "defaultEnabled": true,
+      "componentGuids": [
+        "72e6d6c3-ec5d-4c8f-8411-4d31824b944e"
+      ]
+    },
+    {
+      "id": "clip",
+      "displayName": "Clipping",
+      "buildDefine": "DEKI_FEATURE_CLIP",
+      "defaultEnabled": true,
+      "componentGuids": [
+        "063a42d4-bfe1-49b9-b620-0cbf87ad720f"
+      ]
+    },
+    {
+      "id": "sorting_group",
+      "displayName": "Sorting Groups",
+      "buildDefine": "DEKI_FEATURE_SORTING_GROUP",
+      "defaultEnabled": true,
+      "componentGuids": [
+        "8d743475-7905-4cca-b12c-9c397162851d"
+      ]
+    },
+    {
+      "id": "input",
+      "displayName": "Input",
+      "buildDefine": "DEKI_FEATURE_INPUT",
+      "defaultEnabled": true,
+      "componentGuids": [
+        "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+      ]
+    }
+  ]
+}
