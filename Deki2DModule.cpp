@@ -187,7 +187,11 @@ DEKI_PLUGIN_API const char* DekiPlugin_GetName(void)
 
 DEKI_PLUGIN_API const char* DekiPlugin_GetVersion(void)
 {
-    return "1.0.0";
+#ifdef DEKI_MODULE_VERSION
+    return DEKI_MODULE_VERSION;
+#else
+    return "0.0.0-dev";
+#endif
 }
 
 DEKI_PLUGIN_API const char* DekiPlugin_GetReflectionJson(void)
