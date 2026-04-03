@@ -2,6 +2,8 @@
 #include "Sprite.h"
 #include "../../providers/DekiFileSystemProvider.h"
 #include "../../DekiLogSystem.h"
+#include "DekiTime.h"
+#include "assets/AssetManager.h"
 #include <cstring>
 
 BitmapFont::BitmapFont()
@@ -325,4 +327,28 @@ int32_t BitmapFont::GetVisualCenterY() const
     // Visual center is midpoint between top and bottom of glyph bounds
     // Return as offset from top of line (where textY starts)
     return (min_y + max_y) / 2;
+}
+
+// Self-register font loader with AssetManager
+namespace {
+    struct _FontLoaderReg {
+        _FontLoaderReg() {
+            Deki::AssetManager::RegisterLoader("BitmapFont",
+                [](const char* p) -> void* {
+                    auto* f = BitmapFont::Load(p);
+                    if (f) DekiTime::Delay(1); // Yield for watchdog on embedded
+                    return f;
+                },
+                [](void* a) { delete static_cast<BitmapFont*>(a); });
+            // Also register as "Font" (alias)
+            Deki::AssetManager::RegisterLoader("Font",
+                [](const char* p) -> void* {
+                    auto* f = BitmapFont::Load(p);
+                    if (f) DekiTime::Delay(1);
+                    return f;
+                },
+                [](void* a) { delete static_cast<BitmapFont*>(a); });
+        }
+    };
+    static _FontLoaderReg s_fontLoaderReg;
 }

@@ -1,6 +1,6 @@
 #include "SortingGroupComponent.h"
-#include "../rendering/ComponentInterfaceAdapters.h"
-#include "../rendering/ISortableProvider.h"
+#include "ComponentInterfaceAdapters.h"
+#include "ISortableProvider.h"
 
 static struct SortingGroupInterfaceRegistrar {
     SortingGroupInterfaceRegistrar() {

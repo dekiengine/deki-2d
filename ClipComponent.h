@@ -3,8 +3,8 @@
 #include <cstdint>
 #include "DekiComponent.h"
 #include "reflection/DekiProperty.h"
-#include "../rendering/IClipProvider.h"
-#include "../rendering/ISortableProvider.h"
+#include "IClipProvider.h"
+#include "ISortableProvider.h"
 
 /**
  * @brief Component that clips children to a rectangular region

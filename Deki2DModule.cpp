@@ -27,6 +27,8 @@
 #include "editor/FontSyncHandler.h"
 #include "editor/FontFileInspector.h"
 #include "editor/FontCompiler.h"
+#include "Texture2D.h"
+#include "BitmapFont.h"
 #include "imgui.h"
 #include <deki-editor/EditorAssets.h>
 #include <deki-editor/AssetPipeline.h>
@@ -105,6 +107,67 @@ DEKI_2D_API int Deki2D_EnsureRegistered(void)
 
     // Initialize font preview callbacks for live editing in PrefabView
     Deki2D::InitializeFontPreviewCallbacks();
+
+    // Register image loader and font factory with EditorAssets
+    DekiEditor::EditorAssets::RegisterImageLoader(Texture2D::LoadAsRGBA);
+    DekiEditor::EditorAssets::RegisterFontFactory(
+        // Font factory: parse .dfont, create Texture2D + BitmapFont, return atlas RGBA
+        [](const char* dfontPath, uint8_t** outAtlasRGBA, int32_t& outW, int32_t& outH) -> void* {
+            namespace fs = std::filesystem;
+            if (!dfontPath || !fs::exists(dfontPath))
+                return nullptr;
+
+            fs::path fontDir = fs::path(dfontPath).parent_path();
+
+            std::ifstream fontFile(dfontPath, std::ios::binary);
+            if (!fontFile) return nullptr;
+
+            FontHeader header;
+            fontFile.read(reinterpret_cast<char*>(&header), sizeof(FontHeader));
+            if (memcmp(header.magic, "DFNT", 4) != 0) return nullptr;
+
+            GlyphInfo* glyphArray = new GlyphInfo[header.glyph_count];
+            fontFile.read(reinterpret_cast<char*>(glyphArray), header.glyph_count * sizeof(GlyphInfo));
+
+            std::string atlasFilename;
+            if (header.atlas_path_len > 1) {
+                atlasFilename.resize(header.atlas_path_len - 1);
+                fontFile.read(atlasFilename.data(), header.atlas_path_len - 1);
+            }
+            fontFile.close();
+
+            if (atlasFilename.empty()) { delete[] glyphArray; return nullptr; }
+
+            fs::path atlasPath = fontDir / atlasFilename;
+            if (!fs::exists(atlasPath)) { delete[] glyphArray; return nullptr; }
+
+            int32_t atlasW = 0, atlasH = 0;
+            bool hasAlpha = false;
+            uint8_t* rgba = Texture2D::LoadAsRGBA(atlasPath.string().c_str(), atlasW, atlasH, hasAlpha);
+            if (!rgba) { delete[] glyphArray; return nullptr; }
+
+            Texture2D* atlas = new Texture2D();
+            atlas->width = atlasW;
+            atlas->height = atlasH;
+            atlas->format = Texture2D::TextureFormat::RGBA8888;
+            atlas->has_alpha = true;
+            atlas->data = new uint8_t[atlasW * atlasH * 4];
+            memcpy(atlas->data, rgba, atlasW * atlasH * 4);
+
+            BitmapFont* font = BitmapFont::CreateFromMemory(
+                atlas, glyphArray, header.first_char, header.last_char,
+                header.line_height, header.baseline);
+
+            if (!font) { free(rgba); return nullptr; }
+
+            if (outAtlasRGBA) *outAtlasRGBA = rgba; else free(rgba);
+            outW = atlasW;
+            outH = atlasH;
+            return font;
+        },
+        // Font destroyer
+        [](void* f) { delete static_cast<BitmapFont*>(f); }
+    );
 
     return Deki2D_GetAutoComponentCount();
 }

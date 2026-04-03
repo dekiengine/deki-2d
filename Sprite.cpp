@@ -7,6 +7,8 @@
 #include "providers/DekiFileSystemProvider.h"
 #include "providers/DekiMemoryProvider.h"
 #include "DekiLogSystem.h"
+#include "DekiTime.h"
+#include "assets/AssetManager.h"
 
 Sprite::Sprite() : Texture2D()
 {
@@ -622,4 +624,28 @@ Sprite* Sprite::CreateNineSlice(Sprite* source, int32_t target_width, int32_t ta
                   source->width, source->height, target_width, target_height);
 
     return result;
+}
+
+// Self-register sprite loader with AssetManager
+namespace {
+    struct _SpriteLoaderReg {
+        _SpriteLoaderReg() {
+            Deki::AssetManager::RegisterLoader("Sprite",
+                [](const char* p) -> void* {
+                    auto* s = Sprite::Load(p);
+                    if (s) DekiTime::Delay(1); // Yield for watchdog on embedded
+                    return s;
+                },
+                [](void* a) { delete static_cast<Sprite*>(a); });
+            // Also register as "Texture" (alias)
+            Deki::AssetManager::RegisterLoader("Texture",
+                [](const char* p) -> void* {
+                    auto* s = Sprite::Load(p);
+                    if (s) DekiTime::Delay(1);
+                    return s;
+                },
+                [](void* a) { delete static_cast<Sprite*>(a); });
+        }
+    };
+    static _SpriteLoaderReg s_spriteLoaderReg;
 }

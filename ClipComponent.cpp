@@ -1,7 +1,7 @@
 #include "ClipComponent.h"
-#include "../rendering/ComponentInterfaceAdapters.h"
-#include "../rendering/IClipProvider.h"
-#include "../rendering/ISortableProvider.h"
+#include "ComponentInterfaceAdapters.h"
+#include "IClipProvider.h"
+#include "ISortableProvider.h"
 
 // Register interface adapters at static init — no RTTI, no DekiComponent vtable changes
 static struct ClipInterfaceRegistrar {

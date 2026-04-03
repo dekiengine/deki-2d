@@ -5,6 +5,10 @@ set(MODULE_UPPER "2D")
 set(MODULE_TARGET "deki-2d")
 set(MODULE_FILE_PREFIX "2D")
 set(MODULE_SOURCES
+    Sprite.cpp
+    Texture2D.cpp
+    BitmapFont.cpp
+    FrameAnimationMsgPack.cpp
     GradientComponent.cpp
     SpriteComponent.cpp
     ScrollComponent.cpp
@@ -17,13 +21,6 @@ set(MODULE_SOURCES
     SortingGroupComponent.cpp
 )
 set(MODULE_ENTRY Deki2DModule.cpp)
-# Core infrastructure always compiled into deki-engine-core (needed by AssetManager, etc.)
-set(MODULE_CORE_SOURCES
-    Sprite.cpp
-    Texture2D.cpp
-    BitmapFont.cpp
-    FrameAnimationMsgPack.cpp
-)
 set(MODULE_EDITOR_SOURCES
     editor/ClipCustomEditor.cpp
     editor/ScrollCustomEditor.cpp

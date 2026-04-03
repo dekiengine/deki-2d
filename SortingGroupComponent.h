@@ -3,7 +3,7 @@
 #include <cstdint>
 #include "DekiComponent.h"
 #include "reflection/DekiProperty.h"
-#include "../rendering/ISortableProvider.h"
+#include "ISortableProvider.h"
 
 /**
  * @brief Component that groups children for sorting purposes

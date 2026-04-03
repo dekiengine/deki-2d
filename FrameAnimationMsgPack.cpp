@@ -1,6 +1,7 @@
 #include "FrameAnimationMsgPack.h"
 #include "FrameAnimationData.h"
 #include "DekiLogSystem.h"
+#include "assets/AssetManager.h"
 #include <cstdio>
 #include <cstring>
 #include <fstream>
@@ -328,3 +329,22 @@ bool FrameAnimationMsgPackHelper::SaveAnimation(const char* msgpack_path, const 
     }
 }
 #endif
+
+// Self-register animation loader with AssetManager
+namespace {
+    struct _AnimLoaderReg {
+        _AnimLoaderReg() {
+            auto loader = [](const char* p) -> void* {
+                auto* data = new FrameAnimationData();
+                if (FrameAnimationMsgPackHelper::LoadAnimation(p, data))
+                    return data;
+                delete data;
+                return nullptr;
+            };
+            auto unloader = [](void* a) { delete static_cast<FrameAnimationData*>(a); };
+            Deki::AssetManager::RegisterLoader("FrameAnimationData", loader, unloader);
+            Deki::AssetManager::RegisterLoader("Animation", loader, unloader);
+        }
+    };
+    static _AnimLoaderReg s_animLoaderReg;
+}
