@@ -1,6 +1,6 @@
 #include "GradientComponent.h"
 #include "DekiObject.h"
-#include "../rendering/CameraComponent.h"
+#include "deki-rendering/CameraComponent.h"
 #ifndef DEKI_EDITOR
 #include "providers/DekiMemoryProvider.h"
 #endif

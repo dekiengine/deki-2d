@@ -2,10 +2,10 @@
 
 #include <stdint.h>
 
-#include "../../DekiBehaviour.h"
-#include "../../assets/AssetRef.h"
-#include "../../reflection/ObjectRef.h"
-#include "../../reflection/DekiProperty.h"
+#include "DekiBehaviour.h"
+#include "assets/AssetRef.h"
+#include "reflection/ObjectRef.h"
+#include "reflection/DekiProperty.h"
 #include "Color.h"
 #include "Sprite.h"
 

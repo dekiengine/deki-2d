@@ -1,5 +1,5 @@
 #include "SpritesheetEditorWindow.h"
-#include "modules/2d/Texture2D.h"
+#include "Texture2D.h"
 #include "imgui.h"
 #include <deki-editor/EditorApplication.h>
 #include <deki-editor/AssetDatabase.h>

@@ -4,9 +4,9 @@
 #include <functional>
 #include <vector>
 
-#include "../../DekiBehaviour.h"
-#include "../../assets/AssetRef.h"
-#include "../../reflection/ObjectRef.h"
+#include "DekiBehaviour.h"
+#include "assets/AssetRef.h"
+#include "reflection/ObjectRef.h"
 #include "reflection/DekiProperty.h"
 
 // Forward declarations

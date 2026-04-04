@@ -1,6 +1,6 @@
 #include "SpriteComponent.h"
 #include "DekiObject.h"
-#include "../rendering/CameraComponent.h"
+#include "deki-rendering/CameraComponent.h"
 #include "profiling/DekiProfiler.h"
 #include "DekiLogSystem.h"
 

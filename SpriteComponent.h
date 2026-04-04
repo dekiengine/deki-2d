@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include "../rendering/RendererComponent.h"
+#include "deki-rendering/RendererComponent.h"
 #include "Sprite.h"
 #include "Color.h"
 #include "assets/AssetRef.h"

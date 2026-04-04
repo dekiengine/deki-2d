@@ -3,10 +3,10 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include "../rendering/RendererComponent.h"
+#include "deki-rendering/RendererComponent.h"
 #include "BitmapFont.h"
 #include "Color.h"
-#include "../../assets/AssetRef.h"
+#include "assets/AssetRef.h"
 
 /**
  * @brief Text alignment options

@@ -10,8 +10,8 @@
 
 #include <deki-editor/EditorRegistry.h>
 #include <deki-editor/CustomEditor.h>
-#include "modules/2d/ButtonComponent.h"
-#include "modules/input/InputCollider.h"
+#include "ButtonComponent.h"
+#include "deki-input/InputCollider.h"
 
 namespace DekiEditor
 {

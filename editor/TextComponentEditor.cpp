@@ -14,9 +14,9 @@
 #include <deki-editor/EditorGUI.h>
 #include <deki-editor/AssetPipeline.h>
 #include <deki-editor/AssetData.h>
-#include "modules/2d/editor/FontSyncHandler.h"
-#include "modules/2d/TextComponent.h"
-#include "modules/2d/BitmapFont.h"
+#include "editor/FontSyncHandler.h"
+#include "TextComponent.h"
+#include "BitmapFont.h"
 #include "DekiObject.h"
 #include "DekiEngine.h"
 #include "DekiLogSystem.h"

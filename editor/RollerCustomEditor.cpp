@@ -10,7 +10,7 @@
 #include <deki-editor/EditorRegistry.h>
 #include <deki-editor/CustomEditor.h>
 #include <deki-editor/EditorGUI.h>
-#include "modules/2d/RollerComponent.h"
+#include "RollerComponent.h"
 #include "imgui.h"
 #include <string>
 

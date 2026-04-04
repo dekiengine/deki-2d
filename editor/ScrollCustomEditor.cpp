@@ -10,7 +10,7 @@
 
 #include <deki-editor/EditorRegistry.h>
 #include <deki-editor/CustomEditor.h>
-#include "modules/2d/ScrollComponent.h"
+#include "ScrollComponent.h"
 #include "DekiObject.h"
 
 namespace DekiEditor

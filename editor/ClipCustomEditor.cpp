@@ -9,7 +9,7 @@
 
 #include <deki-editor/EditorRegistry.h>
 #include <deki-editor/CustomEditor.h>
-#include "modules/2d/ClipComponent.h"
+#include "ClipComponent.h"
 
 namespace DekiEditor
 {

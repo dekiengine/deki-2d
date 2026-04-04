@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#include "../rendering/RendererComponent.h"
+#include "deki-rendering/RendererComponent.h"
 #include "Color.h"
 
 /**

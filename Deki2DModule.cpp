@@ -11,7 +11,7 @@
 
 #include "Deki2DModule.h"
 #include "interop/DekiPlugin.h"
-#include "modules/DekiModuleFeatureMeta.h"
+#include "DekiModuleFeatureMeta.h"
 #include "SpriteComponent.h"
 #include "TextComponent.h"
 #include "GradientComponent.h"

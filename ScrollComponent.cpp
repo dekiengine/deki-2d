@@ -1,15 +1,15 @@
 #include "ScrollComponent.h"
-#include "modules/input/InputCollider.h"
-#include "modules/input/InputDispatch.h"
-#include "../../DekiObject.h"
-#include "../../DekiLogSystem.h"
+#include "deki-input/InputCollider.h"
+#include "deki-input/InputDispatch.h"
+#include "DekiObject.h"
+#include "DekiLogSystem.h"
 #include "ClipComponent.h"
 #include "ScrollElement.h"
 #include <algorithm>
 #include <cmath>
 #include <cstring>
 
-#include "../../Prefab.h"
+#include "Prefab.h"
 
 
 ScrollComponent::ScrollComponent()

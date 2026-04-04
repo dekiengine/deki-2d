@@ -13,7 +13,7 @@
 #include <deki-editor/CustomEditor.h>
 #include <deki-editor/EditorGUI.h>
 #include <deki-editor/AssetDatabase.h>
-#include "modules/2d/SpriteComponent.h"
+#include "SpriteComponent.h"
 #include "DekiLogSystem.h"
 #include "imgui.h"
 #include <nlohmann/json.hpp>

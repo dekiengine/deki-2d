@@ -5,7 +5,7 @@
 #include <deki-editor/EditorExtension.h>
 #include <string>
 #include <vector>
-#include "modules/2d/Deki2DModule.h"
+#include "Deki2DModule.h"
 
 namespace Deki2D
 {

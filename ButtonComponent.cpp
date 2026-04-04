@@ -1,5 +1,5 @@
 #include "ButtonComponent.h"
-#include "modules/input/InputCollider.h"
+#include "deki-input/InputCollider.h"
 #include "DekiObject.h"
 #include "DekiLogSystem.h"
 

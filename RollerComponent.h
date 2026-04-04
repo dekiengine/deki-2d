@@ -5,8 +5,8 @@
 #include <vector>
 #include <string>
 
-#include "../../DekiBehaviour.h"
-#include "../../reflection/ObjectRef.h"
+#include "DekiBehaviour.h"
+#include "reflection/ObjectRef.h"
 #include "Color.h"
 #include "reflection/DekiProperty.h"
 

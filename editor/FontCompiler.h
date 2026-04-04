@@ -5,8 +5,8 @@
 #include <string>
 #include <vector>
 #include <cstdint>
-#include "modules/2d/Deki2DModule.h"
-#include "modules/2d/BitmapFont.h"  // For GlyphInfo
+#include "Deki2DModule.h"
+#include "BitmapFont.h"  // For GlyphInfo
 
 namespace Deki2D
 {

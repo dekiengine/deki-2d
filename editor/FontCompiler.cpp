@@ -2,7 +2,7 @@
 
 #ifdef DEKI_EDITOR
 
-#include "modules/2d/BitmapFont.h"
+#include "BitmapFont.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H

@@ -1,7 +1,7 @@
 #include "BitmapFont.h"
 #include "Sprite.h"
-#include "../../providers/DekiFileSystemProvider.h"
-#include "../../DekiLogSystem.h"
+#include "providers/DekiFileSystemProvider.h"
+#include "DekiLogSystem.h"
 #include "DekiTime.h"
 #include "assets/AssetManager.h"
 #include <cstring>

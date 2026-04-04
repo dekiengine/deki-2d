@@ -1,9 +1,9 @@
 #include "TextComponent.h"
-#include "../../DekiObject.h"
-#include "../rendering/CameraComponent.h"
-#include "../../DekiLogSystem.h"
-#include "../rendering/QuadBlit.h"
-#include "../../profiling/DekiProfiler.h"
+#include "DekiObject.h"
+#include "deki-rendering/CameraComponent.h"
+#include "DekiLogSystem.h"
+#include "deki-rendering/QuadBlit.h"
+#include "profiling/DekiProfiler.h"
 #include <cstring>
 #include <vector>
 #include <sstream>
@@ -16,9 +16,9 @@
 #include <fstream>
 #include <cstdlib>  // For std::malloc
 #include <nlohmann/json.hpp>
-#include "../../providers/DekiMemoryProvider.h"  // For atlas data allocation
+#include "providers/DekiMemoryProvider.h"  // For atlas data allocation
 #include "editor/FontCompiler.h"  // For on-demand font compilation
-#include "../../Guid.h"  // For GenerateDeterministicGuid
+#include "Guid.h"  // For GenerateDeterministicGuid
 #endif
 
 #ifdef DEKI_EDITOR
