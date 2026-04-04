@@ -18,7 +18,7 @@
 
 // DLL export macro
 #ifdef _WIN32
-    #ifdef DEKI_2D_EXPORTS
+    #if defined(DEKI_2D_EXPORTS) || defined(DEKI_PLUGIN_EXPORTS)
         #define DEKI_2D_API __declspec(dllexport)
     #else
         #define DEKI_2D_API __declspec(dllimport)
