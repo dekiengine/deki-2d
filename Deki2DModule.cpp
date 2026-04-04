@@ -180,6 +180,7 @@ DEKI_2D_API int Deki2D_EnsureRegistered(void)
 
 extern "C" {
 
+#ifndef DEKI_PLUGIN_EXPORTS
 DEKI_PLUGIN_API const char* DekiPlugin_GetName(void)
 {
     return "Deki 2D Module";
@@ -274,6 +275,8 @@ DEKI_PLUGIN_API const DekiModuleFeatureInfo* DekiPlugin_GetFeature(int index)
     return &s_Features[index];
 }
 
+#endif // DEKI_PLUGIN_EXPORTS
+
 // =============================================================================
 // Module-specific feature API (for linked DLL access without name conflicts)
 // =============================================================================
@@ -285,18 +288,21 @@ DEKI_2D_API const char* Deki2D_GetName(void)
 
 DEKI_2D_API int Deki2D_GetFeatureCount(void)
 {
-    return DekiPlugin_GetFeatureCount();
+    return static_cast<int>(sizeof(s_Features) / sizeof(s_Features[0]));
 }
 
 DEKI_2D_API const DekiModuleFeatureInfo* Deki2D_GetFeature(int index)
 {
-    return DekiPlugin_GetFeature(index);
+    if (index < 0 || index >= Deki2D_GetFeatureCount())
+        return nullptr;
+    return &s_Features[index];
 }
 
 // =============================================================================
 // Play Mode Hook
 // =============================================================================
 
+#ifndef DEKI_PLUGIN_EXPORTS
 DEKI_PLUGIN_API void DekiPlugin_OnPlayModeStart(void* prefabPtr)
 {
     if (!prefabPtr)
@@ -390,6 +396,8 @@ DEKI_PLUGIN_API void DekiPlugin_FreeCompileResult(void* handle)
 {
     delete static_cast<Deki2D::FontCompiler::CompileResult*>(handle);
 }
+
+#endif // DEKI_PLUGIN_EXPORTS
 
 } // extern "C"
 
