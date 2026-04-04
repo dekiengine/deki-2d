@@ -240,6 +240,8 @@ DEKI_PLUGIN_API void DekiPlugin_RegisterComponents(void)
     Deki2D_EnsureRegistered();
 }
 
+#endif // DEKI_PLUGIN_EXPORTS (resume after feature data)
+
 // =============================================================================
 // Module Feature API
 // =============================================================================
@@ -263,6 +265,7 @@ static const DekiModuleFeatureInfo s_Features[] = {
     {"roller",    "Rollers",   "Roller/picker UI components",         true, "DEKI_FEATURE_ROLLER",    s_RollerGuids,    1},
 };
 
+#ifndef DEKI_PLUGIN_EXPORTS
 DEKI_PLUGIN_API int DekiPlugin_GetFeatureCount(void)
 {
     return sizeof(s_Features) / sizeof(s_Features[0]);
