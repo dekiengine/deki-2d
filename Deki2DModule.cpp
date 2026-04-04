@@ -61,16 +61,19 @@
 // this function to ensure the DLL code is actually loaded and the static
 // initializers (REGISTER_COMPONENT) have run.
 
-// Auto-generated registration helpers
+#ifndef DEKI_PLUGIN_EXPORTS
+// Auto-generated registration helpers (standalone DLL only)
 extern void Deki2D_RegisterComponents();
 extern int Deki2D_GetAutoComponentCount();
 extern const DekiComponentMeta* Deki2D_GetAutoComponentMeta(int index);
 
 // Track if already registered to avoid duplicates
 static bool s_Registered = false;
+#endif
 
 extern "C" {
 
+#ifndef DEKI_PLUGIN_EXPORTS
 /**
  * @brief Set ImGui context for cross-DLL ImGui usage
  * Must be called from main exe before any ImGui functions are used in this DLL
@@ -171,6 +174,8 @@ DEKI_2D_API int Deki2D_EnsureRegistered(void)
 
     return Deki2D_GetAutoComponentCount();
 }
+
+#endif // DEKI_PLUGIN_EXPORTS
 
 } // extern "C"
 
