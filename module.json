@@ -1,7 +1,8 @@
 {
-  "id": "deki:2d",
+  "id": "deki-2d",
   "displayName": "2D",
   "buildDefine": "DEKI_MODULE_2D",
+  "requires": ["deki-rendering", "deki-input"],
   "features": [
     {
       "id": "sprite",
