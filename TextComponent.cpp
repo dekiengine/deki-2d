@@ -411,11 +411,32 @@ void TextComponent::RenderGlyph(const GlyphInfo* glyph,
                                ((color.g >> 2) << 5) |
                                (color.b >> 3);
 
+    // Pre-compute alpha offset based on format to avoid per-pixel switch
+    // -1 = opaque (no alpha channel), -2 = transparency color check
+    int32_t alpha_offset;
+    switch (atlas->format)
+    {
+        case Texture2D::TextureFormat::RGBA8888:  alpha_offset = 3; break;
+        case Texture2D::TextureFormat::RGB565A8:  alpha_offset = 2; break;
+        case Texture2D::TextureFormat::ALPHA8:    alpha_offset = 0; break;
+        default:
+            alpha_offset = (atlas->has_transparency && atlas->format == Texture2D::TextureFormat::RGB565) ? -2 : -1;
+            break;
+    }
+
+    // Cache frequently accessed members as locals
+    const uint8_t* atlas_data = atlas->data;
+    const int32_t atlas_width = atlas->width;
+    const uint8_t col_r = color.r;
+    const uint8_t col_g = color.g;
+    const uint8_t col_b = color.b;
+
     // Render glyph pixels
     for (int32_t py = clip_top; py < clip_bottom; py++)
     {
         int32_t atlas_y = src_y + py;
         int32_t screen_y_pos = dest_y + (py - clip_top);
+        uint16_t* dest_row = (uint16_t*)(render_buffer + screen_y_pos * screen_width * 2);
 
         for (int32_t px = clip_left; px < clip_right; px++)
         {
@@ -423,50 +444,32 @@ void TextComponent::RenderGlyph(const GlyphInfo* glyph,
             int32_t screen_x_pos = dest_x + (px - clip_left);
 
             // Get pixel from atlas
-            size_t atlas_offset = (atlas_y * atlas->width + atlas_x) * atlas_bpp;
-            uint8_t alpha = 255;
+            size_t atlas_off = (atlas_y * atlas_width + atlas_x) * atlas_bpp;
+            uint8_t alpha;
 
-            // Extract alpha based on format
-            switch (atlas->format)
+            if (alpha_offset >= 0)
             {
-                case Texture2D::TextureFormat::RGBA8888:
-                    alpha = atlas->data[atlas_offset + 3];
-                    break;
-                case Texture2D::TextureFormat::RGB565A8:
-                    alpha = atlas->data[atlas_offset + 2];
-                    break;
-                case Texture2D::TextureFormat::ALPHA8:
-                    alpha = atlas->data[atlas_offset];
-                    break;
-                default:
-                    // For RGB formats, use transparency color or assume opaque
-                    if (atlas->has_transparency)
-                    {
-                        // Check if pixel matches transparent color
-                        // For RGB565:
-                        if (atlas->format == Texture2D::TextureFormat::RGB565)
-                        {
-                            uint16_t pixel = *((uint16_t*)(atlas->data + atlas_offset));
-                            uint8_t r = ((pixel >> 11) & 0x1F) << 3;
-                            uint8_t g = ((pixel >> 5) & 0x3F) << 2;
-                            uint8_t b = (pixel & 0x1F) << 3;
-                            // Simple transparent color check (magenta = 255,0,255)
-                            if (r > 240 && g < 16 && b > 240)
-                            {
-                                alpha = 0;
-                            }
-                        }
-                    }
-                    break;
+                alpha = atlas_data[atlas_off + alpha_offset];
+            }
+            else if (alpha_offset == -2)
+            {
+                // RGB565 transparency color check
+                uint16_t pixel = *((const uint16_t*)(atlas_data + atlas_off));
+                uint8_t r = ((pixel >> 11) & 0x1F) << 3;
+                uint8_t g = ((pixel >> 5) & 0x3F) << 2;
+                uint8_t b = (pixel & 0x1F) << 3;
+                alpha = (r > 240 && g < 16 && b > 240) ? 0 : 255;
+            }
+            else
+            {
+                alpha = 255;
             }
 
             // Skip fully transparent pixels
             if (alpha == 0)
                 continue;
 
-            // Write to render buffer (RGB565)
-            size_t screen_offset = (screen_y_pos * screen_width + screen_x_pos) * 2;
-            uint16_t* dest_pixel = (uint16_t*)(render_buffer + screen_offset);
+            uint16_t* dest_pixel = dest_row + screen_x_pos;
 
             if (alpha == 255)
             {
@@ -482,9 +485,9 @@ void TextComponent::RenderGlyph(const GlyphInfo* glyph,
                 uint8_t bg_b = (bg & 0x1F) << 3;
 
                 uint8_t inv_alpha = 255 - alpha;
-                uint8_t out_r = ((color.r * alpha + bg_r * inv_alpha) + 128) >> 8;
-                uint8_t out_g = ((color.g * alpha + bg_g * inv_alpha) + 128) >> 8;
-                uint8_t out_b = ((color.b * alpha + bg_b * inv_alpha) + 128) >> 8;
+                uint8_t out_r = ((col_r * alpha + bg_r * inv_alpha) + 128) >> 8;
+                uint8_t out_g = ((col_g * alpha + bg_g * inv_alpha) + 128) >> 8;
+                uint8_t out_b = ((col_b * alpha + bg_b * inv_alpha) + 128) >> 8;
 
                 *dest_pixel = ((out_r >> 3) << 11) | ((out_g >> 2) << 5) | (out_b >> 3);
             }
@@ -791,10 +794,11 @@ bool TextComponent::RenderContent(const DekiObject* owner,
 
     if (cacheValid)
     {
-        // Return cached buffer (not owned by caller - we manage lifetime)
-        outSource = QuadBlit::MakeSource(m_cachedBuffer, width, height, 3, true, true, false);
+        outSource = QuadBlit::MakeSource(
+            m_cachedBuffer + m_cropFirstRow * width * 3,
+            width, m_cropHeight, 3, true, true, false);
         outPivotX = 0.5f;
-        outPivotY = 0.5f;
+        outPivotY = m_cropPivotY;
         outTintR = 255;
         outTintG = 255;
         outTintB = 255;
@@ -876,10 +880,28 @@ bool TextComponent::RenderContent(const DekiObject* owner,
         // Pre-compute text color as RGB565
         uint16_t text_rgb565 = ((color.r >> 3) << 11) | ((color.g >> 2) << 5) | (color.b >> 3);
 
+        // Pre-compute alpha offset based on format to avoid per-pixel switch
+        // -1 = opaque (no alpha channel), -2 = transparency color check
+        int32_t alpha_offset;
+        switch (atlas->format)
+        {
+            case Texture2D::TextureFormat::RGBA8888:  alpha_offset = 3; break;
+            case Texture2D::TextureFormat::RGB565A8:  alpha_offset = 2; break;
+            case Texture2D::TextureFormat::ALPHA8:    alpha_offset = 0; break;
+            default:
+                alpha_offset = (atlas->has_transparency && atlas->format == Texture2D::TextureFormat::RGB565) ? -2 : -1;
+                break;
+        }
+
+        const uint8_t* atlas_data = atlas->data;
+        const int32_t atlas_width = atlas->width;
+
         for (int32_t py = clip_top; py < clip_bottom; py++)
         {
             int32_t atlas_y = src_y + py;
             int32_t buf_y = dest_y + (py - clip_top);
+            size_t atlas_row = atlas_y * atlas_width;
+            size_t buf_row = buf_y * width;
 
             for (int32_t px = clip_left; px < clip_right; px++)
             {
@@ -887,37 +909,25 @@ bool TextComponent::RenderContent(const DekiObject* owner,
                 int32_t buf_x = dest_x + (px - clip_left);
 
                 // Get pixel from atlas
-                size_t atlas_offset = (atlas_y * atlas->width + atlas_x) * atlas_bpp;
-                uint8_t alpha = 255;
+                size_t atlas_off = (atlas_row + atlas_x) * atlas_bpp;
+                uint8_t alpha;
 
-                // Extract alpha based on format
-                switch (atlas->format)
+                if (alpha_offset >= 0)
                 {
-                    case Texture2D::TextureFormat::RGBA8888:
-                        alpha = atlas->data[atlas_offset + 3];
-                        break;
-                    case Texture2D::TextureFormat::RGB565A8:
-                        alpha = atlas->data[atlas_offset + 2];
-                        break;
-                    case Texture2D::TextureFormat::ALPHA8:
-                        alpha = atlas->data[atlas_offset];
-                        break;
-                    default:
-                        if (atlas->has_transparency)
-                        {
-                            if (atlas->format == Texture2D::TextureFormat::RGB565)
-                            {
-                                uint16_t pixel = *((uint16_t*)(atlas->data + atlas_offset));
-                                uint8_t r = ((pixel >> 11) & 0x1F) << 3;
-                                uint8_t g = ((pixel >> 5) & 0x3F) << 2;
-                                uint8_t b = (pixel & 0x1F) << 3;
-                                if (r > 240 && g < 16 && b > 240)
-                                {
-                                    alpha = 0;
-                                }
-                            }
-                        }
-                        break;
+                    alpha = atlas_data[atlas_off + alpha_offset];
+                }
+                else if (alpha_offset == -2)
+                {
+                    // RGB565 transparency color check
+                    uint16_t pixel = *((const uint16_t*)(atlas_data + atlas_off));
+                    uint8_t r = ((pixel >> 11) & 0x1F) << 3;
+                    uint8_t g = ((pixel >> 5) & 0x3F) << 2;
+                    uint8_t b = (pixel & 0x1F) << 3;
+                    alpha = (r > 240 && g < 16 && b > 240) ? 0 : 255;
+                }
+                else
+                {
+                    alpha = 255;
                 }
 
                 // Skip fully transparent pixels
@@ -925,7 +935,7 @@ bool TextComponent::RenderContent(const DekiObject* owner,
                     continue;
 
                 // Write to buffer (RGB565A8: 2 bytes RGB565 + 1 byte alpha)
-                size_t buf_offset = (buf_y * width + buf_x) * 3;
+                size_t buf_offset = (buf_row + buf_x) * 3;
                 *(uint16_t*)(m_cachedBuffer + buf_offset) = text_rgb565;
                 m_cachedBuffer[buf_offset + 2] = alpha;
             }
@@ -941,10 +951,45 @@ bool TextComponent::RenderContent(const DekiObject* owner,
     m_cachedVerticalAlign = verticalAlign;
     m_cachedFont = fontPtr;
 
+    // Compute tight vertical crop bounds (scan for first/last non-empty row)
+    int32_t firstRow = height;
+    int32_t lastRow = -1;
+    for (int32_t row = 0; row < height; row++)
+    {
+        const uint8_t* rowPtr = m_cachedBuffer + row * width * 3;
+        for (int32_t col = 0; col < width; col++)
+        {
+            if (rowPtr[col * 3 + 2] != 0)  // Check alpha byte
+            {
+                if (row < firstRow) firstRow = row;
+                lastRow = row;
+                break;
+            }
+        }
+    }
+
+    if (lastRow < firstRow)
+    {
+        // Entirely empty — fall back to full buffer
+        firstRow = 0;
+        lastRow = height - 1;
+    }
+
+    m_cropFirstRow = firstRow;
+    m_cropHeight = lastRow - firstRow + 1;
+
+    // Adjust pivot so the cropped sub-region stays at the correct world position
+    // Original pivot 0.5 corresponds to the center of the full height buffer.
+    // We need pivotY such that: cropFirstRow + pivotY * cropHeight == 0.5 * height
+    m_cropPivotY = (0.5f * height - static_cast<float>(m_cropFirstRow))
+                 / static_cast<float>(m_cropHeight);
+
     // Return source - RGB565A8 format (not owned by caller, we manage lifetime)
-    outSource = QuadBlit::MakeSource(m_cachedBuffer, width, height, 3, true, true, false);
+    outSource = QuadBlit::MakeSource(
+        m_cachedBuffer + m_cropFirstRow * width * 3,
+        width, m_cropHeight, 3, true, true, false);
     outPivotX = 0.5f;
-    outPivotY = 0.5f;
+    outPivotY = m_cropPivotY;
     // Text color is baked into buffer - no additional tint
     outTintR = 255;
     outTintG = 255;

@@ -251,6 +251,66 @@ Sprite* Sprite::Load(const char* file_path)
     sprite->allocated_with_backend = true;  // Allocated with DekiMemoryProvider in play mode
 #endif
 
+    // For RGB565A8 sprites marked as having alpha, check if all pixels are actually opaque.
+    // If so, clear has_alpha so QuadBlit can use the fast memcpy path instead of per-pixel blending.
+    if (sprite->has_alpha && sprite->format == Texture2D::TextureFormat::RGB565A8)
+    {
+        bool allOpaque = true;
+        int32_t w = sprite->width;
+        int32_t h = sprite->height;
+
+        // Scan for any non-opaque pixel
+        for (int32_t i = 0; i < w * h; i++)
+        {
+            if (pixel_data[i * 3 + 2] != 255)
+            {
+                allOpaque = false;
+                break;
+            }
+        }
+
+        if (allOpaque)
+        {
+            sprite->has_alpha = false;
+        }
+        else
+        {
+            // Build per-row opaque span data for fast blitting.
+            // For each row, find the contiguous opaque region in the middle.
+            // Pixels outside this region need alpha blending; pixels inside can be written directly.
+            sprite->alphaRowSpans = new int16_t[h * 2];
+            for (int32_t y = 0; y < h; y++)
+            {
+                const uint8_t* row = pixel_data + y * w * 3;
+                int16_t opaqueStart = (int16_t)w;  // default: no opaque span
+                int16_t opaqueEnd = 0;
+
+                // Find first opaque pixel from left
+                for (int32_t x = 0; x < w; x++)
+                {
+                    if (row[x * 3 + 2] == 255)
+                    {
+                        opaqueStart = (int16_t)x;
+                        break;
+                    }
+                }
+
+                // Find last opaque pixel from right
+                for (int32_t x = w - 1; x >= opaqueStart; x--)
+                {
+                    if (row[x * 3 + 2] == 255)
+                    {
+                        opaqueEnd = (int16_t)(x + 1);
+                        break;
+                    }
+                }
+
+                sprite->alphaRowSpans[y * 2] = opaqueStart;
+                sprite->alphaRowSpans[y * 2 + 1] = opaqueEnd;
+            }
+        }
+    }
+
     DEKI_LOG_DEBUG("Loaded sprite: %s (%dx%d, %s, pivot: %.2f,%.2f)",
               file_path,
               sprite->width,

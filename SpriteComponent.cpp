@@ -142,7 +142,8 @@ bool SpriteComponent::RenderContent(const DekiObject* owner,
             bytesPerPixel,
             hasAlpha,
             isRGB565,
-            false  // ownsPixels = false - sprite owns its data
+            false,  // ownsPixels = false - sprite owns its data
+            spr->alphaRowSpans
         );
         outPivotX = spr->pivot_x;
         outPivotY = spr->pivot_y;

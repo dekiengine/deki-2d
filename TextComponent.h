@@ -263,6 +263,11 @@ private:
     TextVerticalAlign m_cachedVerticalAlign = TextVerticalAlign::Top;
     BitmapFont* m_cachedFont = nullptr;
 
+    // Cached vertical crop bounds (tight Y range of actual glyph content)
+    int32_t m_cropFirstRow = 0;
+    int32_t m_cropHeight = 0;
+    float m_cropPivotY = 0.5f;
+
     // Render a single glyph to the buffer
     void RenderGlyph(const GlyphInfo* glyph,
                      int32_t x,

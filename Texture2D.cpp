@@ -10,7 +10,7 @@
 #include <cstring>
 
 Texture2D::Texture2D()
-: data(nullptr), width(0), height(0), format(Texture2D::TextureFormat::RGB565), has_transparency(false), has_alpha(false)
+: data(nullptr), width(0), height(0), format(Texture2D::TextureFormat::RGB565), has_transparency(false), has_alpha(false), alphaRowSpans(nullptr)
 #ifdef DEKI_EDITOR
 , allocated_with_backend(false)
 #endif
@@ -38,6 +38,8 @@ Texture2D::~Texture2D()
 #endif
         data = nullptr;
     }
+    delete[] alphaRowSpans;
+    alphaRowSpans = nullptr;
 }
 
 #ifndef DEKI_EDITOR

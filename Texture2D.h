@@ -48,6 +48,13 @@ class Texture2D
 
     bool has_transparency;  // Whether the texture has transparent pixels
     bool has_alpha;  // Whether the texture has an alpha channel
+
+    // Per-row opaque span data for RGB565A8 sprites with alpha.
+    // For each row: opaqueStart = first fully opaque column, opaqueEnd = last+1 fully opaque column.
+    // Pixels outside [opaqueStart, opaqueEnd) have alpha and need blending.
+    // Pixels inside this range are fully opaque and can be written directly (no blend math).
+    // nullptr if not computed (non-RGB565A8, or fully opaque/transparent sprites).
+    int16_t* alphaRowSpans;  // Packed pairs: [opaqueStart0, opaqueEnd0, opaqueStart1, opaqueEnd1, ...]
 #ifdef DEKI_EDITOR
     bool allocated_with_backend;  // Editor-only: Track which allocator was used (play mode uses backend, edit mode uses malloc)
 #endif
