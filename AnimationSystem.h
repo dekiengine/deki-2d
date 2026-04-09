@@ -39,6 +39,12 @@ public:
     void UpdateAnimations(uint32_t current_time);
 
     /**
+     * @brief Clear all registered animation components
+     * Used when stopping play mode to prevent stale pointers
+     */
+    void ClearAll();
+
+    /**
      * @brief Get the singleton instance
      * @return Reference to the singleton instance
      */

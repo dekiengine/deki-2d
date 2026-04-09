@@ -52,6 +52,11 @@ void AnimationSystem::UnregisterAnimationComponent(AnimationComponent* animation
     }
 }
 
+void AnimationSystem::ClearAll()
+{
+    animation_components.clear();
+}
+
 void AnimationSystem::UpdateAnimations(uint32_t current_time)
 {
     // Update all animation components

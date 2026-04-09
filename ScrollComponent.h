@@ -71,14 +71,14 @@ public:
     ObjectRef<InputCollider> input_collider;
 
     DEKI_EXPORT
-    ScrollMode mode;
+    ScrollMode mode = ScrollMode::NonTemplate;
 
     DEKI_VISIBLE_WHEN(mode, Template)
     DEKI_EXPORT
     Deki::AssetRef<Prefab> item_prefab;
 
     DEKI_EXPORT
-    ScrollDirection direction;
+    ScrollDirection direction = ScrollDirection::Vertical;
 
     DEKI_EXPORT
     int32_t item_spacing;

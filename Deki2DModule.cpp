@@ -20,6 +20,7 @@
 #include "ScrollComponent.h"
 #include "RollerComponent.h"
 #include "AnimationComponent.h"
+#include "AnimationSystem.h"
 #include "reflection/ComponentRegistry.h"
 #include "reflection/ComponentFactory.h"
 
@@ -343,9 +344,7 @@ DEKI_PLUGIN_API void DekiPlugin_OnPlayModeStart(void* prefabPtr)
 
 DEKI_PLUGIN_API void DekiPlugin_OnPlayModeStop(void)
 {
-    // Clear any module-side state set during OnPlayModeStart
-    // Currently OnPlayModeStart only modifies TextComponent properties (no stored pointers)
-    // but this hook ensures proper lifecycle for future module state
+    AnimationSystem::GetInstance().ClearAll();
 }
 
 // =============================================================================
