@@ -12,3 +12,7 @@ build/
 .claude/
 CMakeFiles/
 cmake-build-*/
+
+# Build artifacts from project junction
+generated/
+.deki-package.json
