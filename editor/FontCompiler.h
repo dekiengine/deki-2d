@@ -47,14 +47,16 @@ public:
      */
     struct CompileResult
     {
-        std::vector<uint8_t> atlasRGBA;  // RGBA pixel data
-        std::vector<GlyphInfo> glyphs;   // Glyph metrics
+        std::vector<uint8_t> atlasRGBA;      // RGBA pixel data
+        std::vector<GlyphInfo> glyphs;       // Glyph metrics
+        std::vector<uint32_t> codepoints;    // Codepoint for each glyph (v2 sparse format)
         uint32_t atlasWidth = 0;
         uint32_t atlasHeight = 0;
-        uint8_t firstChar = 32;
-        uint8_t lastChar = 126;
+        uint32_t firstChar = 32;
+        uint32_t lastChar = 126;
         uint8_t lineHeight = 0;
         uint8_t baseline = 0;
+        bool isSparse = false;               // true = v2 sparse codepoint table
     };
 
     /**
@@ -85,6 +87,36 @@ public:
         int firstChar, int charCount, int charsPerRow,
         std::vector<GlyphInfo>& outGlyphs
     );
+
+    /**
+     * @brief BDF compilation options
+     */
+    struct BdfCompileOptions
+    {
+        std::vector<int> selectedChars;  // Codepoints to include (any Unicode range)
+        int padding = 2;
+        int maxAtlasSize = 2048;
+    };
+
+    /**
+     * @brief Compile a BDF bitmap font to bitmap font data
+     * @param bdfPath Path to the .bdf file
+     * @param options Compilation options (selected chars, padding)
+     * @param outResult Output containing atlas and glyph data
+     * @return true on success, false on failure
+     */
+    static bool CompileBdfFont(
+        const std::string& bdfPath,
+        const BdfCompileOptions& options,
+        CompileResult& outResult
+    );
+
+    /**
+     * @brief Get all codepoints available in a BDF file
+     * @param bdfPath Path to the .bdf file
+     * @return Vector of codepoints found in the file (empty on failure)
+     */
+    static std::vector<int> GetBdfCodepoints(const std::string& bdfPath);
 
     /**
      * @brief Write DFONT file from compilation result

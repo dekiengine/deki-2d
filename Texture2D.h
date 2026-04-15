@@ -5,6 +5,7 @@
 #define DTEX_FLAG_HAS_TRANSPARENCY 0x01  // Image has transparent pixels
 #define DTEX_FLAG_HAS_ALPHA 0x02         // Image has alpha channel
 #define DTEX_FLAG_IS_SPRITE 0x04         // File contains sprite metadata
+#define DTEX_FLAG_ALL_OPAQUE 0x08        // All alpha pixels are 255 (skip runtime scan)
 
 /**
  * @brief Base texture class for V-Engine

@@ -60,16 +60,11 @@ Sprite* Sprite::Load(const char* file_path)
         return nullptr;
     }
 
+    uint32_t tStart = DekiTime::GetTime();
+
     IDekiFileSystem* fs = DekiFileSystemProvider::GetFileSystemForPath(file_path);
     if (!fs) {
-        DEKI_LOG_DEBUG("FileSystem not initialized for path: %s", file_path);
-        return nullptr;
-    }
-
-    // Check if file exists
-    if (!fs->FileExists(file_path))
-    {
-        DEKI_LOG_ERROR("Sprite file does not exist: %s", file_path);
+        DEKI_LOG_INTERNAL("FileSystem not initialized for path: %s", file_path);
         return nullptr;
     }
 
@@ -111,7 +106,7 @@ Sprite* Sprite::Load(const char* file_path)
     // Non-sprite textures (e.g. font atlases) are loaded through Sprite::Load() — this is normal
     if (!(header.flags & DTEX_FLAG_IS_SPRITE))
     {
-        DEKI_LOG_DEBUG("Loading non-sprite texture as sprite: %s", file_path);
+        DEKI_LOG_INTERNAL("Loading non-sprite texture as sprite: %s", file_path);
     }
 
     // Validate file size
@@ -200,7 +195,7 @@ Sprite* Sprite::Load(const char* file_path)
                 sprite->default_frame_width = frameWidth;
                 sprite->default_frame_height = frameHeight;
 
-                DEKI_LOG_DEBUG("  Sprite metadata: frame %dx%d", frameWidth, frameHeight);
+                DEKI_LOG_INTERNAL("  Sprite metadata: frame %dx%d", frameWidth, frameHeight);
             }
             else if (chunk_type == 2 && chunk_size >= 2)  // Frame list chunk
             {
@@ -231,7 +226,7 @@ Sprite* Sprite::Load(const char* file_path)
                         frame.height = *(int32_t*)(metadata + offset + frame_offset);
                         frame_offset += sizeof(int32_t);
                     }
-                    DEKI_LOG_DEBUG("  Frame list: %u frames", frameCount);
+                    DEKI_LOG_INTERNAL("  Frame list: %u frames", frameCount);
                 }
             }
             // Skip to next chunk
@@ -245,6 +240,8 @@ Sprite* Sprite::Load(const char* file_path)
         DekiMemoryProvider::Free(metadata);
     }
 
+    uint32_t tReadDone = DekiTime::GetTime();
+
     // Pixel data is now owned by sprite
     sprite->data = pixel_data;
 #ifdef DEKI_EDITOR
@@ -255,63 +252,72 @@ Sprite* Sprite::Load(const char* file_path)
     // If so, clear has_alpha so QuadBlit can use the fast memcpy path instead of per-pixel blending.
     if (sprite->has_alpha && sprite->format == Texture2D::TextureFormat::RGB565A8)
     {
-        bool allOpaque = true;
-        int32_t w = sprite->width;
-        int32_t h = sprite->height;
-
-        // Scan for any non-opaque pixel
-        for (int32_t i = 0; i < w * h; i++)
-        {
-            if (pixel_data[i * 3 + 2] != 255)
-            {
-                allOpaque = false;
-                break;
-            }
-        }
-
-        if (allOpaque)
+        // If exporter already determined all pixels are opaque, skip the scan
+        if (header.flags & DTEX_FLAG_ALL_OPAQUE)
         {
             sprite->has_alpha = false;
         }
         else
         {
-            // Build per-row opaque span data for fast blitting.
-            // For each row, find the contiguous opaque region in the middle.
-            // Pixels outside this region need alpha blending; pixels inside can be written directly.
-            sprite->alphaRowSpans = new int16_t[h * 2];
-            for (int32_t y = 0; y < h; y++)
+            bool allOpaque = true;
+            int32_t w = sprite->width;
+            int32_t h = sprite->height;
+
+            // Scan for any non-opaque pixel
+            for (int32_t i = 0; i < w * h; i++)
             {
-                const uint8_t* row = pixel_data + y * w * 3;
-                int16_t opaqueStart = (int16_t)w;  // default: no opaque span
-                int16_t opaqueEnd = 0;
-
-                // Find first opaque pixel from left
-                for (int32_t x = 0; x < w; x++)
+                if (pixel_data[i * 3 + 2] != 255)
                 {
-                    if (row[x * 3 + 2] == 255)
-                    {
-                        opaqueStart = (int16_t)x;
-                        break;
-                    }
+                    allOpaque = false;
+                    break;
                 }
+            }
 
-                // Find last opaque pixel from right
-                for (int32_t x = w - 1; x >= opaqueStart; x--)
+            if (allOpaque)
+            {
+                sprite->has_alpha = false;
+            }
+            else
+            {
+                // Build per-row opaque span data for fast blitting.
+                sprite->alphaRowSpans = new int16_t[h * 2];
+                for (int32_t y = 0; y < h; y++)
                 {
-                    if (row[x * 3 + 2] == 255)
-                    {
-                        opaqueEnd = (int16_t)(x + 1);
-                        break;
-                    }
-                }
+                    const uint8_t* row = pixel_data + y * w * 3;
+                    int16_t opaqueStart = (int16_t)w;
+                    int16_t opaqueEnd = 0;
 
-                sprite->alphaRowSpans[y * 2] = opaqueStart;
-                sprite->alphaRowSpans[y * 2 + 1] = opaqueEnd;
+                    for (int32_t x = 0; x < w; x++)
+                    {
+                        if (row[x * 3 + 2] == 255)
+                        {
+                            opaqueStart = (int16_t)x;
+                            break;
+                        }
+                    }
+
+                    for (int32_t x = w - 1; x >= opaqueStart; x--)
+                    {
+                        if (row[x * 3 + 2] == 255)
+                        {
+                            opaqueEnd = (int16_t)(x + 1);
+                            break;
+                        }
+                    }
+
+                    sprite->alphaRowSpans[y * 2] = opaqueStart;
+                    sprite->alphaRowSpans[y * 2 + 1] = opaqueEnd;
+                }
             }
         }
     }
 
-    DEKI_LOG_DEBUG("Loaded sprite: %s (%dx%d, %s, pivot: %.2f,%.2f)",
+    uint32_t tEnd = DekiTime::GetTime();
+    DEKI_LOG_INFO("[PERF] Sprite::Load: read=%ums, alpha=%ums, total=%ums (%dx%d) %s",
+              tReadDone - tStart, tEnd - tReadDone, tEnd - tStart,
+              sprite->width, sprite->height, file_path);
+
+    DEKI_LOG_INTERNAL("Loaded sprite: %s (%dx%d, %s, pivot: %.2f,%.2f)",
               file_path,
               sprite->width,
               sprite->height,
@@ -319,6 +325,156 @@ Sprite* Sprite::Load(const char* file_path)
               sprite->pivot_x,
               sprite->pivot_y);
 
+    return sprite;
+}
+
+Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
+{
+    if (!fileData || fileSize < sizeof(Texture2D::Header))
+    {
+        DEKI_LOG_ERROR("Sprite::LoadFromFileData: invalid data");
+        return nullptr;
+    }
+
+    // Parse header from buffer
+    Texture2D::Header header;
+    memcpy(&header, fileData, sizeof(Texture2D::Header));
+
+    if (!Texture2D::ValidateHeader(header))
+    {
+        DEKI_LOG_ERROR("Sprite::LoadFromFileData: invalid header");
+        return nullptr;
+    }
+
+    size_t expected_size = sizeof(Texture2D::Header) + header.data_size + header.metadata_size;
+    if (fileSize < expected_size)
+    {
+        DEKI_LOG_ERROR("Sprite::LoadFromFileData: file size mismatch");
+        return nullptr;
+    }
+
+    const uint8_t* src = fileData + sizeof(Texture2D::Header);
+
+    // Copy pixel data into PSRAM (sprite takes ownership)
+    uint8_t* pixel_data = (uint8_t*)DekiMemoryProvider::Allocate(
+        header.data_size, true, "Sprite::LoadFromFileData");
+    if (!pixel_data)
+    {
+        DEKI_LOG_ERROR("Sprite::LoadFromFileData: alloc failed");
+        return nullptr;
+    }
+    memcpy(pixel_data, src, header.data_size);
+    src += header.data_size;
+
+    // Create sprite
+    Sprite* sprite = new Sprite();
+    if (!sprite->LoadFromMemory(header, pixel_data))
+    {
+        DekiMemoryProvider::Free(pixel_data);
+        delete sprite;
+        return nullptr;
+    }
+
+    // Process metadata (same logic as Load)
+    if (header.metadata_size > 0)
+    {
+        const uint8_t* metadata = src;
+        uint32_t offset = 0;
+
+        if (header.metadata_size >= sizeof(uint32_t))
+        {
+            uint32_t num_chunks = *(uint32_t*)(metadata + offset);
+            offset += sizeof(uint32_t);
+
+            for (uint32_t i = 0; i < num_chunks && offset + 8 <= header.metadata_size; ++i)
+            {
+                uint32_t chunk_type = *(uint32_t*)(metadata + offset);
+                offset += sizeof(uint32_t);
+                uint32_t chunk_size = *(uint32_t*)(metadata + offset);
+                offset += sizeof(uint32_t);
+
+                if (offset + chunk_size > header.metadata_size) break;
+
+                if (chunk_type == 1 && chunk_size >= 8)
+                {
+                    sprite->default_frame_width = *(int32_t*)(metadata + offset);
+                    sprite->default_frame_height = *(int32_t*)(metadata + offset + sizeof(int32_t));
+                }
+                else if (chunk_type == 2 && chunk_size >= 2)
+                {
+                    uint16_t frameCount = *(uint16_t*)(metadata + offset);
+                    uint32_t frame_offset = sizeof(uint16_t);
+                    const uint32_t FRAME_ENTRY_SIZE = 36 + 4 * sizeof(int32_t);
+
+                    if (chunk_size >= sizeof(uint16_t) + frameCount * FRAME_ENTRY_SIZE)
+                    {
+                        sprite->frames.resize(frameCount);
+                        for (uint16_t fi = 0; fi < frameCount; ++fi)
+                        {
+                            SpriteFrame& frame = sprite->frames[fi];
+                            memcpy(frame.guid, metadata + offset + frame_offset, 36);
+                            frame.guid[36] = '\0';
+                            frame_offset += 36;
+                            frame.x = *(int32_t*)(metadata + offset + frame_offset); frame_offset += sizeof(int32_t);
+                            frame.y = *(int32_t*)(metadata + offset + frame_offset); frame_offset += sizeof(int32_t);
+                            frame.width = *(int32_t*)(metadata + offset + frame_offset); frame_offset += sizeof(int32_t);
+                            frame.height = *(int32_t*)(metadata + offset + frame_offset); frame_offset += sizeof(int32_t);
+                        }
+                    }
+                }
+                offset += chunk_size;
+            }
+        }
+    }
+
+    // Own pixel data
+    sprite->data = pixel_data;
+#ifdef DEKI_EDITOR
+    sprite->allocated_with_backend = true;
+#endif
+
+    // Alpha scan (same as Load)
+    if (sprite->has_alpha && sprite->format == Texture2D::TextureFormat::RGB565A8)
+    {
+        if (header.flags & DTEX_FLAG_ALL_OPAQUE)
+        {
+            sprite->has_alpha = false;
+        }
+        else
+        {
+            bool allOpaque = true;
+            int32_t w = sprite->width;
+            int32_t h = sprite->height;
+
+            for (int32_t i = 0; i < w * h; i++)
+            {
+                if (pixel_data[i * 3 + 2] != 255) { allOpaque = false; break; }
+            }
+
+            if (allOpaque)
+            {
+                sprite->has_alpha = false;
+            }
+            else
+            {
+                sprite->alphaRowSpans = new int16_t[h * 2];
+                for (int32_t y = 0; y < h; y++)
+                {
+                    const uint8_t* row = pixel_data + y * w * 3;
+                    int16_t opaqueStart = (int16_t)w, opaqueEnd = 0;
+                    for (int32_t x = 0; x < w; x++)
+                        if (row[x * 3 + 2] == 255) { opaqueStart = (int16_t)x; break; }
+                    for (int32_t x = w - 1; x >= opaqueStart; x--)
+                        if (row[x * 3 + 2] == 255) { opaqueEnd = (int16_t)(x + 1); break; }
+                    sprite->alphaRowSpans[y * 2] = opaqueStart;
+                    sprite->alphaRowSpans[y * 2 + 1] = opaqueEnd;
+                }
+            }
+        }
+    }
+
+    DEKI_LOG_INFO("[PERF] Sprite::LoadFromFileData: %dx%d (%zu bytes, from pack)",
+                  sprite->width, sprite->height, fileSize);
     return sprite;
 }
 
@@ -336,7 +492,7 @@ bool Sprite::LoadFromMemory(const Texture2D::Header& header, const uint8_t* pixe
 
 Sprite* Sprite::CreateSolid(int32_t width, int32_t height, uint8_t r, uint8_t g, uint8_t b)
 {
-    DEKI_LOG_DEBUG("Sprite::CreateSolid called: %dx%d, RGB(%d,%d,%d)", width, height, r, g, b);
+    DEKI_LOG_INTERNAL("Sprite::CreateSolid called: %dx%d, RGB(%d,%d,%d)", width, height, r, g, b);
 
     if (width <= 0 || height <= 0)
     {
@@ -352,7 +508,7 @@ Sprite* Sprite::CreateSolid(int32_t width, int32_t height, uint8_t r, uint8_t g,
     sprite->has_alpha = false;
 
     size_t data_size = width * height * 2;  // RGB565 format = 2 bytes per pixel
-    DEKI_LOG_DEBUG("Sprite::CreateSolid - Allocating %zu bytes for RGB565 data", data_size);
+    DEKI_LOG_INTERNAL("Sprite::CreateSolid - Allocating %zu bytes for RGB565 data", data_size);
 
     sprite->data = (uint8_t*)DekiMemoryProvider::Allocate(
         data_size, true, "Sprite::CreateSolid");
@@ -364,7 +520,7 @@ Sprite* Sprite::CreateSolid(int32_t width, int32_t height, uint8_t r, uint8_t g,
         return nullptr;
     }
 
-    DEKI_LOG_DEBUG("Sprite::CreateSolid - Memory allocated, filling with color...");
+    DEKI_LOG_INTERNAL("Sprite::CreateSolid - Memory allocated, filling with color...");
 
     // Convert RGB888 to RGB565
     uint16_t r5 = (r * 31) / 255;  // 5 bits for red
@@ -379,7 +535,7 @@ Sprite* Sprite::CreateSolid(int32_t width, int32_t height, uint8_t r, uint8_t g,
         data16[i] = rgb565;
     }
 
-    DEKI_LOG_DEBUG("Sprite::CreateSolid - Sprite created successfully at %p", sprite);
+    DEKI_LOG_INTERNAL("Sprite::CreateSolid - Sprite created successfully at %p", sprite);
     return sprite;
 }
 
@@ -497,7 +653,7 @@ bool Sprite::SetNineSliceBorders(uint16_t left, uint16_t right, uint16_t top, ui
     nine_slice_bottom = bottom;
     has_nine_slice = true;
 
-    DEKI_LOG_DEBUG("Set 9-slice borders: L=%u R=%u T=%u B=%u", left, right, top, bottom);
+    DEKI_LOG_INTERNAL("Set 9-slice borders: L=%u R=%u T=%u B=%u", left, right, top, bottom);
     return true;
 }
 
@@ -680,7 +836,7 @@ Sprite* Sprite::CreateNineSlice(Sprite* source, int32_t target_width, int32_t ta
                   source->data, source->width, source->width - src_right, source->height - src_bottom, src_right, src_bottom, bytes_per_pixel);
     }
 
-    DEKI_LOG_DEBUG("Created 9-slice sprite: %dx%d -> %dx%d",
+    DEKI_LOG_INTERNAL("Created 9-slice sprite: %dx%d -> %dx%d",
                   source->width, source->height, target_width, target_height);
 
     return result;
@@ -696,7 +852,8 @@ namespace {
                     if (s) DekiTime::Delay(1); // Yield for watchdog on embedded
                     return s;
                 },
-                [](void* a) { delete static_cast<Sprite*>(a); });
+                [](void* a) { delete static_cast<Sprite*>(a); },
+                [](const uint8_t* d, size_t s) -> void* { return Sprite::LoadFromFileData(d, s); });
             // Also register as "Texture" (alias)
             Deki::AssetManager::RegisterLoader("Texture",
                 [](const char* p) -> void* {
@@ -704,7 +861,8 @@ namespace {
                     if (s) DekiTime::Delay(1);
                     return s;
                 },
-                [](void* a) { delete static_cast<Sprite*>(a); });
+                [](void* a) { delete static_cast<Sprite*>(a); },
+                [](const uint8_t* d, size_t s) -> void* { return Sprite::LoadFromFileData(d, s); });
         }
     };
     static _SpriteLoaderReg s_spriteLoaderReg;

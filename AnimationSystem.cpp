@@ -6,13 +6,13 @@ AnimationSystem* AnimationSystem::instance = nullptr;
 
 AnimationSystem::AnimationSystem()
 {
-    DEKI_LOG_DEBUG("AnimationSystem initialized");
+    DEKI_LOG_INTERNAL("AnimationSystem initialized");
 }
 
 AnimationSystem::~AnimationSystem()
 {
     animation_components.clear();
-    DEKI_LOG_DEBUG("AnimationSystem destroyed");
+    DEKI_LOG_INTERNAL("AnimationSystem destroyed");
 }
 
 void AnimationSystem::RegisterAnimationComponent(AnimationComponent* animation_component)
@@ -27,12 +27,12 @@ void AnimationSystem::RegisterAnimationComponent(AnimationComponent* animation_c
     auto it = std::find(animation_components.begin(), animation_components.end(), animation_component);
     if (it != animation_components.end())
     {
-        DEKI_LOG_DEBUG("AnimationSystem::RegisterAnimationComponent - component already registered");
+        DEKI_LOG_INTERNAL("AnimationSystem::RegisterAnimationComponent - component already registered");
         return;
     }
 
     animation_components.push_back(animation_component);
-    DEKI_LOG_DEBUG("AnimationSystem::RegisterAnimationComponent - registered component (total: %d)",
+    DEKI_LOG_INTERNAL("AnimationSystem::RegisterAnimationComponent - registered component (total: %d)",
                   static_cast<int>(animation_components.size()));
 }
 
@@ -47,7 +47,7 @@ void AnimationSystem::UnregisterAnimationComponent(AnimationComponent* animation
     if (it != animation_components.end())
     {
         animation_components.erase(it);
-        DEKI_LOG_DEBUG("AnimationSystem::UnregisterAnimationComponent - unregistered component (total: %d)",
+        DEKI_LOG_INTERNAL("AnimationSystem::UnregisterAnimationComponent - unregistered component (total: %d)",
                       static_cast<int>(animation_components.size()));
     }
 }

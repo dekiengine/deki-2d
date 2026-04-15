@@ -40,11 +40,11 @@ void ButtonComponent::Start()
         {
             InvokeCallbacks(on_release);
 
-            // Click = was pressed inside and pointer is still inside collider
+            // Click = was pressed inside and released inside collider
             InputCollider* col = input_collider.Get();
             if (col && col->IsPointerInside())
             {
-                SetState(ButtonState::Hovered);
+                SetState(ButtonState::Normal);
                 InvokeCallbacks(on_click);
             }
             else

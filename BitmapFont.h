@@ -19,7 +19,7 @@ struct GlyphInfo
 };
 
 /**
- * @brief Binary font format header
+ * @brief Binary font format header (v1 - ASCII only, contiguous glyph array)
  *
  * File structure:
  * [FontHeader][GlyphInfo array][atlas_path (null-terminated string)]
@@ -36,6 +36,28 @@ struct FontHeader
     uint8_t baseline;        // Y offset from top to baseline
     uint16_t glyph_count;    // Number of glyphs (last_char - first_char + 1)
     uint16_t atlas_path_len; // Length of atlas path string (including null terminator)
+};
+
+/**
+ * @brief Binary font format header (v2 - Unicode, sparse codepoint table)
+ *
+ * File structure:
+ * [FontHeaderV2][uint32_t codepoints[glyph_count]][GlyphInfo array][atlas_path]
+ *
+ * Glyphs are stored sparsely: each glyph has a corresponding codepoint entry.
+ * Lookup requires searching the codepoint table (binary search, since sorted).
+ */
+struct FontHeaderV2
+{
+    char magic[4];           // "DFNT" (Deki Font)
+    uint32_t version;        // Format version (2)
+    uint32_t first_codepoint;// First codepoint (for info/range display)
+    uint32_t last_codepoint; // Last codepoint (for info/range display)
+    uint8_t line_height;     // Height of a line of text
+    uint8_t baseline;        // Y offset from top to baseline
+    uint16_t glyph_count;    // Number of glyphs (sparse - only included codepoints)
+    uint16_t atlas_path_len; // Length of atlas path string (including null terminator)
+    uint16_t reserved;       // Padding for alignment
 };
 
 /**
@@ -59,6 +81,14 @@ public:
      * @return Loaded font or nullptr on failure
      */
     static BitmapFont* Load(const char* file_path);
+
+    /**
+     * @brief Load font from raw file data in memory (for pack file support)
+     * @param data Pointer to raw .dfont file bytes
+     * @param size Total size in bytes
+     * @return Loaded font or nullptr on failure
+     */
+    static BitmapFont* LoadFromFileData(const uint8_t* data, size_t size);
 
     /**
      * @brief Create a monospace font from a grid-based atlas
@@ -103,11 +133,18 @@ public:
                                         uint8_t baseline);
 
     /**
-     * @brief Get glyph info for a character
+     * @brief Get glyph info for a character (ASCII)
      * @param c Character to look up
      * @return Pointer to glyph info or nullptr if character not in font
      */
     const GlyphInfo* GetGlyph(char c) const;
+
+    /**
+     * @brief Get glyph info for a Unicode codepoint
+     * @param codepoint Unicode codepoint (e.g., 0x4E00 for CJK)
+     * @return Pointer to glyph info or nullptr if codepoint not in font
+     */
+    const GlyphInfo* GetGlyphByCodepoint(uint32_t codepoint) const;
 
     /**
      * @brief Measure the width of a text string
@@ -137,20 +174,20 @@ public:
     uint8_t GetBaseline() const { return baseline; }
 
     /**
-     * @brief Get the texture atlas
+     * @brief Get the texture atlas (loads lazily on first call)
      * @return Pointer to atlas texture
      */
-    Texture2D* GetAtlas() const { return atlas; }
+    Texture2D* GetAtlas() const;
 
     /**
      * @brief Get first character code in font
      */
-    uint8_t GetFirstChar() const { return first_char; }
+    uint32_t GetFirstChar() const { return first_char; }
 
     /**
      * @brief Get last character code in font
      */
-    uint8_t GetLastChar() const { return last_char; }
+    uint32_t GetLastChar() const { return last_char; }
 
     /**
      * @brief Get the actual visual bounds of glyphs
@@ -171,11 +208,14 @@ public:
     int32_t GetVisualCenterY() const;
 
 private:
-    Texture2D* atlas;        // Glyph atlas texture
-    GlyphInfo* glyphs;       // Array of glyph info
-    uint8_t first_char;      // First character code
-    uint8_t last_char;       // Last character code
-    uint8_t line_height;     // Line height in pixels
-    uint8_t baseline;        // Baseline offset
-    uint16_t glyph_count;    // Number of glyphs
+    mutable Texture2D* atlas;  // Glyph atlas texture (lazy-loaded)
+    GlyphInfo* glyphs;         // Array of glyph info
+    uint32_t* codepoints;      // Sorted codepoint table (v2 only, nullptr for v1)
+    uint32_t first_char;       // First character code (widened for v2)
+    uint32_t last_char;        // Last character code (widened for v2)
+    uint8_t line_height;       // Line height in pixels
+    uint8_t baseline;          // Baseline offset
+    uint16_t glyph_count;      // Number of glyphs
+    bool is_sparse;            // true = v2 sparse codepoint table, false = v1 contiguous
+    std::string atlasPath_;    // Deferred atlas path for lazy loading
 };

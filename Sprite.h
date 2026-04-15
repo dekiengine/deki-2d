@@ -90,6 +90,14 @@ class Sprite : public Texture2D
     static Sprite* Load(const char* file_path);
 
     /**
+     * @brief Load sprite from raw file data in memory (for pack file support)
+     * @param data Pointer to raw .dtex file bytes (header + pixel data + metadata)
+     * @param size Total size in bytes
+     * @return Loaded sprite or nullptr on failure
+     */
+    static Sprite* LoadFromFileData(const uint8_t* data, size_t size);
+
+    /**
      * @brief Creates a solid color sprite
      * @param width Width of the sprite
      * @param height Height of the sprite

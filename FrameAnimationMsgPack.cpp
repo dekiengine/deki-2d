@@ -256,7 +256,7 @@ bool FrameAnimationMsgPackHelper::LoadAnimationFromMemory(const uint8_t* data, s
     for (const auto& anim : out_data->animations)
         totalFrames += static_cast<int>(anim.frames.size());
 
-    DEKI_LOG_DEBUG("FrameAnimationMsgPackHelper::LoadAnimation - loaded %d animations with %d total frames",
+    DEKI_LOG_INTERNAL("FrameAnimationMsgPackHelper::LoadAnimation - loaded %d animations with %d total frames",
                   static_cast<int>(out_data->animations.size()), totalFrames);
 
     return true;
@@ -317,7 +317,7 @@ bool FrameAnimationMsgPackHelper::SaveAnimation(const char* msgpack_path, const 
         for (const auto& seq : anim_data->animations)
             totalFrames += static_cast<int>(seq.frames.size());
 
-        DEKI_LOG_DEBUG("FrameAnimationMsgPackHelper::SaveAnimation - saved %d animations with %d total frames (%zu bytes)",
+        DEKI_LOG_INTERNAL("FrameAnimationMsgPackHelper::SaveAnimation - saved %d animations with %d total frames (%zu bytes)",
                       static_cast<int>(anim_data->animations.size()), totalFrames, msgpack_data.size());
 
         return file.good();

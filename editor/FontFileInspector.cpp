@@ -230,6 +230,43 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
         ImGui::EndDisabled();
     }
 
+    // Rebake button — force re-bake all variants (deletes cache first)
+    if (!m_Sizes.empty())
+    {
+        ImGui::SameLine();
+        if (ImGui::Button("Rebake"))
+        {
+            SaveSettings(assetPath, assetGuid);
+
+            // Delete cached files to force re-bake
+            auto* pl = DekiEditor::AssetPipeline::Instance();
+            if (pl)
+            {
+                std::string cacheDir = pl->GetProjectPath() + "/cache/";
+                for (int size : m_Sizes)
+                {
+                    std::string variantGuid = GetVariantGuidFromData(assetPath, size);
+                    std::string atlasGuid = GetAtlasGuidFromData(assetPath, size);
+                    std::error_code ec;
+                    if (!variantGuid.empty()) fs::remove(cacheDir + variantGuid, ec);
+                    if (!atlasGuid.empty()) fs::remove(cacheDir + atlasGuid, ec);
+                }
+            }
+
+            for (int size : m_Sizes)
+            {
+                BakeFontVariant(assetPath, assetGuid, size);
+            }
+
+            m_SettingsModified = false;
+            DekiEditor::EditorApplication::Get().RequestAssetInvalidation();
+        }
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("Delete cached fonts and re-bake all variants");
+        }
+    }
+
     // Show variant status
     if (!m_Sizes.empty())
     {
@@ -567,7 +604,7 @@ void FontFileInspector::BakeFontVariant(const std::string& assetPath, const std:
     std::string atlasPath = cacheDir + "/" + atlasGuid;
     if (!DekiEditor::TextureImporter::WriteTexFile(atlasPath, result.atlasRGBA.data(),
                                                     result.atlasWidth, result.atlasHeight,
-                                                    DekiEditor::TextureFormat::RGB565A8))
+                                                    DekiEditor::TextureFormat::ALPHA8))
     {
         DEKI_LOG_ERROR("Failed to write font atlas: %s", atlasPath.c_str());
         return;

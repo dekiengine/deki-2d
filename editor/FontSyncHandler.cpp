@@ -3,6 +3,7 @@
 #ifdef DEKI_EDITOR
 
 #include <deki-editor/AssetPipeline.h>
+#include <deki-editor/SubAsset.h>
 #include <deki-editor/TextureImporter.h>
 #include <deki-editor/AssetData.h>  // For DekiEditor::GenerateGuid
 #include "FontCompiler.h"
@@ -46,6 +47,56 @@ static bool GetOrCreateVariantGuids(const std::string& fontGuid, int fontSize,
     j["variants"][sizeKey]["atlasGuid"] = outAtlasGuid;
 
     return true;
+}
+
+// Register baked font variants as sub-assets for a given font GUID
+static void RegisterFontSubAssets(const std::string& fontGuid, const std::string& projectPath)
+{
+    namespace fs = std::filesystem;
+    std::string cachePath = projectPath + "/cache";
+    std::vector<DekiEditor::SubAssetInfo> subAssets;
+    int index = 0;
+
+    for (int sz = 8; sz <= 128; sz++)
+    {
+        std::string seed = fontGuid + ":" + std::to_string(sz);
+        std::string vGuid = Deki::GenerateDeterministicGuid(seed);
+        std::string vPath = cachePath + "/" + vGuid;
+
+        if (!fs::exists(vPath)) continue;
+
+        DekiEditor::SubAssetInfo fontSub;
+        fontSub.guid = vGuid;
+        fontSub.parentGuid = fontGuid;
+        fontSub.subAssetIndex = index++;
+        fontSub.name = std::to_string(sz) + "px";
+        fontSub.depth = 0;
+        fontSub.cachePath = vPath;
+        subAssets.push_back(fontSub);
+
+        std::string aGuid = Deki::GenerateDeterministicGuid(seed + ":atlas");
+        std::string aPath = cachePath + "/" + aGuid;
+
+        if (fs::exists(aPath))
+        {
+            DekiEditor::SubAssetInfo atlasSub;
+            atlasSub.guid = aGuid;
+            atlasSub.parentGuid = fontGuid;
+            atlasSub.subAssetIndex = index++;
+            atlasSub.name = std::to_string(sz) + "px atlas";
+            atlasSub.depth = 1;
+            atlasSub.cachePath = aPath;
+            atlasSub.hasPreview = true;
+            subAssets.push_back(atlasSub);
+        }
+    }
+
+    if (!subAssets.empty())
+    {
+        auto* pipeline = DekiEditor::AssetPipeline::Instance();
+        if (pipeline)
+            pipeline->RegisterSubAssets(fontGuid, subAssets);
+    }
 }
 
 /**
@@ -177,7 +228,7 @@ static void HandleFontSync(
         // Write atlas (filename is atlasGuid, no extension)
         // atlasPath already defined above
         if (!DekiEditor::TextureImporter::WriteTexFile(atlasPath, result.atlasRGBA.data(),
-            result.atlasWidth, result.atlasHeight, DekiEditor::TextureFormat::RGB565A8))
+            result.atlasWidth, result.atlasHeight, DekiEditor::TextureFormat::ALPHA8))
         {
             DEKI_LOG_WARNING("FontSync: Failed to write atlas %s", atlasPath.c_str());
             continue;
@@ -212,6 +263,174 @@ static void HandleFontSync(
             DEKI_LOG_EDITOR("FontSync: Updated .data file with new GUIDs: %s", dataPath.c_str());
         }
     }
+
+    // Register baked variants as sub-assets for Asset Browser display
+    RegisterFontSubAssets(fontGuid, projectPath);
+}
+
+// =========================================================================
+// BDF Font Sync
+// =========================================================================
+
+static void RegisterBdfSubAssets(const std::string& fontGuid, const std::string& projectPath)
+{
+    std::string cachePath = projectPath + "/cache";
+    std::vector<DekiEditor::SubAssetInfo> subAssets;
+
+    std::string vGuid = Deki::GenerateDeterministicGuid(fontGuid + ":bdf");
+    std::string vPath = cachePath + "/" + vGuid;
+
+    if (!fs::exists(vPath)) return;
+
+    DekiEditor::SubAssetInfo fontSub;
+    fontSub.guid = vGuid;
+    fontSub.parentGuid = fontGuid;
+    fontSub.subAssetIndex = 0;
+    fontSub.name = "bdf";
+    fontSub.depth = 0;
+    fontSub.cachePath = vPath;
+    subAssets.push_back(fontSub);
+
+    std::string aGuid = Deki::GenerateDeterministicGuid(fontGuid + ":bdf:atlas");
+    std::string aPath = cachePath + "/" + aGuid;
+    if (fs::exists(aPath))
+    {
+        DekiEditor::SubAssetInfo atlasSub;
+        atlasSub.guid = aGuid;
+        atlasSub.parentGuid = fontGuid;
+        atlasSub.subAssetIndex = 1;
+        atlasSub.name = "bdf atlas";
+        atlasSub.depth = 1;
+        atlasSub.cachePath = aPath;
+        atlasSub.hasPreview = true;
+        subAssets.push_back(atlasSub);
+    }
+
+    auto* pipeline = DekiEditor::AssetPipeline::Instance();
+    if (pipeline)
+        pipeline->RegisterSubAssets(fontGuid, subAssets);
+}
+
+static void HandleBdfSync(
+    const std::string& absolutePath,
+    const std::string& fontGuid,
+    const std::string& projectPath)
+{
+    DEKI_LOG_EDITOR("BdfSync: HandleBdfSync called for %s (guid=%s)", absolutePath.c_str(), fontGuid.c_str());
+
+    // Read .data sidecar
+    std::string dataPath = absolutePath + ".data";
+    json j;
+    bool hasData = false;
+
+    if (fs::exists(dataPath))
+    {
+        std::ifstream file(dataPath);
+        if (file.is_open())
+        {
+            try { j = json::parse(file); hasData = true; }
+            catch (...) {}
+        }
+    }
+
+    // Read selected chars from .data, or auto-select all if missing
+    std::vector<int> selectedChars;
+    if (hasData && j.contains("bdfSettings") && j["bdfSettings"].contains("selectedChars"))
+    {
+        for (const auto& val : j["bdfSettings"]["selectedChars"])
+        {
+            if (val.is_number_integer())
+                selectedChars.push_back(val.get<int>());
+        }
+    }
+
+    // No settings yet — auto-select all codepoints from the BDF file
+    if (selectedChars.empty())
+    {
+        selectedChars = FontCompiler::GetBdfCodepoints(absolutePath);
+        if (selectedChars.empty())
+        {
+            DEKI_LOG_EDITOR("BdfSync: No glyphs found in BDF file");
+            return;
+        }
+        DEKI_LOG_EDITOR("BdfSync: Auto-selecting all %zu chars for %s", selectedChars.size(), absolutePath.c_str());
+
+        // Save default settings to .data so future syncs use them
+        std::sort(selectedChars.begin(), selectedChars.end());
+        j["bdfSettings"]["selectedChars"] = selectedChars;
+        std::ofstream outFile(dataPath);
+        if (outFile.is_open())
+            outFile << j.dump(2);
+    }
+
+    // Deterministic GUIDs
+    std::string variantGuid = Deki::GenerateDeterministicGuid(fontGuid + ":bdf");
+    std::string atlasGuid = Deki::GenerateDeterministicGuid(fontGuid + ":bdf:atlas");
+
+    // Update variants in .data
+    if (!j.contains("variants"))
+        j["variants"] = json::object();
+    j["variants"]["bdf"] = { {"guid", variantGuid}, {"atlasGuid", atlasGuid} };
+
+    std::string cacheDir = projectPath + "/cache";
+    fs::create_directories(cacheDir);
+
+    std::string dfontPath = cacheDir + "/" + variantGuid;
+    std::string atlasPath = cacheDir + "/" + atlasGuid;
+
+    // Skip if already cached
+    if (fs::exists(dfontPath) && fs::exists(atlasPath))
+    {
+        Deki::AssetManager::Get()->RegisterGuid(variantGuid, variantGuid);
+        DEKI_LOG_EDITOR("BdfSync: Already cached, registered GUID %s", variantGuid.c_str());
+        RegisterBdfSubAssets(fontGuid, projectPath);
+        return;
+    }
+
+    // Delete stale dfont if atlas missing
+    if (fs::exists(dfontPath) && !fs::exists(atlasPath))
+        fs::remove(dfontPath);
+
+    DEKI_LOG_EDITOR("BdfSync: Baking BDF font %s", absolutePath.c_str());
+
+    // Compile
+    FontCompiler::BdfCompileOptions options;
+    options.selectedChars = selectedChars;
+    options.padding = 2;
+    options.maxAtlasSize = 2048;
+
+    FontCompiler::CompileResult result;
+    if (!FontCompiler::CompileBdfFont(absolutePath, options, result))
+    {
+        DEKI_LOG_WARNING("BdfSync: Failed to compile %s", absolutePath.c_str());
+        return;
+    }
+
+    // Write atlas
+    if (!DekiEditor::TextureImporter::WriteTexFile(atlasPath, result.atlasRGBA.data(),
+        result.atlasWidth, result.atlasHeight, DekiEditor::TextureFormat::ALPHA8))
+    {
+        DEKI_LOG_WARNING("BdfSync: Failed to write atlas %s", atlasPath.c_str());
+        return;
+    }
+
+    // Write dfont
+    if (!FontCompiler::WriteDfontFile(dfontPath, result, atlasGuid))
+    {
+        DEKI_LOG_WARNING("BdfSync: Failed to write dfont %s", dfontPath.c_str());
+        return;
+    }
+
+    // Register
+    Deki::AssetManager::Get()->RegisterGuid(variantGuid, variantGuid);
+    DEKI_LOG_EDITOR("BdfSync: Baked -> font=%s, atlas=%s", variantGuid.c_str(), atlasGuid.c_str());
+
+    // Save .data with variant GUIDs
+    std::ofstream outFile(dataPath);
+    if (outFile.is_open())
+        outFile << j.dump(2);
+
+    RegisterBdfSubAssets(fontGuid, projectPath);
 }
 
 // Static flag to prevent adding duplicate callbacks
@@ -235,7 +454,28 @@ void RegisterFontSyncHandlers()
         DEKI_LOG_EDITOR("FontSync: OnStarted callback invoked, registering handlers");
         pipeline->RegisterSyncHandler(".ttf", HandleFontSync);
         pipeline->RegisterSyncHandler(".otf", HandleFontSync);
-        DEKI_LOG_EDITOR("FontSync: Handlers registered for .ttf and .otf");
+        pipeline->RegisterSyncHandler(".bdf", HandleBdfSync);
+        DEKI_LOG_EDITOR("FontSync: Handlers registered for .ttf, .otf, and .bdf");
+    });
+
+    // After all assets are imported, scan for existing baked font variants
+    // and register them as sub-assets (for warm cache / project re-open)
+    DekiEditor::AssetPipeline::OnImportComplete([](DekiEditor::AssetPipeline* pipeline) {
+        const auto& allAssets = pipeline->GetAllAssets();
+        for (const auto& [path, info] : allAssets)
+        {
+            if (info.guid.empty()) continue;
+            std::string ext = fs::path(path).extension().string();
+            for (auto& c : ext) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+            if (ext == ".ttf" || ext == ".otf")
+            {
+                RegisterFontSubAssets(info.guid, pipeline->GetProjectPath());
+            }
+            else if (ext == ".bdf")
+            {
+                RegisterBdfSubAssets(info.guid, pipeline->GetProjectPath());
+            }
+        }
     });
 }
 

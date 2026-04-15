@@ -88,6 +88,16 @@ public:
     const std::string& GetText() const { return text; }
 
     /**
+     * @brief Font resolve callback for editor integration
+     *
+     * Called during RenderContent to let external code (editor) handle font resolution
+     * (GUID sync, preview, baking). Return non-null to use that font directly,
+     * or nullptr to fall through to the runtime path (font.Get()).
+     */
+    using FontResolveCallback = BitmapFont*(*)(TextComponent*);
+    static void SetFontResolveCallback(FontResolveCallback cb);
+
+    /**
      * @brief Set the font to use for rendering
      * @param f Pointer to bitmap font (not owned by TextComponent)
      */
@@ -240,6 +250,10 @@ public:
     DEKI_EXPORT
     deki::Color color;
 
+    /** @brief Pixel scale for bitmap fonts (1x, 2x, 3x nearest-neighbor) */
+    DEKI_EXPORT
+    int32_t pixelScale = 1;
+
     /** @brief Horizontal text alignment */
     DEKI_EXPORT
     TextAlign align = TextAlign::Left;
@@ -252,6 +266,8 @@ public:
     void InvalidateRenderCache();
 
 private:
+    static FontResolveCallback s_fontResolveCallback;
+
     // Cached render buffer
     uint8_t* m_cachedBuffer = nullptr;
     size_t m_cachedBufferSize = 0;
@@ -262,6 +278,7 @@ private:
     TextAlign m_cachedAlign = TextAlign::Left;
     TextVerticalAlign m_cachedVerticalAlign = TextVerticalAlign::Top;
     BitmapFont* m_cachedFont = nullptr;
+    int32_t m_cachedPixelScale = 1;
 
     // Cached vertical crop bounds (tight Y range of actual glyph content)
     int32_t m_cropFirstRow = 0;

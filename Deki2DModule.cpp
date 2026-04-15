@@ -27,6 +27,8 @@
 #ifdef DEKI_EDITOR
 #include "editor/FontSyncHandler.h"
 #include "editor/FontFileInspector.h"
+#include <cstdlib>
+#include "editor/BdfFileInspector.h"
 #include "editor/FontCompiler.h"
 #include "Texture2D.h"
 #include "BitmapFont.h"
@@ -36,6 +38,7 @@
 #include "Guid.h"
 #include "Prefab.h"
 #include "DekiObject.h"
+#include "DekiEngine.h"
 #include "DekiLogSystem.h"
 #include <filesystem>
 #include <functional>
@@ -70,6 +73,9 @@ extern const DekiComponentMeta* Deki2D_GetAutoComponentMeta(int index);
 
 // Track if already registered to avoid duplicates
 static bool s_Registered = false;
+
+// Forward declaration — defined after extern "C" block
+static BitmapFont* EditorFontResolve(TextComponent* tc);
 #endif
 
 extern "C" {
@@ -108,9 +114,13 @@ DEKI_2D_API int Deki2D_EnsureRegistered(void)
     // Register font-related editor features
     Deki2D::RegisterFontSyncHandlers();
     Deki2D::RegisterFontFileInspector();
+    Deki2D::RegisterBdfFileInspector();
 
     // Initialize font preview callbacks for live editing in PrefabView
     Deki2D::InitializeFontPreviewCallbacks();
+
+    // Register font resolve callback for TextComponent (GUID sync, preview, baking)
+    TextComponent::SetFontResolveCallback(EditorFontResolve);
 
     // Register image loader and font factory with EditorAssets
     DekiEditor::EditorAssets::RegisterImageLoader(Texture2D::LoadAsRGBA);
@@ -326,7 +336,20 @@ DEKI_PLUGIN_API void DekiPlugin_OnPlayModeStart(void* prefabPtr)
         TextComponent* textComp = obj->GetComponent<TextComponent>();
         if (textComp && !textComp->font.source.empty())
         {
-            std::string seed = textComp->font.source + ":" + std::to_string(textComp->fontSize);
+            // Detect BDF vs TTF to use correct GUID convention
+            bool isBdf = false;
+            auto* pl = DekiEditor::AssetPipeline::Instance();
+            const auto* fi = pl ? pl->GetAssetInfoByGuid(textComp->font.source) : nullptr;
+            if (fi)
+            {
+                std::string ext = std::filesystem::path(fi->path).extension().string();
+                for (char& c : ext) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+                isBdf = (ext == ".bdf");
+            }
+
+            std::string seed = isBdf
+                ? (textComp->font.source + ":bdf")
+                : (textComp->font.source + ":" + std::to_string(textComp->fontSize));
             textComp->font.guid = Deki::GenerateDeterministicGuid(seed);
         }
 
@@ -407,6 +430,233 @@ DEKI_PLUGIN_API void DekiPlugin_FreeCompileResult(void* handle)
 #endif // DEKI_PLUGIN_EXPORTS
 
 } // extern "C"
+
+// =============================================================================
+// Preview Font Management (moved from TextComponent.cpp for clean separation)
+// =============================================================================
+
+namespace {
+    static BitmapFont* s_PreviewFont = nullptr;
+    static std::string s_PreviewFontGuid;
+    static int s_PreviewFontSize = 0;
+} // anonymous namespace
+
+static BitmapFont* GetEditorFontVariant(const std::string& fontGuid, int fontSize)
+{
+    if (fontGuid.empty() || fontSize <= 0)
+        return nullptr;
+
+    if (s_PreviewFont && s_PreviewFontGuid == fontGuid && s_PreviewFontSize == fontSize)
+        return s_PreviewFont;
+
+    if (s_PreviewFont)
+    {
+        delete s_PreviewFont;
+        s_PreviewFont = nullptr;
+        s_PreviewFontGuid.clear();
+        s_PreviewFontSize = 0;
+    }
+
+    auto* pipeline = DekiEditor::AssetPipeline::Instance();
+    if (!pipeline) return nullptr;
+    const DekiEditor::AssetInfo* info = pipeline->GetAssetInfoByGuid(fontGuid);
+    if (!info) return nullptr;
+    std::string ttfPath = (std::filesystem::path(pipeline->GetProjectPath()) / info->path).string();
+    if (ttfPath.empty() || !std::filesystem::exists(ttfPath))
+        return nullptr;
+
+    Deki2D::FontCompiler::CompileOptions options;
+    options.fontSize = fontSize;
+    options.firstChar = 32;
+    options.lastChar = 126;
+    options.padding = 2;
+
+    Deki2D::FontCompiler::CompileResult result;
+    if (!Deki2D::FontCompiler::CompileTrueTypeFont(ttfPath, options, result))
+        return nullptr;
+
+    Texture2D* atlas = new Texture2D();
+    atlas->width = result.atlasWidth;
+    atlas->height = result.atlasHeight;
+    atlas->format = Texture2D::TextureFormat::RGBA8888;
+    atlas->has_alpha = true;
+    atlas->has_transparency = true;
+
+    size_t atlasSize = result.atlasWidth * result.atlasHeight * 4;
+    if (DekiMemoryProvider::IsInitialized())
+    {
+        atlas->data = static_cast<uint8_t*>(DekiMemoryProvider::Allocate(atlasSize, false, "FontPreviewAtlas"));
+        atlas->allocated_with_backend = true;
+    }
+    else
+    {
+        atlas->data = static_cast<uint8_t*>(std::malloc(atlasSize));
+    }
+
+    if (!atlas->data) { delete atlas; return nullptr; }
+    memcpy(atlas->data, result.atlasRGBA.data(), atlasSize);
+
+    GlyphInfo* glyphsCopy = new GlyphInfo[result.glyphs.size()];
+    memcpy(glyphsCopy, result.glyphs.data(), result.glyphs.size() * sizeof(GlyphInfo));
+
+    BitmapFont* font = BitmapFont::CreateFromMemory(
+        atlas, glyphsCopy,
+        result.firstChar, result.lastChar,
+        result.lineHeight, result.baseline);
+
+    if (font)
+    {
+        s_PreviewFont = font;
+        s_PreviewFontGuid = fontGuid;
+        s_PreviewFontSize = fontSize;
+    }
+    return font;
+}
+
+static bool IsBdfFont(const std::string& sourceGuid)
+{
+    auto* pl = DekiEditor::AssetPipeline::Instance();
+    const auto* fi = pl ? pl->GetAssetInfoByGuid(sourceGuid) : nullptr;
+    if (!fi) return false;
+    std::string ext = std::filesystem::path(fi->path).extension().string();
+    for (char& c : ext) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    return (ext == ".bdf");
+}
+
+static std::string ComputeBakedFontGuid(const std::string& sourceGuid, int fontSize)
+{
+    std::string seed = IsBdfFont(sourceGuid)
+        ? (sourceGuid + ":bdf")
+        : (sourceGuid + ":" + std::to_string(fontSize));
+    return Deki::GenerateDeterministicGuid(seed);
+}
+
+static BitmapFont* EditorFontResolve(TextComponent* tc)
+{
+    if (DekiEngine::IsRuntimeMode())
+    {
+        // Play mode: update GUID if fontSize changed (e.g., by RollerComponent)
+        if (!tc->font.source.empty() && tc->fontSize > 0)
+        {
+            std::string expectedGuid = ComputeBakedFontGuid(tc->font.source, tc->fontSize);
+            if (tc->font.guid != expectedGuid)
+            {
+                tc->font.guid = expectedGuid;
+                tc->font.ptr = nullptr;
+                tc->font.loadAttempted = false;
+            }
+        }
+        return nullptr;
+    }
+
+    // Edit mode: preview takes priority
+    if (tc->previewEnabled && tc->previewSize > 0)
+        return GetEditorFontVariant(tc->font.source, tc->previewSize);
+
+    // Edit mode: GUID sync with font baking
+    if (!tc->font.source.empty() && tc->fontSize > 0)
+    {
+        std::string expectedGuid = ComputeBakedFontGuid(tc->font.source, tc->fontSize);
+        if (tc->font.guid != expectedGuid)
+        {
+            tc->font.guid = expectedGuid;
+            tc->font.ptr = nullptr;
+            tc->font.loadAttempted = false;
+            Deki2D::EnsureFontSizeBaked(tc->font.source, tc->fontSize);
+        }
+    }
+
+    tc->fontSizeUnavailable = (tc->font.Get() == nullptr
+                                && !tc->font.source.empty() && tc->fontSize > 0);
+    return nullptr;
+}
+
+namespace Deki2D {
+
+// Forward declaration — defined in Font Preview Callbacks section below
+void ClearPreviewTextureCache();
+
+void ClearPreviewFont()
+{
+    if (s_PreviewFont)
+    {
+        delete s_PreviewFont;
+        s_PreviewFont = nullptr;
+    }
+    s_PreviewFontGuid.clear();
+    s_PreviewFontSize = 0;
+    ClearPreviewTextureCache();
+}
+
+bool SetPreviewFontFromData(
+    const std::string& sourceGuid,
+    int fontSize,
+    const uint8_t* atlasRGBA,
+    uint32_t atlasWidth,
+    uint32_t atlasHeight,
+    const GlyphInfo* glyphs,
+    size_t glyphCount,
+    uint8_t firstChar,
+    uint8_t lastChar,
+    uint8_t lineHeight,
+    uint8_t baseline)
+{
+    if (!atlasRGBA || !glyphs || glyphCount == 0 || atlasWidth == 0 || atlasHeight == 0)
+        return false;
+
+    if (s_PreviewFontGuid != sourceGuid || s_PreviewFontSize != fontSize)
+        ClearPreviewFont();
+
+    Texture2D* atlas = new Texture2D();
+    atlas->width = atlasWidth;
+    atlas->height = atlasHeight;
+    atlas->format = Texture2D::TextureFormat::RGBA8888;
+    atlas->has_alpha = true;
+    atlas->has_transparency = true;
+
+    size_t atlasSize = atlasWidth * atlasHeight * 4;
+    if (DekiMemoryProvider::IsInitialized())
+    {
+        atlas->data = static_cast<uint8_t*>(DekiMemoryProvider::Allocate(atlasSize, false, "FontPreviewAtlas"));
+        atlas->allocated_with_backend = true;
+    }
+    else
+    {
+        atlas->data = static_cast<uint8_t*>(std::malloc(atlasSize));
+    }
+
+    if (!atlas->data) { delete atlas; return false; }
+    memcpy(atlas->data, atlasRGBA, atlasSize);
+
+    GlyphInfo* glyphsCopy = new GlyphInfo[glyphCount];
+    memcpy(glyphsCopy, glyphs, glyphCount * sizeof(GlyphInfo));
+
+    BitmapFont* font = BitmapFont::CreateFromMemory(
+        atlas, glyphsCopy,
+        firstChar, lastChar,
+        lineHeight, baseline);
+
+    if (!font) return false;
+
+    s_PreviewFont = font;
+    s_PreviewFontGuid = sourceGuid;
+    s_PreviewFontSize = fontSize;
+    return true;
+}
+
+bool HasPreviewFont(const std::string& sourceGuid, int fontSize)
+{
+    return s_PreviewFont && s_PreviewFontGuid == sourceGuid && s_PreviewFontSize == fontSize;
+}
+
+BitmapFont* GetPreviewFont(const std::string& sourceGuid, int fontSize)
+{
+    if (s_PreviewFont && s_PreviewFontGuid == sourceGuid && s_PreviewFontSize == fontSize)
+        return s_PreviewFont;
+    return nullptr;
+}
+
+} // namespace Deki2D
 
 // =============================================================================
 // Font Preview Callbacks

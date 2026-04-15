@@ -178,7 +178,7 @@ private:
     // Touch tracking
     bool m_IsDragging = false;
     bool m_DragConfirmed = false;
-    float m_DragThreshold = 5.0f;
+    float m_DragThreshold = 10.0f;
     int32_t m_LastTouchPos = 0;
     int32_t m_TouchStartPos = 0;
     int32_t m_TouchStartOffset = 0;

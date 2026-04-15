@@ -90,7 +90,6 @@ private:
 
     // Export
     int m_ExportSize = 32;
-    float m_ExportColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};
     std::string m_OutputPath;
     bool m_ExportAsAtlas = false;
 

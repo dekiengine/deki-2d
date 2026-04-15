@@ -53,14 +53,7 @@ Texture2D* Texture2D::Load(const char* file_path)
 
     IDekiFileSystem* fs = DekiFileSystemProvider::GetFileSystemForPath(file_path);
     if (!fs) {
-        DEKI_LOG_DEBUG("FileSystem not initialized for path: %s", file_path);
-        return nullptr;
-    }
-
-    // Check if file exists
-    if (!fs->FileExists(file_path))
-    {
-        DEKI_LOG_ERROR("Texture file does not exist: %s", file_path);
+        DEKI_LOG_INTERNAL("FileSystem not initialized for path: %s", file_path);
         return nullptr;
     }
 
@@ -143,7 +136,7 @@ Texture2D* Texture2D::Load(const char* file_path)
     // Pixel data is now owned by texture
     texture->data = pixel_data;
 
-    DEKI_LOG_DEBUG("Loaded texture: %s (%dx%d, %s)",
+    DEKI_LOG_INTERNAL("Loaded texture: %s (%dx%d, %s)",
               file_path,
               texture->width,
               texture->height,
@@ -402,7 +395,7 @@ uint8_t* Texture2D::LoadAsRGBA(const char* file_path, int32_t& out_width, int32_
     out_height = header.height;
     out_has_alpha = (header.flags & DTEX_FLAG_HAS_ALPHA) != 0;
 
-    DEKI_LOG_DEBUG("Loaded texture as RGBA: %s (%dx%d, %s)",
+    DEKI_LOG_INTERNAL("Loaded texture as RGBA: %s (%dx%d, %s)",
               file_path,
               out_width,
               out_height,

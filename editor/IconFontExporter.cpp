@@ -809,14 +809,6 @@ void IconFontExporter::ExportSelectedAsPNGs()
         if (!RasterizeGlyph(icons[idx].codepoint, m_ExportSize, rgba, w, h))
             continue;
 
-        for (int i = 0; i < w * h; i++)
-        {
-            rgba[i * 4 + 0] = (uint8_t)(rgba[i * 4 + 0] * m_ExportColor[0]);
-            rgba[i * 4 + 1] = (uint8_t)(rgba[i * 4 + 1] * m_ExportColor[1]);
-            rgba[i * 4 + 2] = (uint8_t)(rgba[i * 4 + 2] * m_ExportColor[2]);
-            rgba[i * 4 + 3] = (uint8_t)(rgba[i * 4 + 3] * m_ExportColor[3]);
-        }
-
         std::string filename = icons[idx].name + ".png";
         std::string filepath = (std::filesystem::path(m_OutputPath) / filename).string();
         stbi_write_png(filepath.c_str(), w, h, 4, rgba.data(), w * 4);
@@ -883,10 +875,10 @@ void IconFontExporter::ExportSelectedAsAtlas()
 
                     uint8_t alpha = glyphRGBA[(y * gw + x) * 4 + 3];
                     int px = (destY * atlasW + destX) * 4;
-                    atlasData[px + 0] = (uint8_t)(255 * m_ExportColor[0]);
-                    atlasData[px + 1] = (uint8_t)(255 * m_ExportColor[1]);
-                    atlasData[px + 2] = (uint8_t)(255 * m_ExportColor[2]);
-                    atlasData[px + 3] = (uint8_t)(alpha * m_ExportColor[3]);
+                    atlasData[px + 0] = 255;
+                    atlasData[px + 1] = 255;
+                    atlasData[px + 2] = 255;
+                    atlasData[px + 3] = alpha;
                 }
             }
         }
@@ -985,7 +977,6 @@ void IconFontExporter::SaveExportManifest()
     j["npmPackage"] = m_Fonts[m_CurrentFontIndex].npmPackage;
     j["source"] = m_Fonts[m_CurrentFontIndex].source;
     j["exportSize"] = m_ExportSize;
-    j["color"] = {m_ExportColor[0], m_ExportColor[1], m_ExportColor[2], m_ExportColor[3]};
     j["asAtlas"] = m_ExportAsAtlas;
     nlohmann::json iconNames = nlohmann::json::array();
     for (int idx : m_SelectedIcons)
@@ -1037,14 +1028,6 @@ void IconFontExporter::LoadExportManifest(const std::string& manifestPath)
         // Restore export settings
         m_ExportSize = j.value("exportSize", 32);
         m_ExportAsAtlas = j.value("asAtlas", false);
-
-        if (j.contains("color") && j["color"].is_array() && j["color"].size() >= 4)
-        {
-            m_ExportColor[0] = j["color"][0].get<float>();
-            m_ExportColor[1] = j["color"][1].get<float>();
-            m_ExportColor[2] = j["color"][2].get<float>();
-            m_ExportColor[3] = j["color"][3].get<float>();
-        }
 
         // Restore selection by name
         if (m_CurrentFontIndex >= 0 && j.contains("icons") && j["icons"].is_array())
@@ -1249,7 +1232,6 @@ void IconFontExporter::DrawExportSettings()
 
     ImGui::SetNextItemWidth(120);
     ImGui::SliderInt("Export Size (px)", &m_ExportSize, 8, 256);
-    ImGui::ColorEdit4("Tint Color", m_ExportColor);
 
     // Output folder with picker popup
     if (m_OutputPath.empty())

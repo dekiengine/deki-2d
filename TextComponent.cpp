@@ -10,249 +10,48 @@
 #include <iomanip>
 #include <unordered_map>
 
-#ifdef DEKI_EDITOR
-#include <deki-editor/AssetPipeline.h>
-#include <filesystem>
-#include <fstream>
-#include <cstdlib>  // For std::malloc
-#include <nlohmann/json.hpp>
-#include "providers/DekiMemoryProvider.h"  // For atlas data allocation
-#include "editor/FontCompiler.h"  // For on-demand font compilation
-#include "Guid.h"  // For GenerateDeterministicGuid
-#endif
-
-#ifdef DEKI_EDITOR
-namespace {
-    // Single preview font slot - only one preview font exists at a time
-    // Automatically cleared when preview changes or is disabled
-    static BitmapFont* s_PreviewFont = nullptr;
-    static std::string s_PreviewFontGuid;
-    static int s_PreviewFontSize = 0;
-
-    /**
-     * @brief Resolve TTF path from source GUID
-     */
-    static std::string ResolveTTFPath(const std::string& sourceGuid)
+// Decode one UTF-8 codepoint from str at position i, advance i past it.
+// Returns the codepoint, or 0xFFFD on invalid sequence.
+static uint32_t DecodeUtf8(const char* str, size_t len, size_t& i)
+{
+    uint8_t b0 = static_cast<uint8_t>(str[i]);
+    if (b0 < 0x80)
     {
-        auto* pipeline = DekiEditor::AssetPipeline::Instance();
-        if (!pipeline)
-            return "";
-
-        const DekiEditor::AssetInfo* info = pipeline->GetAssetInfoByGuid(sourceGuid);
-        if (!info)
-            return "";
-
-        return (std::filesystem::path(pipeline->GetProjectPath()) / info->path).string();
+        i += 1;
+        return b0;
     }
-
-    /**
-     * @brief Compile a font on-demand for preview mode
-     *
-     * Uses a single temporary slot — only one preview font exists at a time.
-     * Cleared when preview font/size changes.
-     */
-    static BitmapFont* GetEditorFontVariant(const std::string& fontGuid, int fontSize, bool /*allowOnDemandCompile*/)
+    else if ((b0 & 0xE0) == 0xC0 && i + 1 < len)
     {
-        if (fontGuid.empty() || fontSize <= 0)
-            return nullptr;
-
-        // Return existing preview if it matches
-        if (s_PreviewFont && s_PreviewFontGuid == fontGuid && s_PreviewFontSize == fontSize)
-        {
-            return s_PreviewFont;
-        }
-
-        // Clear old preview font (different font/size requested)
-        if (s_PreviewFont)
-        {
-            delete s_PreviewFont;
-            s_PreviewFont = nullptr;
-            s_PreviewFontGuid.clear();
-            s_PreviewFontSize = 0;
-        }
-
-        // Compile on-demand
-        std::string ttfPath = ResolveTTFPath(fontGuid);
-        if (ttfPath.empty() || !std::filesystem::exists(ttfPath))
-        {
-            DEKI_LOG_WARNING("TextComponent: TTF not found for %s", fontGuid.c_str());
-            return nullptr;
-        }
-
-        DEKI_LOG_EDITOR("TextComponent: Compiling preview font %s @ %d px", fontGuid.c_str(), fontSize);
-
-        Deki2D::FontCompiler::CompileOptions options;
-        options.fontSize = fontSize;
-        options.firstChar = 32;
-        options.lastChar = 126;
-        options.padding = 2;
-
-        Deki2D::FontCompiler::CompileResult result;
-        if (!Deki2D::FontCompiler::CompileTrueTypeFont(ttfPath, options, result))
-        {
-            DEKI_LOG_ERROR("TextComponent: Failed to compile preview %s @ %d px", fontGuid.c_str(), fontSize);
-            return nullptr;
-        }
-
-        // Create preview font
-        Texture2D* atlas = new Texture2D();
-        atlas->width = result.atlasWidth;
-        atlas->height = result.atlasHeight;
-        atlas->format = Texture2D::TextureFormat::RGBA8888;
-        atlas->has_alpha = true;
-        atlas->has_transparency = true;
-
-        size_t atlasSize = result.atlasWidth * result.atlasHeight * 4;
-        if (DekiMemoryProvider::IsInitialized())
-        {
-            atlas->data = static_cast<uint8_t*>(DekiMemoryProvider::Allocate(atlasSize, false, "FontPreviewAtlas"));
-            atlas->allocated_with_backend = true;
-        }
-        else
-        {
-            atlas->data = static_cast<uint8_t*>(std::malloc(atlasSize));
-        }
-
-        if (!atlas->data)
-        {
-            DEKI_LOG_ERROR("TextComponent: Failed to allocate preview atlas data");
-            delete atlas;
-            return nullptr;
-        }
-        memcpy(atlas->data, result.atlasRGBA.data(), atlasSize);
-
-        GlyphInfo* glyphsCopy = new GlyphInfo[result.glyphs.size()];
-        memcpy(glyphsCopy, result.glyphs.data(), result.glyphs.size() * sizeof(GlyphInfo));
-
-        BitmapFont* font = BitmapFont::CreateFromMemory(
-            atlas, glyphsCopy,
-            result.firstChar, result.lastChar,
-            result.lineHeight, result.baseline
-        );
-
-        if (font)
-        {
-            s_PreviewFont = font;
-            s_PreviewFontGuid = fontGuid;
-            s_PreviewFontSize = fontSize;
-            DEKI_LOG_EDITOR("TextComponent: Created preview font %s @ %d px", fontGuid.c_str(), fontSize);
-        }
-
-        return font;
+        uint32_t cp = (b0 & 0x1F) << 6;
+        cp |= (static_cast<uint8_t>(str[i + 1]) & 0x3F);
+        i += 2;
+        return cp;
     }
-} // anonymous namespace
-
-namespace Deki2D {
-    // Forward declaration - implemented in Deki2DModule.cpp
-    void ClearPreviewTextureCache();
-
-    void ClearPreviewFont()
+    else if ((b0 & 0xF0) == 0xE0 && i + 2 < len)
     {
-        if (s_PreviewFont)
-        {
-            delete s_PreviewFont;
-            s_PreviewFont = nullptr;
-        }
-        s_PreviewFontGuid.clear();
-        s_PreviewFontSize = 0;
-
-        // Also clear GPU texture cache to keep in sync
-        ClearPreviewTextureCache();
+        uint32_t cp = (b0 & 0x0F) << 12;
+        cp |= (static_cast<uint8_t>(str[i + 1]) & 0x3F) << 6;
+        cp |= (static_cast<uint8_t>(str[i + 2]) & 0x3F);
+        i += 3;
+        return cp;
     }
-
-    bool SetPreviewFontFromData(
-        const std::string& sourceGuid,
-        int fontSize,
-        const uint8_t* atlasRGBA,
-        uint32_t atlasWidth,
-        uint32_t atlasHeight,
-        const GlyphInfo* glyphs,
-        size_t glyphCount,
-        uint8_t firstChar,
-        uint8_t lastChar,
-        uint8_t lineHeight,
-        uint8_t baseline)
+    else if ((b0 & 0xF8) == 0xF0 && i + 3 < len)
     {
-        if (!atlasRGBA || !glyphs || glyphCount == 0 || atlasWidth == 0 || atlasHeight == 0)
-        {
-            DEKI_LOG_ERROR("SetPreviewFontFromData: Invalid parameters");
-            return false;
-        }
-
-        // Clear old preview if different
-        if (s_PreviewFontGuid != sourceGuid || s_PreviewFontSize != fontSize)
-        {
-            ClearPreviewFont();
-        }
-
-        // Create Texture2D for atlas - allocated HERE in deki-2d.dll
-        Texture2D* atlas = new Texture2D();
-        atlas->width = atlasWidth;
-        atlas->height = atlasHeight;
-        atlas->format = Texture2D::TextureFormat::RGBA8888;
-        atlas->has_alpha = true;
-        atlas->has_transparency = true;
-
-        // Allocate atlas data matching what Texture2D destructor expects
-        // Destructor uses DekiMemoryProvider::Free if initialized, else std::free
-        size_t atlasSize = atlasWidth * atlasHeight * 4;
-        if (DekiMemoryProvider::IsInitialized())
-        {
-            atlas->data = static_cast<uint8_t*>(DekiMemoryProvider::Allocate(atlasSize, false, "FontPreviewAtlas"));
-            atlas->allocated_with_backend = true;
-        }
-        else
-        {
-            atlas->data = static_cast<uint8_t*>(std::malloc(atlasSize));
-        }
-
-        if (!atlas->data)
-        {
-            DEKI_LOG_ERROR("SetPreviewFontFromData: Failed to allocate atlas data");
-            delete atlas;
-            return false;
-        }
-        memcpy(atlas->data, atlasRGBA, atlasSize);
-
-        // Copy glyph info - allocated HERE in deki-2d.dll
-        GlyphInfo* glyphsCopy = new GlyphInfo[glyphCount];
-        memcpy(glyphsCopy, glyphs, glyphCount * sizeof(GlyphInfo));
-
-        // Create BitmapFont - takes ownership of atlas and glyphsCopy
-        BitmapFont* font = BitmapFont::CreateFromMemory(
-            atlas, glyphsCopy,
-            firstChar, lastChar,
-            lineHeight, baseline
-        );
-
-        if (!font)
-        {
-            DEKI_LOG_ERROR("SetPreviewFontFromData: Failed to create BitmapFont");
-            return false;
-        }
-
-        // Store as single preview font
-        s_PreviewFont = font;
-        s_PreviewFontGuid = sourceGuid;
-        s_PreviewFontSize = fontSize;
-
-        DEKI_LOG_EDITOR("TextComponent: Set preview font %s @ %d px", sourceGuid.c_str(), fontSize);
-        return true;
+        uint32_t cp = (b0 & 0x07) << 18;
+        cp |= (static_cast<uint8_t>(str[i + 1]) & 0x3F) << 12;
+        cp |= (static_cast<uint8_t>(str[i + 2]) & 0x3F) << 6;
+        cp |= (static_cast<uint8_t>(str[i + 3]) & 0x3F);
+        i += 4;
+        return cp;
     }
+    i += 1; // Skip invalid byte
+    return 0xFFFD;
+}
 
-    bool HasPreviewFont(const std::string& sourceGuid, int fontSize)
-    {
-        return s_PreviewFont && s_PreviewFontGuid == sourceGuid && s_PreviewFontSize == fontSize;
-    }
+// Font resolve callback — set by editor to handle GUID sync, preview, baking
+TextComponent::FontResolveCallback TextComponent::s_fontResolveCallback = nullptr;
+void TextComponent::SetFontResolveCallback(FontResolveCallback cb) { s_fontResolveCallback = cb; }
 
-    BitmapFont* GetPreviewFont(const std::string& sourceGuid, int fontSize)
-    {
-        if (s_PreviewFont && s_PreviewFontGuid == sourceGuid && s_PreviewFontSize == fontSize)
-            return s_PreviewFont;
-        return nullptr;
-    }
-} // namespace Deki2D
-#endif // DEKI_EDITOR
 
 // ============================================================================
 // Component Registration
@@ -495,16 +294,18 @@ void TextComponent::RenderGlyph(const GlyphInfo* glyph,
     }
 }
 
-// Helper to measure width of a string
+// Helper to measure width of a string (UTF-8 aware)
 int32_t TextComponent::MeasureLineWidth(const char* str, size_t len) const
 {
     if (!font || !str || len == 0)
         return 0;
 
     int32_t totalWidth = 0;
-    for (size_t i = 0; i < len; i++)
+    size_t i = 0;
+    while (i < len)
     {
-        const GlyphInfo* glyph = font->GetGlyph(str[i]);
+        uint32_t cp = DecodeUtf8(str, len, i);
+        const GlyphInfo* glyph = font->GetGlyphByCodepoint(cp);
         if (glyph)
         {
             totalWidth += glyph->advance;
@@ -548,8 +349,9 @@ std::vector<std::string> TextComponent::WrapTextWithFont(const BitmapFont* fontP
             continue;
         }
 
-        // Check if entire paragraph fits
-        int32_t paraWidth = fontPtr->MeasureWidth(para.c_str());
+        // Check if entire paragraph fits (account for pixel scale)
+        int32_t ps = (std::max)(1, pixelScale);
+        int32_t paraWidth = fontPtr->MeasureWidth(para.c_str()) * ps;
         if (paraWidth <= width)
         {
             result.push_back(para);
@@ -584,7 +386,7 @@ std::vector<std::string> TextComponent::WrapTextWithFont(const BitmapFont* fontP
         for (const auto& word : words)
         {
             std::string testLine = currentLine.empty() ? word : currentLine + " " + word;
-            int32_t testWidth = fontPtr->MeasureWidth(testLine.c_str());
+            int32_t testWidth = fontPtr->MeasureWidth(testLine.c_str()) * ps;
 
             if (testWidth <= width)
             {
@@ -598,7 +400,7 @@ std::vector<std::string> TextComponent::WrapTextWithFont(const BitmapFont* fontP
                     result.push_back(currentLine);
                 }
                 // Check if single word exceeds width
-                int32_t wordWidth = fontPtr->MeasureWidth(word.c_str());
+                int32_t wordWidth = fontPtr->MeasureWidth(word.c_str()) * ps;
                 if (wordWidth > width)
                 {
                     // Word is too long, add it anyway
@@ -634,15 +436,18 @@ void TextComponent::CalculateGlyphLayout(const BitmapFont* fontPtr, std::vector<
     // Word-wrap text
     std::vector<std::string> lines = WrapTextWithFont(fontPtr);
 
+    // Pixel scale factor
+    float ps = static_cast<float>((std::max)(1, pixelScale));
+
     // Calculate total text height
-    float lineHeightF = static_cast<float>(fontPtr->GetLineHeight());
+    float lineHeightF = static_cast<float>(fontPtr->GetLineHeight()) * ps;
     float totalTextHeight = lineHeightF * static_cast<float>(lines.size());
 
     // Get visual bounds for ascender/descender
     int32_t minY = 0, maxY = 0;
     fontPtr->GetVisualBounds(minY, maxY);
-    float ascenderHeight = static_cast<float>(-minY);
-    float descenderDepth = static_cast<float>(maxY);
+    float ascenderHeight = static_cast<float>(-minY) * ps;
+    float descenderDepth = static_cast<float>(maxY) * ps;
     float visualLineHeight = ascenderHeight + descenderDepth;
 
     // Calculate baseline Y position (relative to center)
@@ -680,8 +485,8 @@ void TextComponent::CalculateGlyphLayout(const BitmapFont* fontPtr, std::vector<
             continue;
         }
 
-        // Measure line width
-        float lineWidth = static_cast<float>(fontPtr->MeasureWidth(lineText.c_str()));
+        // Measure line width (scaled)
+        float lineWidth = static_cast<float>(fontPtr->MeasureWidth(lineText.c_str())) * ps;
 
         // Apply horizontal alignment (relative to center)
         float worldLineX = -containerW * 0.5f;
@@ -698,12 +503,15 @@ void TextComponent::CalculateGlyphLayout(const BitmapFont* fontPtr, std::vector<
                 break;
         }
 
-        // Process each character
+        // Process each character (UTF-8 aware)
         float cursorX = 0;
-        for (size_t i = 0; i < lineText.length(); i++)
+        size_t ci = 0;
+        size_t lineLen = lineText.length();
+        const char* lineData = lineText.c_str();
+        while (ci < lineLen)
         {
-            char c = lineText[i];
-            const GlyphInfo* glyph = fontPtr->GetGlyph(c);
+            uint32_t cp = DecodeUtf8(lineData, lineLen, ci);
+            const GlyphInfo* glyph = fontPtr->GetGlyphByCodepoint(cp);
             if (!glyph)
                 continue;
 
@@ -714,7 +522,7 @@ void TextComponent::CalculateGlyphLayout(const BitmapFont* fontPtr, std::vector<
             layout.worldY = worldLineY;
             outGlyphs.push_back(layout);
 
-            cursorX += glyph->advance;
+            cursorX += glyph->advance * ps;
         }
 
         worldLineY += lineHeightF;
@@ -738,43 +546,18 @@ bool TextComponent::RenderContent(const DekiObject* owner,
         return false;
 
     BitmapFont* fontPtr = nullptr;
-    bool usePreview = false;
 
-#ifdef DEKI_EDITOR
-    usePreview = (previewEnabled && previewSize > 0);
-    if (usePreview)
-    {
-        // Preview mode: compile on-demand (editor-only)
-        fontPtr = GetEditorFontVariant(font.source, previewSize, true);
-    }
-    else
-    {
-        // Sync font.guid with current fontSize so font.Get() loads the right variant
-        if (!font.source.empty() && fontSize > 0)
-        {
-            std::string expectedGuid = Deki::GenerateDeterministicGuid(
-                font.source + ":" + std::to_string(fontSize));
-            if (font.guid != expectedGuid)
-            {
-                font.guid = expectedGuid;
-                font.ptr = nullptr;
-                font.loadAttempted = false;
-            }
-        }
-    }
-#endif
+    // Editor hook: let external code handle font resolution (GUID sync, preview, baking)
+    if (s_fontResolveCallback)
+        fontPtr = s_fontResolveCallback(this);
 
-    // Unified path: same as embedded runtime
-    if (!usePreview)
+    // Runtime path: direct load from AssetRef
+    if (!fontPtr)
     {
         if (!font) return false;
         fontPtr = font.Get();
     }
 
-#ifdef DEKI_EDITOR
-    fontSizeUnavailable = (!usePreview && fontPtr == nullptr
-                           && !font.source.empty() && fontSize > 0);
-#endif
     if (!fontPtr || !fontPtr->GetAtlas())
         return false;
 
@@ -790,7 +573,8 @@ bool TextComponent::RenderContent(const DekiObject* owner,
         && m_cachedColor == color
         && m_cachedAlign == align
         && m_cachedVerticalAlign == verticalAlign
-        && m_cachedFont == fontPtr;
+        && m_cachedFont == fontPtr
+        && m_cachedPixelScale == pixelScale;
 
     if (cacheValid)
     {
@@ -837,21 +621,27 @@ bool TextComponent::RenderContent(const DekiObject* owner,
 
         const GlyphInfo* glyph = layout.glyph;
 
-        // Convert world position to buffer position (center + world offset)
-        int32_t dest_x = static_cast<int32_t>(std::floor(centerX + layout.worldX)) + glyph->offset_x;
-        int32_t dest_y = static_cast<int32_t>(std::floor(centerY + layout.worldY)) + glyph->offset_y;
+        int32_t ps = (std::max)(1, pixelScale);
 
-        // Calculate source rectangle in atlas
+        // Convert world position to buffer position (center + world offset, scaled)
+        int32_t dest_x = static_cast<int32_t>(std::floor(centerX + layout.worldX)) + glyph->offset_x * ps;
+        int32_t dest_y = static_cast<int32_t>(std::floor(centerY + layout.worldY)) + glyph->offset_y * ps;
+
+        // Calculate source rectangle in atlas (native size)
         int32_t src_x = glyph->x;
         int32_t src_y = glyph->y;
         int32_t glyph_w = glyph->width;
         int32_t glyph_h = glyph->height;
 
-        // Clip to buffer bounds
+        // Scaled dimensions in buffer
+        int32_t scaled_w = glyph_w * ps;
+        int32_t scaled_h = glyph_h * ps;
+
+        // Clip to buffer bounds (in scaled pixel space)
         int32_t clip_left = 0;
         int32_t clip_top = 0;
-        int32_t clip_right = glyph_w;
-        int32_t clip_bottom = glyph_h;
+        int32_t clip_right = scaled_w;
+        int32_t clip_bottom = scaled_h;
 
         if (dest_x < 0)
         {
@@ -898,14 +688,15 @@ bool TextComponent::RenderContent(const DekiObject* owner,
 
         for (int32_t py = clip_top; py < clip_bottom; py++)
         {
-            int32_t atlas_y = src_y + py;
+            // Map scaled pixel back to atlas pixel
+            int32_t atlas_y = src_y + py / ps;
             int32_t buf_y = dest_y + (py - clip_top);
             size_t atlas_row = atlas_y * atlas_width;
             size_t buf_row = buf_y * width;
 
             for (int32_t px = clip_left; px < clip_right; px++)
             {
-                int32_t atlas_x = src_x + px;
+                int32_t atlas_x = src_x + px / ps;
                 int32_t buf_x = dest_x + (px - clip_left);
 
                 // Get pixel from atlas
@@ -950,6 +741,7 @@ bool TextComponent::RenderContent(const DekiObject* owner,
     m_cachedAlign = align;
     m_cachedVerticalAlign = verticalAlign;
     m_cachedFont = fontPtr;
+    m_cachedPixelScale = pixelScale;
 
     // Compute tight vertical crop bounds (scan for first/last non-empty row)
     int32_t firstRow = height;

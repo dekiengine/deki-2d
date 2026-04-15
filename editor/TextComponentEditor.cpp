@@ -171,9 +171,48 @@ private:
         return "";
     }
 
+    std::string GetBdfVariantGuidFromData(const std::string& sourceGuid)
+    {
+        auto* pipeline = DekiEditor::AssetPipeline::Instance();
+        const DekiEditor::AssetInfo* fontInfo = pipeline->GetAssetInfoByGuid(sourceGuid);
+        if (!fontInfo)
+            return "";
+
+        namespace fs = std::filesystem;
+        std::string fontPath = (fs::path(pipeline->GetProjectPath()) / fontInfo->path).string();
+        std::string dataPath = fontPath + ".data";
+
+        if (!fs::exists(dataPath))
+            return "";
+
+        std::ifstream file(dataPath);
+        if (!file.is_open())
+            return "";
+
+        try
+        {
+            nlohmann::json j = nlohmann::json::parse(file);
+            if (j.contains("variants") &&
+                j["variants"].contains("bdf") &&
+                j["variants"]["bdf"].contains("guid"))
+            {
+                return j["variants"]["bdf"]["guid"].get<std::string>();
+            }
+        }
+        catch (...) {}
+
+        return "";
+    }
+
     void UpdateBakedFontGuid(TextComponent* textComp)
     {
-        if (!textComp || textComp->font.source.empty())
+        if (!textComp)
+            return;
+
+        // Resolve source GUID (font.source if set, otherwise font.guid IS the source)
+        std::string resolvedSource = textComp->font.source.empty()
+            ? textComp->font.guid : textComp->font.source;
+        if (resolvedSource.empty())
             return;
 
         // Store component pointer for destructor cleanup
@@ -185,16 +224,36 @@ private:
             : textComp->fontSize;
 
         // Check if anything rendering-relevant changed
-        bool sourceChanged = (textComp->font.source != m_LastSource);
+        bool sourceChanged = (resolvedSource != m_LastSource);
         bool sizeChanged = (actualRenderSize != m_LastRenderSize);
         bool previewStateChanged = (textComp->previewEnabled != m_LastPreviewEnabled);
 
         if (!sourceChanged && !sizeChanged && !previewStateChanged)
             return;
 
-        // Read the variant GUID from the font's .data file
-        // This is the actual GUID used when the font was baked
-        std::string variantGuid = GetVariantGuidFromData(textComp->font.source, textComp->fontSize);
+        // Read the variant GUID
+        // For BDF fonts, use deterministic GUID; for TTF, use fontSize key from .data
+        std::string variantGuid;
+        {
+            auto* pl = DekiEditor::AssetPipeline::Instance();
+            const DekiEditor::AssetInfo* fi = pl ? pl->GetAssetInfoByGuid(resolvedSource) : nullptr;
+            if (fi)
+            {
+                std::string ext = std::filesystem::path(fi->path).extension().string();
+                for (char& c : ext) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+                if (ext == ".bdf")
+                {
+                    variantGuid = Deki::GenerateDeterministicGuid(resolvedSource + ":bdf");
+                    // Ensure variant GUID is registered with AssetManager
+                    Deki::AssetManager::Get()->RegisterGuid(variantGuid, variantGuid);
+                    // Set font.source so subsequent lookups work
+                    if (textComp->font.source.empty())
+                        textComp->font.source = resolvedSource;
+                }
+                else
+                    variantGuid = GetVariantGuidFromData(resolvedSource, textComp->fontSize);
+            }
+        }
         if (!variantGuid.empty() && textComp->font.guid != variantGuid)
         {
             textComp->font.guid = variantGuid;
@@ -203,7 +262,7 @@ private:
         }
 
         // Cache ALL state including preview
-        m_LastSource = textComp->font.source;
+        m_LastSource = resolvedSource;
         m_LastRenderSize = actualRenderSize;
         m_LastPreviewEnabled = textComp->previewEnabled;
         m_LastPreviewSize = textComp->previewSize;
@@ -280,8 +339,38 @@ public:
         const std::string& sourceGuid = textComp->font.source.empty()
             ? textComp->font.guid : textComp->font.source;
 
-        // Draw custom fontSize dropdown with baked sizes only (right after font)
+        // Detect if font is BDF (check source extension)
+        bool isBdfFont = false;
         if (!sourceGuid.empty())
+        {
+            auto* pipeline = DekiEditor::AssetPipeline::Instance();
+            if (pipeline)
+            {
+                const DekiEditor::AssetInfo* fontInfo = pipeline->GetAssetInfoByGuid(sourceGuid);
+                if (fontInfo)
+                {
+                    std::string ext = std::filesystem::path(fontInfo->path).extension().string();
+                    for (char& c : ext) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+                    isBdfFont = (ext == ".bdf");
+                }
+            }
+        }
+
+        // Pixel Scale (useful for bitmap/BDF fonts, available for all)
+        {
+            float lw = ImGui::GetContentRegionAvail().x * 0.4f;
+            ImGui::AlignTextToFramePadding();
+            ImGui::Text("Pixel Scale");
+            ImGui::SameLine(lw);
+            ImGui::SetNextItemWidth(-1);
+            if (ImGui::InputInt("##pixelScale", &textComp->pixelScale))
+            {
+                textComp->pixelScale = (std::max)(1, (std::min)(8, textComp->pixelScale));
+            }
+        }
+
+        // Draw custom fontSize dropdown with baked sizes only (skip for BDF fonts)
+        if (!sourceGuid.empty() && !isBdfFont)
         {
             std::vector<int32_t> bakedSizes = GetBakedSizesFromData(sourceGuid);
 
@@ -357,8 +446,8 @@ public:
         gui.PropertyField("align");
         gui.PropertyField("verticalAlign");
 
-        // Font Preview section - allows testing different sizes without baking
-        if (!sourceGuid.empty())
+        // Font Preview section - allows testing different sizes without baking (TTF only)
+        if (!sourceGuid.empty() && !isBdfFont)
         {
             ImGui::Separator();
 
