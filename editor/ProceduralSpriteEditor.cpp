@@ -10,6 +10,7 @@
 
 #include <deki-editor/EditorExtension.h>
 #include <deki-editor/EditorRegistry.h>
+#include <deki-editor/EditorApplication.h>
 #include "imgui.h"
 #include <nlohmann/json.hpp>
 #include <vector>
@@ -250,6 +251,34 @@ static void RenderProceduralSpriteToRGBA(uint8_t* buffer, int32_t totalW, int32_
 // JSON Parsing Helpers
 // ============================================================================
 
+// Bold section header, matching the grouping style used in InspectorPanel /
+// ModuleManagerPanel. More prominent than SeparatorText because the label
+// uses the bold font and sits above a full-width separator line.
+static void SectionHeader(const char* title)
+{
+    ImGui::Spacing();
+    ImFont* boldFont = (ImGui::GetIO().Fonts->Fonts.Size > 1) ? ImGui::GetIO().Fonts->Fonts[1] : nullptr;
+    if (boldFont) ImGui::PushFont(boldFont);
+    ImGui::TextUnformatted(title);
+    if (boldFont) ImGui::PopFont();
+    ImGui::Separator();
+}
+
+// Group header — one level above SectionHeader. Uses the theme accent colour
+// so it's visibly distinct from the neutral white subsection titles, making
+// clear that everything that follows is part of this group (pair with
+// ImGui::Indent() / Unindent() around the grouped content).
+static void GroupHeader(const char* title)
+{
+    ImGui::Spacing();
+    ImFont* boldFont = (ImGui::GetIO().Fonts->Fonts.Size > 1) ? ImGui::GetIO().Fonts->Fonts[1] : nullptr;
+    if (boldFont) ImGui::PushFont(boldFont);
+    ImVec4 accent = ImGui::GetStyleColorVec4(ImGuiCol_CheckMark);
+    ImGui::TextColored(accent, "%s", title);
+    if (boldFont) ImGui::PopFont();
+    ImGui::Separator();
+}
+
 static void ParseBorderWidth(const nlohmann::json& data, int32_t& top, int32_t& right, int32_t& bottom, int32_t& left)
 {
     if (data.contains("border_width"))
@@ -322,6 +351,18 @@ static void ParseBorderRadius(const nlohmann::json& data, int32_t& tl, int32_t& 
             }
         }
     }
+}
+
+static void ParseNineSlice(const nlohmann::json& data, int32_t& top, int32_t& right, int32_t& bottom, int32_t& left)
+{
+    top = right = bottom = left = 0;
+    if (!data.contains("nine_slice")) return;
+    const auto& ns = data["nine_slice"];
+    if (!ns.is_array() || ns.size() < 4) return;
+    top    = ns[0].get<int32_t>();
+    right  = ns[1].get<int32_t>();
+    bottom = ns[2].get<int32_t>();
+    left   = ns[3].get<int32_t>();
 }
 
 static void ParseColor(const nlohmann::json& data, const char* key, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t& a)
@@ -436,14 +477,14 @@ public:
             auto data = nlohmann::json::parse(jsonData);
             bool modified = false;
 
-            ImGui::Separator();
-
-            if (ImGui::CollapsingHeader("Procedural Sprite", ImGuiTreeNodeFlags_DefaultOpen))
+            // Group header — accent-coloured so the subsections below read
+            // as belonging to "Procedural Sprite" without needing an indent.
+            GroupHeader("Procedural Sprite");
             {
-                ImGui::Indent();
-
-                // Dimensions
                 float lw = ImGui::GetContentRegionAvail().x * 0.4f;
+
+                // ── Dimensions ───────────────────────────────────────────
+                SectionHeader("Dimensions");
                 int width = data.value("width", 64);
                 int height = data.value("height", 64);
                 ImGui::AlignTextToFramePadding(); ImGui::Text("Width"); ImGui::SameLine(lw); ImGui::SetNextItemWidth(-1);
@@ -459,9 +500,8 @@ public:
                     modified = true;
                 }
 
-                ImGui::Separator();
-
-                // Background color
+                // ── Background ───────────────────────────────────────────
+                SectionHeader("Background");
                 float bgColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};
                 if (data.contains("background_color") && data["background_color"].is_array() && data["background_color"].size() >= 4)
                 {
@@ -470,7 +510,7 @@ public:
                     bgColor[2] = data["background_color"][2].get<int>() / 255.0f;
                     bgColor[3] = data["background_color"][3].get<int>() / 255.0f;
                 }
-                ImGui::AlignTextToFramePadding(); ImGui::Text("Background"); ImGui::SameLine(lw); ImGui::SetNextItemWidth(-1);
+                ImGui::AlignTextToFramePadding(); ImGui::Text("Color"); ImGui::SameLine(lw); ImGui::SetNextItemWidth(-1);
                 if (ImGui::ColorEdit4("##bgColor", bgColor))
                 {
                     data["background_color"] = {
@@ -482,9 +522,8 @@ public:
                     modified = true;
                 }
 
-                ImGui::Separator();
-                ImGui::Text("Border Width");
-
+                // ── Border Width ─────────────────────────────────────────
+                SectionHeader("Border Width");
                 int32_t bwTop = 0, bwRight = 0, bwBottom = 0, bwLeft = 0;
                 ParseBorderWidth(data, bwTop, bwRight, bwBottom, bwLeft);
 
@@ -504,9 +543,8 @@ public:
                     modified = true;
                 }
 
-                ImGui::Separator();
-                ImGui::Text("Border Color");
-
+                // ── Border Color ─────────────────────────────────────────
+                SectionHeader("Border Color");
                 float borderColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
                 if (data.contains("border_color") && data["border_color"].is_array() && data["border_color"].size() >= 4)
                 {
@@ -531,9 +569,8 @@ public:
                     modified = true;
                 }
 
-                ImGui::Separator();
-                ImGui::Text("Border Radius");
-
+                // ── Border Radius ────────────────────────────────────────
+                SectionHeader("Border Radius");
                 int32_t brTL = 0, brTR = 0, brBR = 0, brBL = 0;
                 ParseBorderRadius(data, brTL, brTR, brBR, brBL);
 
@@ -553,8 +590,21 @@ public:
                     modified = true;
                 }
 
-                ImGui::Separator();
+                // ── 9-Slice ──────────────────────────────────────────────
+                SectionHeader("9-Slice");
+                {
+                    int32_t nsTop = 0, nsRight = 0, nsBottom = 0, nsLeft = 0;
+                    ParseNineSlice(data, nsTop, nsRight, nsBottom, nsLeft);
+                    ImGui::Text("L:%d  R:%d  T:%d  B:%d", nsLeft, nsRight, nsTop, nsBottom);
+                    ImGui::SameLine();
+                    if (ImGui::Button("Edit 9-Slice..."))
+                    {
+                        EditorApplication::Get().RequestOpenTool(assetPath, /*cachePath*/ "");
+                    }
+                }
 
+                // ── Misc ─────────────────────────────────────────────────
+                SectionHeader("Misc");
                 bool antialiased = data.value("antialiased", false);
                 ImGui::AlignTextToFramePadding(); ImGui::Text("Antialiased"); ImGui::SameLine(lw);
                 if (ImGui::Checkbox("##antialiased", &antialiased))
@@ -563,7 +613,6 @@ public:
                     modified = true;
                 }
 
-                ImGui::Unindent();
             }
 
             if (modified)

@@ -59,23 +59,6 @@ static DekiObject* FindChildByName(DekiObject* parent, const char* name)
     return nullptr;
 }
 
-static DekiObject* FindOrCreateChild(DekiObject* parent, const char* name, const char* componentType)
-{
-    if (!parent) return nullptr;
-
-    DekiObject* found = FindChildByName(parent, name);
-    if (found) return found;
-
-#ifdef DEKI_EDITOR
-    DekiObject* child = new DekiObject(name);
-    parent->AddChild(child);
-    child->AddComponent(componentType);
-    return child;
-#else
-    return nullptr;
-#endif
-}
-
 DekiObject* ScrollComponent::CloneTemplate(DekiObject* tmpl, const char* name)
 {
     if (!tmpl || !item_prefab.Get()) return nullptr;
@@ -126,10 +109,12 @@ void ScrollComponent::EnsureChildObjects(DekiObject* owner)
         return;
     }
 
-    // Find or create Clip child on owner
-    m_ClipObj = FindOrCreateChild(owner, "Clip", "ClipComponent");
+    // Discover Clip child (must already exist; authored in the editor).
+    m_ClipObj = FindChildByName(owner, "Clip");
     if (!m_ClipObj)
     {
+        DEKI_LOG_WARNING("ScrollComponent: missing 'Clip' child on '%s'",
+                         owner->GetName().c_str());
         m_TemplateObj = nullptr;
         m_SlotObjs.clear();
         m_SlotItemIndices.clear();
@@ -141,31 +126,18 @@ void ScrollComponent::EnsureChildObjects(DekiObject* owner)
 
     if (mode == ScrollMode::Template)
     {
-        // Find the Template child (first child named "Template")
+        // Find the Template child (must already exist; authored in the editor).
         m_TemplateObj = FindChildByName(m_ClipObj, "Template");
-
-        // If no Template exists, instantiate from item_prefab
-        if (!m_TemplateObj && item_prefab.Get())
+        if (!m_TemplateObj)
         {
-            Prefab* ownerPrefab = owner->GetOwnerPrefab();
-            if (ownerPrefab)
-            {
-                DekiObject* instance = item_prefab.Get()->Instantiate(ownerPrefab);
-                if (instance)
-                {
-                    ownerPrefab->RemoveObject(instance);
-                    m_ClipObj->AddChild(instance);
-                    instance->SetName("Template");
-                    instance->SetOwnerPrefab(ownerPrefab);
-                    m_TemplateObj = instance;
-                }
-            }
+            DEKI_LOG_WARNING("ScrollComponent: missing 'Template' child on '%s'",
+                             owner->GetName().c_str());
+            m_SlotObjs.clear();
+            m_SlotItemIndices.clear();
+            return;
         }
 
-        if (m_TemplateObj)
-        {
-            m_TemplateObj->SetActive(false);  // Template is always hidden
-        }
+        m_TemplateObj->SetActive(false);  // Template is always hidden at runtime
 
         // Measure item size from template
         m_ItemSize = MeasureChildSize(m_TemplateObj);
@@ -190,22 +162,19 @@ void ScrollComponent::EnsureChildObjects(DekiObject* owner)
         int32_t totalSlots = GetTotalSlotCount();
 
         // Create missing slots by cloning template
-        if (m_TemplateObj)
+        while (static_cast<int32_t>(m_SlotObjs.size()) < totalSlots)
         {
-            while (static_cast<int32_t>(m_SlotObjs.size()) < totalSlots)
+            std::string name = "Slot" + std::to_string(m_SlotObjs.size());
+            DekiObject* slot = CloneTemplate(m_TemplateObj, name.c_str());
+            if (slot)
             {
-                std::string name = "Slot" + std::to_string(m_SlotObjs.size());
-                DekiObject* slot = CloneTemplate(m_TemplateObj, name.c_str());
-                if (slot)
-                {
-                    m_ClipObj->AddChild(slot);
-                    slot->SetActive(true);
-                    m_SlotObjs.push_back(slot);
-                }
-                else
-                {
-                    break;
-                }
+                m_ClipObj->AddChild(slot);
+                slot->SetActive(true);
+                m_SlotObjs.push_back(slot);
+            }
+            else
+            {
+                break;
             }
         }
 

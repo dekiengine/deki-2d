@@ -18,6 +18,8 @@
 #include "imgui.h"
 #include <nlohmann/json.hpp>
 #include <fstream>
+#include <filesystem>
+#include <deki-editor/EditorApplication.h>
 
 namespace DekiEditor
 {
@@ -54,6 +56,31 @@ static bool IsProceduralSpriteAsset(const std::string& assetPath)
     }
 
     return false;
+}
+
+// Bold section header matching ProceduralSpriteEditor. Field labels underneath
+// should feel subordinate — the bold font + separator achieves that.
+static void SectionHeader(const char* title)
+{
+    ImGui::Spacing();
+    ImFont* boldFont = (ImGui::GetIO().Fonts->Fonts.Size > 1) ? ImGui::GetIO().Fonts->Fonts[1] : nullptr;
+    if (boldFont) ImGui::PushFont(boldFont);
+    ImGui::TextUnformatted(title);
+    if (boldFont) ImGui::PopFont();
+    ImGui::Separator();
+}
+
+// Group header — one level above SectionHeader, accent-coloured so the
+// subsections visibly belong to this group (pair with Indent/Unindent).
+static void GroupHeader(const char* title)
+{
+    ImGui::Spacing();
+    ImFont* boldFont = (ImGui::GetIO().Fonts->Fonts.Size > 1) ? ImGui::GetIO().Fonts->Fonts[1] : nullptr;
+    if (boldFont) ImGui::PushFont(boldFont);
+    ImVec4 accent = ImGui::GetStyleColorVec4(ImGuiCol_CheckMark);
+    ImGui::TextColored(accent, "%s", title);
+    if (boldFont) ImGui::PopFont();
+    ImGui::Separator();
 }
 
 // Helper functions for parsing ProceduralSprite JSON
@@ -199,6 +226,16 @@ public:
             }
         }
 
+        // In Tiled/NineSlice modes the on-screen quad expands to width/height
+        // (per-axis; 0 keeps the native fallback above). Selection bounds must
+        // match the rendered quad, not the source texture.
+        if (spriteComp->render_mode == SpriteRenderMode::Tiled ||
+            spriteComp->render_mode == SpriteRenderMode::NineSlice)
+        {
+            if (spriteComp->width  > 0) displayWidth  = static_cast<float>(spriteComp->width);
+            if (spriteComp->height > 0) displayHeight = static_cast<float>(spriteComp->height);
+        }
+
         outWidth = displayWidth;
         outHeight = displayHeight;
         return true;
@@ -206,19 +243,10 @@ public:
 
     bool WantsInspectorOverride(DekiComponent* comp) override
     {
-        auto* spriteComp = static_cast<SpriteComponent*>(comp);
-        if (!spriteComp)
-            return false;
-
-        const std::string& spriteGuid = spriteComp->sprite.guid;
-        if (spriteGuid.empty())
-            return false;
-
-        // Resolve GUID to absolute asset path
-        std::string assetPath = AssetDatabase::GUIDToAbsolutePath(spriteGuid);
-
-        // Check if it's a ProceduralSprite
-        return IsProceduralSpriteAsset(assetPath);
+        // Always override: we draw the standard properties manually so we can
+        // inject the 9-slice editing UI for both procedural (.asset) and
+        // normal (.png) sprites in addition to the auto-reflected fields.
+        return comp != nullptr;
     }
 
     void OnInspectorGUI(DekiComponent* comp) override
@@ -237,15 +265,20 @@ public:
         EditorGUI::Get().PropertyField("tint_color");
         EditorGUI::Get().PropertyField("ignore_clip");
         EditorGUI::Get().PropertyField("sortingOrder");
+        EditorGUI::Get().PropertyField("render_mode");
+        EditorGUI::Get().PropertyField("width");
+        EditorGUI::Get().PropertyField("height");
 
         if (!IsProceduralSpriteAsset(assetPath))
         {
-            // Regular sprite - no additional properties
+            // Regular sprite: expose 9-slice border editing via the .png.data sidecar.
+            DrawNormalSpriteNineSliceUI(assetPath, spriteGuid);
             return;
         }
 
-        ImGui::Separator();
-        ImGui::Text("Procedural Sprite");
+        // Group header — accent-coloured so the subsections below read as
+        // belonging to "Procedural Sprite" without needing an indent.
+        GroupHeader("Procedural Sprite");
 
         // Read the ProceduralSprite JSON
         std::ifstream file(assetPath);
@@ -272,8 +305,10 @@ public:
         nlohmann::json jsonData = originalData;
         bool modified = false;
 
-        // Dimensions
         float lw = ImGui::GetContentRegionAvail().x * 0.4f;
+
+        // ── Dimensions ───────────────────────────────────────────────────
+        SectionHeader("Dimensions");
         int width = jsonData.value("width", 64);
         int height = jsonData.value("height", 64);
         ImGui::AlignTextToFramePadding(); ImGui::Text("Width"); ImGui::SameLine(lw); ImGui::SetNextItemWidth(-1);
@@ -289,7 +324,8 @@ public:
             modified = true;
         }
 
-        // Background color
+        // ── Background ───────────────────────────────────────────────────
+        SectionHeader("Background");
         float bgColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};
         if (jsonData.contains("background_color") && jsonData["background_color"].is_array() && jsonData["background_color"].size() >= 4)
         {
@@ -298,7 +334,7 @@ public:
             bgColor[2] = jsonData["background_color"][2].get<int>() / 255.0f;
             bgColor[3] = jsonData["background_color"][3].get<int>() / 255.0f;
         }
-        ImGui::AlignTextToFramePadding(); ImGui::Text("Background"); ImGui::SameLine(lw); ImGui::SetNextItemWidth(-1);
+        ImGui::AlignTextToFramePadding(); ImGui::Text("Color"); ImGui::SameLine(lw); ImGui::SetNextItemWidth(-1);
         if (ImGui::ColorEdit4("##bgColor", bgColor))
         {
             jsonData["background_color"] = {
@@ -310,8 +346,8 @@ public:
             modified = true;
         }
 
-        // Border Width
-        ImGui::Text("Border Width");
+        // ── Border Width ─────────────────────────────────────────────────
+        SectionHeader("Border Width");
         int32_t bwTop = 0, bwRight = 0, bwBottom = 0, bwLeft = 0;
         ParseBorderWidth(jsonData, bwTop, bwRight, bwBottom, bwLeft);
 
@@ -331,8 +367,8 @@ public:
             modified = true;
         }
 
-        // Border Color
-        ImGui::Text("Border Color");
+        // ── Border Color ─────────────────────────────────────────────────
+        SectionHeader("Border Color");
         float borderColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
         if (jsonData.contains("border_color") && jsonData["border_color"].is_array() && jsonData["border_color"].size() >= 4)
         {
@@ -357,8 +393,8 @@ public:
             modified = true;
         }
 
-        // Border Radius
-        ImGui::Text("Border Radius");
+        // ── Border Radius ────────────────────────────────────────────────
+        SectionHeader("Border Radius");
         int32_t brTL = 0, brTR = 0, brBR = 0, brBL = 0;
         ParseBorderRadius(jsonData, brTL, brTR, brBR, brBL);
 
@@ -378,7 +414,27 @@ public:
             modified = true;
         }
 
-        // Antialiased
+        // ── 9-Slice ──────────────────────────────────────────────────────
+        SectionHeader("9-Slice");
+        {
+            int32_t nsTop = 0, nsRight = 0, nsBottom = 0, nsLeft = 0;
+            if (jsonData.contains("nine_slice") && jsonData["nine_slice"].is_array() && jsonData["nine_slice"].size() >= 4)
+            {
+                nsTop    = jsonData["nine_slice"][0].get<int32_t>();
+                nsRight  = jsonData["nine_slice"][1].get<int32_t>();
+                nsBottom = jsonData["nine_slice"][2].get<int32_t>();
+                nsLeft   = jsonData["nine_slice"][3].get<int32_t>();
+            }
+            ImGui::Text("L:%d  R:%d  T:%d  B:%d", nsLeft, nsRight, nsTop, nsBottom);
+            ImGui::SameLine();
+            if (ImGui::Button("Edit 9-Slice..."))
+            {
+                EditorApplication::Get().RequestOpenTool(assetPath, /*cachePath*/ "");
+            }
+        }
+
+        // ── Misc ─────────────────────────────────────────────────────────
+        SectionHeader("Misc");
         bool antialiased = jsonData.value("antialiased", false);
         ImGui::AlignTextToFramePadding(); ImGui::Text("Antialiased"); ImGui::SameLine(lw);
         if (ImGui::Checkbox("##antialiased", &antialiased))
@@ -396,6 +452,54 @@ public:
                 originalData.dump(2),
                 jsonData.dump(2)
             );
+        }
+    }
+
+private:
+    // Reads the current 9-slice borders from the .png.data sidecar (if any) and
+    // shows a summary line + "Edit 9-Slice..." button. The window handles the
+    // actual edit + save round-trip.
+    void DrawNormalSpriteNineSliceUI(const std::string& assetPath, const std::string& spriteGuid)
+    {
+        (void)spriteGuid;
+        if (assetPath.empty())
+            return;
+
+        ImGui::Separator();
+
+        int32_t nsTop = 0, nsRight = 0, nsBottom = 0, nsLeft = 0;
+        std::string dataPath = assetPath + ".data";
+        if (std::filesystem::exists(dataPath))
+        {
+            std::ifstream in(dataPath);
+            if (in.is_open())
+            {
+                try
+                {
+                    nlohmann::json dataJson;
+                    in >> dataJson;
+                    const nlohmann::json* node = nullptr;
+                    if (dataJson.contains("settings") && dataJson["settings"].contains("nine_slice"))
+                        node = &dataJson["settings"]["nine_slice"];
+                    else if (dataJson.contains("nine_slice"))
+                        node = &dataJson["nine_slice"];
+                    if (node && node->is_array() && node->size() >= 4)
+                    {
+                        nsTop    = (*node)[0].get<int32_t>();
+                        nsRight  = (*node)[1].get<int32_t>();
+                        nsBottom = (*node)[2].get<int32_t>();
+                        nsLeft   = (*node)[3].get<int32_t>();
+                    }
+                }
+                catch (...) {}
+            }
+        }
+
+        ImGui::Text("9-slice  L:%d  R:%d  T:%d  B:%d", nsLeft, nsRight, nsTop, nsBottom);
+        ImGui::SameLine();
+        if (ImGui::Button("Edit 9-Slice..."))
+        {
+            EditorApplication::Get().RequestOpenTool(assetPath, /*cachePath*/ "");
         }
     }
 };

@@ -9,6 +9,21 @@
 #include "reflection/DekiProperty.h"
 
 /**
+ * @brief How a SpriteComponent draws its sprite.
+ *
+ * Normal    - Single quad at the sprite's native size (default).
+ * Tiled     - Repeat the sprite to fill render_width x render_height.
+ * NineSlice - 9-slice scale to render_width x render_height. Requires the
+ *             sprite to have has_nine_slice = true with valid borders.
+ */
+enum class SpriteRenderMode : uint8_t
+{
+    Normal    = 0,
+    Tiled     = 1,
+    NineSlice = 2,
+};
+
+/**
  * @brief Sprite component for entities that have visual representation
  */
 class SpriteComponent : public RendererComponent
@@ -30,6 +45,21 @@ public:
     // Tint color (white = no tint)
     DEKI_EXPORT
     deki::Color tint_color;
+
+    // Render mode: single quad / tiled / 9-slice
+    DEKI_EXPORT
+    SpriteRenderMode render_mode = SpriteRenderMode::Normal;
+
+    // Rendered size used by Tiled and NineSlice modes (0 = sprite native size).
+    // The sprite is baked into a buffer of these dimensions, so the on-screen
+    // quad expands accordingly while the transform's scale stays the same.
+    DEKI_VISIBLE_WHEN(render_mode, Tiled, NineSlice)
+    DEKI_EXPORT
+    int32_t width;
+
+    DEKI_VISIBLE_WHEN(render_mode, Tiled, NineSlice)
+    DEKI_EXPORT
+    int32_t height;
 
     SpriteComponent(Sprite* spr = nullptr);
 
@@ -82,6 +112,13 @@ private:
     uint8_t* m_cachedFrameBuffer = nullptr;
     size_t m_cachedFrameSize = 0;
 
+    // Cached pre-baked buffer for Tiled / NineSlice modes (re-baked on size/source/mode change)
+    uint8_t*         m_cachedRenderBuffer = nullptr;
+    size_t           m_cachedRenderSize   = 0;
+    int32_t          m_cachedRenderW      = 0;
+    int32_t          m_cachedRenderH      = 0;
+    const Sprite*    m_cachedRenderSrc    = nullptr;
+    SpriteRenderMode m_cachedRenderMode   = SpriteRenderMode::Normal;
 };
 
 // Generated property metadata (after class definition for offsetof)

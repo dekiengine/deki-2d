@@ -154,6 +154,34 @@ class Sprite : public Texture2D
     static Sprite* CreateNineSlice(Sprite* source, int32_t target_width, int32_t target_height);
 
     /**
+     * @brief Tile a source sprite into a caller-owned pixel buffer.
+     *
+     * Same algorithm as CreateTiled() but writes into an externally managed
+     * buffer. Used by SpriteComponent's render-mode cache to avoid allocating
+     * a new Sprite per resize.
+     *
+     * @param dst Destination buffer of size dst_w * dst_h * bytesPerPixel(source->format)
+     * @param dst_w Destination width
+     * @param dst_h Destination height
+     * @param source Source sprite to tile (must be valid, dimensions > 0)
+     */
+    static void BakeTiledInto(uint8_t* dst, int32_t dst_w, int32_t dst_h, const Sprite* source);
+
+    /**
+     * @brief 9-slice scale a source sprite into a caller-owned pixel buffer.
+     *
+     * Same 9-region algorithm as CreateNineSlice() but writes into an
+     * externally managed buffer. Caller must ensure source->has_nine_slice
+     * is true and dst_w/dst_h >= nine_slice border totals.
+     *
+     * @param dst Destination buffer of size dst_w * dst_h * bytesPerPixel(source->format)
+     * @param dst_w Destination width
+     * @param dst_h Destination height
+     * @param source Source sprite with valid 9-slice metadata
+     */
+    static void BakeNineSliceInto(uint8_t* dst, int32_t dst_w, int32_t dst_h, const Sprite* source);
+
+    /**
      * @brief Sets 9-slice borders for this sprite
      *
      * This enables 9-slice scaling for the sprite. Use this for sprites loaded

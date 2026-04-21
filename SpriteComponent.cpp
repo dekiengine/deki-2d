@@ -21,6 +21,9 @@ SpriteComponent::SpriteComponent(Sprite* spr)
 , frame_width(0)  // 0 means use full sprite width
 , frame_height(0) // 0 means use full sprite height
 , tint_color(deki::Color::White)
+, render_mode(SpriteRenderMode::Normal)
+, width(0)
+, height(0)
 , m_cachedFrameBuffer(nullptr)
 , m_cachedFrameSize(0)
 {
@@ -92,6 +95,15 @@ void SpriteComponent::UnloadAssets()
     delete[] m_cachedFrameBuffer;
     m_cachedFrameBuffer = nullptr;
     m_cachedFrameSize = 0;
+
+    // Free cached Tiled/NineSlice bake buffer
+    delete[] m_cachedRenderBuffer;
+    m_cachedRenderBuffer = nullptr;
+    m_cachedRenderSize   = 0;
+    m_cachedRenderW      = 0;
+    m_cachedRenderH      = 0;
+    m_cachedRenderSrc    = nullptr;
+    m_cachedRenderMode   = SpriteRenderMode::Normal;
 }
 
 // ============================================================
@@ -124,6 +136,87 @@ bool SpriteComponent::RenderContent(const DekiObject* owner,
                      spr->format == Texture2D::TextureFormat::RGB565A8);
     bool hasAlpha = spr->has_alpha;
     int32_t bytesPerPixel = Texture2D::GetBytesPerPixel(spr->format);
+
+    // Tiled / NineSlice: stretch the whole sprite into a cached bake buffer.
+    // These modes are mutually exclusive with animation frame extraction.
+    // width/height of 0 means "use sprite native size" (matches the
+    // frame_width=0 convention elsewhere in this component).
+    if (render_mode == SpriteRenderMode::Tiled || render_mode == SpriteRenderMode::NineSlice)
+    {
+        int32_t target_w = (width  > 0) ? width  : spr->width;
+        int32_t target_h = (height > 0) ? height : spr->height;
+
+        // Hard guard: bake helpers assume positive dims and at least 1 source
+        // pixel per axis. Refuse degenerate input rather than crash.
+        if (target_w <= 0 || target_h <= 0 || spr->width <= 0 || spr->height <= 0)
+        {
+            DEKI_LOG_ERROR("SpriteComponent: invalid dims (target %dx%d, sprite %dx%d)",
+                           target_w, target_h, spr->width, spr->height);
+            return false;
+        }
+
+        if (render_mode == SpriteRenderMode::NineSlice)
+        {
+            if (!spr->has_nine_slice)
+            {
+                DEKI_LOG_ERROR("SpriteComponent: NineSlice mode but sprite has no 9-slice borders");
+                return false;
+            }
+            int32_t min_w = spr->nine_slice_left + spr->nine_slice_right;
+            int32_t min_h = spr->nine_slice_top  + spr->nine_slice_bottom;
+            // Borders must also fit inside the SOURCE — otherwise BakeNineSliceInto
+            // computes a negative center region and corner reads can underflow.
+            if (min_w >= spr->width || min_h >= spr->height)
+            {
+                DEKI_LOG_ERROR("SpriteComponent: 9-slice borders %dx%d exceed source size %dx%d",
+                               min_w, min_h, spr->width, spr->height);
+                return false;
+            }
+            if (target_w < min_w || target_h < min_h)
+            {
+                DEKI_LOG_ERROR("SpriteComponent: 9-slice target %dx%d smaller than borders %dx%d",
+                               target_w, target_h, min_w, min_h);
+                return false;
+            }
+        }
+
+        // (Re-)bake when source / size / mode changed
+        if (m_cachedRenderSrc != spr ||
+            m_cachedRenderW   != target_w ||
+            m_cachedRenderH   != target_h ||
+            m_cachedRenderMode != render_mode)
+        {
+            size_t need = (size_t)target_w * (size_t)target_h * (size_t)bytesPerPixel;
+            if (m_cachedRenderSize != need)
+            {
+                delete[] m_cachedRenderBuffer;
+                m_cachedRenderBuffer = new uint8_t[need];
+                m_cachedRenderSize   = need;
+            }
+            if (render_mode == SpriteRenderMode::NineSlice)
+                Sprite::BakeNineSliceInto(m_cachedRenderBuffer, target_w, target_h, spr);
+            else
+                Sprite::BakeTiledInto(m_cachedRenderBuffer, target_w, target_h, spr);
+
+            m_cachedRenderSrc  = spr;
+            m_cachedRenderW    = target_w;
+            m_cachedRenderH    = target_h;
+            m_cachedRenderMode = render_mode;
+        }
+
+        outSource = QuadBlit::MakeSource(
+            m_cachedRenderBuffer,
+            target_w,
+            target_h,
+            bytesPerPixel,
+            hasAlpha,
+            isRGB565,
+            false  // ownsPixels = false - component owns this buffer
+        );
+        outPivotX = spr->pivot_x;
+        outPivotY = spr->pivot_y;
+        return true;
+    }
 
     // Use component frame settings, or sprite defaults if component doesn't specify
     int32_t effectiveFrameWidth = (frame_width > 0) ? frame_width : spr->default_frame_width;

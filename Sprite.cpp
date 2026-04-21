@@ -195,7 +195,22 @@ Sprite* Sprite::Load(const char* file_path)
                 sprite->default_frame_width = frameWidth;
                 sprite->default_frame_height = frameHeight;
 
-                DEKI_LOG_INTERNAL("  Sprite metadata: frame %dx%d", frameWidth, frameHeight);
+                // Optional 9-slice tail (1 byte flag + 4 * uint16) — chunk_size 17+
+                if (chunk_size >= 17)
+                {
+                    const uint8_t* nine = metadata + offset + 8;
+                    if (nine[0])
+                    {
+                        sprite->has_nine_slice    = true;
+                        sprite->nine_slice_left   = *(uint16_t*)(nine + 1);
+                        sprite->nine_slice_right  = *(uint16_t*)(nine + 3);
+                        sprite->nine_slice_top    = *(uint16_t*)(nine + 5);
+                        sprite->nine_slice_bottom = *(uint16_t*)(nine + 7);
+                    }
+                }
+
+                DEKI_LOG_INTERNAL("  Sprite metadata: frame %dx%d, 9-slice=%d",
+                                  frameWidth, frameHeight, sprite->has_nine_slice ? 1 : 0);
             }
             else if (chunk_type == 2 && chunk_size >= 2)  // Frame list chunk
             {
@@ -399,6 +414,19 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
                 {
                     sprite->default_frame_width = *(int32_t*)(metadata + offset);
                     sprite->default_frame_height = *(int32_t*)(metadata + offset + sizeof(int32_t));
+
+                    if (chunk_size >= 17)
+                    {
+                        const uint8_t* nine = metadata + offset + 8;
+                        if (nine[0])
+                        {
+                            sprite->has_nine_slice    = true;
+                            sprite->nine_slice_left   = *(uint16_t*)(nine + 1);
+                            sprite->nine_slice_right  = *(uint16_t*)(nine + 3);
+                            sprite->nine_slice_top    = *(uint16_t*)(nine + 5);
+                            sprite->nine_slice_bottom = *(uint16_t*)(nine + 7);
+                        }
+                    }
                 }
                 else if (chunk_type == 2 && chunk_size >= 2)
                 {
@@ -578,6 +606,28 @@ Sprite* Sprite::CreateSolidRGBA(int32_t width, int32_t height, uint8_t r, uint8_
     return sprite;
 }
 
+void Sprite::BakeTiledInto(uint8_t* dst, int32_t dst_w, int32_t dst_h, const Sprite* source)
+{
+    uint32_t bytes_per_pixel = Texture2D::GetBytesPerPixel(source->format);
+
+    for (int32_t y = 0; y < dst_h; ++y)
+    {
+        int32_t src_y = y % source->height;
+        for (int32_t x = 0; x < dst_w; ++x)
+        {
+            int32_t src_x = x % source->width;
+
+            int32_t dst_idx = (y * dst_w + x) * bytes_per_pixel;
+            int32_t src_idx = (src_y * source->width + src_x) * bytes_per_pixel;
+
+            for (uint32_t i = 0; i < bytes_per_pixel; ++i)
+            {
+                dst[dst_idx + i] = source->data[src_idx + i];
+            }
+        }
+    }
+}
+
 Sprite* Sprite::CreateTiled(Sprite* source, int32_t target_width, int32_t target_height)
 {
     if (!source || !source->data || source->width <= 0 || source->height <= 0 || target_width <= 0 ||
@@ -601,7 +651,7 @@ Sprite* Sprite::CreateTiled(Sprite* source, int32_t target_width, int32_t target
     tiled->transparent_g = source->transparent_g;
     tiled->transparent_b = source->transparent_b;
 
-        uint32_t bytes_per_pixel = Texture2D::GetBytesPerPixel(source->format);
+    uint32_t bytes_per_pixel = Texture2D::GetBytesPerPixel(source->format);
     size_t tiled_data_size = target_width * target_height * bytes_per_pixel;
     tiled->data = (uint8_t*)DekiMemoryProvider::Allocate(tiled_data_size, true);
 
@@ -611,27 +661,7 @@ Sprite* Sprite::CreateTiled(Sprite* source, int32_t target_width, int32_t target
         return nullptr;
     }
 
-    // Tile the source sprite to fill the target dimensions
-    for (int32_t y = 0; y < target_height; ++y)
-    {
-        for (int32_t x = 0; x < target_width; ++x)
-        {
-            // Calculate source pixel coordinates using modulo for tiling
-            int32_t src_x = x % source->width;
-            int32_t src_y = y % source->height;
-
-            // Calculate indices
-            int32_t dst_idx = (y * target_width + x) * bytes_per_pixel;
-            int32_t src_idx = (src_y * source->width + src_x) * bytes_per_pixel;
-
-            // Copy pixel data
-            for (uint32_t i = 0; i < bytes_per_pixel; ++i)
-            {
-                tiled->data[dst_idx + i] = source->data[src_idx + i];
-            }
-        }
-    }
-
+    BakeTiledInto(tiled->data, target_width, target_height, source);
     return tiled;
 }
 
@@ -657,66 +687,9 @@ bool Sprite::SetNineSliceBorders(uint16_t left, uint16_t right, uint16_t top, ui
     return true;
 }
 
-Sprite* Sprite::CreateNineSlice(Sprite* source, int32_t target_width, int32_t target_height)
+void Sprite::BakeNineSliceInto(uint8_t* dst, int32_t target_width, int32_t target_height, const Sprite* source)
 {
-    // Validate input
-    if (!source || !source->data)
-    {
-        DEKI_LOG_ERROR("CreateNineSlice: Invalid source sprite");
-        return nullptr;
-    }
-
-    if (!source->has_nine_slice)
-    {
-        DEKI_LOG_ERROR("CreateNineSlice: Source sprite does not have 9-slice data");
-        return nullptr;
-    }
-
-    // Validate target dimensions
-    int32_t min_width = source->nine_slice_left + source->nine_slice_right;
-    int32_t min_height = source->nine_slice_top + source->nine_slice_bottom;
-
-    if (target_width < min_width || target_height < min_height)
-    {
-        DEKI_LOG_ERROR("CreateNineSlice: Target size %dx%d too small (min: %dx%d)",
-                      target_width, target_height, min_width, min_height);
-        return nullptr;
-    }
-
-    // Create new sprite
-    Sprite* result = new Sprite();
-    result->width = target_width;
-    result->height = target_height;
-    result->format = source->format;
-    result->has_transparency = source->has_transparency;
-    result->has_alpha = source->has_alpha;
-
-    // Copy sprite properties
-    result->pivot_x = source->pivot_x;
-    result->pivot_y = source->pivot_y;
-    result->pixels_per_unit = source->pixels_per_unit;
-    result->transparent_r = source->transparent_r;
-    result->transparent_g = source->transparent_g;
-    result->transparent_b = source->transparent_b;
-
-    // Copy 9-slice properties
-    result->has_nine_slice = source->has_nine_slice;
-    result->nine_slice_left = source->nine_slice_left;
-    result->nine_slice_right = source->nine_slice_right;
-    result->nine_slice_top = source->nine_slice_top;
-    result->nine_slice_bottom = source->nine_slice_bottom;
-
-    // Allocate pixel data
-        uint32_t bytes_per_pixel = Texture2D::GetBytesPerPixel(source->format);
-    size_t result_data_size = target_width * target_height * bytes_per_pixel;
-    result->data = (uint8_t*)DekiMemoryProvider::Allocate(result_data_size, true, "Sprite::CreateNineSlice");
-
-    if (!result->data)
-    {
-        DEKI_LOG_ERROR("CreateNineSlice: Failed to allocate memory for scaled sprite");
-        delete result;
-        return nullptr;
-    }
+    uint32_t bytes_per_pixel = Texture2D::GetBytesPerPixel(source->format);
 
     // Calculate region dimensions
     // Source regions
@@ -776,65 +749,125 @@ Sprite* Sprite::CreateNineSlice(Sprite* source, int32_t target_width, int32_t ta
     // Top-left corner (copy as-is)
     if (src_left > 0 && src_top > 0)
     {
-        CopyRegion(result->data, target_width, 0, 0, dst_left, dst_top,
+        CopyRegion(dst, target_width, 0, 0, dst_left, dst_top,
                   source->data, source->width, 0, 0, src_left, src_top, bytes_per_pixel);
     }
 
     // Top edge (stretch horizontally)
     if (src_top > 0 && src_center_w > 0)
     {
-        CopyRegion(result->data, target_width, dst_left, 0, dst_center_w, dst_top,
+        CopyRegion(dst, target_width, dst_left, 0, dst_center_w, dst_top,
                   source->data, source->width, src_left, 0, src_center_w, src_top, bytes_per_pixel);
     }
 
     // Top-right corner (copy as-is)
     if (src_right > 0 && src_top > 0)
     {
-        CopyRegion(result->data, target_width, target_width - dst_right, 0, dst_right, dst_top,
+        CopyRegion(dst, target_width, target_width - dst_right, 0, dst_right, dst_top,
                   source->data, source->width, source->width - src_right, 0, src_right, src_top, bytes_per_pixel);
     }
 
     // Left edge (stretch vertically)
     if (src_left > 0 && src_center_h > 0)
     {
-        CopyRegion(result->data, target_width, 0, dst_top, dst_left, dst_center_h,
+        CopyRegion(dst, target_width, 0, dst_top, dst_left, dst_center_h,
                   source->data, source->width, 0, src_top, src_left, src_center_h, bytes_per_pixel);
     }
 
     // Center (stretch both directions)
     if (src_center_w > 0 && src_center_h > 0)
     {
-        CopyRegion(result->data, target_width, dst_left, dst_top, dst_center_w, dst_center_h,
+        CopyRegion(dst, target_width, dst_left, dst_top, dst_center_w, dst_center_h,
                   source->data, source->width, src_left, src_top, src_center_w, src_center_h, bytes_per_pixel);
     }
 
     // Right edge (stretch vertically)
     if (src_right > 0 && src_center_h > 0)
     {
-        CopyRegion(result->data, target_width, target_width - dst_right, dst_top, dst_right, dst_center_h,
+        CopyRegion(dst, target_width, target_width - dst_right, dst_top, dst_right, dst_center_h,
                   source->data, source->width, source->width - src_right, src_top, src_right, src_center_h, bytes_per_pixel);
     }
 
     // Bottom-left corner (copy as-is)
     if (src_left > 0 && src_bottom > 0)
     {
-        CopyRegion(result->data, target_width, 0, target_height - dst_bottom, dst_left, dst_bottom,
+        CopyRegion(dst, target_width, 0, target_height - dst_bottom, dst_left, dst_bottom,
                   source->data, source->width, 0, source->height - src_bottom, src_left, src_bottom, bytes_per_pixel);
     }
 
     // Bottom edge (stretch horizontally)
     if (src_center_w > 0 && src_bottom > 0)
     {
-        CopyRegion(result->data, target_width, dst_left, target_height - dst_bottom, dst_center_w, dst_bottom,
+        CopyRegion(dst, target_width, dst_left, target_height - dst_bottom, dst_center_w, dst_bottom,
                   source->data, source->width, src_left, source->height - src_bottom, src_center_w, src_bottom, bytes_per_pixel);
     }
 
     // Bottom-right corner (copy as-is)
     if (src_right > 0 && src_bottom > 0)
     {
-        CopyRegion(result->data, target_width, target_width - dst_right, target_height - dst_bottom, dst_right, dst_bottom,
+        CopyRegion(dst, target_width, target_width - dst_right, target_height - dst_bottom, dst_right, dst_bottom,
                   source->data, source->width, source->width - src_right, source->height - src_bottom, src_right, src_bottom, bytes_per_pixel);
     }
+}
+
+Sprite* Sprite::CreateNineSlice(Sprite* source, int32_t target_width, int32_t target_height)
+{
+    // Validate input
+    if (!source || !source->data)
+    {
+        DEKI_LOG_ERROR("CreateNineSlice: Invalid source sprite");
+        return nullptr;
+    }
+
+    if (!source->has_nine_slice)
+    {
+        DEKI_LOG_ERROR("CreateNineSlice: Source sprite does not have 9-slice data");
+        return nullptr;
+    }
+
+    // Validate target dimensions
+    int32_t min_width = source->nine_slice_left + source->nine_slice_right;
+    int32_t min_height = source->nine_slice_top + source->nine_slice_bottom;
+
+    if (target_width < min_width || target_height < min_height)
+    {
+        DEKI_LOG_ERROR("CreateNineSlice: Target size %dx%d too small (min: %dx%d)",
+                      target_width, target_height, min_width, min_height);
+        return nullptr;
+    }
+
+    Sprite* result = new Sprite();
+    result->width = target_width;
+    result->height = target_height;
+    result->format = source->format;
+    result->has_transparency = source->has_transparency;
+    result->has_alpha = source->has_alpha;
+
+    result->pivot_x = source->pivot_x;
+    result->pivot_y = source->pivot_y;
+    result->pixels_per_unit = source->pixels_per_unit;
+    result->transparent_r = source->transparent_r;
+    result->transparent_g = source->transparent_g;
+    result->transparent_b = source->transparent_b;
+
+    result->has_nine_slice = source->has_nine_slice;
+    result->nine_slice_left = source->nine_slice_left;
+    result->nine_slice_right = source->nine_slice_right;
+    result->nine_slice_top = source->nine_slice_top;
+    result->nine_slice_bottom = source->nine_slice_bottom;
+
+    uint32_t bytes_per_pixel = Texture2D::GetBytesPerPixel(source->format);
+    size_t result_data_size = target_width * target_height * bytes_per_pixel;
+    result->data = (uint8_t*)DekiMemoryProvider::Allocate(result_data_size, true, "Sprite::CreateNineSlice");
+
+    if (!result->data)
+    {
+        DEKI_LOG_ERROR("CreateNineSlice: Failed to allocate memory for scaled sprite");
+        delete result;
+        return nullptr;
+    }
+
+    BakeNineSliceInto(result->data, target_width, target_height, source);
 
     DEKI_LOG_INTERNAL("Created 9-slice sprite: %dx%d -> %dx%d",
                   source->width, source->height, target_width, target_height);
