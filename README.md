@@ -6,7 +6,7 @@ Part of the [Deki Engine](https://github.com/ATeam-Dekiru/deki-engine) module ec
 
 ## Installation
 
-In the Deki Editor Package Manager, add this repository URL.
+Install via the Module Manager inside the Deki Editor.
 
 ## Dependencies
 
