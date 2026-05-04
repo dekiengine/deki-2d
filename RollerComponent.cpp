@@ -645,23 +645,25 @@ void RollerComponent::UpdateSelection()
     }
 }
 
-void RollerComponent::HandlePointerDown(int32_t x, int32_t y)
+void RollerComponent::HandlePointerDown(float x, float y)
 {
     (void)x;
+    const int32_t iy = static_cast<int32_t>(y);
     m_IsDragging = true;
-    m_LastTouchY = y;
-    m_TouchStartY = y;
+    m_LastTouchY = iy;
+    m_TouchStartY = iy;
     m_TouchStartOffset = m_ScrollOffset;
     m_ScrollVelocity = 0;
     m_IsSnapping = false;
 }
 
-void RollerComponent::HandlePointerMove(int32_t x, int32_t y)
+void RollerComponent::HandlePointerMove(float x, float y)
 {
     (void)x;
     if (!m_IsDragging) return;
 
-    int32_t delta = y - m_LastTouchY;
+    const int32_t iy = static_cast<int32_t>(y);
+    int32_t delta = iy - m_LastTouchY;
 
     // Default: drag follows touch direction (like ScrollComponent)
     // reverse_drag: drag moves opposite to touch
@@ -672,7 +674,7 @@ void RollerComponent::HandlePointerMove(int32_t x, int32_t y)
     // Track velocity for momentum (reduced for less aggressive scrolling)
     m_ScrollVelocity = scrollDelta / 3;
 
-    m_LastTouchY = y;
+    m_LastTouchY = iy;
 
     ClampScrollOffset();
     UpdateSelection();
@@ -682,15 +684,16 @@ void RollerComponent::HandlePointerMove(int32_t x, int32_t y)
         SyncChildObjects(GetOwner());
 }
 
-void RollerComponent::HandlePointerUp(int32_t x, int32_t y)
+void RollerComponent::HandlePointerUp(float x, float y)
 {
     (void)x;
     if (!m_IsDragging) return;
 
     m_IsDragging = false;
 
+    const int32_t iy = static_cast<int32_t>(y);
     // Check if this was a tap (minimal movement) - if so, select the tapped item
-    int32_t dragDistance = std::abs(y - m_TouchStartY);
+    int32_t dragDistance = std::abs(iy - m_TouchStartY);
     if (dragDistance < item_height / 3)  // Threshold for tap vs drag
     {
         DekiObject* owner = GetOwner();
@@ -699,7 +702,7 @@ void RollerComponent::HandlePointerUp(int32_t x, int32_t y)
             // Calculate which row was tapped
             int32_t centerY = static_cast<int32_t>(std::round(owner->GetWorldY()));
             int32_t rollerTop = centerY - GetHeight() / 2;
-            int32_t relativeY = y - rollerTop;
+            int32_t relativeY = iy - rollerTop;
             int32_t tappedRow = relativeY / item_height;
 
             // Clamp to valid row range
@@ -839,15 +842,15 @@ void RollerComponent::Start()
         return;
     }
 
-    collider->on_pointer_down.push_back([this](int32_t x, int32_t y) {
+    collider->on_pointer_down.push_back([this](float x, float y) {
         HandlePointerDown(x, y);
     });
 
-    collider->on_pointer_move.push_back([this](int32_t x, int32_t y) {
+    collider->on_pointer_move.push_back([this](float x, float y) {
         HandlePointerMove(x, y);
     });
 
-    collider->on_pointer_up.push_back([this](int32_t x, int32_t y) {
+    collider->on_pointer_up.push_back([this](float x, float y) {
         HandlePointerUp(x, y);
     });
 }

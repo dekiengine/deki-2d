@@ -1,5 +1,6 @@
 #include "GradientComponent.h"
 #include "DekiObject.h"
+#include "DekiEngine.h"
 #include "deki-rendering/CameraComponent.h"
 #ifndef DEKI_EDITOR
 #include "providers/DekiMemoryProvider.h"
@@ -451,6 +452,7 @@ bool GradientComponent::RenderContent(const DekiObject* owner,
         true,   // isRGB565
         true    // ownsPixels - caller should free
     );
+    outSource.pixelsPerMeter = DekiEngineSettings::Global().pixelsPerMeter;
 
     // Gradient uses center pivot (0.5, 0.5)
     outPivotX = 0.5f;

@@ -26,7 +26,7 @@ struct SpriteMetadata
 {
     float pivot_x;  // Pivot point X (0.0 to 1.0)
     float pivot_y;  // Pivot point Y (0.0 to 1.0)
-    float pixels_per_unit;  // Pixels per world unit (for scaling)
+    float pixels_per_meter;  // Pixels per world unit (for scaling)
     uint8_t transparent_r;  // Transparent color R (if has_transparency)
     uint8_t transparent_g;  // Transparent color G (if has_transparency)
     uint8_t transparent_b;  // Transparent color B (if has_transparency)
@@ -51,10 +51,21 @@ class Sprite : public Texture2D
     // Sprite-specific properties
     float pivot_x;  // Pivot point X (0.0 to 1.0, default 0.5)
     float pivot_y;  // Pivot point Y (0.0 to 1.0, default 0.5)
-    float pixels_per_unit;  // Pixels per world unit (default 100)
+    float pixels_per_meter;  // Pixels per world unit (default 16 = matches project PPM; ignored in camera Pixels mode)
     uint8_t transparent_r;  // Transparent color R
     uint8_t transparent_g;  // Transparent color G
     uint8_t transparent_b;  // Transparent color B
+
+    // Chroma key (1-bit transparency). When has_chroma_key is true, pixels
+    // matching (transparent_r/g/b) are treated as transparent at render time.
+    // For RGB565/RGB565A8 sources the key is pre-quantized to 5/6/5 precision
+    // at load time so it matches pixels extracted from the source.
+    bool has_chroma_key;
+    // Per-row non-key column spans (packed pairs [start, end] per row), used
+    // by QuadBlit to fast-path chroma blits. Owned by the sprite. Layout
+    // matches alphaRowSpans. nullptr if has_chroma_key is false or the chunk
+    // didn't supply spans (legacy files).
+    int16_t* chromaRowSpans;
 
     // 9-slice properties (for scalable UI elements)
     bool has_nine_slice;     // Whether this sprite has 9-slice data

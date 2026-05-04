@@ -7,6 +7,7 @@
 #include <vector>
 #include <set>
 #include "Deki2DModule.h"
+#include "FontCompiler.h"
 
 namespace Deki2D
 {
@@ -59,6 +60,13 @@ private:
     // Selection (indices into m_AvailableChars)
     std::set<int> m_SelectedChars;
     char m_SearchFilter[256] = "";
+
+    // Baked decoration — matches the TTF inspector; applied at bake time and
+    // stored in the .dfont v4 header so runtime renders with palette lookup.
+    FontCompiler::DecorationMode m_Decoration = FontCompiler::DecorationMode::None;
+    int m_OutlineSize = 1;
+    int m_ShadowDx = 1;
+    int m_ShadowDy = 1;
 
     // Glyph atlas for display
     uint32_t m_GlyphAtlasTexture = 0;

@@ -31,6 +31,30 @@ class DEKI_2D_API FontCompiler
 {
 public:
     /**
+     * @brief FreeType hinting / rendering mode
+     */
+    enum class HintingMode
+    {
+        None,   // FT_LOAD_NO_HINTING  — unhinted, full grayscale AA
+        Light,  // FT_LOAD_TARGET_LIGHT — no horizontal hinting, smoothest on low-DPI
+        Normal, // FT_LOAD_TARGET_NORMAL — FreeType default hinting
+        Mono    // FT_LOAD_TARGET_MONO  — 1-bit, no AA, pixel-crisp
+    };
+
+    /**
+     * @brief Baked decoration kind.
+     *
+     * None: atlas stays 8-bit alpha (classic path). Outline/Shadow switch the atlas to
+     * 4-bit palette-indexed, enabling NDS-style per-label colour swaps at render time.
+     */
+    enum class DecorationMode : uint8_t
+    {
+        None    = 0,
+        Outline = 1,   // Glyph dilated by `outlineSize` px on all sides
+        Shadow  = 2    // Secondary shape = glyph translated by (shadowDx, shadowDy)
+    };
+
+    /**
      * @brief Compilation options
      */
     struct CompileOptions
@@ -40,6 +64,12 @@ public:
         int lastChar = 126;   // ASCII tilde
         int padding = 2;      // Padding around each glyph
         int maxAtlasSize = 2048;
+        HintingMode hinting = HintingMode::Light;
+        int oversample = 2;   // 1=off, 2/3/4=supersample at N×size then box-filter down. Forced to 1 for Mono.
+        DecorationMode decoration = DecorationMode::None;
+        int outlineSize = 1;  // Used when decoration == Outline. Valid 1..3.
+        int shadowDx = 1;     // Used when decoration == Shadow. Valid -3..+3.
+        int shadowDy = 1;     // Used when decoration == Shadow. Valid -3..+3.
     };
 
     /**
@@ -56,6 +86,11 @@ public:
         uint32_t lastChar = 126;
         uint8_t lineHeight = 0;
         uint8_t baseline = 0;
+        uint8_t capHeight = 0;               // height of 'H' from baseline (0 = unknown)
+        uint8_t xHeight = 0;                 // height of 'x' from baseline (0 = unknown)
+        DecorationMode decoration = DecorationMode::None;
+        int8_t decorationA = 0;              // outline size, or shadow dx
+        int8_t decorationB = 0;              // shadow dy (unused for outline)
         bool isSparse = false;               // true = v2 sparse codepoint table
     };
 
@@ -96,6 +131,10 @@ public:
         std::vector<int> selectedChars;  // Codepoints to include (any Unicode range)
         int padding = 2;
         int maxAtlasSize = 2048;
+        DecorationMode decoration = DecorationMode::None;
+        int outlineSize = 1;   // 1..3 px when decoration == Outline
+        int shadowDx = 1;      // -3..+3 px when decoration == Shadow
+        int shadowDy = 1;      // -3..+3 px when decoration == Shadow
     };
 
     /**

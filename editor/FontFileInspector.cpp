@@ -35,6 +35,46 @@ namespace Deki2D
 // Static extensions array
 static const char* s_FontExtensions[] = { ".ttf", ".otf" };
 
+// Hinting mode <-> JSON string
+static const char* HintingToString(FontCompiler::HintingMode m)
+{
+    switch (m)
+    {
+    case FontCompiler::HintingMode::None:   return "none";
+    case FontCompiler::HintingMode::Normal: return "normal";
+    case FontCompiler::HintingMode::Mono:   return "mono";
+    case FontCompiler::HintingMode::Light:
+    default:                                return "light";
+    }
+}
+
+static FontCompiler::HintingMode HintingFromString(const std::string& s)
+{
+    if (s == "none")   return FontCompiler::HintingMode::None;
+    if (s == "normal") return FontCompiler::HintingMode::Normal;
+    if (s == "mono")   return FontCompiler::HintingMode::Mono;
+    return FontCompiler::HintingMode::Light;
+}
+
+// Decoration mode <-> JSON string
+static const char* DecorationToString(FontCompiler::DecorationMode m)
+{
+    switch (m)
+    {
+    case FontCompiler::DecorationMode::Outline: return "outline";
+    case FontCompiler::DecorationMode::Shadow:  return "shadow";
+    case FontCompiler::DecorationMode::None:
+    default:                                    return "none";
+    }
+}
+
+static FontCompiler::DecorationMode DecorationFromString(const std::string& s)
+{
+    if (s == "outline") return FontCompiler::DecorationMode::Outline;
+    if (s == "shadow")  return FontCompiler::DecorationMode::Shadow;
+    return FontCompiler::DecorationMode::None;
+}
+
 const char** FontFileInspector::GetExtensions() const
 {
     return s_FontExtensions;
@@ -94,6 +134,96 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
         int charCount = m_LastChar - m_FirstChar + 1;
         ImGui::TextDisabled("Total: %d characters", charCount);
 
+    }
+
+    // Rasterization settings
+    if (ImGui::CollapsingHeader("Rasterization", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        static const char* kHintingLabels[] = { "None (unhinted AA)", "Light (smoother AA)", "Normal (FreeType default)", "Mono (1-bit, no AA)" };
+        static const FontCompiler::HintingMode kHintingValues[] = {
+            FontCompiler::HintingMode::None,
+            FontCompiler::HintingMode::Light,
+            FontCompiler::HintingMode::Normal,
+            FontCompiler::HintingMode::Mono,
+        };
+        int currentIndex = 1; // Light
+        for (int i = 0; i < 4; ++i)
+        {
+            if (kHintingValues[i] == m_Hinting) { currentIndex = i; break; }
+        }
+        ImGui::SetNextItemWidth(220);
+        if (ImGui::Combo("Hinting Mode", &currentIndex, kHintingLabels, 4))
+        {
+            m_Hinting = kHintingValues[currentIndex];
+            m_SettingsModified = true;
+        }
+
+        // Oversample combo — Mono hinting disables it (1-bit source doesn't benefit)
+        static const char* kOversampleLabels[] = { "1x (off)", "2x", "3x", "4x" };
+        int oversampleIndex = m_Oversample - 1;
+        if (oversampleIndex < 0) oversampleIndex = 0;
+        if (oversampleIndex > 3) oversampleIndex = 3;
+        const bool oversampleDisabled = (m_Hinting == FontCompiler::HintingMode::Mono);
+        if (oversampleDisabled)
+        {
+            m_Oversample = 1;
+            oversampleIndex = 0;
+            ImGui::BeginDisabled();
+        }
+        ImGui::SetNextItemWidth(220);
+        if (ImGui::Combo("Oversample", &oversampleIndex, kOversampleLabels, 4))
+        {
+            m_Oversample = oversampleIndex + 1;
+            m_SettingsModified = true;
+        }
+        if (oversampleDisabled)
+            ImGui::EndDisabled();
+
+        // Decoration combo — None / Outline / Shadow. NDS-style baked halo or drop shadow.
+        static const char* kDecorationLabels[] = { "None", "Outline", "Shadow" };
+        static const FontCompiler::DecorationMode kDecorationValues[] = {
+            FontCompiler::DecorationMode::None,
+            FontCompiler::DecorationMode::Outline,
+            FontCompiler::DecorationMode::Shadow,
+        };
+        int decorationIndex = 0;
+        for (int i = 0; i < 3; ++i)
+            if (kDecorationValues[i] == m_Decoration) { decorationIndex = i; break; }
+        ImGui::SetNextItemWidth(220);
+        if (ImGui::Combo("Decoration", &decorationIndex, kDecorationLabels, 3))
+        {
+            m_Decoration = kDecorationValues[decorationIndex];
+            m_SettingsModified = true;
+        }
+        if (m_Decoration == FontCompiler::DecorationMode::Outline)
+        {
+            ImGui::SetNextItemWidth(100);
+            if (ImGui::InputInt("Outline Size (px)", &m_OutlineSize))
+            {
+                if (m_OutlineSize < 1) m_OutlineSize = 1;
+                if (m_OutlineSize > 3) m_OutlineSize = 3;
+                m_SettingsModified = true;
+            }
+        }
+        else if (m_Decoration == FontCompiler::DecorationMode::Shadow)
+        {
+            ImGui::SetNextItemWidth(100);
+            if (ImGui::InputInt("Shadow dX", &m_ShadowDx))
+            {
+                if (m_ShadowDx < -3) m_ShadowDx = -3;
+                if (m_ShadowDx > 3) m_ShadowDx = 3;
+                m_SettingsModified = true;
+            }
+            ImGui::SetNextItemWidth(100);
+            if (ImGui::InputInt("Shadow dY", &m_ShadowDy))
+            {
+                if (m_ShadowDy < -3) m_ShadowDy = -3;
+                if (m_ShadowDy > 3) m_ShadowDy = 3;
+                m_SettingsModified = true;
+            }
+        }
+
+        ImGui::TextDisabled("Affects edge smoothness. Re-bake variants after changing.");
     }
 
     // Size variants
@@ -378,6 +508,12 @@ void FontFileInspector::LoadSettings(const std::string& assetPath)
     m_Sizes.clear();
     m_FirstChar = 32;
     m_LastChar = 126;
+    m_Hinting = FontCompiler::HintingMode::Light;
+    m_Oversample = 2;
+    m_Decoration = FontCompiler::DecorationMode::None;
+    m_OutlineSize = 1;
+    m_ShadowDx = 1;
+    m_ShadowDy = 1;
 
     std::string dataPath = assetPath + ".data";
     if (!fs::exists(dataPath))
@@ -412,6 +548,40 @@ void FontFileInspector::LoadSettings(const std::string& assetPath)
             if (settings.contains("lastChar") && settings["lastChar"].is_number_integer())
                 m_LastChar = settings["lastChar"].get<int>();
 
+            if (settings.contains("hinting") && settings["hinting"].is_string())
+                m_Hinting = HintingFromString(settings["hinting"].get<std::string>());
+
+            if (settings.contains("oversample") && settings["oversample"].is_number_integer())
+            {
+                int v = settings["oversample"].get<int>();
+                if (v < 1) v = 1;
+                if (v > 4) v = 4;
+                m_Oversample = v;
+            }
+
+            if (settings.contains("decoration") && settings["decoration"].is_string())
+                m_Decoration = DecorationFromString(settings["decoration"].get<std::string>());
+            if (settings.contains("outlineSize") && settings["outlineSize"].is_number_integer())
+            {
+                int v = settings["outlineSize"].get<int>();
+                if (v < 1) v = 1;
+                if (v > 3) v = 3;
+                m_OutlineSize = v;
+            }
+            if (settings.contains("shadowDx") && settings["shadowDx"].is_number_integer())
+            {
+                int v = settings["shadowDx"].get<int>();
+                if (v < -3) v = -3;
+                if (v > 3) v = 3;
+                m_ShadowDx = v;
+            }
+            if (settings.contains("shadowDy") && settings["shadowDy"].is_number_integer())
+            {
+                int v = settings["shadowDy"].get<int>();
+                if (v < -3) v = -3;
+                if (v > 3) v = 3;
+                m_ShadowDy = v;
+            }
         }
     }
     catch (const json::exception&)
@@ -451,6 +621,12 @@ void FontFileInspector::SaveSettings(const std::string& assetPath, const std::st
     j["fontSettings"]["sizes"] = m_Sizes;
     j["fontSettings"]["firstChar"] = m_FirstChar;
     j["fontSettings"]["lastChar"] = m_LastChar;
+    j["fontSettings"]["hinting"] = HintingToString(m_Hinting);
+    j["fontSettings"]["oversample"] = m_Oversample;
+    j["fontSettings"]["decoration"] = DecorationToString(m_Decoration);
+    j["fontSettings"]["outlineSize"] = m_OutlineSize;
+    j["fontSettings"]["shadowDx"] = m_ShadowDx;
+    j["fontSettings"]["shadowDy"] = m_ShadowDy;
     // Generate random variant GUIDs (only if they don't exist)
     if (!j.contains("variants"))
         j["variants"] = json::object();
@@ -591,7 +767,12 @@ void FontFileInspector::BakeFontVariant(const std::string& assetPath, const std:
     options.lastChar = m_LastChar;
     options.padding = 2;
     options.maxAtlasSize = 2048;
-
+    options.hinting = m_Hinting;
+    options.oversample = m_Oversample;
+    options.decoration = m_Decoration;
+    options.outlineSize = m_OutlineSize;
+    options.shadowDx = m_ShadowDx;
+    options.shadowDy = m_ShadowDy;
 
     FontCompiler::CompileResult result;
     if (!FontCompiler::CompileTrueTypeFont(assetPath, options, result))
@@ -636,7 +817,12 @@ void FontFileInspector::GeneratePreview(const std::string& assetPath, int fontSi
     options.lastChar = m_LastChar;
     options.padding = 2;
     options.maxAtlasSize = 2048;
-
+    options.hinting = m_Hinting;
+    options.oversample = m_Oversample;
+    options.decoration = m_Decoration;
+    options.outlineSize = m_OutlineSize;
+    options.shadowDx = m_ShadowDx;
+    options.shadowDy = m_ShadowDy;
 
     FontCompiler::CompileResult result;
     if (!FontCompiler::CompileTrueTypeFont(assetPath, options, result))

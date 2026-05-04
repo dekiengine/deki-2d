@@ -6,7 +6,7 @@
 #include "assets/AssetManager.h"
 #include "assets/AssetPackReader.h"
 #include <cstring>
-
+ 
 BitmapFont::BitmapFont()
     : atlas(nullptr)
     , glyphs(nullptr)
@@ -15,6 +15,11 @@ BitmapFont::BitmapFont()
     , last_char(0)
     , line_height(0)
     , baseline(0)
+    , cap_height(0)
+    , x_height(0)
+    , decoration_mode(0)
+    , decoration_a(0)
+    , decoration_b(0)
     , glyph_count(0)
     , is_sparse(false)
 {
@@ -94,8 +99,9 @@ BitmapFont* BitmapFont::Load(const char* file_path)
         return nullptr;
     }
 
-    // Validate version
-    if (header.version != 1 && header.version != 2)
+    // Validate version (low 31 bits — v3/v4 encode sparse flag in high bit)
+    const uint32_t versionLow = header.version & 0x7FFFFFFFu;
+    if (versionLow != 1 && versionLow != 2 && versionLow != 3 && versionLow != 4)
     {
         DEKI_LOG_ERROR("BitmapFont::Load: Unsupported version %u", header.version);
         delete[] file_data;
@@ -105,7 +111,104 @@ BitmapFont* BitmapFont::Load(const char* file_path)
     BitmapFont* font = new BitmapFont();
     const char* atlas_rel_path = nullptr;
 
-    if (header.version == 1)
+    if (versionLow == 4)
+    {
+        FontHeaderV4 headerV4;
+        if (static_cast<size_t>(file_size) < sizeof(FontHeaderV4))
+        {
+            DEKI_LOG_ERROR("BitmapFont::Load: File too small for v4 header");
+            delete[] file_data;
+            delete font;
+            return nullptr;
+        }
+        memcpy(&headerV4, file_data, sizeof(FontHeaderV4));
+        const bool sparse = (headerV4.version & 0x80000000u) != 0;
+
+        size_t codepoints_size = sparse ? headerV4.glyph_count * sizeof(uint32_t) : 0;
+        size_t glyphs_size = headerV4.glyph_count * sizeof(GlyphInfo);
+        size_t min_size = sizeof(FontHeaderV4) + codepoints_size + glyphs_size + headerV4.atlas_path_len;
+        if (static_cast<size_t>(file_size) < min_size)
+        {
+            DEKI_LOG_ERROR("BitmapFont::Load: File too small for v4 glyph data");
+            delete[] file_data;
+            delete font;
+            return nullptr;
+        }
+
+        font->first_char = headerV4.first_codepoint;
+        font->last_char = headerV4.last_codepoint;
+        font->line_height = headerV4.line_height;
+        font->baseline = headerV4.baseline;
+        font->cap_height = headerV4.cap_height;
+        font->x_height = headerV4.x_height;
+        font->decoration_mode = headerV4.decoration_mode;
+        font->decoration_a = headerV4.decoration_a;
+        font->decoration_b = headerV4.decoration_b;
+        font->glyph_count = headerV4.glyph_count;
+        font->is_sparse = sparse;
+
+        size_t offset = sizeof(FontHeaderV4);
+        if (sparse)
+        {
+            font->codepoints = new uint32_t[headerV4.glyph_count];
+            memcpy(font->codepoints, file_data + offset, codepoints_size);
+            offset += codepoints_size;
+        }
+
+        font->glyphs = new GlyphInfo[headerV4.glyph_count];
+        memcpy(font->glyphs, file_data + offset, glyphs_size);
+        offset += glyphs_size;
+
+        atlas_rel_path = (const char*)(file_data + offset);
+    }
+    else if (versionLow == 3)
+    {
+        FontHeaderV3 headerV3;
+        if (static_cast<size_t>(file_size) < sizeof(FontHeaderV3))
+        {
+            DEKI_LOG_ERROR("BitmapFont::Load: File too small for v3 header");
+            delete[] file_data;
+            delete font;
+            return nullptr;
+        }
+        memcpy(&headerV3, file_data, sizeof(FontHeaderV3));
+        const bool sparse = (headerV3.version & 0x80000000u) != 0;
+
+        size_t codepoints_size = sparse ? headerV3.glyph_count * sizeof(uint32_t) : 0;
+        size_t glyphs_size = headerV3.glyph_count * sizeof(GlyphInfo);
+        size_t min_size = sizeof(FontHeaderV3) + codepoints_size + glyphs_size + headerV3.atlas_path_len;
+        if (static_cast<size_t>(file_size) < min_size)
+        {
+            DEKI_LOG_ERROR("BitmapFont::Load: File too small for v3 glyph data");
+            delete[] file_data;
+            delete font;
+            return nullptr;
+        }
+
+        font->first_char = headerV3.first_codepoint;
+        font->last_char = headerV3.last_codepoint;
+        font->line_height = headerV3.line_height;
+        font->baseline = headerV3.baseline;
+        font->cap_height = headerV3.cap_height;
+        font->x_height = headerV3.x_height;
+        font->glyph_count = headerV3.glyph_count;
+        font->is_sparse = sparse;
+
+        size_t offset = sizeof(FontHeaderV3);
+        if (sparse)
+        {
+            font->codepoints = new uint32_t[headerV3.glyph_count];
+            memcpy(font->codepoints, file_data + offset, codepoints_size);
+            offset += codepoints_size;
+        }
+
+        font->glyphs = new GlyphInfo[headerV3.glyph_count];
+        memcpy(font->glyphs, file_data + offset, glyphs_size);
+        offset += glyphs_size;
+
+        atlas_rel_path = (const char*)(file_data + offset);
+    }
+    else if (versionLow == 1)
     {
         // V1: contiguous ASCII glyph array
         uint16_t expected_glyph_count = header.last_char - header.first_char + 1;
@@ -139,7 +242,7 @@ BitmapFont* BitmapFont::Load(const char* file_path)
         memcpy(font->glyphs, file_data + sizeof(FontHeader), glyphs_size);
         atlas_rel_path = (const char*)(file_data + sizeof(FontHeader) + glyphs_size);
     }
-    else // version == 2
+    else // versionLow == 2
     {
         // V2: sparse codepoint table + glyph array
         FontHeaderV2 headerV2;
@@ -216,7 +319,9 @@ BitmapFont* BitmapFont::LoadFromFileData(const uint8_t* data, size_t size)
     FontHeader header;
     memcpy(&header, data, sizeof(FontHeader));
 
-    if (memcmp(header.magic, "DFNT", 4) != 0 || (header.version != 1 && header.version != 2))
+    const uint32_t versionLow = header.version & 0x7FFFFFFFu;
+    if (memcmp(header.magic, "DFNT", 4) != 0 ||
+        (versionLow != 1 && versionLow != 2 && versionLow != 3 && versionLow != 4))
     {
         DEKI_LOG_ERROR("BitmapFont::LoadFromFileData: invalid magic/version");
         return nullptr;
@@ -225,7 +330,96 @@ BitmapFont* BitmapFont::LoadFromFileData(const uint8_t* data, size_t size)
     BitmapFont* font = new BitmapFont();
     const char* atlas_rel_path = nullptr;
 
-    if (header.version == 1)
+    if (versionLow == 4)
+    {
+        FontHeaderV4 headerV4;
+        if (size < sizeof(FontHeaderV4))
+        {
+            DEKI_LOG_ERROR("BitmapFont::LoadFromFileData: data too small for v4");
+            delete font;
+            return nullptr;
+        }
+        memcpy(&headerV4, data, sizeof(FontHeaderV4));
+        const bool sparse = (headerV4.version & 0x80000000u) != 0;
+
+        size_t codepoints_size = sparse ? headerV4.glyph_count * sizeof(uint32_t) : 0;
+        size_t glyphs_size = headerV4.glyph_count * sizeof(GlyphInfo);
+        size_t min_size = sizeof(FontHeaderV4) + codepoints_size + glyphs_size + headerV4.atlas_path_len;
+        if (size < min_size)
+        {
+            DEKI_LOG_ERROR("BitmapFont::LoadFromFileData: data too small for v4 glyphs");
+            delete font;
+            return nullptr;
+        }
+
+        font->first_char = headerV4.first_codepoint;
+        font->last_char = headerV4.last_codepoint;
+        font->line_height = headerV4.line_height;
+        font->baseline = headerV4.baseline;
+        font->cap_height = headerV4.cap_height;
+        font->x_height = headerV4.x_height;
+        font->decoration_mode = headerV4.decoration_mode;
+        font->decoration_a = headerV4.decoration_a;
+        font->decoration_b = headerV4.decoration_b;
+        font->glyph_count = headerV4.glyph_count;
+        font->is_sparse = sparse;
+
+        size_t offset = sizeof(FontHeaderV4);
+        if (sparse)
+        {
+            font->codepoints = new uint32_t[headerV4.glyph_count];
+            memcpy(font->codepoints, data + offset, codepoints_size);
+            offset += codepoints_size;
+        }
+        font->glyphs = new GlyphInfo[headerV4.glyph_count];
+        memcpy(font->glyphs, data + offset, glyphs_size);
+        offset += glyphs_size;
+        atlas_rel_path = (const char*)(data + offset);
+    }
+    else if (versionLow == 3)
+    {
+        FontHeaderV3 headerV3;
+        if (size < sizeof(FontHeaderV3))
+        {
+            DEKI_LOG_ERROR("BitmapFont::LoadFromFileData: data too small for v3");
+            delete font;
+            return nullptr;
+        }
+        memcpy(&headerV3, data, sizeof(FontHeaderV3));
+        const bool sparse = (headerV3.version & 0x80000000u) != 0;
+
+        size_t codepoints_size = sparse ? headerV3.glyph_count * sizeof(uint32_t) : 0;
+        size_t glyphs_size = headerV3.glyph_count * sizeof(GlyphInfo);
+        size_t min_size = sizeof(FontHeaderV3) + codepoints_size + glyphs_size + headerV3.atlas_path_len;
+        if (size < min_size)
+        {
+            DEKI_LOG_ERROR("BitmapFont::LoadFromFileData: data too small for v3 glyphs");
+            delete font;
+            return nullptr;
+        }
+
+        font->first_char = headerV3.first_codepoint;
+        font->last_char = headerV3.last_codepoint;
+        font->line_height = headerV3.line_height;
+        font->baseline = headerV3.baseline;
+        font->cap_height = headerV3.cap_height;
+        font->x_height = headerV3.x_height;
+        font->glyph_count = headerV3.glyph_count;
+        font->is_sparse = sparse;
+
+        size_t offset = sizeof(FontHeaderV3);
+        if (sparse)
+        {
+            font->codepoints = new uint32_t[headerV3.glyph_count];
+            memcpy(font->codepoints, data + offset, codepoints_size);
+            offset += codepoints_size;
+        }
+        font->glyphs = new GlyphInfo[headerV3.glyph_count];
+        memcpy(font->glyphs, data + offset, glyphs_size);
+        offset += glyphs_size;
+        atlas_rel_path = (const char*)(data + offset);
+    }
+    else if (versionLow == 1)
     {
         uint16_t expected_glyph_count = header.last_char - header.first_char + 1;
         if (header.glyph_count != expected_glyph_count)
@@ -255,7 +449,7 @@ BitmapFont* BitmapFont::LoadFromFileData(const uint8_t* data, size_t size)
         memcpy(font->glyphs, data + sizeof(FontHeader), glyphs_size);
         atlas_rel_path = (const char*)(data + sizeof(FontHeader) + glyphs_size);
     }
-    else // version == 2
+    else // versionLow == 2
     {
         FontHeaderV2 headerV2;
         if (size < sizeof(FontHeaderV2))
@@ -539,6 +733,33 @@ int32_t BitmapFont::GetVisualCenterY() const
     // Visual center is midpoint between top and bottom of glyph bounds
     // Return as offset from top of line (where textY starts)
     return (min_y + max_y) / 2;
+}
+
+uint8_t BitmapFont::GetCapHeight() const
+{
+    // v1/v2 fonts set cap_height to 0; fall back to typographic approximation.
+    if (cap_height != 0)
+        return cap_height;
+    return static_cast<uint8_t>((baseline * 7) / 10);
+}
+
+uint8_t BitmapFont::GetXHeight() const
+{
+    if (x_height != 0)
+        return x_height;
+    return static_cast<uint8_t>((baseline * 5) / 10);
+}
+
+int32_t BitmapFont::GetCapCenterY() const
+{
+    // Baseline measured from top-of-line; cap-height extends upward from baseline.
+    // Optical cap center sits half a cap-height above the baseline.
+    return static_cast<int32_t>(baseline) - static_cast<int32_t>(GetCapHeight()) / 2;
+}
+
+int32_t BitmapFont::GetXCenterY() const
+{
+    return static_cast<int32_t>(baseline) - static_cast<int32_t>(GetXHeight()) / 2;
 }
 
 // Self-register font loader with AssetManager

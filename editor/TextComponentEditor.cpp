@@ -443,6 +443,7 @@ public:
         gui.PropertyField("width");
         gui.PropertyField("height");
         gui.PropertyField("color");
+        gui.PropertyField("decorationColor");
         gui.PropertyField("align");
         gui.PropertyField("verticalAlign");
 

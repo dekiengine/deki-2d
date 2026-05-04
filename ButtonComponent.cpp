@@ -25,7 +25,7 @@ void ButtonComponent::Start()
     }
 
     // Register pointer callbacks on InputCollider
-    collider->on_pointer_down.push_back([this](int32_t x, int32_t y) {
+    collider->on_pointer_down.push_back([this](float x, float y) {
         (void)x; (void)y;
         if (!is_enabled) return;
         m_WasPressedInside = true;
@@ -33,7 +33,7 @@ void ButtonComponent::Start()
         InvokeCallbacks(on_press);
     });
 
-    collider->on_pointer_up.push_back([this](int32_t x, int32_t y) {
+    collider->on_pointer_up.push_back([this](float x, float y) {
         (void)x; (void)y;
         if (!is_enabled) return;
         if (m_WasPressedInside)
@@ -55,7 +55,7 @@ void ButtonComponent::Start()
         }
     });
 
-    collider->on_pointer_enter.push_back([this](int32_t x, int32_t y) {
+    collider->on_pointer_enter.push_back([this](float x, float y) {
         (void)x; (void)y;
         if (!is_enabled) return;
         if (!m_WasPressedInside)
@@ -64,7 +64,7 @@ void ButtonComponent::Start()
         }
     });
 
-    collider->on_pointer_exit.push_back([this](int32_t x, int32_t y) {
+    collider->on_pointer_exit.push_back([this](float x, float y) {
         (void)x; (void)y;
         if (!is_enabled) return;
         if (m_WasPressedInside)

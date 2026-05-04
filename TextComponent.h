@@ -20,12 +20,20 @@ enum class TextAlign : uint8_t
 
 /**
  * @brief Text vertical alignment options
+ *
+ * Top/Middle/Bottom (0-2) are the legacy modes. The additional anchors use
+ * font-wide typographic metrics so text centers optically regardless of
+ * whether the string contains ascenders or descenders.
  */
 enum class TextVerticalAlign : uint8_t
 {
-    Top = 0,
-    Middle = 1,
-    Bottom = 2
+    Top        = 0,
+    Middle     = 1,  // Legacy: centers on visual bounds of the whole font (ascent+descent)
+    Bottom     = 2,
+    CapCenter  = 3,  // Centers on cap-height — best for uppercase / mixed UI labels
+    XCenter    = 4,  // Centers on x-height — best for lowercase-heavy body text
+    TypoCenter = 5,  // Centers on typographic midline; same as Middle for single-line
+    Baseline   = 6   // Baseline sits on the container center line
 };
 
 /**
@@ -250,6 +258,14 @@ public:
     DEKI_EXPORT
     deki::Color color;
 
+    /**
+     * @brief Decoration color (outline / shadow).
+     * Only used when the bound font is v4+ and was baked with a decoration other
+     * than None. Ignored for plain alpha fonts.
+     */
+    DEKI_EXPORT
+    deki::Color decorationColor;
+
     /** @brief Pixel scale for bitmap fonts (1x, 2x, 3x nearest-neighbor) */
     DEKI_EXPORT
     int32_t pixelScale = 1;
@@ -258,9 +274,9 @@ public:
     DEKI_EXPORT
     TextAlign align = TextAlign::Left;
 
-    /** @brief Vertical text alignment */
+    /** @brief Vertical text alignment (new components default to cap-center for optical centering) */
     DEKI_EXPORT
-    TextVerticalAlign verticalAlign = TextVerticalAlign::Top;
+    TextVerticalAlign verticalAlign = TextVerticalAlign::CapCenter;
 
     // Invalidate the render cache (call when text/font/color/size changes)
     void InvalidateRenderCache();
@@ -275,6 +291,7 @@ private:
     int32_t m_cachedWidth = 0;
     int32_t m_cachedHeight = 0;
     deki::Color m_cachedColor;
+    deki::Color m_cachedDecorationColor;
     TextAlign m_cachedAlign = TextAlign::Left;
     TextVerticalAlign m_cachedVerticalAlign = TextVerticalAlign::Top;
     BitmapFont* m_cachedFont = nullptr;

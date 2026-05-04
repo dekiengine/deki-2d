@@ -125,54 +125,22 @@ DEKI_2D_API int Deki2D_EnsureRegistered(void)
     // Register image loader and font factory with EditorAssets
     DekiEditor::EditorAssets::RegisterImageLoader(Texture2D::LoadAsRGBA);
     DekiEditor::EditorAssets::RegisterFontFactory(
-        // Font factory: parse .dfont, create Texture2D + BitmapFont, return atlas RGBA
+        // Font factory: load a BitmapFont (handles v1/v2/v3/v4) and, separately,
+        // hand the editor the raw RGBA bytes of the atlas so it can upload a
+        // preview texture.
         [](const char* dfontPath, uint8_t** outAtlasRGBA, int32_t& outW, int32_t& outH) -> void* {
-            namespace fs = std::filesystem;
-            if (!dfontPath || !fs::exists(dfontPath))
-                return nullptr;
+            if (!dfontPath) return nullptr;
 
-            fs::path fontDir = fs::path(dfontPath).parent_path();
+            BitmapFont* font = BitmapFont::Load(dfontPath);
+            if (!font) return nullptr;
 
-            std::ifstream fontFile(dfontPath, std::ios::binary);
-            if (!fontFile) return nullptr;
-
-            FontHeader header;
-            fontFile.read(reinterpret_cast<char*>(&header), sizeof(FontHeader));
-            if (memcmp(header.magic, "DFNT", 4) != 0) return nullptr;
-
-            GlyphInfo* glyphArray = new GlyphInfo[header.glyph_count];
-            fontFile.read(reinterpret_cast<char*>(glyphArray), header.glyph_count * sizeof(GlyphInfo));
-
-            std::string atlasFilename;
-            if (header.atlas_path_len > 1) {
-                atlasFilename.resize(header.atlas_path_len - 1);
-                fontFile.read(atlasFilename.data(), header.atlas_path_len - 1);
-            }
-            fontFile.close();
-
-            if (atlasFilename.empty()) { delete[] glyphArray; return nullptr; }
-
-            fs::path atlasPath = fontDir / atlasFilename;
-            if (!fs::exists(atlasPath)) { delete[] glyphArray; return nullptr; }
+            const std::string& atlasAbsPath = font->GetAtlasPath();
+            if (atlasAbsPath.empty()) { delete font; return nullptr; }
 
             int32_t atlasW = 0, atlasH = 0;
             bool hasAlpha = false;
-            uint8_t* rgba = Texture2D::LoadAsRGBA(atlasPath.string().c_str(), atlasW, atlasH, hasAlpha);
-            if (!rgba) { delete[] glyphArray; return nullptr; }
-
-            Texture2D* atlas = new Texture2D();
-            atlas->width = atlasW;
-            atlas->height = atlasH;
-            atlas->format = Texture2D::TextureFormat::RGBA8888;
-            atlas->has_alpha = true;
-            atlas->data = new uint8_t[atlasW * atlasH * 4];
-            memcpy(atlas->data, rgba, atlasW * atlasH * 4);
-
-            BitmapFont* font = BitmapFont::CreateFromMemory(
-                atlas, glyphArray, header.first_char, header.last_char,
-                header.line_height, header.baseline);
-
-            if (!font) { free(rgba); return nullptr; }
+            uint8_t* rgba = Texture2D::LoadAsRGBA(atlasAbsPath.c_str(), atlasW, atlasH, hasAlpha);
+            if (!rgba) { delete font; return nullptr; }
 
             if (outAtlasRGBA) *outAtlasRGBA = rgba; else free(rgba);
             outW = atlasW;

@@ -318,9 +318,9 @@ private:
     void UpdateSelection();
 
     // Input handlers (registered on InputCollider in Start())
-    void HandlePointerDown(int32_t x, int32_t y);
-    void HandlePointerMove(int32_t x, int32_t y);
-    void HandlePointerUp(int32_t x, int32_t y);
+    void HandlePointerDown(float x, float y);
+    void HandlePointerMove(float x, float y);
+    void HandlePointerUp(float x, float y);
 };
 
 // Generated property metadata (after class definition for offsetof)

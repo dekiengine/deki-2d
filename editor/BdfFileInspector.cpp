@@ -95,6 +95,54 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
         m_SettingsModified = true;
     }
 
+    // Rasterization settings (decoration — outline or shadow — baked into atlas)
+    if (ImGui::CollapsingHeader("Rasterization", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        static const char* kDecorationLabels[] = { "None", "Outline", "Shadow" };
+        static const FontCompiler::DecorationMode kDecorationValues[] = {
+            FontCompiler::DecorationMode::None,
+            FontCompiler::DecorationMode::Outline,
+            FontCompiler::DecorationMode::Shadow,
+        };
+        int decorationIndex = 0;
+        for (int i = 0; i < 3; ++i)
+            if (kDecorationValues[i] == m_Decoration) { decorationIndex = i; break; }
+        ImGui::SetNextItemWidth(220);
+        if (ImGui::Combo("Decoration", &decorationIndex, kDecorationLabels, 3))
+        {
+            m_Decoration = kDecorationValues[decorationIndex];
+            m_SettingsModified = true;
+        }
+        if (m_Decoration == FontCompiler::DecorationMode::Outline)
+        {
+            ImGui::SetNextItemWidth(100);
+            if (ImGui::InputInt("Outline Size (px)", &m_OutlineSize))
+            {
+                if (m_OutlineSize < 1) m_OutlineSize = 1;
+                if (m_OutlineSize > 3) m_OutlineSize = 3;
+                m_SettingsModified = true;
+            }
+        }
+        else if (m_Decoration == FontCompiler::DecorationMode::Shadow)
+        {
+            ImGui::SetNextItemWidth(100);
+            if (ImGui::InputInt("Shadow dX", &m_ShadowDx))
+            {
+                if (m_ShadowDx < -3) m_ShadowDx = -3;
+                if (m_ShadowDx > 3) m_ShadowDx = 3;
+                m_SettingsModified = true;
+            }
+            ImGui::SetNextItemWidth(100);
+            if (ImGui::InputInt("Shadow dY", &m_ShadowDy))
+            {
+                if (m_ShadowDy < -3) m_ShadowDy = -3;
+                if (m_ShadowDy > 3) m_ShadowDy = 3;
+                m_SettingsModified = true;
+            }
+        }
+        ImGui::TextDisabled("Baked into atlas. Re-bake after changing.");
+    }
+
     // Apply & Bake button
     bool canBake = m_SettingsModified || !isCached;
     if (!canBake || m_SelectedChars.empty())
@@ -383,9 +431,31 @@ void BdfFileInspector::LoadBdf(const std::string& assetPath)
 // Load/Save .bdf.data sidecar
 // ---------------------------------------------------------------------------
 
+static FontCompiler::DecorationMode BdfDecorationFromString(const std::string& s)
+{
+    if (s == "outline") return FontCompiler::DecorationMode::Outline;
+    if (s == "shadow")  return FontCompiler::DecorationMode::Shadow;
+    return FontCompiler::DecorationMode::None;
+}
+
+static const char* BdfDecorationToString(FontCompiler::DecorationMode m)
+{
+    switch (m)
+    {
+    case FontCompiler::DecorationMode::Outline: return "outline";
+    case FontCompiler::DecorationMode::Shadow:  return "shadow";
+    case FontCompiler::DecorationMode::None:
+    default:                                    return "none";
+    }
+}
+
 void BdfFileInspector::LoadSettings(const std::string& assetPath)
 {
     m_SelectedChars.clear();
+    m_Decoration = FontCompiler::DecorationMode::None;
+    m_OutlineSize = 1;
+    m_ShadowDx = 1;
+    m_ShadowDy = 1;
 
     auto* pipeline = DekiEditor::AssetPipeline::Instance();
     if (!pipeline) return;
@@ -431,6 +501,31 @@ void BdfFileInspector::LoadSettings(const std::string& assetPath)
                 m_SelectedChars.insert(it->second);
         }
     }
+
+    const auto& settings = j["bdfSettings"];
+    if (settings.contains("decoration") && settings["decoration"].is_string())
+        m_Decoration = BdfDecorationFromString(settings["decoration"].get<std::string>());
+    if (settings.contains("outlineSize") && settings["outlineSize"].is_number_integer())
+    {
+        int v = settings["outlineSize"].get<int>();
+        if (v < 1) v = 1;
+        if (v > 3) v = 3;
+        m_OutlineSize = v;
+    }
+    if (settings.contains("shadowDx") && settings["shadowDx"].is_number_integer())
+    {
+        int v = settings["shadowDx"].get<int>();
+        if (v < -3) v = -3;
+        if (v > 3) v = 3;
+        m_ShadowDx = v;
+    }
+    if (settings.contains("shadowDy") && settings["shadowDy"].is_number_integer())
+    {
+        int v = settings["shadowDy"].get<int>();
+        if (v < -3) v = -3;
+        if (v > 3) v = 3;
+        m_ShadowDy = v;
+    }
 }
 
 void BdfFileInspector::SaveSettings(const std::string& assetPath, const std::string& assetGuid)
@@ -457,6 +552,10 @@ void BdfFileInspector::SaveSettings(const std::string& assetPath, const std::str
     std::vector<int> codepoints = GetSelectedCodepoints();
     std::sort(codepoints.begin(), codepoints.end());
     j["bdfSettings"]["selectedChars"] = codepoints;
+    j["bdfSettings"]["decoration"] = BdfDecorationToString(m_Decoration);
+    j["bdfSettings"]["outlineSize"] = m_OutlineSize;
+    j["bdfSettings"]["shadowDx"] = m_ShadowDx;
+    j["bdfSettings"]["shadowDy"] = m_ShadowDy;
 
     // Write
     std::ofstream outFile(dataPath);
@@ -497,6 +596,10 @@ void BdfFileInspector::BakeFont(const std::string& assetPath, const std::string&
     options.selectedChars = codepoints;
     options.padding = 2;
     options.maxAtlasSize = 2048;
+    options.decoration = m_Decoration;
+    options.outlineSize = m_OutlineSize;
+    options.shadowDx = m_ShadowDx;
+    options.shadowDy = m_ShadowDy;
 
     FontCompiler::CompileResult result;
     if (!FontCompiler::CompileBdfFont(fullPath, options, result))

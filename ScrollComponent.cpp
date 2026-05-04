@@ -554,9 +554,9 @@ void ScrollComponent::Update(float delta_time)
         SyncChildObjects(GetOwner());
 }
 
-void ScrollComponent::HandlePointerDown(int32_t x, int32_t y)
+void ScrollComponent::HandlePointerDown(float x, float y)
 {
-    int32_t touchPos = (direction == ScrollDirection::Vertical) ? y : x;
+    int32_t touchPos = static_cast<int32_t>((direction == ScrollDirection::Vertical) ? y : x);
     m_IsDragging = true;
     m_DragConfirmed = false;
     m_LastTouchPos = touchPos;
@@ -568,7 +568,7 @@ void ScrollComponent::HandlePointerDown(int32_t x, int32_t y)
     m_VelSampleCount = 0;
 }
 
-void ScrollComponent::HandlePointerMove(int32_t x, int32_t y)
+void ScrollComponent::HandlePointerMove(float x, float y)
 {
     if (!m_IsDragging) return;
 
@@ -579,7 +579,7 @@ void ScrollComponent::HandlePointerMove(int32_t x, int32_t y)
         return;
     }
 
-    int32_t touchPos = (direction == ScrollDirection::Vertical) ? y : x;
+    int32_t touchPos = static_cast<int32_t>((direction == ScrollDirection::Vertical) ? y : x);
 
     // Check drag threshold before confirming scroll gesture
     if (!m_DragConfirmed)
@@ -614,7 +614,7 @@ void ScrollComponent::HandlePointerMove(int32_t x, int32_t y)
         SyncChildObjects(GetOwner());
 }
 
-void ScrollComponent::HandlePointerUp(int32_t x, int32_t y)
+void ScrollComponent::HandlePointerUp(float x, float y)
 {
     (void)x; (void)y;
     if (!m_IsDragging) return;
@@ -677,15 +677,15 @@ void ScrollComponent::Start()
     // Scroll will claim the gesture via InputDispatch when drag threshold is exceeded.
     collider->consume_input = false;
 
-    collider->on_pointer_down.push_back([this](int32_t x, int32_t y) {
+    collider->on_pointer_down.push_back([this](float x, float y) {
         HandlePointerDown(x, y);
     });
 
-    collider->on_pointer_move.push_back([this](int32_t x, int32_t y) {
+    collider->on_pointer_move.push_back([this](float x, float y) {
         HandlePointerMove(x, y);
     });
 
-    collider->on_pointer_up.push_back([this](int32_t x, int32_t y) {
+    collider->on_pointer_up.push_back([this](float x, float y) {
         HandlePointerUp(x, y);
     });
 }

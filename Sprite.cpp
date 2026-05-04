@@ -17,7 +17,12 @@ Sprite::Sprite() : Texture2D()
 
 Sprite::~Sprite()
 {
-    // Base class destructor handles data cleanup
+    // Base class destructor handles pixel data cleanup
+    if (chromaRowSpans)
+    {
+        delete[] chromaRowSpans;
+        chromaRowSpans = nullptr;
+    }
 }
 
 const SpriteFrame* Sprite::FindFrame(const std::string& guid) const
@@ -34,10 +39,17 @@ void Sprite::SetDefaultSpriteProperties()
 {
     pivot_x = 0.5f;  // Center pivot
     pivot_y = 0.5f;  // Center pivot
-    pixels_per_unit = 100.0f;  // Unity-style default
+    // Default 16 to match the project's default pixelsPerMeter. This value
+    // is *ignored* in Pixels mode (Standard2DRenderer overrides to 1.0 — see
+    // its drawScale block) so backward-compat for legacy/Pixel-mode projects
+    // is preserved. In Meters mode, it makes a 16-px sprite occupy 1 m × 1 m
+    // by default (the natural mental model for retro tile workflows).
+    pixels_per_meter = 16.0f;
     transparent_r = 255;  // Magenta as default transparent color
     transparent_g = 0;
     transparent_b = 255;
+    has_chroma_key = false;
+    chromaRowSpans = nullptr;
 
     // 9-slice defaults
     has_nine_slice = false;
@@ -243,6 +255,29 @@ Sprite* Sprite::Load(const char* file_path)
                     }
                     DEKI_LOG_INTERNAL("  Frame list: %u frames", frameCount);
                 }
+            }
+            else if (chunk_type == 3 && chunk_size >= 8)  // Chroma key chunk
+            {
+                // Layout: enabled(u8), r(u8), g(u8), b(u8), row_spans_count(u32),
+                //         int16[row_spans_count] spans
+                const uint8_t* p = metadata + offset;
+                uint8_t enabled = p[0];
+                if (enabled)
+                {
+                    sprite->has_chroma_key = true;
+                    sprite->transparent_r = p[1];
+                    sprite->transparent_g = p[2];
+                    sprite->transparent_b = p[3];
+                }
+                uint32_t spansCount = *(const uint32_t*)(p + 4);
+                if (enabled && spansCount > 0 &&
+                    chunk_size >= 8 + spansCount * sizeof(int16_t))
+                {
+                    sprite->chromaRowSpans = new int16_t[spansCount];
+                    memcpy(sprite->chromaRowSpans, p + 8, spansCount * sizeof(int16_t));
+                }
+                DEKI_LOG_INTERNAL("  Chroma key: enabled=%d rgb=(%u,%u,%u) spans=%u",
+                                  (int)enabled, p[1], p[2], p[3], spansCount);
             }
             // Skip to next chunk
             offset += chunk_size;
@@ -450,6 +485,25 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
                         }
                     }
                 }
+                else if (chunk_type == 3 && chunk_size >= 8)
+                {
+                    const uint8_t* p = metadata + offset;
+                    uint8_t enabled = p[0];
+                    if (enabled)
+                    {
+                        sprite->has_chroma_key = true;
+                        sprite->transparent_r = p[1];
+                        sprite->transparent_g = p[2];
+                        sprite->transparent_b = p[3];
+                    }
+                    uint32_t spansCount = *(const uint32_t*)(p + 4);
+                    if (enabled && spansCount > 0 &&
+                        chunk_size >= 8 + spansCount * sizeof(int16_t))
+                    {
+                        sprite->chromaRowSpans = new int16_t[spansCount];
+                        memcpy(sprite->chromaRowSpans, p + 8, spansCount * sizeof(int16_t));
+                    }
+                }
                 offset += chunk_size;
             }
         }
@@ -646,10 +700,14 @@ Sprite* Sprite::CreateTiled(Sprite* source, int32_t target_width, int32_t target
     // Copy sprite-specific properties
     tiled->pivot_x = source->pivot_x;
     tiled->pivot_y = source->pivot_y;
-    tiled->pixels_per_unit = source->pixels_per_unit;
+    tiled->pixels_per_meter = source->pixels_per_meter;
     tiled->transparent_r = source->transparent_r;
     tiled->transparent_g = source->transparent_g;
     tiled->transparent_b = source->transparent_b;
+    tiled->has_chroma_key = source->has_chroma_key;
+    // chromaRowSpans is intentionally NOT copied: tiled output has different
+    // dimensions, so source spans don't apply. Render falls back to per-pixel
+    // chroma compare for tiled sprites — uncommon and small perf cost.
 
     uint32_t bytes_per_pixel = Texture2D::GetBytesPerPixel(source->format);
     size_t tiled_data_size = target_width * target_height * bytes_per_pixel;
@@ -845,10 +903,12 @@ Sprite* Sprite::CreateNineSlice(Sprite* source, int32_t target_width, int32_t ta
 
     result->pivot_x = source->pivot_x;
     result->pivot_y = source->pivot_y;
-    result->pixels_per_unit = source->pixels_per_unit;
+    result->pixels_per_meter = source->pixels_per_meter;
     result->transparent_r = source->transparent_r;
     result->transparent_g = source->transparent_g;
     result->transparent_b = source->transparent_b;
+    result->has_chroma_key = source->has_chroma_key;
+    // chromaRowSpans not copied — see CreateTiled note.
 
     result->has_nine_slice = source->has_nine_slice;
     result->nine_slice_left = source->nine_slice_left;

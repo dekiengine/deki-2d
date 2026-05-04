@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include "Deki2DModule.h"
+#include "FontCompiler.h"
 
 namespace Deki2D
 {
@@ -51,6 +52,12 @@ private:
     std::vector<int> m_Sizes;
     int m_FirstChar = 32;
     int m_LastChar = 126;
+    FontCompiler::HintingMode m_Hinting = FontCompiler::HintingMode::Light;
+    int m_Oversample = 2;
+    FontCompiler::DecorationMode m_Decoration = FontCompiler::DecorationMode::None;
+    int m_OutlineSize = 1;
+    int m_ShadowDx = 1;
+    int m_ShadowDy = 1;
     bool m_SettingsModified = false;
 
     // Size editor state

@@ -63,24 +63,10 @@ public:
         return (localX >= left && localX <= right && localY >= top && localY <= bottom);
     }
 
-    bool SupportsResize() const override
-    {
-        return true;
-    }
-
-    void GetResizeTarget(DekiComponent* comp, int32_t** outWidth, int32_t** outHeight) override
-    {
-        auto* button = static_cast<ButtonComponent*>(comp);
-        if (!button)
-            return;
-
-        InputCollider* collider = button->input_collider.Get();
-        if (!collider)
-            return;
-
-        if (outWidth) *outWidth = &collider->width;
-        if (outHeight) *outHeight = &collider->height;
-    }
+    // Resize gizmo not exposed: the button's hit area lives on InputCollider,
+    // whose width/height are float (world units), but GetResizeTarget hands the
+    // gizmo int32_t* fields. Until the editor API gains a float variant, the
+    // collider is sized via the inspector instead.
 };
 
 REGISTER_EDITOR(ButtonCustomEditor)

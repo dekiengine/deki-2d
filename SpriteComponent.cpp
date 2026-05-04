@@ -8,6 +8,35 @@
 #include <algorithm>
 #include <cmath>
 
+namespace
+{
+    // Populate chroma-key fields on a QuadBlit::Source from a Sprite. Quantizes
+    // the key to 5/6/5 precision when the source is RGB565-family so it matches
+    // pixels extracted at that precision. attachRowSpans is false for sprites
+    // whose pixel buffer is a derived bake (frame copy, tiled, 9-slice) — the
+    // source-level row spans don't map to the derived buffer's rows.
+    inline void ApplyChromaKey(QuadBlit::Source& src, const Sprite* spr, bool attachRowSpans)
+    {
+        if (!spr || !spr->has_chroma_key)
+            return;
+        src.hasChromaKey = true;
+        if (src.isRGB565)
+        {
+            src.keyR = (uint8_t)((spr->transparent_r >> 3) << 3);
+            src.keyG = (uint8_t)((spr->transparent_g >> 2) << 2);
+            src.keyB = (uint8_t)((spr->transparent_b >> 3) << 3);
+        }
+        else
+        {
+            src.keyR = spr->transparent_r;
+            src.keyG = spr->transparent_g;
+            src.keyB = spr->transparent_b;
+        }
+        if (attachRowSpans)
+            src.chromaRowSpans = spr->chromaRowSpans;
+    }
+}
+
 // ============================================================================
 // Component Registration
 // ============================================================================
@@ -213,6 +242,10 @@ bool SpriteComponent::RenderContent(const DekiObject* owner,
             isRGB565,
             false  // ownsPixels = false - component owns this buffer
         );
+        // Tiled / 9-slice produce a derived buffer with different dimensions
+        // from the source — sprite's chromaRowSpans don't apply.
+        ApplyChromaKey(outSource, spr, /*attachRowSpans=*/false);
+        outSource.pixelsPerMeter = spr->pixels_per_meter;
         outPivotX = spr->pivot_x;
         outPivotY = spr->pivot_y;
         return true;
@@ -238,6 +271,9 @@ bool SpriteComponent::RenderContent(const DekiObject* owner,
             false,  // ownsPixels = false - sprite owns its data
             spr->alphaRowSpans
         );
+        // Full-sprite blit uses the same row layout as the source — spans apply.
+        ApplyChromaKey(outSource, spr, /*attachRowSpans=*/true);
+        outSource.pixelsPerMeter = spr->pixels_per_meter;
         outPivotX = spr->pivot_x;
         outPivotY = spr->pivot_y;
     }
@@ -279,6 +315,11 @@ bool SpriteComponent::RenderContent(const DekiObject* owner,
             isRGB565,
             false  // ownsPixels = false - we manage this buffer's lifetime
         );
+        // Frame is a sub-region of the source — its row layout doesn't match
+        // the sprite's chromaRowSpans (different y origin and width). Use
+        // per-pixel chroma compare without spans for animation frames.
+        ApplyChromaKey(outSource, spr, /*attachRowSpans=*/false);
+        outSource.pixelsPerMeter = spr->pixels_per_meter;
         // Frame uses center pivot
         outPivotX = 0.5f;
         outPivotY = 0.5f;

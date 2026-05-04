@@ -61,6 +61,73 @@ struct FontHeaderV2
 };
 
 /**
+ * @brief Baked decoration kind for v4+ fonts. Matches FontCompiler::DecorationMode.
+ *
+ * When decoration != None the atlas stores 4-bit palette indices (in the low nibble
+ * of each byte) instead of 8-bit alpha; the runtime builds a 16-entry colour palette
+ * per TextComponent from textColor + decorationColor.
+ */
+enum class FontDecorationMode : uint8_t
+{
+    None    = 0,
+    Outline = 1,
+    Shadow  = 2
+};
+
+/**
+ * @brief Binary font format header (v3 - adds cap-height / x-height metrics)
+ *
+ * File structure (contiguous ASCII):
+ * [FontHeaderV3][GlyphInfo array][atlas_path]
+ *
+ * File structure (sparse, is_sparse flag via high bit of version):
+ * [FontHeaderV3Sparse][uint32_t codepoints[glyph_count]][GlyphInfo array][atlas_path]
+ *
+ * Cap-height and x-height enable optical centering that is independent of the
+ * actual text content (see BitmapFont::GetCapCenterY / GetXCenterY).
+ */
+struct FontHeaderV3
+{
+    char magic[4];           // "DFNT"
+    uint32_t version;        // 3 (contiguous ASCII) or 0x80000003 (sparse)
+    uint32_t first_codepoint;
+    uint32_t last_codepoint;
+    uint8_t line_height;
+    uint8_t baseline;
+    uint8_t cap_height;      // Height of capital letters from baseline (0 = unknown)
+    uint8_t x_height;        // Height of lowercase 'x' from baseline (0 = unknown)
+    uint16_t glyph_count;
+    uint16_t atlas_path_len;
+};
+
+/**
+ * @brief Binary font format header (v4 - adds NDS-style baked decoration metadata).
+ *
+ * Layout matches V3 plus four bytes describing the decoration baked into the atlas.
+ * When `decoration_mode != None` the atlas bytes are 4-bit palette indices (low
+ * nibble per pixel) and TextComponent switches to the palette-lookup render path.
+ *
+ * Sparse flag is carried in the high bit of `version` (0x80000004) just like v3.
+ */
+struct FontHeaderV4
+{
+    char magic[4];           // "DFNT"
+    uint32_t version;        // 4 or 0x80000004 (sparse)
+    uint32_t first_codepoint;
+    uint32_t last_codepoint;
+    uint8_t line_height;
+    uint8_t baseline;
+    uint8_t cap_height;
+    uint8_t x_height;
+    uint8_t decoration_mode; // FontDecorationMode enum value
+    int8_t  decoration_a;    // outline size (1..3) OR shadow dx (-3..+3)
+    int8_t  decoration_b;    // unused for outline OR shadow dy (-3..+3)
+    uint8_t reserved;        // padding for uint16 alignment
+    uint16_t glyph_count;
+    uint16_t atlas_path_len;
+};
+
+/**
  * @brief Bitmap font for text rendering
  *
  * Supports ASCII characters with glyph metrics for proper text layout.
@@ -174,10 +241,61 @@ public:
     uint8_t GetBaseline() const { return baseline; }
 
     /**
+     * @brief Height of capital letters from baseline.
+     *        Falls back to (baseline * 7/10) for v1/v2 fonts that don't store it.
+     */
+    uint8_t GetCapHeight() const;
+
+    /**
+     * @brief Height of lowercase 'x' from baseline.
+     *        Falls back to (baseline * 5/10) for v1/v2 fonts that don't store it.
+     */
+    uint8_t GetXHeight() const;
+
+    /**
+     * @brief Y offset from top-of-line to the optical cap-center.
+     *        Use this for UI labels — uppercase/mixed text sits optically centered
+     *        regardless of whether the text contains descenders.
+     */
+    int32_t GetCapCenterY() const;
+
+    /**
+     * @brief Y offset from top-of-line to the optical x-center.
+     *        Use this for lowercase-heavy body text.
+     */
+    int32_t GetXCenterY() const;
+
+    /**
+     * @brief Baked decoration kind.
+     *        None = atlas is 8-bit alpha (classic path).
+     *        Outline / Shadow = atlas stores 4-bit palette indices; renderer uses
+     *        a 16-entry palette built from textColor + decorationColor.
+     */
+    FontDecorationMode GetDecorationMode() const { return static_cast<FontDecorationMode>(decoration_mode); }
+
+    /** @brief Decoration parameter A: outline thickness (Outline) or shadow dx (Shadow). */
+    int8_t GetDecorationA() const { return decoration_a; }
+
+    /** @brief Decoration parameter B: shadow dy (Shadow); unused for Outline. */
+    int8_t GetDecorationB() const { return decoration_b; }
+
+    /**
      * @brief Get the texture atlas (loads lazily on first call)
      * @return Pointer to atlas texture
      */
     Texture2D* GetAtlas() const;
+
+    /**
+     * @brief Get the resolved atlas path.
+     *
+     * For fonts loaded via `Load(file_path)` this is the absolute path to the
+     * atlas .tex file (dfont's parent dir + filename from header). For fonts
+     * loaded via `LoadFromFileData` this is the relative asset path used for
+     * pack-reader lookups. Callers that need the raw atlas bytes (e.g. the
+     * editor preview pipeline) should read from this path directly rather
+     * than re-parsing the .dfont header.
+     */
+    const std::string& GetAtlasPath() const { return atlasPath_; }
 
     /**
      * @brief Get first character code in font
@@ -215,6 +333,11 @@ private:
     uint32_t last_char;        // Last character code (widened for v2)
     uint8_t line_height;       // Line height in pixels
     uint8_t baseline;          // Baseline offset
+    uint8_t cap_height;        // Capital letter height from baseline (0 = unknown, use fallback)
+    uint8_t x_height;          // Lowercase 'x' height from baseline (0 = unknown, use fallback)
+    uint8_t decoration_mode;   // v4+: FontDecorationMode (0 = None; default)
+    int8_t  decoration_a;      // v4+: outline size or shadow dx
+    int8_t  decoration_b;      // v4+: shadow dy (unused for outline)
     uint16_t glyph_count;      // Number of glyphs
     bool is_sparse;            // true = v2 sparse codepoint table, false = v1 contiguous
     std::string atlasPath_;    // Deferred atlas path for lazy loading
