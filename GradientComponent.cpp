@@ -3,7 +3,7 @@
 #include "DekiEngine.h"
 #include "deki-rendering/CameraComponent.h"
 #ifndef DEKI_EDITOR
-#include "providers/DekiMemoryProvider.h"
+#include "providers/DekiMemory.h"
 #endif
 #include <cmath>
 #include <algorithm>

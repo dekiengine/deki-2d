@@ -1,7 +1,7 @@
 #include "Texture2D.h"
-#include "providers/DekiMemoryProvider.h"
+#include "providers/DekiMemory.h"
 #ifndef DEKI_EDITOR
-#include "providers/DekiFileSystemProvider.h"
+#include "providers/DekiFileSystem.h"
 #else
 #include <cstdlib>
 #include <fstream>
@@ -23,18 +23,18 @@ Texture2D::~Texture2D()
     {
 #ifdef DEKI_EDITOR
         // Editor: Free using the same allocator that was used for allocation
-        // Play mode uses DekiMemoryProvider, edit mode uses std::free
+        // Play mode uses DekiMemory, edit mode uses std::free
         if (allocated_with_backend)
         {
-            DekiMemoryProvider::Free(data);
+            DekiMemory::Free(data);
         }
         else
         {
             std::free(data);
         }
 #else
-        // Runtime: Always use DekiMemoryProvider
-        DekiMemoryProvider::Free(data);
+        // Runtime: Always use DekiMemory
+        DekiMemory::Free(data);
 #endif
         data = nullptr;
     }
@@ -51,7 +51,7 @@ Texture2D* Texture2D::Load(const char* file_path)
         return nullptr;
     }
 
-    IDekiFileSystem* fs = DekiFileSystemProvider::GetFileSystemForPath(file_path);
+    IDekiFileSystem* fs = DekiFileSystem::GetFileSystemForPath(file_path);
     if (!fs) {
         DEKI_LOG_INTERNAL("FileSystem not initialized for path: %s", file_path);
         return nullptr;
@@ -102,7 +102,7 @@ Texture2D* Texture2D::Load(const char* file_path)
     }
 
     // Read pixel data
-    uint8_t* pixel_data = (uint8_t*)DekiMemoryProvider::Allocate(
+    uint8_t* pixel_data = (uint8_t*)DekiMemory::Allocate(
         header.data_size, true, "Texture2D::Load");
 
     if (!pixel_data)
@@ -116,7 +116,7 @@ Texture2D* Texture2D::Load(const char* file_path)
     if (bytes_read != header.data_size)
     {
         DEKI_LOG_ERROR("Failed to read texture pixel data");
-        DekiMemoryProvider::Free(pixel_data);
+        DekiMemory::Free(pixel_data);
         fs->CloseFile(file);
         return nullptr;
     }
@@ -128,7 +128,7 @@ Texture2D* Texture2D::Load(const char* file_path)
     if (!texture->LoadFromMemory(header, pixel_data))
     {
         DEKI_LOG_ERROR("Failed to load texture from memory");
-        DekiMemoryProvider::Free(pixel_data);
+        DekiMemory::Free(pixel_data);
         delete texture;
         return nullptr;
     }

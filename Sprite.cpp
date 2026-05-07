@@ -4,8 +4,8 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "providers/DekiFileSystemProvider.h"
-#include "providers/DekiMemoryProvider.h"
+#include "providers/DekiFileSystem.h"
+#include "providers/DekiMemory.h"
 #include "DekiLogSystem.h"
 #include "DekiTime.h"
 #include "assets/AssetManager.h"
@@ -74,7 +74,7 @@ Sprite* Sprite::Load(const char* file_path)
 
     uint32_t tStart = DekiTime::GetTime();
 
-    IDekiFileSystem* fs = DekiFileSystemProvider::GetFileSystemForPath(file_path);
+    IDekiFileSystem* fs = DekiFileSystem::GetFileSystemForPath(file_path);
     if (!fs) {
         DEKI_LOG_INTERNAL("FileSystem not initialized for path: %s", file_path);
         return nullptr;
@@ -131,7 +131,7 @@ Sprite* Sprite::Load(const char* file_path)
     }
 
     // Read pixel data
-    uint8_t* pixel_data = (uint8_t*)DekiMemoryProvider::Allocate(
+    uint8_t* pixel_data = (uint8_t*)DekiMemory::Allocate(
         header.data_size, true, "Sprite::Load");
 
     if (!pixel_data)
@@ -145,7 +145,7 @@ Sprite* Sprite::Load(const char* file_path)
     if (bytes_read != header.data_size)
     {
         DEKI_LOG_ERROR("Failed to read sprite pixel data");
-        DekiMemoryProvider::Free(pixel_data);
+        DekiMemory::Free(pixel_data);
         fs->CloseFile(file);
         return nullptr;
     }
@@ -154,7 +154,7 @@ Sprite* Sprite::Load(const char* file_path)
     uint8_t* metadata = nullptr;
     if (header.metadata_size > 0)
     {
-        metadata = (uint8_t*)DekiMemoryProvider::Allocate(
+        metadata = (uint8_t*)DekiMemory::Allocate(
             header.metadata_size, false, "Sprite::Load-metadata");
 
         if (metadata)
@@ -163,7 +163,7 @@ Sprite* Sprite::Load(const char* file_path)
             if (bytes_read != header.metadata_size)
             {
                 DEKI_LOG_WARNING("Failed to read sprite metadata, using defaults");
-                DekiMemoryProvider::Free(metadata);
+                DekiMemory::Free(metadata);
                 metadata = nullptr;
             }
         }
@@ -176,8 +176,8 @@ Sprite* Sprite::Load(const char* file_path)
     if (!sprite->LoadFromMemory(header, pixel_data))
     {
         DEKI_LOG_ERROR("Failed to load sprite from memory");
-        DekiMemoryProvider::Free(pixel_data);
-        if (metadata) DekiMemoryProvider::Free(metadata);
+        DekiMemory::Free(pixel_data);
+        if (metadata) DekiMemory::Free(metadata);
         delete sprite;
         return nullptr;
     }
@@ -283,11 +283,11 @@ Sprite* Sprite::Load(const char* file_path)
             offset += chunk_size;
         }
 
-        DekiMemoryProvider::Free(metadata);
+        DekiMemory::Free(metadata);
     }
     else if (metadata)
     {
-        DekiMemoryProvider::Free(metadata);
+        DekiMemory::Free(metadata);
     }
 
     uint32_t tReadDone = DekiTime::GetTime();
@@ -295,7 +295,7 @@ Sprite* Sprite::Load(const char* file_path)
     // Pixel data is now owned by sprite
     sprite->data = pixel_data;
 #ifdef DEKI_EDITOR
-    sprite->allocated_with_backend = true;  // Allocated with DekiMemoryProvider in play mode
+    sprite->allocated_with_backend = true;  // Allocated with DekiMemory in play mode
 #endif
 
     // For RGB565A8 sprites marked as having alpha, check if all pixels are actually opaque.
@@ -406,7 +406,7 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
     const uint8_t* src = fileData + sizeof(Texture2D::Header);
 
     // Copy pixel data into PSRAM (sprite takes ownership)
-    uint8_t* pixel_data = (uint8_t*)DekiMemoryProvider::Allocate(
+    uint8_t* pixel_data = (uint8_t*)DekiMemory::Allocate(
         header.data_size, true, "Sprite::LoadFromFileData");
     if (!pixel_data)
     {
@@ -420,7 +420,7 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
     Sprite* sprite = new Sprite();
     if (!sprite->LoadFromMemory(header, pixel_data))
     {
-        DekiMemoryProvider::Free(pixel_data);
+        DekiMemory::Free(pixel_data);
         delete sprite;
         return nullptr;
     }
@@ -592,7 +592,7 @@ Sprite* Sprite::CreateSolid(int32_t width, int32_t height, uint8_t r, uint8_t g,
     size_t data_size = width * height * 2;  // RGB565 format = 2 bytes per pixel
     DEKI_LOG_INTERNAL("Sprite::CreateSolid - Allocating %zu bytes for RGB565 data", data_size);
 
-    sprite->data = (uint8_t*)DekiMemoryProvider::Allocate(
+    sprite->data = (uint8_t*)DekiMemory::Allocate(
         data_size, true, "Sprite::CreateSolid");
 
     if (!sprite->data)
@@ -634,7 +634,7 @@ Sprite* Sprite::CreateSolidRGBA(int32_t width, int32_t height, uint8_t r, uint8_
 
         size_t data_size = width * height * 3;  // RGB565A8 format (2 bytes RGB565 + 1 byte alpha)
 
-    sprite->data = (uint8_t*)DekiMemoryProvider::Allocate(
+    sprite->data = (uint8_t*)DekiMemory::Allocate(
         data_size, true, "Sprite::CreateSolidRGBA");
 
     if (!sprite->data)
@@ -711,7 +711,7 @@ Sprite* Sprite::CreateTiled(Sprite* source, int32_t target_width, int32_t target
 
     uint32_t bytes_per_pixel = Texture2D::GetBytesPerPixel(source->format);
     size_t tiled_data_size = target_width * target_height * bytes_per_pixel;
-    tiled->data = (uint8_t*)DekiMemoryProvider::Allocate(tiled_data_size, true);
+    tiled->data = (uint8_t*)DekiMemory::Allocate(tiled_data_size, true);
 
     if (!tiled->data)
     {
@@ -918,7 +918,7 @@ Sprite* Sprite::CreateNineSlice(Sprite* source, int32_t target_width, int32_t ta
 
     uint32_t bytes_per_pixel = Texture2D::GetBytesPerPixel(source->format);
     size_t result_data_size = target_width * target_height * bytes_per_pixel;
-    result->data = (uint8_t*)DekiMemoryProvider::Allocate(result_data_size, true, "Sprite::CreateNineSlice");
+    result->data = (uint8_t*)DekiMemory::Allocate(result_data_size, true, "Sprite::CreateNineSlice");
 
     if (!result->data)
     {

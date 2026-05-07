@@ -1,6 +1,6 @@
 #include "BitmapFont.h"
 #include "Sprite.h"
-#include "providers/DekiFileSystemProvider.h"
+#include "providers/DekiFileSystem.h"
 #include "DekiLogSystem.h"
 #include "DekiTime.h"
 #include "assets/AssetManager.h"
@@ -43,7 +43,7 @@ BitmapFont* BitmapFont::Load(const char* file_path)
     uint32_t tStart = DekiTime::GetTime();
 
     // Read entire file
-    IDekiFileSystem* fs = DekiFileSystemProvider::GetFileSystemForPath(file_path);
+    IDekiFileSystem* fs = DekiFileSystem::GetFileSystemForPath(file_path);
     if (!fs)
     {
         DEKI_LOG_ERROR("BitmapFont::Load: No filesystem available for path: %s", file_path);
