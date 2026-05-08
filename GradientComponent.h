@@ -81,6 +81,17 @@ class GradientComponent : public RendererComponent
     DEKI_EXPORT
     GradientDitherMode dither_mode;
 
+    /**
+     * @brief Scale of the dither pattern in pixels per Bayer cell.
+     *
+     * 1 (default) = native 1px dither (current behavior).
+     * 2/4/8/16    = chunkier blocks that make the pattern more visible —
+     *               useful for stylized retro looks.
+     * Non power-of-2 values snap down to the nearest power of 2 (so 3→2, 7→4).
+     */
+    DEKI_EXPORT
+    uint8_t dither_scale;
+
     // Area to fill
     DEKI_EXPORT
     int32_t width;
@@ -249,14 +260,19 @@ class GradientComponent : public RendererComponent
     void InterpolateColor(float position, uint8_t* r, uint8_t* g, uint8_t* b) const;
 
     /**
-     * @brief Apply dithering to color
-     * @param x Pixel X coordinate
-     * @param y Pixel Y coordinate
-     * @param r Red component (modified)
-     * @param g Green component (modified)
-     * @param b Blue component (modified)
+     * @brief Sample the Bayer threshold at (x, y) for the current dither_mode.
+     * @return Threshold in [0, 1).
      */
-    void ApplyDithering(int32_t x, int32_t y, uint8_t* r, uint8_t* g, uint8_t* b) const;
+    float SampleBayerThreshold(int32_t x, int32_t y) const;
+
+    /**
+     * @brief Pixelorama-style stipple pick: write one of the bracketing stop
+     *        colors based on whether the local-t exceeds a Bayer threshold.
+     *        No interpolation between stops — every output pixel is exactly
+     *        one of the authored colors.
+     */
+    void PickStopByThreshold(float position, float threshold,
+                             uint8_t* r, uint8_t* g, uint8_t* b) const;
 
     /**
      * @brief Convert RGB to RGB565 format

@@ -51,6 +51,7 @@ GradientComponent::GradientComponent(int32_t w, int32_t h)
 , gradient_type(GradientType::Linear)
 , tile_mode(GradientTileMode::None)
 , dither_mode(GradientDitherMode::Ordered4x4)
+, dither_scale(1)
 , width(w)
 , height(h)
 , angle(0.0f)
@@ -272,54 +273,81 @@ DEKI_FAST_ATTR void GradientComponent::InterpolateColor(float position, uint8_t*
     *r = *g = *b = 0;
 }
 
-void GradientComponent::ApplyDithering(int32_t x, int32_t y, uint8_t* r, uint8_t* g, uint8_t* b) const
+DEKI_FAST_ATTR float GradientComponent::SampleBayerThreshold(int32_t x, int32_t y) const
 {
-    if (dither_mode == GradientDitherMode::None) return;
-
-    // Get normalized threshold from Bayer matrix (0.0 to 1.0 range)
-    // The threshold determines whether a pixel rounds up or down during quantization
-    float threshold = 0.0f;
-
+    // Returns Bayer threshold in [0, 1) for ordered dithering. Pixelorama uses
+    // the same M / N² normalisation (no +0.5 centring), which gives crisp
+    // hard-edged transitions at t=0 and t=1.
     switch (dither_mode)
     {
         case GradientDitherMode::Ordered2x2:
-            // BAYER_2x2 has values 0-3, normalize to 0.0-1.0
-            threshold = BAYER_2x2[(y & 1) * 2 + (x & 1)] / 4.0f;
-            break;
-
+            return BAYER_2x2[(y & 1) * 2 + (x & 1)] / 4.0f;
         case GradientDitherMode::Ordered4x4:
-            // BAYER_4x4 has values 0-15, normalize to 0.0-1.0
-            threshold = BAYER_4x4[(y & 3) * 4 + (x & 3)] / 16.0f;
-            break;
-
+            return BAYER_4x4[(y & 3) * 4 + (x & 3)] / 16.0f;
         case GradientDitherMode::Ordered8x8:
-            // BAYER_8x8 has values 0-63, normalize to 0.0-1.0
-            threshold = BAYER_8x8[(y & 7) * 8 + (x & 7)] / 64.0f;
-            break;
-
+            return BAYER_8x8[(y & 7) * 8 + (x & 7)] / 64.0f;
         case GradientDitherMode::Ordered16x16:
-            // BAYER_16x16 has values 0-255, normalize to 0.0-1.0
-            threshold = BAYER_16x16[(y & 15) * 16 + (x & 15)] / 256.0f;
-            break;
-
+            return BAYER_16x16[(y & 15) * 16 + (x & 15)] / 256.0f;
         default:
-            return;
+            return 0.0f;
+    }
+}
+
+DEKI_FAST_ATTR void GradientComponent::PickStopByThreshold(float position, float threshold,
+                                                            uint8_t* r, uint8_t* g, uint8_t* b) const
+{
+    // Pixelorama-style gradient dithering: instead of blending between stops,
+    // pick ONE of the two bracket stops based on whether the local-t exceeds
+    // a Bayer threshold. This produces the stippled, pixel-art look where
+    // every pixel is exactly one of the authored colors and the dither pattern
+    // fills the transition zones between them.
+    //
+    // Matches Pixelorama's Gradient.gdshader behaviour:
+    //   - position < stops[0].position  → first stop (solid)
+    //   - position >= stops[N-1].position → last stop (solid)
+    //   - inside a bracket: ramp_val = (local_t < threshold) ? 0 : 1
+    //     (i.e. local_t >= threshold picks the upper stop)
+    if (stop_count == 0) { *r = *g = *b = 0; return; }
+    if (stop_count == 1)
+    {
+        *r = stops[0].color.r;
+        *g = stops[0].color.g;
+        *b = stops[0].color.b;
+        return;
     }
 
-    // Apply ordered dithering for RGB565 quantization
-    // RGB565: R=5 bits (step=8), G=6 bits (step=4), B=5 bits (step=8)
-    // Add threshold * step_size to color before quantization
-    // This causes some pixels to round up, creating the dither pattern
+    if (position < stops[0].position)
+    {
+        *r = stops[0].color.r;
+        *g = stops[0].color.g;
+        *b = stops[0].color.b;
+        return;
+    }
+    if (position >= stops[stop_count - 1].position)
+    {
+        *r = stops[stop_count - 1].color.r;
+        *g = stops[stop_count - 1].color.g;
+        *b = stops[stop_count - 1].color.b;
+        return;
+    }
 
-    // For 5-bit channels: quantization step is 8 (256/32)
-    // For 6-bit channel: quantization step is 4 (256/64)
-    int16_t new_r = *r + (int16_t)(threshold * 8.0f) - 4;  // Center around 0
-    int16_t new_g = *g + (int16_t)(threshold * 4.0f) - 2;  // Center around 0
-    int16_t new_b = *b + (int16_t)(threshold * 8.0f) - 4;  // Center around 0
+    for (int i = 0; i < stop_count - 1; i++)
+    {
+        if (position >= stops[i].position && position < stops[i + 1].position)
+        {
+            float range = stops[i + 1].position - stops[i].position;
+            float local_t = (range > 0.0f) ? (position - stops[i].position) / range : 0.0f;
 
-    *r = (uint8_t)std::clamp((int)new_r, 0, 255);
-    *g = (uint8_t)std::clamp((int)new_g, 0, 255);
-    *b = (uint8_t)std::clamp((int)new_b, 0, 255);
+            // Pixelorama's comparison: ramp_val = (local_t < threshold) ? 0 : 1
+            const GradientStop& picked = (local_t >= threshold) ? stops[i + 1] : stops[i];
+            *r = picked.color.r;
+            *g = picked.color.g;
+            *b = picked.color.b;
+            return;
+        }
+    }
+
+    *r = *g = *b = 0;
 }
 
 DEKI_FAST_ATTR uint16_t GradientComponent::ConvertToRGB565(uint8_t r, uint8_t g, uint8_t b) const
@@ -350,6 +378,18 @@ void GradientComponent::RenderToBuffer(uint8_t* buffer)
 
     int32_t actual_tile_width = tile_width > 0 ? tile_width : render_width;
     int32_t actual_tile_height = tile_height > 0 ? tile_height : render_height;
+
+    // Snap dither_scale down to the nearest power of 2 and convert to a shift,
+    // so the per-pixel cost stays a single bit-shift (no integer division on
+    // the Xtensa hot path).
+    int dither_shift = 0;
+    {
+        uint8_t s = dither_scale;
+        if (s >= 16)     dither_shift = 4;
+        else if (s >= 8) dither_shift = 3;
+        else if (s >= 4) dither_shift = 2;
+        else if (s >= 2) dither_shift = 1;
+    }
 
     for (int32_t y = 0; y < render_height; y++)
     {
@@ -407,12 +447,20 @@ void GradientComponent::RenderToBuffer(uint8_t* buffer)
             // Calculate gradient position
             float grad_pos = CalculateGradientPosition(norm_x, norm_y);
 
-            // Interpolate color
             uint8_t r, g, b;
-            InterpolateColor(grad_pos, &r, &g, &b);
-
-            // Apply dithering
-            ApplyDithering(x, y, &r, &g, &b);
+            if (dither_mode == GradientDitherMode::None)
+            {
+                // No dither: smooth lerp between stops (legacy behaviour).
+                InterpolateColor(grad_pos, &r, &g, &b);
+            }
+            else
+            {
+                // Pixelorama-style stipple dither: pick one of the bracketing
+                // stop colors based on a Bayer threshold. Coordinates are
+                // shifted by dither_shift so each Bayer cell spans an N×N block.
+                float threshold = SampleBayerThreshold(x >> dither_shift, y >> dither_shift);
+                PickStopByThreshold(grad_pos, threshold, &r, &g, &b);
+            }
 
             // Convert to RGB565 and write directly to buffer at (x, y)
             buffer16[y * render_width + x] = ConvertToRGB565(r, g, b);
