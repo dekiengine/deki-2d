@@ -28,17 +28,17 @@ var NAVTREE =
     [ "Components", "index.html#autotoc_md0", null ],
     [ "Feature flags", "index.html#autotoc_md1", null ],
     [ "Component reference", "index.html#autotoc_md2", [
-      [ "AnimationComponent (Animation Component)", "index.html#c-animationcomponent", null ],
-      [ "ButtonComponent (Button Component)", "index.html#c-buttoncomponent", null ],
-      [ "ButtonStyleComponent (Button Style Component)", "index.html#c-buttonstylecomponent", null ],
-      [ "ClipComponent (Clip Component)", "index.html#c-clipcomponent", null ],
-      [ "GradientComponent (Gradient Component)", "index.html#c-gradientcomponent", null ],
-      [ "RollerComponent (Roller Component)", "index.html#c-rollercomponent", null ],
-      [ "ScrollComponent (Scroll Component)", "index.html#c-scrollcomponent", null ],
-      [ "ScrollElement (Scroll Element)", "index.html#c-scrollelement", null ],
-      [ "SortingGroupComponent (Sorting Group Component)", "index.html#c-sortinggroupcomponent", null ],
-      [ "SpriteComponent (Sprite Component)", "index.html#c-spritecomponent", null ],
-      [ "TextComponent (Text Component)", "index.html#c-textcomponent", null ]
+      [ "AnimationComponent", "index.html#c-animationcomponent", null ],
+      [ "ButtonComponent", "index.html#c-buttoncomponent", null ],
+      [ "ButtonStyleComponent", "index.html#c-buttonstylecomponent", null ],
+      [ "ClipComponent", "index.html#c-clipcomponent", null ],
+      [ "GradientComponent", "index.html#c-gradientcomponent", null ],
+      [ "RollerComponent", "index.html#c-rollercomponent", null ],
+      [ "ScrollComponent", "index.html#c-scrollcomponent", null ],
+      [ "ScrollElement", "index.html#c-scrollelement", null ],
+      [ "SortingGroupComponent", "index.html#c-sortinggroupcomponent", null ],
+      [ "SpriteComponent", "index.html#c-spritecomponent", null ],
+      [ "TextComponent", "index.html#c-textcomponent", null ]
     ] ]
   ] ]
 ];
