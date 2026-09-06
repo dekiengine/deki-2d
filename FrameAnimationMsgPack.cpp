@@ -2,6 +2,7 @@
 #include "FrameAnimationData.h"
 #include <deki/LogSystem.h>
 #include <deki/assets/AssetManager.h>
+#include <deki/providers/FileSystem.h>
 #include <deki/SceneMessagePack.h>
 #include <cstddef>
 #include <cstdint>
@@ -29,24 +30,36 @@ bool FrameAnimationMsgPackHelper::LoadAnimation(const char* msgpack_path, FrameA
         return false;
     }
 
-    // Read file into buffer
-    std::ifstream file(msgpack_path, std::ios::binary | std::ios::ate);
-    if (!file.is_open())
+    // Read through the filesystem provider, like Sprite and BitmapFont: a raw
+    // ifstream cannot resolve a mounted prefix such as "S:/", so on a device
+    // (and in the desktop simulator) every animation failed to open.
+    Deki::IFileSystem* fs = Deki::FileSystem::GetFileSystemForPath(msgpack_path);
+    if (!fs)
+    {
+        DEKI_LOG_ERROR("FrameAnimationMsgPackHelper::LoadAnimation - no filesystem for: %s", msgpack_path);
+        return false;
+    }
+    Deki::IFileSystem::FileHandle file = fs->OpenFile(msgpack_path, Deki::IFileSystem::OpenMode::READ_BINARY);
+    if (!file)
     {
         DEKI_LOG_ERROR("FrameAnimationMsgPackHelper::LoadAnimation - failed to open: %s", msgpack_path);
         return false;
     }
-
-    std::streamsize size = file.tellg();
-    file.seekg(0, std::ios::beg);
-
-    std::vector<uint8_t> buffer(size);
-    if (!file.read(reinterpret_cast<char*>(buffer.data()), size))
+    const long size = fs->GetFileSize(file);
+    if (size <= 0)
     {
-        DEKI_LOG_ERROR("FrameAnimationMsgPackHelper::LoadAnimation - failed to read file");
+        fs->CloseFile(file);
+        DEKI_LOG_ERROR("FrameAnimationMsgPackHelper::LoadAnimation - empty file: %s", msgpack_path);
         return false;
     }
-
+    std::vector<uint8_t> buffer(static_cast<size_t>(size));
+    const size_t read = fs->ReadFile(file, buffer.data(), static_cast<size_t>(size));
+    fs->CloseFile(file);
+    if (read != static_cast<size_t>(size))
+    {
+        DEKI_LOG_ERROR("FrameAnimationMsgPackHelper::LoadAnimation - failed to read file: %s", msgpack_path);
+        return false;
+    }
     return LoadAnimationFromMemory(buffer.data(), static_cast<size_t>(size), out_data);
 }
 
