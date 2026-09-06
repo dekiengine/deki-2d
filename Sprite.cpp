@@ -10,6 +10,43 @@
 #include <deki/Time.h>
 #include <deki/assets/AssetManager.h>
 
+// Per-row opaque spans for RGB565A8 pixels: [start, end) of the longest run
+// of fully opaque pixels in each row. The blitter copies that run straight
+// and blends everything outside it per pixel, so the run must not contain a
+// soft or transparent pixel (first-to-last opaque used to be recorded, and
+// the notch of a heart or the gap between two legs came out in whatever
+// colour the transparent pixel carried). A row with no opaque pixel gets an
+// EMPTY span at the row end, so the blitter's left region covers the row
+// once and its right region is empty. (start=w, end=0 made both regions
+// cover the whole row: every soft pixel blended twice, and the right loop
+// started at x=0 regardless of the clip rect.)
+static void BuildOpaqueRowSpans(const uint8_t* pixel_data, int32_t w, int32_t h, int16_t* spans)
+{
+    for (int32_t y = 0; y < h; y++)
+    {
+        const uint8_t* row = pixel_data + y * w * 3;
+        int32_t bestStart = w, bestEnd = w;
+        int32_t runStart = -1;
+        for (int32_t x = 0; x <= w; x++)
+        {
+            const bool opaque = (x < w) && row[x * 3 + 2] == 255;
+            if (opaque && runStart < 0)
+                runStart = x;
+            if (!opaque && runStart >= 0)
+            {
+                if (x - runStart > bestEnd - bestStart || bestStart >= w)
+                {
+                    bestStart = runStart;
+                    bestEnd = x;
+                }
+                runStart = -1;
+            }
+        }
+        spans[y * 2] = (int16_t)bestStart;
+        spans[y * 2 + 1] = (int16_t)bestEnd;
+    }
+}
+
 Sprite::Sprite() : Texture2D()
 {
     SetDefaultSpriteProperties();
@@ -327,41 +364,7 @@ Sprite* Sprite::Load(const char* file_path)
             {
                 // Build per-row opaque span data for fast blitting.
                 sprite->alphaRowSpans = new int16_t[h * 2];
-                for (int32_t y = 0; y < h; y++)
-                {
-                    const uint8_t* row = pixel_data + y * w * 3;
-                    int16_t opaqueStart = (int16_t)w;
-                    int16_t opaqueEnd = 0;
-
-                    for (int32_t x = 0; x < w; x++)
-                    {
-                        if (row[x * 3 + 2] == 255)
-                        {
-                            opaqueStart = (int16_t)x;
-                            break;
-                        }
-                    }
-
-                    for (int32_t x = w - 1; x >= opaqueStart; x--)
-                    {
-                        if (row[x * 3 + 2] == 255)
-                        {
-                            opaqueEnd = (int16_t)(x + 1);
-                            break;
-                        }
-                    }
-
-                    // No opaque pixel at all: an EMPTY span at the row end, so the
-                    // blitter's left region covers the row once and its right
-                    // region is empty. (start=w, end=0 made both regions cover the
-                    // whole row: every soft pixel blended twice, and the right
-                    // loop started at x=0 regardless of the clip rect.)
-                    if (opaqueStart >= w)
-                        opaqueEnd = (int16_t)w;
-
-                    sprite->alphaRowSpans[y * 2] = opaqueStart;
-                    sprite->alphaRowSpans[y * 2 + 1] = opaqueEnd;
-                }
+                BuildOpaqueRowSpans(pixel_data, w, h, sprite->alphaRowSpans);
             }
         }
     }
@@ -539,19 +542,7 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
             else
             {
                 sprite->alphaRowSpans = new int16_t[h * 2];
-                for (int32_t y = 0; y < h; y++)
-                {
-                    const uint8_t* row = pixel_data + y * w * 3;
-                    int16_t opaqueStart = (int16_t)w, opaqueEnd = 0;
-                    for (int32_t x = 0; x < w; x++)
-                        if (row[x * 3 + 2] == 255) { opaqueStart = (int16_t)x; break; }
-                    for (int32_t x = w - 1; x >= opaqueStart; x--)
-                        if (row[x * 3 + 2] == 255) { opaqueEnd = (int16_t)(x + 1); break; }
-                    if (opaqueStart >= w)
-                        opaqueEnd = (int16_t)w;  // empty span, see Sprite::Load
-                    sprite->alphaRowSpans[y * 2] = opaqueStart;
-                    sprite->alphaRowSpans[y * 2 + 1] = opaqueEnd;
-                }
+                BuildOpaqueRowSpans(pixel_data, w, h, sprite->alphaRowSpans);
             }
         }
     }
