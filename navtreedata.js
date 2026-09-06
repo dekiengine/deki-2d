@@ -26,8 +26,7 @@ var NAVTREE =
 [
   [ "deki-2d", "index.html", [
     [ "Components", "index.html#autotoc_md0", null ],
-    [ "Feature flags", "index.html#autotoc_md1", null ],
-    [ "Component reference", "index.html#autotoc_md2", [
+    [ "Component reference", "index.html#autotoc_md1", [
       [ "AnimationComponent", "index.html#c-animationcomponent", null ],
       [ "ButtonComponent", "index.html#c-buttoncomponent", null ],
       [ "ButtonStyleComponent", "index.html#c-buttonstylecomponent", null ],
