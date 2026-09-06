@@ -1,0 +1,19 @@
+build/
+*.o
+*.obj
+*.a
+*.lib
+*.dll
+*.pdb
+*.tmp
+*.log
+.vs/
+.vscode/
+.claude/
+.cache/
+CMakeFiles/
+cmake-build-*/
+
+# Build artifacts from project junction
+generated/
+.deki-package.json
