@@ -19,7 +19,6 @@ AnimationComponent::AnimationComponent(SpriteComponent* sprite_comp)
     , playOnceOverride(false)
     , completion_callback(nullptr)
 {
-    SetNeedsUpdate(true);
 }
 
 AnimationComponent::~AnimationComponent()

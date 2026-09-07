@@ -1,7 +1,7 @@
 {
   "id": "deki-2d",
   "displayName": "2D",
-  "minEngine": "0.11.0",
+  "minEngine": "0.12.0",
   "buildDefine": "DEKI_PACKAGE_2D",
   "requires": [
     "deki-rendering",
