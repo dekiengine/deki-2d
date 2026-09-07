@@ -4,6 +4,9 @@
 #include "TextComponent.h"
 #include "SpriteComponent.h"
 #include <deki/Object.h>
+#ifdef DEKI_EDITOR
+#include <deki-editor/EditorComponents.h>
+#endif
 #include <deki/Engine.h>
 #include <deki/LogSystem.h>
 #include "deki-rendering/CameraComponent.h"
@@ -84,7 +87,7 @@ Deki::Object* RollerComponent::FindOrCreateChild(Deki::Object* owner, const char
     // Create new child object (editor only - runtime loads from scene)
     Deki::Object* child = new Deki::Object(name);
     owner->AddChild(child);
-    child->AddComponent(componentType);
+    DekiEditor::AddComponentByName(child, componentType);
     return child;
 #else
     // Runtime: child should exist from scene loading

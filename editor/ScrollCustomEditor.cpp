@@ -12,6 +12,7 @@
 
 #include <deki-editor/EditorRegistry.h>
 #include <deki-editor/CustomEditor.h>
+#include <deki-editor/EditorComponents.h>
 #include "ScrollComponent.h"
 #include <deki/Object.h>
 #include <deki/Scene.h>
@@ -40,7 +41,7 @@ Deki::Object* EnsureChild(Deki::Object* parent, const char* name, const char* co
 
     Deki::Object* child = new Deki::Object(name);
     parent->AddChild(child);
-    if (componentType) child->AddComponent(componentType);
+    if (componentType) DekiEditor::AddComponentByName(child, componentType);
     return child;
 }
 
