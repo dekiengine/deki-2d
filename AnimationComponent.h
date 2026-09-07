@@ -14,11 +14,11 @@
  *
  * Uses .frameanim files which reference spritesheet frames by GUID.
  */
+DEKI_CATEGORY("2D")
+DEKI_DESCRIPTION("Plays a frame animation asset on the object's sprite.")
 class AnimationComponent : public Deki::Behaviour
 {
 public:
-    DEKI_COMPONENT(AnimationComponent, Deki::Behaviour, "2D", "05f70a7a-334f-492f-9779-f3e351f64d9a", "DEKI_FEATURE_ANIMATION")
-    DEKI_DESCRIPTION("Plays a frame animation asset on the object's sprite.")
 
     SpriteComponent* spriteComponent;         // Associated sprite component
 
@@ -169,4 +169,3 @@ private:
 };
 
 // Generated property metadata (after class definition for offsetof)
-#include "generated/AnimationComponent.gen.h"

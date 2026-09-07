@@ -23,11 +23,11 @@
  *
  * ClipComponents can be nested - child clips are intersected with parent clips.
  */
+DEKI_CATEGORY("Core")
+DEKI_DESCRIPTION("Clips its children's rendering to a rectangle.")
 class ClipComponent : public Deki::Component, public Deki::IClipProvider, public Deki::ISortableProvider
 {
 public:
-    DEKI_COMPONENT(ClipComponent, Deki::Component, "Core", "063a42d4-bfe1-49b9-b620-0cbf87ad720f", "DEKI_FEATURE_CLIP")
-    DEKI_DESCRIPTION("Clips its children's rendering to a rectangle.")
 
     /** @brief Width of clip region in meters */
     DEKI_EXPORT
@@ -55,4 +55,3 @@ public:
 };
 
 // Generated property metadata (after class definition for offsetof)
-#include "generated/ClipComponent.gen.h"

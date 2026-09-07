@@ -54,10 +54,10 @@ using ButtonCallback = std::function<void()>;
  * });
  * @endcode
  */
+DEKI_CATEGORY("2D")
+DEKI_DESCRIPTION("Makes the object a button: tracks hover and press, and fires a click callback.")
 class ButtonComponent : public Deki::Behaviour
 {
-    DEKI_COMPONENT(ButtonComponent, Deki::Behaviour, "2D", "e6bb6f32-be31-4af1-a152-32cd21f490f3", "DEKI_FEATURE_BUTTON")
-    DEKI_DESCRIPTION("Makes the object a button: tracks hover and press, and fires a click callback.")
    public:
 
     // InputCollider reference (required for receiving input)
@@ -130,4 +130,3 @@ class ButtonComponent : public Deki::Behaviour
 };
 
 // Generated property metadata (after class definition for offsetof)
-#include "generated/ButtonComponent.gen.h"

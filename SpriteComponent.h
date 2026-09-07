@@ -26,11 +26,11 @@ enum class SpriteRenderMode : uint8_t
 /**
  * @brief Sprite component for entities that have visual representation
  */
+DEKI_CATEGORY("2D")
+DEKI_DESCRIPTION("Draws a sprite, with tint, flip, and tiled or 9-slice modes.")
 class SpriteComponent : public RendererComponent
 {
 public:
-    DEKI_COMPONENT(SpriteComponent, RendererComponent, "2D", "ca17ba76-f46d-484d-97ff-6e8e5497ef8d", "DEKI_FEATURE_SPRITE")
-    DEKI_DESCRIPTION("Draws a sprite, with tint, flip, and tiled or 9-slice modes.")
 
     // Sprite asset - uses AssetRef for automatic GUID storage and loading
     DEKI_EXPORT
@@ -129,4 +129,3 @@ private:
 };
 
 // Generated property metadata (after class definition for offsetof)
-#include "generated/SpriteComponent.gen.h"

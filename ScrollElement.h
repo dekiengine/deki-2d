@@ -13,11 +13,11 @@
  *
  * Supports visual resizing via the rect tool in the editor.
  */
+DEKI_CATEGORY("2D")
+DEKI_DESCRIPTION("Declares one list item's size so its Scroll Component can lay the list out.")
 class ScrollElement : public Deki::Component
 {
 public:
-    DEKI_COMPONENT(ScrollElement, Deki::Component, "2D", "dcc9b892-ec9b-4eae-90d5-561b5591860a", "DEKI_FEATURE_SCROLL")
-    DEKI_DESCRIPTION("Declares one list item's size so its Scroll Component can lay the list out.")
 
     DEKI_EXPORT
     DEKI_UNIT(Distance)
@@ -32,4 +32,3 @@ public:
 };
 
 // Generated property metadata (after class definition for offsetof)
-#include "generated/ScrollElement.gen.h"

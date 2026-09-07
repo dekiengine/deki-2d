@@ -58,10 +58,11 @@ using ScrollItemCallback = std::function<void(Deki::Object* slot, int32_t itemIn
  * - Touch/drag input support
  * - Vertical and horizontal scrolling
  */
+DEKI_CATEGORY("2D")
+DEKI_DESCRIPTION("Scrolls its children by dragging, with momentum.")
 class ScrollComponent : public Deki::Behaviour
 {
-    DEKI_COMPONENT(ScrollComponent, Deki::Behaviour, "2D", "2d1b84cb-8881-4457-8361-98dec7a84498", "DEKI_FEATURE_SCROLL")
-    DEKI_DESCRIPTION("Scrolls its children by dragging, with momentum.")
+    public:
     using Deki::Behaviour::Update;
 
 public:
@@ -231,4 +232,3 @@ private:
 };
 
 // Generated property metadata (after class definition for offsetof)
-#include "generated/ScrollComponent.gen.h"

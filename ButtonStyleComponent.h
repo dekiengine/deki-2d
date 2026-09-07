@@ -48,10 +48,10 @@ enum class ButtonStyleMode : uint8_t
  * style->pressedColor = Deki::Color(160, 160, 160);
  * @endcode
  */
+DEKI_CATEGORY("2D")
+DEKI_DESCRIPTION("Gives a button its look per state, by tinting or by swapping sprites.")
 class ButtonStyleComponent : public Deki::Behaviour
 {
-    DEKI_COMPONENT(ButtonStyleComponent, Deki::Behaviour, "2D", "0c34e973-6cd1-45d2-b2c6-f010ba320707", "DEKI_FEATURE_BUTTON")
-    DEKI_DESCRIPTION("Gives a button its look per state, by tinting or by swapping sprites.")
 
 public:
 
@@ -110,4 +110,3 @@ private:
 };
 
 // Generated property metadata (after class definition for offsetof)
-#include "generated/ButtonStyleComponent.gen.h"

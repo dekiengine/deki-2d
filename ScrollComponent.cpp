@@ -750,8 +750,8 @@ void ScrollComponent::CancelChildInput(Deki::Object* obj)
     {
         for (Deki::Component* comp : child->GetComponents())
         {
-            if (comp->GetType() == InputCollider::StaticType ||
-                comp->GetBaseType() == InputCollider::StaticType)
+            if (comp->GetType() == ::Deki::TypeId<InputCollider>() ||
+                comp->GetBaseType() == ::Deki::TypeId<InputCollider>())
             {
                 static_cast<InputCollider*>(comp)->CancelInput();
                 break;

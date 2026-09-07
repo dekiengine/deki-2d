@@ -42,11 +42,11 @@ enum class TextVerticalAlign : uint8_t
  * TextComponent renders text strings using BitmapFont for glyph data.
  * Supports color tinting, alignment, and word wrapping.
  */
+DEKI_CATEGORY("2D")
+DEKI_DESCRIPTION("Draws text with a bitmap font, alignment and word wrap.")
 class TextComponent : public RendererComponent
 {
 public:
-    DEKI_COMPONENT(TextComponent, RendererComponent, "2D", "5447ea24-d11f-4161-ae10-2f11e0a18d09", "DEKI_FEATURE_TEXT")
-    DEKI_DESCRIPTION("Draws text with a bitmap font, alignment and word wrap.")
 
     TextComponent();
     virtual ~TextComponent();
@@ -330,4 +330,3 @@ private:
 };
 
 // Generated property metadata (after class definition for offsetof)
-#include "generated/TextComponent.gen.h"

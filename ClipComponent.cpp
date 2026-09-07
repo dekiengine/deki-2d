@@ -14,13 +14,13 @@ void Deki2D_RegisterClipAdapters()
 
     Deki::ComponentInterfaceAdapters::Register(
         Deki::IClipProvider::InterfaceID,
-        ClipComponent::StaticType,
+        ::Deki::TypeId<ClipComponent>(),
         [](Deki::Component* c) -> void* {
             return static_cast<Deki::IClipProvider*>(static_cast<ClipComponent*>(c));
         });
     Deki::ComponentInterfaceAdapters::Register(
         Deki::ISortableProvider::InterfaceID,
-        ClipComponent::StaticType,
+        ::Deki::TypeId<ClipComponent>(),
         [](Deki::Component* c) -> void* {
             return static_cast<Deki::ISortableProvider*>(static_cast<ClipComponent*>(c));
         });

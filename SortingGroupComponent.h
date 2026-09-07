@@ -23,11 +23,11 @@
  * relative to siblings. Children within the group are sorted among
  * themselves by their individual sortingOrder values.
  */
+DEKI_CATEGORY("2D")
+DEKI_DESCRIPTION("Makes its children sort together as one unit against the rest of the scene.")
 class SortingGroupComponent : public Deki::Component, public Deki::ISortableProvider
 {
 public:
-    DEKI_COMPONENT(SortingGroupComponent, Deki::Component, "2D", "8d743475-7905-4cca-b12c-9c397162851d", "DEKI_FEATURE_SORTING_GROUP")
-    DEKI_DESCRIPTION("Makes its children sort together as one unit against the rest of the scene.")
 
     /** @brief Sorting order for this group (affects where all children render in scene) */
     DEKI_EXPORT
@@ -41,4 +41,3 @@ public:
 };
 
 // Generated property metadata (after class definition for offsetof)
-#include "generated/SortingGroupComponent.gen.h"

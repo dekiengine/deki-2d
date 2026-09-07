@@ -68,11 +68,11 @@ struct GradientStop
  * - Memory-efficient procedural generation
  * - Performance optimized for embedded systems
  */
+DEKI_CATEGORY("2D")
+DEKI_DESCRIPTION("Draws a procedural gradient: linear, radial or conical.")
 class GradientComponent : public RendererComponent
 {
    public:
-    DEKI_COMPONENT(GradientComponent, RendererComponent, "2D", "8d84cca3-7eb9-4b92-ba49-968ceec203c8", "DEKI_FEATURE_GRADIENT")
-    DEKI_DESCRIPTION("Draws a procedural gradient: linear, radial or conical.")
 
     // Gradient properties
     DEKI_EXPORT
@@ -321,5 +321,3 @@ class GradientComponent : public RendererComponent
     void WriteStopsToProperties();
 };
 
-// Generated property metadata (after class definition for offsetof)
-#include "generated/GradientComponent.gen.h"

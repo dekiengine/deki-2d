@@ -49,11 +49,11 @@ using RollerCallback = std::function<void(int32_t index, const std::string& valu
  * });
  * @endcode
  */
+DEKI_CATEGORY("2D")
+DEKI_DESCRIPTION("Picker wheel: spins through a list of values with momentum and snaps to one.")
 class RollerComponent : public Deki::Behaviour
 {
 public:
-    DEKI_COMPONENT(RollerComponent, Deki::Behaviour, "2D", "72e6d6c3-ec5d-4c8f-8411-4d31824b944e", "DEKI_FEATURE_ROLLER")
-    DEKI_DESCRIPTION("Picker wheel: spins through a list of values with momentum and snaps to one.")
 
     // Expose base class Update() method (RollerComponent::Update(float) has different signature)
     using Deki::Behaviour::Update;
@@ -326,4 +326,3 @@ private:
 };
 
 // Generated property metadata (after class definition for offsetof)
-#include "generated/RollerComponent.gen.h"

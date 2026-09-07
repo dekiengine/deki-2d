@@ -11,7 +11,7 @@ void Deki2D_RegisterSortingGroupAdapters()
 
     Deki::ComponentInterfaceAdapters::Register(
         Deki::ISortableProvider::InterfaceID,
-        SortingGroupComponent::StaticType,
+        ::Deki::TypeId<SortingGroupComponent>(),
         [](Deki::Component* c) -> void* {
             return static_cast<Deki::ISortableProvider*>(static_cast<SortingGroupComponent*>(c));
         });
