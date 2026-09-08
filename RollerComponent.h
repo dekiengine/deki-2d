@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 
-#include <deki/Behaviour.h>
+#include <deki/Component.h>
 #include <deki/Math.h>
 #include <deki/reflection/ObjectRef.h>
 #include <deki/Color.h>
@@ -51,12 +51,12 @@ using RollerCallback = std::function<void(int32_t index, const std::string& valu
  */
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Picker wheel: spins through a list of values with momentum and snaps to one.")
-class RollerComponent : public Deki::Behaviour
+class RollerComponent : public Deki::Component
 {
 public:
 
     // Expose base class Update() method (RollerComponent::Update(float) has different signature)
-    using Deki::Behaviour::Update;
+    using Deki::Component::Update;
 
     // ========================================================================
     // Editor-visible properties

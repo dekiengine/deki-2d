@@ -32,7 +32,7 @@
 
 
 RollerComponent::RollerComponent()
-    : Deki::Behaviour(),
+    : Deki::Component(),
       width(static_cast<float>(6.25f)),
       itemHeight(static_cast<float>(1.875f)),
       visibleRows(3),

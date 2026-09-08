@@ -4,7 +4,7 @@
 #include <functional>
 #include <vector>
 
-#include <deki/Behaviour.h>
+#include <deki/Component.h>
 #include <deki/Math.h>
 #include <deki/assets/AssetRef.h>
 #include <deki/reflection/ObjectRef.h>
@@ -60,10 +60,10 @@ using ScrollItemCallback = std::function<void(Deki::Object* slot, int32_t itemIn
  */
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Scrolls its children by dragging, with momentum.")
-class ScrollComponent : public Deki::Behaviour
+class ScrollComponent : public Deki::Component
 {
     public:
-    using Deki::Behaviour::Update;
+    using Deki::Component::Update;
 
 public:
 

@@ -4,7 +4,7 @@
 #include <string>
 #include <cstdint>
 #include <functional>
-#include <deki/Behaviour.h>
+#include <deki/Component.h>
 #include "SpriteComponent.h"
 #include <deki/assets/AssetRef.h>
 #include "FrameAnimationData.h"
@@ -16,7 +16,7 @@
  */
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Plays a frame animation asset on the object's sprite.")
-class AnimationComponent : public Deki::Behaviour
+class AnimationComponent : public Deki::Component
 {
 public:
 
@@ -53,7 +53,7 @@ public:
     AnimationComponent(SpriteComponent* sprite_comp = nullptr);
     virtual ~AnimationComponent();
 
-    // Deki::Behaviour overrides
+    // Deki::Component overrides
     void Awake() override;
     void Update() override;
 

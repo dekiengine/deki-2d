@@ -17,7 +17,7 @@
 // meters too. No pixels-per-meter conversion needed anywhere in this file.
 
 ScrollComponent::ScrollComponent()
-    : Deki::Behaviour(),
+    : Deki::Component(),
       mode(ScrollMode::NonTemplate),
       direction(ScrollDirection::Vertical),
       itemSpacing(0.0f),

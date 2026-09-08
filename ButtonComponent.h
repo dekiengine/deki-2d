@@ -4,7 +4,7 @@
 #include <functional>
 #include <vector>
 
-#include <deki/Behaviour.h>
+#include <deki/Component.h>
 #include <deki/reflection/Property.h>
 #include <deki/reflection/ObjectRef.h>
 
@@ -56,7 +56,7 @@ using ButtonCallback = std::function<void()>;
  */
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Makes the object a button: tracks hover and press, and fires a click callback.")
-class ButtonComponent : public Deki::Behaviour
+class ButtonComponent : public Deki::Component
 {
    public:
 
@@ -83,7 +83,7 @@ class ButtonComponent : public Deki::Behaviour
 
     virtual ~ButtonComponent();
 
-    // Deki::Behaviour lifecycle
+    // Deki::Component lifecycle
     void Start() override;
 
     // State management

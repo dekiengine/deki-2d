@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include <deki/Behaviour.h>
+#include <deki/Component.h>
 #include <deki/assets/AssetRef.h>
 #include <deki/reflection/ObjectRef.h>
 #include <deki/reflection/Property.h>
@@ -50,7 +50,7 @@ enum class ButtonStyleMode : uint8_t
  */
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Gives a button its look per state, by tinting or by swapping sprites.")
-class ButtonStyleComponent : public Deki::Behaviour
+class ButtonStyleComponent : public Deki::Component
 {
 
 public:
