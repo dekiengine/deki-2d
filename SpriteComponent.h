@@ -51,6 +51,14 @@ public:
     DEKI_EXPORT
     SpriteRenderMode renderMode = SpriteRenderMode::Normal;
 
+    /** @brief Mirror left to right. */
+    DEKI_EXPORT
+    bool flipHorizontal = false;
+
+    /** @brief Mirror top to bottom. */
+    DEKI_EXPORT
+    bool flipVertical = false;
+
     // Rendered size in meters, used by Tiled and NineSlice modes (0 = sprite
     // native size). The sprite is baked into a pixel buffer sized by
     // round(width * ppm) so the on-screen quad expands while the transform's
@@ -117,6 +125,12 @@ public:
     ~SpriteComponent() override;
 
 private:
+    // Copy the flip flags onto the blit source. QuadBlit mirrors while it
+    // samples, so no buffer is produced and no pivot moves; a flipped blit
+    // takes its generic path, which is why the row-span fast paths stay
+    // correct.
+    void ApplyFlip(QuadBlit::Source& src) const;
+
     // Cached pre-baked buffer for Tiled / NineSlice modes (re-baked on size/source/mode change).
     // Animation frames need no buffer: they point QuadBlit at the sub-rect of
     // the sprite's own pixels via Source::stride.

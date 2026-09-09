@@ -170,6 +170,12 @@ bool SpriteComponent::GetContentExtents(float& outWidth, float& outHeight) const
     return true;
 }
 
+void SpriteComponent::ApplyFlip(QuadBlit::Source& src) const
+{
+    src.flipH = flipHorizontal;
+    src.flipV = flipVertical;
+}
+
 bool SpriteComponent::RenderContent(const Deki::Object* owner,
                                      QuadBlit::Source& outSource,
                                      float& outPivotX,
@@ -279,6 +285,7 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
         // from the source — sprite's chromaRowSpans don't apply.
         ApplyChromaKey(outSource, spr, /*attachRowSpans=*/false);
         outSource.pixelsPerMeter = spr->pixelsPerMeter;
+        ApplyFlip(outSource);
         outPivotX = spr->pivotX;
         outPivotY = spr->pivotY;
         return true;
@@ -347,6 +354,7 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
         outPivotY = 0.5f;
     }
 
+    ApplyFlip(outSource);
     return true;
 }
 
