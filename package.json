@@ -6,7 +6,6 @@
     "transform_2d"
   ],
   "buildDefine": "DEKI_PACKAGE_2D",
-  "strippable": true,
   "requires": [
     "deki-rendering",
     "deki-input"
@@ -93,15 +92,6 @@
       "defaultEnabled": true,
       "componentTypes": [
         "SortingGroupComponent"
-      ]
-    },
-    {
-      "id": "input",
-      "displayName": "Input",
-      "buildDefine": "DEKI_FEATURE_INPUT",
-      "defaultEnabled": true,
-      "componentTypes": [
-        "InputCollider"
       ]
     }
   ]
