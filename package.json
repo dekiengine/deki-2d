@@ -6,6 +6,7 @@
     "transform_2d"
   ],
   "buildDefine": "DEKI_PACKAGE_2D",
+  "strippable": true,
   "requires": [
     "deki-rendering",
     "deki-input"

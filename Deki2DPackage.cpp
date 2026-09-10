@@ -11,6 +11,10 @@
 
 #include "Deki2DPackage.h"
 #include <deki/interop/Plugin.h>
+// The editor's font sync below reaches into TextComponent and friends. A
+// device build takes its components from Deki2DPackage.h, feature by feature,
+// so a stripped one does not name what it did not compile.
+#ifdef DEKI_EDITOR
 #include "SpriteComponent.h"
 #include "TextComponent.h"
 #include "GradientComponent.h"
@@ -19,6 +23,7 @@
 #include "ScrollComponent.h"
 #include "RollerComponent.h"
 #include "AnimationComponent.h"
+#endif
 #include <deki/reflection/ComponentRegistry.h>
 #include <deki/reflection/ComponentFactory.h>
 
