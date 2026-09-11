@@ -130,7 +130,7 @@ std::vector<std::string> TextComponent::WrapTextWithFont(const BitmapFont* fontP
     // widths plus the spaces between them. Measure each word once and add,
     // instead of re-measuring the whole growing line for every word appended
     // (quadratic in line length, with a string concatenation per step).
-    const int32_t ps = (std::max)(1, pixelScale);
+    const int32_t ps = (std::max)(int32_t{1}, pixelScale);
     const int32_t spaceWidth = fontPtr->MeasureWidth(" ") * ps;
 
     std::string currentLine;
@@ -223,7 +223,7 @@ void TextComponent::CalculateGlyphLayout(const BitmapFont* fontPtr, std::vector<
     std::vector<std::string> lines = WrapTextWithFont(fontPtr);
 
     // Pixel scale factor
-    float ps = static_cast<float>((std::max)(1, pixelScale));
+    float ps = static_cast<float>((std::max)(int32_t{1}, pixelScale));
 
     // Calculate total text height
     float lineHeightF = static_cast<float>(fontPtr->GetLineHeight()) * ps;
@@ -517,7 +517,7 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
 
         const GlyphInfo* glyph = layout.glyph;
 
-        int32_t ps = (std::max)(1, pixelScale);
+        int32_t ps = (std::max)(int32_t{1}, pixelScale);
 
         // Convert world position to buffer position (center + world offset, scaled)
         int32_t dest_x = static_cast<int32_t>(std::floor(centerX + layout.worldX)) + glyph->offsetX * ps;
@@ -642,7 +642,7 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
     int32_t firstRow = heightPx;
     int32_t lastRow = -1;
     const int32_t scanEnd = (std::min)(heightPx, touchedLastRow + 1);
-    for (int32_t row = (std::max)(0, touchedFirstRow); row < scanEnd; row++)
+    for (int32_t row = (std::max)(int32_t{0}, touchedFirstRow); row < scanEnd; row++)
     {
         const uint8_t* rowPtr = m_cachedBuffer + row * widthPx * 3;
         for (int32_t col = 0; col < widthPx; col++)
