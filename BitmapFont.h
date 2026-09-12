@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deki/providers/Buffer.h>
+
 #include <cstdint>
 #include <string>
 #include "Texture2D.h"
@@ -200,7 +202,7 @@ public:
      * @return Created font or nullptr on failure
      */
     static BitmapFont* CreateFromMemory(Texture2D* atlas,
-                                        GlyphInfo* glyphs,
+                                        Deki::Buffer<GlyphInfo>&& glyphs,
                                         uint8_t m_FirstChar,
                                         uint8_t m_LastChar,
                                         uint8_t m_LineHeight,
@@ -334,8 +336,11 @@ public:
 
 private:
     mutable Texture2D* atlas;  // Glyph atlas texture (lazy-loaded)
-    GlyphInfo* glyphs;         // Array of glyph info
-    uint32_t* codepoints;      // Sorted codepoint table (v2 only, nullptr for v1)
+    // Owning: the destructor used to free these, and did it with delete[]
+    // against a Deki::Memory allocation. Every loader can now bail out on
+    // any error without an unwind, which is where the mistakes were.
+    Deki::Buffer<GlyphInfo> glyphs;
+    Deki::Buffer<uint32_t> codepoints;  // sorted, sparse fonts only
     uint32_t m_FirstChar;       // First character code (widened for v2)
     uint32_t m_LastChar;        // Last character code (widened for v2)
     uint8_t m_LineHeight;       // Line height in pixels

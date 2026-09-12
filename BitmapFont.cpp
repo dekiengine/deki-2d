@@ -7,11 +7,10 @@
 #include <deki/assets/AssetManager.h>
 #include <deki/assets/AssetPackReader.h>
 #include <cstring>
+#include <utility>
  
 BitmapFont::BitmapFont()
     : atlas(nullptr)
-    , glyphs(nullptr)
-    , codepoints(nullptr)
     , m_FirstChar(0)
     , m_LastChar(0)
     , m_LineHeight(0)
@@ -29,8 +28,7 @@ BitmapFont::BitmapFont()
 BitmapFont::~BitmapFont()
 {
     delete atlas;
-    Deki::Memory::Free(glyphs);
-    Deki::Memory::Free(codepoints);
+    // glyphs and codepoints free themselves.
 }
 
 BitmapFont* BitmapFont::Load(const char* file_path)
@@ -69,9 +67,11 @@ BitmapFont* BitmapFont::Load(const char* file_path)
     }
 
     // Allocate buffer and read entire file
-    uint8_t* file_data =
-        Deki::Memory::AllocateArray<uint8_t>(static_cast<size_t>(file_size), Deki::MemoryUse::Buffer,
-                                             "BitmapFont::file");
+    // Owning: Load has nine early exits below, and each one used to have to
+    // remember to free this. One of them did not.
+    Deki::Buffer<uint8_t> file_buffer(static_cast<size_t>(file_size), Deki::MemoryUse::Buffer,
+                                      "BitmapFont::file");
+    uint8_t* file_data = file_buffer.Data();
     if (!file_data)
     {
         DEKI_LOG_ERROR("BitmapFont::Load: no room for a %ld byte font file '%s'", file_size, file_path);
@@ -84,7 +84,6 @@ BitmapFont* BitmapFont::Load(const char* file_path)
     if (bytes_read != static_cast<size_t>(file_size))
     {
         DEKI_LOG_ERROR("BitmapFont::Load: Failed to read file '%s'", file_path);
-        Deki::Memory::Free(file_data);
         return nullptr;
     }
 
@@ -92,7 +91,6 @@ BitmapFont* BitmapFont::Load(const char* file_path)
     if (static_cast<size_t>(file_size) < sizeof(FontHeader))
     {
         DEKI_LOG_ERROR("BitmapFont::Load: File too small for header");
-        Deki::Memory::Free(file_data);
         return nullptr;
     }
 
@@ -104,7 +102,6 @@ BitmapFont* BitmapFont::Load(const char* file_path)
     if (memcmp(header.magic, "DFNT", 4) != 0)
     {
         DEKI_LOG_ERROR("BitmapFont::Load: Invalid magic (expected DFNT)");
-        Deki::Memory::Free(file_data);
         return nullptr;
     }
 
@@ -113,7 +110,6 @@ BitmapFont* BitmapFont::Load(const char* file_path)
     if (versionLow != 1 && versionLow != 2 && versionLow != 3 && versionLow != 4)
     {
         DEKI_LOG_ERROR("BitmapFont::Load: Unsupported version %u", header.version);
-        Deki::Memory::Free(file_data);
         return nullptr;
     }
 
@@ -126,8 +122,7 @@ BitmapFont* BitmapFont::Load(const char* file_path)
         if (static_cast<size_t>(file_size) < sizeof(FontHeaderV4))
         {
             DEKI_LOG_ERROR("BitmapFont::Load: File too small for v4 header");
-            Deki::Memory::Free(file_data);
-            delete font;
+                delete font;
             return nullptr;
         }
         memcpy(&headerV4, file_data, sizeof(FontHeaderV4));
@@ -139,8 +134,7 @@ BitmapFont* BitmapFont::Load(const char* file_path)
         if (static_cast<size_t>(file_size) < min_size)
         {
             DEKI_LOG_ERROR("BitmapFont::Load: File too small for v4 glyph data");
-            Deki::Memory::Free(file_data);
-            delete font;
+                delete font;
             return nullptr;
         }
 
@@ -159,27 +153,25 @@ BitmapFont* BitmapFont::Load(const char* file_path)
         size_t offset = sizeof(FontHeaderV4);
         if (sparse)
         {
-            font->codepoints = Deki::Memory::AllocateArray<uint32_t>(headerV4.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::codepoints");
+            font->codepoints.Allocate(headerV4.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::codepoints");
             if (!font->codepoints)
             {
                 DEKI_LOG_ERROR("BitmapFont: no room for %u codepoints", (unsigned)headerV4.m_GlyphCount);
-                Deki::Memory::Free(file_data);
-                delete font;
+                        delete font;
                 return nullptr;
             }
-            memcpy(font->codepoints, file_data + offset, codepoints_size);
+            memcpy(font->codepoints.Data(), file_data + offset, codepoints_size);
             offset += codepoints_size;
         }
 
-        font->glyphs = Deki::Memory::AllocateArray<GlyphInfo>(headerV4.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::glyphs");
+        font->glyphs.Allocate(headerV4.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::glyphs");
         if (!font->glyphs)
         {
             DEKI_LOG_ERROR("BitmapFont: no room for %u glyphs", (unsigned)headerV4.m_GlyphCount);
-            Deki::Memory::Free(file_data);
-            delete font;
+                delete font;
             return nullptr;
         }
-        memcpy(font->glyphs, file_data + offset, glyphs_size);
+        memcpy(font->glyphs.Data(), file_data + offset, glyphs_size);
         offset += glyphs_size;
 
         atlas_rel_path = (const char*)(file_data + offset);
@@ -190,8 +182,7 @@ BitmapFont* BitmapFont::Load(const char* file_path)
         if (static_cast<size_t>(file_size) < sizeof(FontHeaderV3))
         {
             DEKI_LOG_ERROR("BitmapFont::Load: File too small for v3 header");
-            Deki::Memory::Free(file_data);
-            delete font;
+                delete font;
             return nullptr;
         }
         memcpy(&headerV3, file_data, sizeof(FontHeaderV3));
@@ -203,8 +194,7 @@ BitmapFont* BitmapFont::Load(const char* file_path)
         if (static_cast<size_t>(file_size) < min_size)
         {
             DEKI_LOG_ERROR("BitmapFont::Load: File too small for v3 glyph data");
-            Deki::Memory::Free(file_data);
-            delete font;
+                delete font;
             return nullptr;
         }
 
@@ -220,27 +210,25 @@ BitmapFont* BitmapFont::Load(const char* file_path)
         size_t offset = sizeof(FontHeaderV3);
         if (sparse)
         {
-            font->codepoints = Deki::Memory::AllocateArray<uint32_t>(headerV3.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::codepoints");
+            font->codepoints.Allocate(headerV3.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::codepoints");
             if (!font->codepoints)
             {
                 DEKI_LOG_ERROR("BitmapFont: no room for %u codepoints", (unsigned)headerV3.m_GlyphCount);
-                Deki::Memory::Free(file_data);
-                delete font;
+                        delete font;
                 return nullptr;
             }
-            memcpy(font->codepoints, file_data + offset, codepoints_size);
+            memcpy(font->codepoints.Data(), file_data + offset, codepoints_size);
             offset += codepoints_size;
         }
 
-        font->glyphs = Deki::Memory::AllocateArray<GlyphInfo>(headerV3.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::glyphs");
+        font->glyphs.Allocate(headerV3.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::glyphs");
         if (!font->glyphs)
         {
             DEKI_LOG_ERROR("BitmapFont: no room for %u glyphs", (unsigned)headerV3.m_GlyphCount);
-            Deki::Memory::Free(file_data);
-            delete font;
+                delete font;
             return nullptr;
         }
-        memcpy(font->glyphs, file_data + offset, glyphs_size);
+        memcpy(font->glyphs.Data(), file_data + offset, glyphs_size);
         offset += glyphs_size;
 
         atlas_rel_path = (const char*)(file_data + offset);
@@ -253,8 +241,7 @@ BitmapFont* BitmapFont::Load(const char* file_path)
         {
             DEKI_LOG_ERROR("BitmapFont::Load: Glyph count mismatch (got %u, expected %u)",
                            header.m_GlyphCount, expected_glyph_count);
-            Deki::Memory::Free(file_data);
-            delete font;
+                delete font;
             return nullptr;
         }
 
@@ -263,8 +250,7 @@ BitmapFont* BitmapFont::Load(const char* file_path)
         if (static_cast<size_t>(file_size) < min_size)
         {
             DEKI_LOG_ERROR("BitmapFont::Load: File too small for v1 glyph data");
-            Deki::Memory::Free(file_data);
-            delete font;
+                delete font;
             return nullptr;
         }
 
@@ -275,15 +261,14 @@ BitmapFont* BitmapFont::Load(const char* file_path)
         font->m_GlyphCount = header.m_GlyphCount;
         font->m_IsSparse = false;
 
-        font->glyphs = Deki::Memory::AllocateArray<GlyphInfo>(header.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::glyphs");
+        font->glyphs.Allocate(header.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::glyphs");
         if (!font->glyphs)
         {
             DEKI_LOG_ERROR("BitmapFont: no room for %u glyphs", (unsigned)header.m_GlyphCount);
-            Deki::Memory::Free(file_data);
-            delete font;
+                delete font;
             return nullptr;
         }
-        memcpy(font->glyphs, file_data + sizeof(FontHeader), glyphs_size);
+        memcpy(font->glyphs.Data(), file_data + sizeof(FontHeader), glyphs_size);
         atlas_rel_path = (const char*)(file_data + sizeof(FontHeader) + glyphs_size);
     }
     else // versionLow == 2
@@ -293,8 +278,7 @@ BitmapFont* BitmapFont::Load(const char* file_path)
         if (static_cast<size_t>(file_size) < sizeof(FontHeaderV2))
         {
             DEKI_LOG_ERROR("BitmapFont::Load: File too small for v2 header");
-            Deki::Memory::Free(file_data);
-            delete font;
+                delete font;
             return nullptr;
         }
         memcpy(&headerV2, file_data, sizeof(FontHeaderV2));
@@ -305,8 +289,7 @@ BitmapFont* BitmapFont::Load(const char* file_path)
         if (static_cast<size_t>(file_size) < min_size)
         {
             DEKI_LOG_ERROR("BitmapFont::Load: File too small for v2 glyph data");
-            Deki::Memory::Free(file_data);
-            delete font;
+                delete font;
             return nullptr;
         }
 
@@ -317,25 +300,23 @@ BitmapFont* BitmapFont::Load(const char* file_path)
         font->m_GlyphCount = headerV2.m_GlyphCount;
         font->m_IsSparse = true;
 
-        font->codepoints = Deki::Memory::AllocateArray<uint32_t>(headerV2.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::codepoints");
+        font->codepoints.Allocate(headerV2.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::codepoints");
         if (!font->codepoints)
         {
             DEKI_LOG_ERROR("BitmapFont: no room for %u codepoints", (unsigned)headerV2.m_GlyphCount);
-            Deki::Memory::Free(file_data);
-            delete font;
+                delete font;
             return nullptr;
         }
-        memcpy(font->codepoints, file_data + sizeof(FontHeaderV2), codepoints_size);
+        memcpy(font->codepoints.Data(), file_data + sizeof(FontHeaderV2), codepoints_size);
 
-        font->glyphs = Deki::Memory::AllocateArray<GlyphInfo>(headerV2.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::glyphs");
+        font->glyphs.Allocate(headerV2.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::glyphs");
         if (!font->glyphs)
         {
             DEKI_LOG_ERROR("BitmapFont: no room for %u glyphs", (unsigned)headerV2.m_GlyphCount);
-            Deki::Memory::Free(file_data);
-            delete font;
+                delete font;
             return nullptr;
         }
-        memcpy(font->glyphs, file_data + sizeof(FontHeaderV2) + codepoints_size, glyphs_size);
+        memcpy(font->glyphs.Data(), file_data + sizeof(FontHeaderV2) + codepoints_size, glyphs_size);
 
         atlas_rel_path = (const char*)(file_data + sizeof(FontHeaderV2) + codepoints_size + glyphs_size);
     }
@@ -353,7 +334,6 @@ BitmapFont* BitmapFont::Load(const char* file_path)
         atlas_path = atlas_rel_path;
     }
 
-    Deki::Memory::Free(file_data);
 
     // Defer atlas loading to first GetAtlas() call for faster scene transitions
     font->m_AtlasPath = atlas_path;
@@ -425,24 +405,24 @@ BitmapFont* BitmapFont::LoadFromFileData(const uint8_t* data, size_t size)
         size_t offset = sizeof(FontHeaderV4);
         if (sparse)
         {
-            font->codepoints = Deki::Memory::AllocateArray<uint32_t>(headerV4.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::codepoints");
+            font->codepoints.Allocate(headerV4.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::codepoints");
             if (!font->codepoints)
             {
                 DEKI_LOG_ERROR("BitmapFont: no room for %u codepoints", (unsigned)headerV4.m_GlyphCount);
                 delete font;
                 return nullptr;
             }
-            memcpy(font->codepoints, data + offset, codepoints_size);
+            memcpy(font->codepoints.Data(), data + offset, codepoints_size);
             offset += codepoints_size;
         }
-        font->glyphs = Deki::Memory::AllocateArray<GlyphInfo>(headerV4.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::glyphs");
+        font->glyphs.Allocate(headerV4.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::glyphs");
         if (!font->glyphs)
         {
             DEKI_LOG_ERROR("BitmapFont: no room for %u glyphs", (unsigned)headerV4.m_GlyphCount);
             delete font;
             return nullptr;
         }
-        memcpy(font->glyphs, data + offset, glyphs_size);
+        memcpy(font->glyphs.Data(), data + offset, glyphs_size);
         offset += glyphs_size;
         atlas_rel_path = (const char*)(data + offset);
     }
@@ -480,24 +460,24 @@ BitmapFont* BitmapFont::LoadFromFileData(const uint8_t* data, size_t size)
         size_t offset = sizeof(FontHeaderV3);
         if (sparse)
         {
-            font->codepoints = Deki::Memory::AllocateArray<uint32_t>(headerV3.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::codepoints");
+            font->codepoints.Allocate(headerV3.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::codepoints");
             if (!font->codepoints)
             {
                 DEKI_LOG_ERROR("BitmapFont: no room for %u codepoints", (unsigned)headerV3.m_GlyphCount);
                 delete font;
                 return nullptr;
             }
-            memcpy(font->codepoints, data + offset, codepoints_size);
+            memcpy(font->codepoints.Data(), data + offset, codepoints_size);
             offset += codepoints_size;
         }
-        font->glyphs = Deki::Memory::AllocateArray<GlyphInfo>(headerV3.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::glyphs");
+        font->glyphs.Allocate(headerV3.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::glyphs");
         if (!font->glyphs)
         {
             DEKI_LOG_ERROR("BitmapFont: no room for %u glyphs", (unsigned)headerV3.m_GlyphCount);
             delete font;
             return nullptr;
         }
-        memcpy(font->glyphs, data + offset, glyphs_size);
+        memcpy(font->glyphs.Data(), data + offset, glyphs_size);
         offset += glyphs_size;
         atlas_rel_path = (const char*)(data + offset);
     }
@@ -527,14 +507,14 @@ BitmapFont* BitmapFont::LoadFromFileData(const uint8_t* data, size_t size)
         font->m_GlyphCount = header.m_GlyphCount;
         font->m_IsSparse = false;
 
-        font->glyphs = Deki::Memory::AllocateArray<GlyphInfo>(header.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::glyphs");
+        font->glyphs.Allocate(header.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::glyphs");
         if (!font->glyphs)
         {
             DEKI_LOG_ERROR("BitmapFont: no room for %u glyphs", (unsigned)header.m_GlyphCount);
             delete font;
             return nullptr;
         }
-        memcpy(font->glyphs, data + sizeof(FontHeader), glyphs_size);
+        memcpy(font->glyphs.Data(), data + sizeof(FontHeader), glyphs_size);
         atlas_rel_path = (const char*)(data + sizeof(FontHeader) + glyphs_size);
     }
     else // versionLow == 2
@@ -565,23 +545,23 @@ BitmapFont* BitmapFont::LoadFromFileData(const uint8_t* data, size_t size)
         font->m_GlyphCount = headerV2.m_GlyphCount;
         font->m_IsSparse = true;
 
-        font->codepoints = Deki::Memory::AllocateArray<uint32_t>(headerV2.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::codepoints");
+        font->codepoints.Allocate(headerV2.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::codepoints");
         if (!font->codepoints)
         {
             DEKI_LOG_ERROR("BitmapFont: no room for %u codepoints", (unsigned)headerV2.m_GlyphCount);
             delete font;
             return nullptr;
         }
-        memcpy(font->codepoints, data + sizeof(FontHeaderV2), codepoints_size);
+        memcpy(font->codepoints.Data(), data + sizeof(FontHeaderV2), codepoints_size);
 
-        font->glyphs = Deki::Memory::AllocateArray<GlyphInfo>(headerV2.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::glyphs");
+        font->glyphs.Allocate(headerV2.m_GlyphCount, Deki::MemoryUse::Hot, "BitmapFont::glyphs");
         if (!font->glyphs)
         {
             DEKI_LOG_ERROR("BitmapFont: no room for %u glyphs", (unsigned)headerV2.m_GlyphCount);
             delete font;
             return nullptr;
         }
-        memcpy(font->glyphs, data + sizeof(FontHeaderV2) + codepoints_size, glyphs_size);
+        memcpy(font->glyphs.Data(), data + sizeof(FontHeaderV2) + codepoints_size, glyphs_size);
 
         atlas_rel_path = (const char*)(data + sizeof(FontHeaderV2) + codepoints_size + glyphs_size);
     }
@@ -626,8 +606,7 @@ BitmapFont* BitmapFont::CreateMonospace(const char* atlas_path,
     font->m_GlyphCount = char_count;
 
     // Generate glyph data
-    font->glyphs = Deki::Memory::AllocateArray<GlyphInfo>(char_count, Deki::MemoryUse::Hot,
-                                                          "BitmapFont::generated");
+    font->glyphs.Allocate(char_count, Deki::MemoryUse::Hot, "BitmapFont::generated");
     if (!font->glyphs)
     {
         DEKI_LOG_ERROR("BitmapFont: no room for %u generated glyphs", (unsigned)char_count);
@@ -655,7 +634,7 @@ BitmapFont* BitmapFont::CreateMonospace(const char* atlas_path,
 }
 
 BitmapFont* BitmapFont::CreateFromMemory(Texture2D* atlas,
-                                          GlyphInfo* glyphs,
+                                          Deki::Buffer<GlyphInfo>&& glyphs,
                                           uint8_t m_FirstChar,
                                           uint8_t m_LastChar,
                                           uint8_t m_LineHeight,
@@ -669,7 +648,7 @@ BitmapFont* BitmapFont::CreateFromMemory(Texture2D* atlas,
 
     BitmapFont* font = new BitmapFont();
     font->atlas = atlas;
-    font->glyphs = glyphs;
+    font->glyphs = std::move(glyphs);
     font->m_FirstChar = m_FirstChar;
     font->m_LastChar = m_LastChar;
     font->m_LineHeight = m_LineHeight;

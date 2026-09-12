@@ -113,11 +113,13 @@ static BitmapFont* GetEditorFontVariant(const std::string& fontGuid, int fontSiz
     if (!atlas->data) { delete atlas; return nullptr; }
     memcpy(atlas->data, result.atlasRGBA.data(), atlasSize);
 
-    GlyphInfo* glyphsCopy = new GlyphInfo[result.glyphs.size()];
-    memcpy(glyphsCopy, result.glyphs.data(), result.glyphs.size() * sizeof(GlyphInfo));
+    Deki::Buffer<GlyphInfo> glyphsCopy(result.glyphs.size(), Deki::MemoryUse::Hot,
+                                       "FontPreview::glyphs");
+    if (!glyphsCopy) { delete atlas; return nullptr; }
+    memcpy(glyphsCopy.Data(), result.glyphs.data(), glyphsCopy.Bytes());
 
     BitmapFont* font = BitmapFont::CreateFromMemory(
-        atlas, glyphsCopy,
+        atlas, std::move(glyphsCopy),
         result.firstChar, result.lastChar,
         result.lineHeight, result.baseline);
 
@@ -260,11 +262,13 @@ bool SetPreviewFontFromData(
     if (!atlas->data) { delete atlas; return false; }
     memcpy(atlas->data, atlasRGBA, atlasSize);
 
-    GlyphInfo* glyphsCopy = new GlyphInfo[glyphCount];
-    memcpy(glyphsCopy, glyphs, glyphCount * sizeof(GlyphInfo));
+    Deki::Buffer<GlyphInfo> glyphsCopy(glyphCount, Deki::MemoryUse::Hot,
+                                       "FontPreview::glyphs");
+    if (!glyphsCopy) { delete atlas; return false; }
+    memcpy(glyphsCopy.Data(), glyphs, glyphsCopy.Bytes());
 
     BitmapFont* font = BitmapFont::CreateFromMemory(
-        atlas, glyphsCopy,
+        atlas, std::move(glyphsCopy),
         firstChar, lastChar,
         lineHeight, baseline);
 
