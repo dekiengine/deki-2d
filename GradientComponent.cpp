@@ -81,7 +81,7 @@ GradientComponent::GradientComponent(float w, float h)
 
 GradientComponent::~GradientComponent()
 {
-    Deki::Memory::Free(m_Baked);
+    // m_Baked frees itself.
 }
 
 void GradientComponent::WriteStopsToProperties()
@@ -543,44 +543,29 @@ bool GradientComponent::RenderContent(const Deki::Object* owner,
     if (m_BakeFailedSize == need)
         return false;
 
-    if (!m_Baked || m_BakedSize != need || m_BakeKey != key)
+    if (!m_Baked || m_Baked.Bytes() != need || m_BakeKey != key)
     {
-        if (m_BakedSize != need)
+        // Allocate() leaves an unchanged size alone, so the common path costs
+        // nothing. The bake is the object's size in pixels times two: 150 KB
+        // for a full-screen gradient at 320x240, more on a bigger panel, and a
+        // device without PSRAM can simply refuse it.
+        if (!m_Baked.Allocate(need, Deki::MemoryUse::Buffer, "GradientComponent::bake"))
         {
-            Deki::Memory::Free(m_Baked);
-
-            // The engine's allocator, which returns null rather than throwing.
-            //
-            // The bake is the object's size in pixels times two, so a
-            // full-screen gradient is 150 KB at 320x240 and more on a bigger
-            // panel. A device without PSRAM can refuse that, and new[] there
-            // does not return null: ESP-IDF builds with exceptions off, so the
-            // throw reaches __cxa_allocate_exception and aborts, rebooting the
-            // board mid-frame. std::nothrow does not save it either, because
-            // libstdc++ implements it by calling the throwing form inside a
-            // try/catch that -fno-exceptions has removed. A missing gradient is
-            // a better outcome than a reboot, and PSRAM is preferred since this
-            // is a large read-mostly buffer.
-            m_Baked = (uint8_t*)Deki::Memory::Allocate(need, Deki::MemoryUse::Buffer, "GradientComponent::bake");
-            m_BakedSize = m_Baked ? need : 0;
-
-            if (!m_Baked)
-            {
-                DEKI_LOG_WARNING("GradientComponent: no room for a %dx%d bake (%u bytes); "
-                                 "not drawing it",
-                                 (int)widthPx, (int)heightPx, (unsigned)need);
-                m_BakeFailedSize = need;
-                return false;
-            }
-            m_BakeFailedSize = 0;
+            DEKI_LOG_WARNING("GradientComponent: no room for a %dx%d bake (%u bytes); "
+                             "not drawing it",
+                             (int)widthPx, (int)heightPx, (unsigned)need);
+            m_BakeFailedSize = need;
+            return false;
         }
-        RenderToBuffer(m_Baked);
+        m_BakeFailedSize = 0;
+
+        RenderToBuffer(m_Baked.Data());
         m_BakeKey = key;
     }
 
     // Create source descriptor
     outSource = QuadBlit::MakeSource(
-        m_Baked,
+        m_Baked.Data(),
         widthPx,
         heightPx,
         2,      // bytesPerPixel for RGB565

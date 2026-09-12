@@ -1,4 +1,6 @@
 #pragma once
+
+#include <deki/providers/Buffer.h>
 #include <cstdint>
 
 // DTEX format flags
@@ -55,7 +57,10 @@ class Texture2D
     // Pixels outside [opaqueStart, opaqueEnd) have alpha and need blending.
     // Pixels inside this range are fully opaque and can be written directly (no blend math).
     // nullptr if not computed (non-RGB565A8, or fully opaque/transparent sprites).
-    int16_t* alphaRowSpans;  // Packed pairs: [opaqueStart0, opaqueEnd0, opaqueStart1, opaqueEnd1, ...]
+    // Owning. This member is where the mismatch was: loaders allocated it
+    // with new[] in one place, Deki::Memory in another, and nothing at all
+    // on a third path, while the destructor always used delete[].
+    Deki::Buffer<int16_t> alphaRowSpans;
 #ifdef DEKI_EDITOR
     bool allocatedWithBackend;  // Editor-only: Track which allocator was used (play mode uses backend, edit mode uses malloc)
 #endif

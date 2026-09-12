@@ -10,7 +10,7 @@
 #include <cstring>
 
 Texture2D::Texture2D()
-: data(nullptr), width(0), height(0), format(Texture2D::TextureFormat::RGB565), hasTransparency(false), hasAlpha(false), alphaRowSpans(nullptr)
+: data(nullptr), width(0), height(0), format(Texture2D::TextureFormat::RGB565), hasTransparency(false), hasAlpha(false)
 #ifdef DEKI_EDITOR
 , allocatedWithBackend(false)
 #endif
@@ -38,9 +38,7 @@ Texture2D::~Texture2D()
 #endif
         data = nullptr;
     }
-    // Allocated through Deki::Memory by the loaders, so freed the same way.
-    Deki::Memory::Free(alphaRowSpans);
-    alphaRowSpans = nullptr;
+    // alphaRowSpans frees itself.
 }
 
 #ifndef DEKI_EDITOR

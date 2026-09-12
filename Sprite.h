@@ -65,7 +65,7 @@ class Sprite : public Texture2D
     // by QuadBlit to fast-path chroma blits. Owned by the sprite. Layout
     // matches alphaRowSpans. nullptr if hasChromaKey is false or the chunk
     // didn't supply spans (legacy files).
-    int16_t* chromaRowSpans;
+    Deki::Buffer<int16_t> chromaRowSpans;  // owning; see Texture2D::alphaRowSpans
 
     // 9-slice properties (for scalable UI elements)
     bool hasNineSlice;     // Whether this sprite has 9-slice data

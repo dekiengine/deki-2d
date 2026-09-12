@@ -55,11 +55,7 @@ Sprite::Sprite() : Texture2D()
 Sprite::~Sprite()
 {
     // Base class destructor handles pixel data cleanup
-    if (chromaRowSpans)
-    {
-        Deki::Memory::Free(chromaRowSpans);
-        chromaRowSpans = nullptr;
-    }
+    // chromaRowSpans frees itself.
 }
 
 const SpriteFrame* Sprite::FindFrame(const std::string& guid) const
@@ -86,7 +82,7 @@ void Sprite::SetDefaultSpriteProperties()
     transparentG = 0;
     transparentB = 255;
     hasChromaKey = false;
-    chromaRowSpans = nullptr;
+    chromaRowSpans.Reset();
 
     // 9-slice defaults
     hasNineSlice = false;
@@ -312,10 +308,9 @@ Sprite* Sprite::Load(const char* file_path)
                                       spansCount <= (chunk_size - 8) / sizeof(int16_t);
                 if (enabled && spansCount > 0 && spansFit)
                 {
-                    sprite->chromaRowSpans =
-                        Deki::Memory::AllocateArray<int16_t>(spansCount, Deki::MemoryUse::Hot, "Sprite::chromaSpans");
+                    sprite->chromaRowSpans.Allocate(spansCount, Deki::MemoryUse::Hot, "Sprite::chromaSpans");
                     if (sprite->chromaRowSpans)
-                        memcpy(sprite->chromaRowSpans, p + 8, spansCount * sizeof(int16_t));
+                        memcpy(sprite->chromaRowSpans.Data(), p + 8, spansCount * sizeof(int16_t));
                     else
                         DEKI_LOG_WARNING("Sprite: no room for %u chroma spans; "
                                          "the slower per-pixel compare will be used",
@@ -373,11 +368,9 @@ Sprite* Sprite::Load(const char* file_path)
             else
             {
                 // Build per-row opaque span data for fast blitting.
-                sprite->alphaRowSpans =
-                    Deki::Memory::AllocateArray<int16_t>(static_cast<size_t>(h) * 2, Deki::MemoryUse::Hot,
-                                                         "Sprite::alphaSpans");
+                sprite->alphaRowSpans.Allocate(static_cast<size_t>(h) * 2, Deki::MemoryUse::Hot, "Sprite::alphaSpans");
                 if (sprite->alphaRowSpans)
-                    BuildOpaqueRowSpans(pixel_data, w, h, sprite->alphaRowSpans);
+                    BuildOpaqueRowSpans(pixel_data, w, h, sprite->alphaRowSpans.Data());
                 else
                     DEKI_LOG_WARNING("Sprite: no room for %d alpha spans; the slower "
                                      "per-pixel path will be used", h * 2);
@@ -522,10 +515,9 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
                                           spansCount <= (chunk_size - 8) / sizeof(int16_t);
                     if (enabled && spansCount > 0 && spansFit)
                     {
-                        sprite->chromaRowSpans =
-                            Deki::Memory::AllocateArray<int16_t>(spansCount, Deki::MemoryUse::Hot, "Sprite::chromaSpans");
+                        sprite->chromaRowSpans.Allocate(spansCount, Deki::MemoryUse::Hot, "Sprite::chromaSpans");
                         if (sprite->chromaRowSpans)
-                            memcpy(sprite->chromaRowSpans, p + 8, spansCount * sizeof(int16_t));
+                            memcpy(sprite->chromaRowSpans.Data(), p + 8, spansCount * sizeof(int16_t));
                         else
                             DEKI_LOG_WARNING("Sprite: no room for %u chroma spans; "
                                              "the slower per-pixel compare will be used",
@@ -567,11 +559,9 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
             }
             else
             {
-                sprite->alphaRowSpans =
-                    Deki::Memory::AllocateArray<int16_t>(static_cast<size_t>(h) * 2, Deki::MemoryUse::Hot,
-                                                         "Sprite::alphaSpans");
+                sprite->alphaRowSpans.Allocate(static_cast<size_t>(h) * 2, Deki::MemoryUse::Hot, "Sprite::alphaSpans");
                 if (sprite->alphaRowSpans)
-                    BuildOpaqueRowSpans(pixel_data, w, h, sprite->alphaRowSpans);
+                    BuildOpaqueRowSpans(pixel_data, w, h, sprite->alphaRowSpans.Data());
                 else
                     DEKI_LOG_WARNING("Sprite: no room for %d alpha spans; the slower "
                                      "per-pixel path will be used", h * 2);

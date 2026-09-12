@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deki/providers/Buffer.h>
+
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -310,8 +312,8 @@ private:
     static FontResolveCallback s_fontResolveCallback;
 
     // Cached render buffer
-    uint8_t* m_cachedBuffer = nullptr;
-    size_t m_cachedBufferSize = 0;
+    // Owning, and it knows its own size.
+    Deki::Buffer<uint8_t> m_cachedBuffer;
     std::string m_cachedText;
     int32_t m_cachedWidth = 0;
     int32_t m_cachedHeight = 0;

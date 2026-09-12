@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deki/providers/Buffer.h>
+
 #include <stdint.h>
 #include "deki-rendering/RendererComponent.h"
 #include <deki/Color.h>
@@ -306,8 +308,9 @@ class GradientComponent : public RendererComponent
     // only when something changed; it used to be rasterised into a freshly
     // allocated buffer on every frame (with cos/sin/atan2 per pixel) and freed
     // by the renderer right after.
-    uint8_t* m_Baked = nullptr;
-    size_t m_BakedSize = 0;
+    // Owning, and it knows its own size, so there is no separate length to
+    // fall out of step with the pointer.
+    Deki::Buffer<uint8_t> m_Baked;
     uint64_t m_BakeKey = 0;
     // A bake size the device could not allocate. Retrying it every frame
     // achieves nothing and floods the log, so it is attempted once and

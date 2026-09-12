@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deki/providers/Buffer.h>
+
 #include <stdint.h>
 
 #include "deki-rendering/RendererComponent.h"
@@ -134,8 +136,8 @@ private:
     // Cached pre-baked buffer for Tiled / NineSlice modes (re-baked on size/source/mode change).
     // Animation frames need no buffer: they point QuadBlit at the sub-rect of
     // the sprite's own pixels via Source::stride.
-    uint8_t*         m_cachedRenderBuffer = nullptr;
-    size_t           m_cachedRenderSize   = 0;
+    // Owning, and it knows its own size.
+    Deki::Buffer<uint8_t> m_cachedRenderBuffer;
     int32_t          m_cachedRenderW      = 0;
     int32_t          m_cachedRenderH      = 0;
     const Sprite*    m_cachedRenderSrc    = nullptr;

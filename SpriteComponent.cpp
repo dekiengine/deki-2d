@@ -37,7 +37,7 @@ namespace
             src.keyB = spr->transparentB;
         }
         if (attachRowSpans)
-            src.chromaRowSpans = spr->chromaRowSpans;
+            src.chromaRowSpans = spr->chromaRowSpans.Data();
     }
 }
 
@@ -123,9 +123,7 @@ void SpriteComponent::UnloadAssets()
     sprite.loadAttempted = false;
 
     // Free cached Tiled/NineSlice bake buffer
-    Deki::Memory::Free(m_cachedRenderBuffer);
-    m_cachedRenderBuffer = nullptr;
-    m_cachedRenderSize   = 0;
+    m_cachedRenderBuffer.Reset();
     m_cachedRenderW      = 0;
     m_cachedRenderH      = 0;
     m_cachedRenderSrc    = nullptr;
@@ -136,7 +134,7 @@ SpriteComponent::~SpriteComponent()
 {
     // The bake buffer was only ever freed by UnloadAssets(), which the runtime
     // never calls, so every tiled / nine-slice sprite leaked it on scene unload.
-    Deki::Memory::Free(m_cachedRenderBuffer);
+    m_cachedRenderBuffer.Reset();
 }
 
 // ============================================================
@@ -256,16 +254,11 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
             m_cachedRenderMode != renderMode)
         {
             size_t need = (size_t)target_w * (size_t)target_h * (size_t)bytesPerPixel;
-            if (m_cachedRenderSize != need)
-            {
-                Deki::Memory::Free(m_cachedRenderBuffer);
-                // Checked: sized by the object on screen, so a device can
-                // refuse it, and new[] there aborts instead of returning null.
-                m_cachedRenderBuffer = Deki::Memory::AllocateArray<uint8_t>(
-                    need, Deki::MemoryUse::Buffer, "SpriteComponent::bake");
-                m_cachedRenderSize = m_cachedRenderBuffer ? need : 0;
-            }
-            if (!m_cachedRenderBuffer)
+            // Allocate() leaves an unchanged size alone, so the reuse path
+            // costs nothing. Sized by the object on screen, which a device can
+            // refuse; not drawing it beats a reboot.
+            if (!m_cachedRenderBuffer.Allocate(need, Deki::MemoryUse::Buffer,
+                                               "SpriteComponent::bake"))
             {
                 DEKI_LOG_WARNING("SpriteComponent: no room for a %dx%d bake (%u bytes); "
                                  "not drawing it",
@@ -273,9 +266,9 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
                 return false;
             }
             if (renderMode == SpriteRenderMode::NineSlice)
-                Sprite::BakeNineSliceInto(m_cachedRenderBuffer, target_w, target_h, spr);
+                Sprite::BakeNineSliceInto(m_cachedRenderBuffer.Data(), target_w, target_h, spr);
             else
-                Sprite::BakeTiledInto(m_cachedRenderBuffer, target_w, target_h, spr);
+                Sprite::BakeTiledInto(m_cachedRenderBuffer.Data(), target_w, target_h, spr);
 
             m_cachedRenderSrc  = spr;
             m_cachedRenderW    = target_w;
@@ -284,7 +277,7 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
         }
 
         outSource = QuadBlit::MakeSource(
-            m_cachedRenderBuffer,
+            m_cachedRenderBuffer.Data(),
             target_w,
             target_h,
             bytesPerPixel,
@@ -320,7 +313,7 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
             hasAlpha,
             isRGB565,
             false,  // ownsPixels = false - sprite owns its data
-            spr->alphaRowSpans
+            spr->alphaRowSpans.Data()
         );
         // Full-sprite blit uses the same row layout as the source — spans apply.
         ApplyChromaKey(outSource, spr, /*attachRowSpans=*/true);

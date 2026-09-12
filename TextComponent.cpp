@@ -34,8 +34,7 @@ TextComponent::TextComponent()
 
 TextComponent::~TextComponent()
 {
-    Deki::Memory::Free(m_cachedBuffer);
-    m_cachedBuffer = nullptr;
+    m_cachedBuffer.Reset();
 }
 
 void TextComponent::UnloadAssets()
@@ -53,9 +52,7 @@ void TextComponent::UnloadAssets()
 
 void TextComponent::InvalidateRenderCache()
 {
-    Deki::Memory::Free(m_cachedBuffer);
-    m_cachedBuffer = nullptr;
-    m_cachedBufferSize = 0;
+    m_cachedBuffer.Reset();
 }
 
 void TextComponent::SetText(const char* newText)
@@ -379,7 +376,7 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
         return false;
 
     // Check if we can reuse the cached buffer
-    bool cacheValid = m_cachedBuffer != nullptr
+    bool cacheValid = static_cast<bool>(m_cachedBuffer)
         && m_cachedText == text
         && m_cachedWidth == widthPx
         && m_cachedHeight == heightPx
@@ -393,7 +390,7 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
     if (cacheValid)
     {
         outSource = QuadBlit::MakeSource(
-            m_cachedBuffer + m_cropFirstRow * widthPx * 3,
+            m_cachedBuffer.Data() + m_cropFirstRow * widthPx * 3,
             widthPx, m_cropHeight, 3, true, true, false);
         outSource.pixelsPerMeter = ppm;
         outPivotX = 0.5f;
@@ -409,24 +406,17 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
     size_t bufferSize = widthPx * heightPx * 3;
 
     // Reuse existing cache buffer if same size, otherwise reallocate
-    if (m_cachedBufferSize != bufferSize)
+    // Allocate() leaves an unchanged size alone, so the reuse path costs
+    // nothing. This is the object's size in pixels times three, which a device
+    // can refuse; undrawn text beats a reboot.
+    if (!m_cachedBuffer.Allocate(bufferSize, Deki::MemoryUse::Buffer, "TextComponent::cache"))
     {
-        Deki::Memory::Free(m_cachedBuffer);
-        // Checked: this is the object's size in pixels times three, so a
-        // device can refuse it, and new[] there aborts rather than
-        // returning null (exceptions are off). Undrawn text beats a reboot.
-        m_cachedBuffer = Deki::Memory::AllocateArray<uint8_t>(bufferSize, Deki::MemoryUse::Buffer,
-                                                             "TextComponent::cache");
-        m_cachedBufferSize = m_cachedBuffer ? bufferSize : 0;
-        if (!m_cachedBuffer)
-        {
-            DEKI_LOG_WARNING("TextComponent: no room for a %dx%d text bake (%u bytes); "
-                             "not drawing it",
-                             (int)widthPx, (int)heightPx, (unsigned)bufferSize);
-            return false;
-        }
+        DEKI_LOG_WARNING("TextComponent: no room for a %dx%d text bake (%u bytes); "
+                         "not drawing it",
+                         (int)widthPx, (int)heightPx, (unsigned)bufferSize);
+        return false;
     }
-    memset(m_cachedBuffer, 0, bufferSize);  // Clear to transparent
+    memset(m_cachedBuffer.Data(), 0, bufferSize);  // Clear to transparent
 
     // Calculate glyph layout using shared method
     std::vector<GlyphLayout> glyphLayouts;
@@ -600,7 +590,7 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
                     if (idx == 0)
                         continue;
                     size_t buf_offset = (buf_row + buf_x) * 3;
-                    *(uint16_t*)(m_cachedBuffer + buf_offset) = pal_rgb[idx];
+                    *(uint16_t*)(m_cachedBuffer.Data() + buf_offset) = pal_rgb[idx];
                     m_cachedBuffer[buf_offset + 2] = pal_a[idx];
                     continue;
                 }
@@ -631,7 +621,7 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
 
                 // Write to buffer (RGB565A8: 2 bytes RGB565 + 1 byte alpha)
                 size_t buf_offset = (buf_row + buf_x) * 3;
-                *(uint16_t*)(m_cachedBuffer + buf_offset) = text_rgb565;
+                *(uint16_t*)(m_cachedBuffer.Data() + buf_offset) = text_rgb565;
                 m_cachedBuffer[buf_offset + 2] = alpha;
             }
         }
@@ -656,7 +646,7 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
     const int32_t scanEnd = (std::min)(heightPx, touchedLastRow + 1);
     for (int32_t row = (std::max)(int32_t{0}, touchedFirstRow); row < scanEnd; row++)
     {
-        const uint8_t* rowPtr = m_cachedBuffer + row * widthPx * 3;
+        const uint8_t* rowPtr = m_cachedBuffer.Data() + row * widthPx * 3;
         for (int32_t col = 0; col < widthPx; col++)
         {
             if (rowPtr[col * 3 + 2] != 0)  // Check alpha byte
@@ -686,7 +676,7 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
 
     // Return source - RGB565A8 format (not owned by caller, we manage lifetime)
     outSource = QuadBlit::MakeSource(
-        m_cachedBuffer + m_cropFirstRow * widthPx * 3,
+        m_cachedBuffer.Data() + m_cropFirstRow * widthPx * 3,
         widthPx, m_cropHeight, 3, true, true, false);
     outSource.pixelsPerMeter = ppm;
     outPivotX = 0.5f;
