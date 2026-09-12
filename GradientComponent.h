@@ -309,6 +309,10 @@ class GradientComponent : public RendererComponent
     uint8_t* m_Baked = nullptr;
     size_t m_BakedSize = 0;
     uint64_t m_BakeKey = 0;
+    // A bake size the device could not allocate. Retrying it every frame
+    // achieves nothing and floods the log, so it is attempted once and
+    // only reconsidered when the required size changes.
+    size_t m_BakeFailedSize = 0;
     uint64_t ComputeBakeKey(int32_t widthPx, int32_t heightPx) const;
 
     // Linear-gradient trig, computed once per bake instead of once per pixel.

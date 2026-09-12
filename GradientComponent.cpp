@@ -2,10 +2,11 @@
 #include <cstring>
 #include <deki/Object.h>
 #include <deki/Engine.h>
+#include <deki/LogSystem.h>
 #include "deki-rendering/CameraComponent.h"
-#ifndef DEKI_EDITOR
+// Unconditional: the bake is allocated through Deki::Memory in both builds,
+// so the editor sees the same failure path the device does.
 #include <deki/providers/Memory.h>
-#endif
 #include <cmath>
 #include <algorithm>
 
@@ -80,7 +81,7 @@ GradientComponent::GradientComponent(float w, float h)
 
 GradientComponent::~GradientComponent()
 {
-    delete[] m_Baked;
+    Deki::Memory::Free(m_Baked);
 }
 
 void GradientComponent::WriteStopsToProperties()
@@ -538,13 +539,40 @@ bool GradientComponent::RenderContent(const Deki::Object* owner,
     // (per-pixel trig for radial/conical); the blit reuses it every frame.
     const uint64_t key = ComputeBakeKey(widthPx, heightPx);
     const size_t need = static_cast<size_t>(widthPx) * static_cast<size_t>(heightPx) * 2;  // RGB565
+    // A size already refused is not attempted again.
+    if (m_BakeFailedSize == need)
+        return false;
+
     if (!m_Baked || m_BakedSize != need || m_BakeKey != key)
     {
         if (m_BakedSize != need)
         {
-            delete[] m_Baked;
-            m_Baked = new uint8_t[need];
-            m_BakedSize = need;
+            Deki::Memory::Free(m_Baked);
+
+            // The engine's allocator, which returns null rather than throwing.
+            //
+            // The bake is the object's size in pixels times two, so a
+            // full-screen gradient is 150 KB at 320x240 and more on a bigger
+            // panel. A device without PSRAM can refuse that, and new[] there
+            // does not return null: ESP-IDF builds with exceptions off, so the
+            // throw reaches __cxa_allocate_exception and aborts, rebooting the
+            // board mid-frame. std::nothrow does not save it either, because
+            // libstdc++ implements it by calling the throwing form inside a
+            // try/catch that -fno-exceptions has removed. A missing gradient is
+            // a better outcome than a reboot, and PSRAM is preferred since this
+            // is a large read-mostly buffer.
+            m_Baked = (uint8_t*)Deki::Memory::Allocate(need, true, "GradientComponent::bake");
+            m_BakedSize = m_Baked ? need : 0;
+
+            if (!m_Baked)
+            {
+                DEKI_LOG_WARNING("GradientComponent: no room for a %dx%d bake (%u bytes); "
+                                 "not drawing it",
+                                 (int)widthPx, (int)heightPx, (unsigned)need);
+                m_BakeFailedSize = need;
+                return false;
+            }
+            m_BakeFailedSize = 0;
         }
         RenderToBuffer(m_Baked);
         m_BakeKey = key;
