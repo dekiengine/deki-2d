@@ -1,4 +1,5 @@
 #include "SpriteComponent.h"
+#include <deki/providers/Memory.h>
 #include "PixelFormat.h"
 #include <deki/Object.h>
 #include <deki/Engine.h>
@@ -122,7 +123,7 @@ void SpriteComponent::UnloadAssets()
     sprite.loadAttempted = false;
 
     // Free cached Tiled/NineSlice bake buffer
-    delete[] m_cachedRenderBuffer;
+    Deki::Memory::Free(m_cachedRenderBuffer);
     m_cachedRenderBuffer = nullptr;
     m_cachedRenderSize   = 0;
     m_cachedRenderW      = 0;
@@ -135,7 +136,7 @@ SpriteComponent::~SpriteComponent()
 {
     // The bake buffer was only ever freed by UnloadAssets(), which the runtime
     // never calls, so every tiled / nine-slice sprite leaked it on scene unload.
-    delete[] m_cachedRenderBuffer;
+    Deki::Memory::Free(m_cachedRenderBuffer);
 }
 
 // ============================================================
@@ -257,9 +258,19 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
             size_t need = (size_t)target_w * (size_t)target_h * (size_t)bytesPerPixel;
             if (m_cachedRenderSize != need)
             {
-                delete[] m_cachedRenderBuffer;
-                m_cachedRenderBuffer = new uint8_t[need];
-                m_cachedRenderSize   = need;
+                Deki::Memory::Free(m_cachedRenderBuffer);
+                // Checked: sized by the object on screen, so a device can
+                // refuse it, and new[] there aborts instead of returning null.
+                m_cachedRenderBuffer = Deki::Memory::AllocateArray<uint8_t>(
+                    need, Deki::MemoryUse::Buffer, "SpriteComponent::bake");
+                m_cachedRenderSize = m_cachedRenderBuffer ? need : 0;
+            }
+            if (!m_cachedRenderBuffer)
+            {
+                DEKI_LOG_WARNING("SpriteComponent: no room for a %dx%d bake (%u bytes); "
+                                 "not drawing it",
+                                 (int)target_w, (int)target_h, (unsigned)need);
+                return false;
             }
             if (renderMode == SpriteRenderMode::NineSlice)
                 Sprite::BakeNineSliceInto(m_cachedRenderBuffer, target_w, target_h, spr);

@@ -38,7 +38,8 @@ Texture2D::~Texture2D()
 #endif
         data = nullptr;
     }
-    delete[] alphaRowSpans;
+    // Allocated through Deki::Memory by the loaders, so freed the same way.
+    Deki::Memory::Free(alphaRowSpans);
     alphaRowSpans = nullptr;
 }
 
@@ -103,7 +104,7 @@ Texture2D* Texture2D::Load(const char* file_path)
 
     // Read pixel data
     uint8_t* pixel_data = (uint8_t*)Deki::Memory::Allocate(
-        header.dataSize, true, "Texture2D::Load");
+        header.dataSize, Deki::MemoryUse::Buffer, "Texture2D::Load");
 
     if (!pixel_data)
     {

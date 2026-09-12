@@ -102,7 +102,7 @@ static BitmapFont* GetEditorFontVariant(const std::string& fontGuid, int fontSiz
     size_t atlasSize = result.atlasWidth * result.atlasHeight * 4;
     if (Deki::Memory::IsInitialized())
     {
-        atlas->data = static_cast<uint8_t*>(Deki::Memory::Allocate(atlasSize, false, "FontPreviewAtlas"));
+        atlas->data = static_cast<uint8_t*>(Deki::Memory::Allocate(atlasSize, Deki::MemoryUse::Buffer, "FontPreviewAtlas"));
         atlas->allocatedWithBackend = true;
     }
     else
@@ -249,7 +249,7 @@ bool SetPreviewFontFromData(
     size_t atlasSize = atlasWidth * atlasHeight * 4;
     if (Deki::Memory::IsInitialized())
     {
-        atlas->data = static_cast<uint8_t*>(Deki::Memory::Allocate(atlasSize, false, "FontPreviewAtlas"));
+        atlas->data = static_cast<uint8_t*>(Deki::Memory::Allocate(atlasSize, Deki::MemoryUse::Buffer, "FontPreviewAtlas"));
         atlas->allocatedWithBackend = true;
     }
     else

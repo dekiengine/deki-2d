@@ -1,4 +1,5 @@
 #include "TextComponent.h"
+#include <deki/providers/Memory.h>
 #include "PixelFormat.h"
 #include <deki/Object.h>
 #include <deki/Engine.h>
@@ -33,7 +34,7 @@ TextComponent::TextComponent()
 
 TextComponent::~TextComponent()
 {
-    delete[] m_cachedBuffer;
+    Deki::Memory::Free(m_cachedBuffer);
     m_cachedBuffer = nullptr;
 }
 
@@ -52,7 +53,7 @@ void TextComponent::UnloadAssets()
 
 void TextComponent::InvalidateRenderCache()
 {
-    delete[] m_cachedBuffer;
+    Deki::Memory::Free(m_cachedBuffer);
     m_cachedBuffer = nullptr;
     m_cachedBufferSize = 0;
 }
@@ -410,9 +411,20 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
     // Reuse existing cache buffer if same size, otherwise reallocate
     if (m_cachedBufferSize != bufferSize)
     {
-        delete[] m_cachedBuffer;
-        m_cachedBuffer = new uint8_t[bufferSize];
-        m_cachedBufferSize = bufferSize;
+        Deki::Memory::Free(m_cachedBuffer);
+        // Checked: this is the object's size in pixels times three, so a
+        // device can refuse it, and new[] there aborts rather than
+        // returning null (exceptions are off). Undrawn text beats a reboot.
+        m_cachedBuffer = Deki::Memory::AllocateArray<uint8_t>(bufferSize, Deki::MemoryUse::Buffer,
+                                                             "TextComponent::cache");
+        m_cachedBufferSize = m_cachedBuffer ? bufferSize : 0;
+        if (!m_cachedBuffer)
+        {
+            DEKI_LOG_WARNING("TextComponent: no room for a %dx%d text bake (%u bytes); "
+                             "not drawing it",
+                             (int)widthPx, (int)heightPx, (unsigned)bufferSize);
+            return false;
+        }
     }
     memset(m_cachedBuffer, 0, bufferSize);  // Clear to transparent
 

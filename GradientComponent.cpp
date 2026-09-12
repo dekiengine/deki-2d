@@ -561,7 +561,7 @@ bool GradientComponent::RenderContent(const Deki::Object* owner,
             // try/catch that -fno-exceptions has removed. A missing gradient is
             // a better outcome than a reboot, and PSRAM is preferred since this
             // is a large read-mostly buffer.
-            m_Baked = (uint8_t*)Deki::Memory::Allocate(need, true, "GradientComponent::bake");
+            m_Baked = (uint8_t*)Deki::Memory::Allocate(need, Deki::MemoryUse::Buffer, "GradientComponent::bake");
             m_BakedSize = m_Baked ? need : 0;
 
             if (!m_Baked)
