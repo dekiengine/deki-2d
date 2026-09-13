@@ -409,7 +409,7 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
     // Allocate() leaves an unchanged size alone, so the reuse path costs
     // nothing. This is the object's size in pixels times three, which a device
     // can refuse; undrawn text beats a reboot.
-    if (!m_cachedBuffer.Allocate(bufferSize, Deki::MemoryUse::Buffer, "TextComponent::cache"))
+    if (!m_cachedBuffer.Allocate(bufferSize, Deki::MemoryUse::External, "TextComponent::cache"))
     {
         DEKI_LOG_WARNING("TextComponent: no room for a %dx%d text bake (%u bytes); "
                          "not drawing it",

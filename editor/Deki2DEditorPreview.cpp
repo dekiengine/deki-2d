@@ -102,7 +102,7 @@ static BitmapFont* GetEditorFontVariant(const std::string& fontGuid, int fontSiz
     size_t atlasSize = result.atlasWidth * result.atlasHeight * 4;
     if (Deki::Memory::IsInitialized())
     {
-        atlas->data = static_cast<uint8_t*>(Deki::Memory::Allocate(atlasSize, Deki::MemoryUse::Buffer, "FontPreviewAtlas"));
+        atlas->data = static_cast<uint8_t*>(Deki::Memory::Allocate(atlasSize, Deki::MemoryUse::External, "FontPreviewAtlas"));
         atlas->allocatedWithBackend = true;
     }
     else
@@ -113,7 +113,7 @@ static BitmapFont* GetEditorFontVariant(const std::string& fontGuid, int fontSiz
     if (!atlas->data) { delete atlas; return nullptr; }
     memcpy(atlas->data, result.atlasRGBA.data(), atlasSize);
 
-    Deki::Buffer<GlyphInfo> glyphsCopy(result.glyphs.size(), Deki::MemoryUse::Hot,
+    Deki::Buffer<GlyphInfo> glyphsCopy(result.glyphs.size(), Deki::MemoryUse::Internal,
                                        "FontPreview::glyphs");
     if (!glyphsCopy) { delete atlas; return nullptr; }
     memcpy(glyphsCopy.Data(), result.glyphs.data(), glyphsCopy.Bytes());
@@ -251,7 +251,7 @@ bool SetPreviewFontFromData(
     size_t atlasSize = atlasWidth * atlasHeight * 4;
     if (Deki::Memory::IsInitialized())
     {
-        atlas->data = static_cast<uint8_t*>(Deki::Memory::Allocate(atlasSize, Deki::MemoryUse::Buffer, "FontPreviewAtlas"));
+        atlas->data = static_cast<uint8_t*>(Deki::Memory::Allocate(atlasSize, Deki::MemoryUse::External, "FontPreviewAtlas"));
         atlas->allocatedWithBackend = true;
     }
     else
@@ -262,7 +262,7 @@ bool SetPreviewFontFromData(
     if (!atlas->data) { delete atlas; return false; }
     memcpy(atlas->data, atlasRGBA, atlasSize);
 
-    Deki::Buffer<GlyphInfo> glyphsCopy(glyphCount, Deki::MemoryUse::Hot,
+    Deki::Buffer<GlyphInfo> glyphsCopy(glyphCount, Deki::MemoryUse::Internal,
                                        "FontPreview::glyphs");
     if (!glyphsCopy) { delete atlas; return false; }
     memcpy(glyphsCopy.Data(), glyphs, glyphsCopy.Bytes());
