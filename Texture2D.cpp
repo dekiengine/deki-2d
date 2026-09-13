@@ -102,7 +102,7 @@ Texture2D* Texture2D::Load(const char* file_path)
 
     // Read pixel data
     uint8_t* pixel_data = (uint8_t*)Deki::Memory::Allocate(
-        header.dataSize, Deki::MemoryUse::External);
+        header.dataSize, Deki::Mem::External);
 
     if (!pixel_data)
     {

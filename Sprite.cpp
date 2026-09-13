@@ -163,7 +163,7 @@ Sprite* Sprite::Load(const char* file_path)
 
     // Read pixel data
     uint8_t* pixel_data = (uint8_t*)Deki::Memory::Allocate(
-        header.dataSize, Deki::MemoryUse::External);
+        header.dataSize, Deki::Mem::External);
 
     if (!pixel_data)
     {
@@ -186,7 +186,7 @@ Sprite* Sprite::Load(const char* file_path)
     if (header.metadataSize > 0)
     {
         metadata = (uint8_t*)Deki::Memory::Allocate(
-            header.metadataSize, Deki::MemoryUse::Internal);
+            header.metadataSize, Deki::Mem::Internal);
 
         if (metadata)
         {
@@ -308,7 +308,7 @@ Sprite* Sprite::Load(const char* file_path)
                                       spansCount <= (chunk_size - 8) / sizeof(int16_t);
                 if (enabled && spansCount > 0 && spansFit)
                 {
-                    sprite->chromaRowSpans.Allocate(spansCount, Deki::MemoryUse::Internal);
+                    sprite->chromaRowSpans.Allocate(spansCount, Deki::Mem::Internal);
                     if (sprite->chromaRowSpans)
                         memcpy(sprite->chromaRowSpans.Data(), p + 8, spansCount * sizeof(int16_t));
                     else
@@ -368,7 +368,7 @@ Sprite* Sprite::Load(const char* file_path)
             else
             {
                 // Build per-row opaque span data for fast blitting.
-                sprite->alphaRowSpans.Allocate(static_cast<size_t>(h) * 2, Deki::MemoryUse::Internal);
+                sprite->alphaRowSpans.Allocate(static_cast<size_t>(h) * 2, Deki::Mem::Internal);
                 if (sprite->alphaRowSpans)
                     BuildOpaqueRowSpans(pixel_data, w, h, sprite->alphaRowSpans.Data());
                 else
@@ -418,7 +418,7 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
 
     // Copy pixel data into PSRAM (sprite takes ownership)
     uint8_t* pixel_data = (uint8_t*)Deki::Memory::Allocate(
-        header.dataSize, Deki::MemoryUse::External);
+        header.dataSize, Deki::Mem::External);
     if (!pixel_data)
     {
         DEKI_LOG_ERROR("Sprite::LoadFromFileData: alloc failed");
@@ -515,7 +515,7 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
                                           spansCount <= (chunk_size - 8) / sizeof(int16_t);
                     if (enabled && spansCount > 0 && spansFit)
                     {
-                        sprite->chromaRowSpans.Allocate(spansCount, Deki::MemoryUse::Internal);
+                        sprite->chromaRowSpans.Allocate(spansCount, Deki::Mem::Internal);
                         if (sprite->chromaRowSpans)
                             memcpy(sprite->chromaRowSpans.Data(), p + 8, spansCount * sizeof(int16_t));
                         else
@@ -559,7 +559,7 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
             }
             else
             {
-                sprite->alphaRowSpans.Allocate(static_cast<size_t>(h) * 2, Deki::MemoryUse::Internal);
+                sprite->alphaRowSpans.Allocate(static_cast<size_t>(h) * 2, Deki::Mem::Internal);
                 if (sprite->alphaRowSpans)
                     BuildOpaqueRowSpans(pixel_data, w, h, sprite->alphaRowSpans.Data());
                 else
@@ -605,7 +605,7 @@ Sprite* Sprite::CreateSolid(int32_t width, int32_t height, uint8_t r, uint8_t g,
     DEKI_LOG_INTERNAL("Sprite::CreateSolid - Allocating %zu bytes for RGB565 data", dataSize);
 
     sprite->data = (uint8_t*)Deki::Memory::Allocate(
-        dataSize, Deki::MemoryUse::External);
+        dataSize, Deki::Mem::External);
 
     if (!sprite->data)
     {
@@ -647,7 +647,7 @@ Sprite* Sprite::CreateSolidRGBA(int32_t width, int32_t height, uint8_t r, uint8_
         size_t dataSize = width * height * 3;  // RGB565A8 format (2 bytes RGB565 + 1 byte alpha)
 
     sprite->data = (uint8_t*)Deki::Memory::Allocate(
-        dataSize, Deki::MemoryUse::External);
+        dataSize, Deki::Mem::External);
 
     if (!sprite->data)
     {
@@ -723,7 +723,7 @@ Sprite* Sprite::CreateTiled(Sprite* source, int32_t target_width, int32_t target
 
     uint32_t bytes_per_pixel = Texture2D::GetBytesPerPixel(source->format);
     size_t tiled_data_size = target_width * target_height * bytes_per_pixel;
-    tiled->data = (uint8_t*)Deki::Memory::Allocate(tiled_data_size, Deki::MemoryUse::External);
+    tiled->data = (uint8_t*)Deki::Memory::Allocate(tiled_data_size, Deki::Mem::External);
 
     if (!tiled->data)
     {
@@ -930,7 +930,7 @@ Sprite* Sprite::CreateNineSlice(Sprite* source, int32_t target_width, int32_t ta
 
     uint32_t bytes_per_pixel = Texture2D::GetBytesPerPixel(source->format);
     size_t result_data_size = target_width * target_height * bytes_per_pixel;
-    result->data = (uint8_t*)Deki::Memory::Allocate(result_data_size, Deki::MemoryUse::External);
+    result->data = (uint8_t*)Deki::Memory::Allocate(result_data_size, Deki::Mem::External);
 
     if (!result->data)
     {

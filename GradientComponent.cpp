@@ -549,7 +549,7 @@ bool GradientComponent::RenderContent(const Deki::Object* owner,
         // nothing. The bake is the object's size in pixels times two: 150 KB
         // for a full-screen gradient at 320x240, more on a bigger panel, and a
         // device without PSRAM can simply refuse it.
-        if (!m_Baked.Allocate(need, Deki::MemoryUse::External))
+        if (!m_Baked.Allocate(need, Deki::Mem::External))
         {
             DEKI_LOG_WARNING("GradientComponent: no room for a %dx%d bake (%u bytes); "
                              "not drawing it",
