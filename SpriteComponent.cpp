@@ -257,8 +257,7 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
             // Allocate() leaves an unchanged size alone, so the reuse path
             // costs nothing. Sized by the object on screen, which a device can
             // refuse; not drawing it beats a reboot.
-            if (!m_cachedRenderBuffer.Allocate(need, Deki::MemoryUse::External,
-                                               "SpriteComponent::bake"))
+            if (!m_cachedRenderBuffer.Allocate(need, Deki::MemoryUse::External))
             {
                 DEKI_LOG_WARNING("SpriteComponent: no room for a %dx%d bake (%u bytes); "
                                  "not drawing it",
