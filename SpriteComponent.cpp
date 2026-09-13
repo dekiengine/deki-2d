@@ -196,11 +196,10 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
     outTintB = tintColor.b;
     outTintA = tintColor.a;
 
-    // Determine format properties
-    bool isRGB565 = (spr->format == Texture2D::TextureFormat::RGB565 ||
-                     spr->format == Texture2D::TextureFormat::RGB565A8);
-    bool hasAlpha = spr->hasAlpha;
-    int32_t bytesPerPixel = Texture2D::GetBytesPerPixel(spr->format);
+
+    // Still needed for sizing the bake buffer and striding into the atlas;
+    // the blit's own shape comes from PixelLayout::FromTexture below.
+    const int32_t bytesPerPixel = Deki::Texture2D::GetBytesPerPixel(spr->format);
 
     // Tiled / NineSlice: stretch the whole sprite into a cached bake buffer.
     // These modes are mutually exclusive with animation frame extraction.
@@ -278,10 +277,7 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
         outSource = QuadBlit::MakeSource(
             m_cachedRenderBuffer.Data(),
             target_w,
-            target_h,
-            bytesPerPixel,
-            hasAlpha,
-            isRGB565,
+            target_h, QuadBlit::PixelLayout::FromTexture(spr->format, spr->hasAlpha),
             false  // ownsPixels = false - component owns this buffer
         );
         // Tiled / 9-slice produce a derived buffer with different dimensions
@@ -307,10 +303,7 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
         outSource = QuadBlit::MakeSource(
             spr->data,
             spr->width,
-            spr->height,
-            bytesPerPixel,
-            hasAlpha,
-            isRGB565,
+            spr->height, QuadBlit::PixelLayout::FromTexture(spr->format, spr->hasAlpha),
             false,  // ownsPixels = false - sprite owns its data
             spr->alphaRowSpans.Data()
         );
@@ -340,10 +333,7 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
         outSource = QuadBlit::MakeSource(
             spr->data + ((size_t)frameY * spr->width + frameX) * bytesPerPixel,
             fw,
-            fh,
-            bytesPerPixel,
-            hasAlpha,
-            isRGB565,
+            fh, QuadBlit::PixelLayout::FromTexture(spr->format, spr->hasAlpha),
             false  // ownsPixels = false - sprite owns its data
         );
         outSource.stride = spr->width * bytesPerPixel;

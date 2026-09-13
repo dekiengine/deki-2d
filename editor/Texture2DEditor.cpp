@@ -5,7 +5,7 @@
  *        free of editor paths.
  */
 
-#include "Texture2D.h"
+#include <deki/assets/Texture2D.h>
 #include <deki/providers/Memory.h>
 #include <deki/LogSystem.h>
 #include <cstdlib>
@@ -13,7 +13,7 @@
 #include <fstream>
 
 #ifdef DEKI_EDITOR
-uint8_t* Texture2D::ConvertToRGBA(const uint8_t* src_data, int32_t width, int32_t height, TextureFormat format)
+uint8_t* Deki::Texture2D::ConvertToRGBA(const uint8_t* src_data, int32_t width, int32_t height, TextureFormat format)
 {
     if (!src_data || width <= 0 || height <= 0)
     {
@@ -96,7 +96,7 @@ uint8_t* Texture2D::ConvertToRGBA(const uint8_t* src_data, int32_t width, int32_
     return rgba;
 }
 
-uint8_t* Texture2D::LoadAsRGBA(const char* file_path, int32_t& out_width, int32_t& out_height, bool& out_has_alpha)
+uint8_t* Deki::Texture2D::LoadAsRGBA(const char* file_path, int32_t& out_width, int32_t& out_height, bool& out_has_alpha)
 {
     out_width = 0;
     out_height = 0;

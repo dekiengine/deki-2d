@@ -103,7 +103,7 @@ DEKI_2D_API int Deki2D_EnsureRegistered(void)
     TextComponent::SetFontResolveCallback(Deki2D::EditorFontResolve);
 
     // Register image loader and font factory with EditorAssets
-    DekiEditor::EditorAssets::RegisterImageLoader(Texture2D::LoadAsRGBA);
+    DekiEditor::EditorAssets::RegisterImageLoader(Deki::Texture2D::LoadAsRGBA);
     DekiEditor::EditorAssets::RegisterFontFactory(
         // Font factory: load a BitmapFont (handles v1/v2/v3/v4) and, separately,
         // hand the editor the raw RGBA bytes of the atlas so it can upload a
@@ -119,7 +119,7 @@ DEKI_2D_API int Deki2D_EnsureRegistered(void)
 
             int32_t atlasW = 0, atlasH = 0;
             bool hasAlpha = false;
-            uint8_t* rgba = Texture2D::LoadAsRGBA(atlasAbsPath.c_str(), atlasW, atlasH, hasAlpha);
+            uint8_t* rgba = Deki::Texture2D::LoadAsRGBA(atlasAbsPath.c_str(), atlasW, atlasH, hasAlpha);
             if (!rgba) { delete font; return nullptr; }
 
             if (outAtlasRGBA) *outAtlasRGBA = rgba; else free(rgba);

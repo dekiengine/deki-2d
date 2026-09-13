@@ -567,10 +567,7 @@ bool GradientComponent::RenderContent(const Deki::Object* owner,
     outSource = QuadBlit::MakeSource(
         m_Baked.Data(),
         widthPx,
-        heightPx,
-        2,      // bytesPerPixel for RGB565
-        false,  // hasAlpha - gradients don't have alpha
-        true,   // isRGB565
+        heightPx, QuadBlit::PixelLayout::RGB565(),   // isRGB565
         false   // ownsPixels - the component owns its bake
     );
     outSource.pixelsPerMeter = Deki::EngineSettings::Global().pixelsPerMeter;

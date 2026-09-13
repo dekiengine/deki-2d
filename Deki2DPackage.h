@@ -47,7 +47,7 @@
 #include "Bounds2D.h"
 
 // Asset Types (always included - stay in deki-engine-core)
-#include "Texture2D.h"
+#include <deki/assets/Texture2D.h>
 #include "Sprite.h"
 #include "ISpriteLoader.h"
 #include "FrameAnimationData.h"

@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include "Texture2D.h"
+#include <deki/assets/Texture2D.h>
 
 /**
  * @brief A frame within a spritesheet
@@ -42,7 +42,7 @@ struct SpriteMetadata
 /**
  * @brief Represents a 2D sprite - a Texture2D with additional sprite metadata
  */
-class Sprite : public Texture2D
+class Sprite : public Deki::Texture2D
 {
    public:
     /// Asset type name for AssetManager::Load<T>() lookup
@@ -65,7 +65,7 @@ class Sprite : public Texture2D
     // by QuadBlit to fast-path chroma blits. Owned by the sprite. Layout
     // matches alphaRowSpans. nullptr if hasChromaKey is false or the chunk
     // didn't supply spans (legacy files).
-    Deki::Buffer<int16_t> chromaRowSpans;  // owning; see Texture2D::alphaRowSpans
+    Deki::Buffer<int16_t> chromaRowSpans;  // owning; see Deki::Texture2D::alphaRowSpans
 
     // 9-slice properties (for scalable UI elements)
     bool hasNineSlice;     // Whether this sprite has 9-slice data
@@ -213,7 +213,7 @@ class Sprite : public Texture2D
      * @param data Raw file data after header
      * @return true on success
      */
-    bool LoadFromMemory(const Texture2D::Header& header, const uint8_t* data) override;
+    bool LoadFromMemory(const Deki::Texture2D::Header& header, const uint8_t* data) override;
 
    private:
     /**

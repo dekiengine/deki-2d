@@ -2,7 +2,7 @@
 #ifdef DEKI_EDITOR
 
 #include "SpritesheetEditorWindow.h"
-#include "Texture2D.h"
+#include <deki/assets/Texture2D.h>
 #include <deki-editor/EditorUI.h>
 #include <deki-editor/EditorApplication.h>
 #include <deki-editor/AssetDatabase.h>

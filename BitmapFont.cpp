@@ -632,7 +632,7 @@ BitmapFont* BitmapFont::CreateMonospace(const char* atlas_path,
     return font;
 }
 
-BitmapFont* BitmapFont::CreateFromMemory(Texture2D* atlas,
+BitmapFont* BitmapFont::CreateFromMemory(Deki::Texture2D* atlas,
                                           Deki::Buffer<GlyphInfo>&& glyphs,
                                           uint8_t m_FirstChar,
                                           uint8_t m_LastChar,
@@ -660,7 +660,7 @@ BitmapFont* BitmapFont::CreateFromMemory(Texture2D* atlas,
     return font;
 }
 
-Texture2D* BitmapFont::GetAtlas() const
+Deki::Texture2D* BitmapFont::GetAtlas() const
 {
     if (!atlas && !m_AtlasPath.empty())
     {

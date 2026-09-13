@@ -13,7 +13,7 @@
 #include "ClipComponent.h"
 #include "deki-rendering/QuadBlit.h"
 #include "BitmapFont.h"
-#include "Texture2D.h"
+#include <deki/assets/Texture2D.h>
 #include "Sprite.h"
 #include <algorithm>
 #include <cmath>

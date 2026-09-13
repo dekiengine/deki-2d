@@ -371,7 +371,7 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
     if (!fontPtr || !fontPtr->GetAtlas())
         return false;
 
-    Texture2D* atlas = fontPtr->GetAtlas();
+    Deki::Texture2D* atlas = fontPtr->GetAtlas();
     if (!atlas->data)
         return false;
 
@@ -391,7 +391,7 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
     {
         outSource = QuadBlit::MakeSource(
             m_cachedBuffer.Data() + m_cropFirstRow * widthPx * 3,
-            widthPx, m_cropHeight, 3, true, true, false);
+            widthPx, m_cropHeight, QuadBlit::PixelLayout::RGB565A8(), false);
         outSource.pixelsPerMeter = ppm;
         outPivotX = 0.5f;
         outPivotY = m_cropPivotY;
@@ -423,7 +423,7 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
     CalculateGlyphLayout(fontPtr, glyphLayouts);
 
     // Get bytes per pixel for atlas format
-    uint32_t atlas_bpp = Texture2D::GetBytesPerPixel(atlas->format);
+    uint32_t atlas_bpp = Deki::Texture2D::GetBytesPerPixel(atlas->format);
 
     // Center of our buffer in local pixel coordinates
     float centerX = widthPx * 0.5f;
@@ -484,11 +484,11 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
     int32_t alpha_offset;
     switch (atlas->format)
     {
-        case Texture2D::TextureFormat::RGBA8888:  alpha_offset = 3; break;
-        case Texture2D::TextureFormat::RGB565A8:  alpha_offset = 2; break;
-        case Texture2D::TextureFormat::ALPHA8:    alpha_offset = 0; break;
+        case Deki::Texture2D::TextureFormat::RGBA8888:  alpha_offset = 3; break;
+        case Deki::Texture2D::TextureFormat::RGB565A8:  alpha_offset = 2; break;
+        case Deki::Texture2D::TextureFormat::ALPHA8:    alpha_offset = 0; break;
         default:
-            alpha_offset = (atlas->hasTransparency && atlas->format == Texture2D::TextureFormat::RGB565) ? -2 : -1;
+            alpha_offset = (atlas->hasTransparency && atlas->format == Deki::Texture2D::TextureFormat::RGB565) ? -2 : -1;
             break;
     }
 
@@ -677,7 +677,7 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
     // Return source - RGB565A8 format (not owned by caller, we manage lifetime)
     outSource = QuadBlit::MakeSource(
         m_cachedBuffer.Data() + m_cropFirstRow * widthPx * 3,
-        widthPx, m_cropHeight, 3, true, true, false);
+        widthPx, m_cropHeight, QuadBlit::PixelLayout::RGB565A8(), false);
     outSource.pixelsPerMeter = ppm;
     outPivotX = 0.5f;
     outPivotY = m_cropPivotY;

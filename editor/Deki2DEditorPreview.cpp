@@ -11,7 +11,7 @@
 
 #include "Deki2DPackage.h"
 #include "TextComponent.h"
-#include "Texture2D.h"
+#include <deki/assets/Texture2D.h>
 #include "BitmapFont.h"
 #include "editor/FontCompiler.h"
 #include "editor/FontSyncHandler.h"
@@ -92,10 +92,10 @@ static BitmapFont* GetEditorFontVariant(const std::string& fontGuid, int fontSiz
     if (!Deki2D::FontCompiler::CompileTrueTypeFont(ttfPath, options, result))
         return nullptr;
 
-    Texture2D* atlas = new Texture2D();
+    Deki::Texture2D* atlas = new Deki::Texture2D();
     atlas->width = result.atlasWidth;
     atlas->height = result.atlasHeight;
-    atlas->format = Texture2D::TextureFormat::RGBA8888;
+    atlas->format = Deki::Texture2D::TextureFormat::RGBA8888;
     atlas->hasAlpha = true;
     atlas->hasTransparency = true;
 
@@ -240,10 +240,10 @@ bool SetPreviewFontFromData(
     if (s_PreviewFontGuid != sourceGuid || s_PreviewFontSize != fontSize)
         ClearPreviewFont();
 
-    Texture2D* atlas = new Texture2D();
+    Deki::Texture2D* atlas = new Deki::Texture2D();
     atlas->width = atlasWidth;
     atlas->height = atlasHeight;
-    atlas->format = Texture2D::TextureFormat::RGBA8888;
+    atlas->format = Deki::Texture2D::TextureFormat::RGBA8888;
     atlas->hasAlpha = true;
     atlas->hasTransparency = true;
 

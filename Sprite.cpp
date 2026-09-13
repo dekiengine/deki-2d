@@ -1,5 +1,5 @@
 #include "Sprite.h"
-#include "Texture2D.h"
+#include <deki/assets/Texture2D.h>
 
 #include <cstdlib>
 #include <cstring>
@@ -47,7 +47,7 @@ static void BuildOpaqueRowSpans(const uint8_t* pixel_data, int32_t w, int32_t h,
     }
 }
 
-Sprite::Sprite() : Texture2D()
+Sprite::Sprite() : Deki::Texture2D()
 {
     SetDefaultSpriteProperties();
 }
@@ -121,7 +121,7 @@ Sprite* Sprite::Load(const char* file_path)
 
     // Get file size
     long file_size = fs->GetFileSize(file);
-    if (file_size < sizeof(Texture2D::Header))
+    if (file_size < sizeof(Deki::Texture2D::Header))
     {
         DEKI_LOG_ERROR("File too small to contain texture header: %s", file_path);
         fs->CloseFile(file);
@@ -129,9 +129,9 @@ Sprite* Sprite::Load(const char* file_path)
     }
 
     // Read header
-    Texture2D::Header header;
-    size_t bytes_read = fs->ReadFile(file, &header, sizeof(Texture2D::Header));
-    if (bytes_read != sizeof(Texture2D::Header))
+    Deki::Texture2D::Header header;
+    size_t bytes_read = fs->ReadFile(file, &header, sizeof(Deki::Texture2D::Header));
+    if (bytes_read != sizeof(Deki::Texture2D::Header))
     {
         DEKI_LOG_ERROR("Failed to read sprite header: %s", file_path);
         fs->CloseFile(file);
@@ -139,7 +139,7 @@ Sprite* Sprite::Load(const char* file_path)
     }
 
     // Validate header
-    if (!Texture2D::ValidateHeader(header))
+    if (!Deki::Texture2D::ValidateHeader(header))
     {
         DEKI_LOG_ERROR("Invalid sprite header: %s", file_path);
         fs->CloseFile(file);
@@ -153,7 +153,7 @@ Sprite* Sprite::Load(const char* file_path)
     }
 
     // Validate file size
-    size_t expected_size = sizeof(Texture2D::Header) + header.dataSize + header.metadataSize;
+    size_t expected_size = sizeof(Deki::Texture2D::Header) + header.dataSize + header.metadataSize;
     if (file_size < expected_size)
     {
         DEKI_LOG_ERROR("File size mismatch. Expected: %zu, Got: %ld", expected_size, file_size);
@@ -338,7 +338,7 @@ Sprite* Sprite::Load(const char* file_path)
 
     // For RGB565A8 sprites marked as having alpha, check if all pixels are actually opaque.
     // If so, clear hasAlpha so QuadBlit can use the fast memcpy path instead of per-pixel blending.
-    if (sprite->hasAlpha && sprite->format == Texture2D::TextureFormat::RGB565A8)
+    if (sprite->hasAlpha && sprite->format == Deki::Texture2D::TextureFormat::RGB565A8)
     {
         // If exporter already determined all pixels are opaque, skip the scan
         if (header.flags & DTEX_FLAG_ALL_OPAQUE)
@@ -382,7 +382,7 @@ Sprite* Sprite::Load(const char* file_path)
               file_path,
               sprite->width,
               sprite->height,
-              Texture2D::GetFormatName(sprite->format),
+              Deki::Texture2D::GetFormatName(sprite->format),
               sprite->pivotX,
               sprite->pivotY);
 
@@ -391,30 +391,30 @@ Sprite* Sprite::Load(const char* file_path)
 
 Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
 {
-    if (!fileData || fileSize < sizeof(Texture2D::Header))
+    if (!fileData || fileSize < sizeof(Deki::Texture2D::Header))
     {
         DEKI_LOG_ERROR("Sprite::LoadFromFileData: invalid data");
         return nullptr;
     }
 
     // Parse header from buffer
-    Texture2D::Header header;
-    memcpy(&header, fileData, sizeof(Texture2D::Header));
+    Deki::Texture2D::Header header;
+    memcpy(&header, fileData, sizeof(Deki::Texture2D::Header));
 
-    if (!Texture2D::ValidateHeader(header))
+    if (!Deki::Texture2D::ValidateHeader(header))
     {
         DEKI_LOG_ERROR("Sprite::LoadFromFileData: invalid header");
         return nullptr;
     }
 
-    size_t expected_size = sizeof(Texture2D::Header) + header.dataSize + header.metadataSize;
+    size_t expected_size = sizeof(Deki::Texture2D::Header) + header.dataSize + header.metadataSize;
     if (fileSize < expected_size)
     {
         DEKI_LOG_ERROR("Sprite::LoadFromFileData: file size mismatch");
         return nullptr;
     }
 
-    const uint8_t* src = fileData + sizeof(Texture2D::Header);
+    const uint8_t* src = fileData + sizeof(Deki::Texture2D::Header);
 
     // Copy pixel data into PSRAM (sprite takes ownership)
     uint8_t* pixel_data = (uint8_t*)Deki::Memory::Allocate(
@@ -536,7 +536,7 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
 #endif
 
     // Alpha scan (same as Load)
-    if (sprite->hasAlpha && sprite->format == Texture2D::TextureFormat::RGB565A8)
+    if (sprite->hasAlpha && sprite->format == Deki::Texture2D::TextureFormat::RGB565A8)
     {
         if (header.flags & DTEX_FLAG_ALL_OPAQUE)
         {
@@ -572,10 +572,10 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
     return sprite;
 }
 
-bool Sprite::LoadFromMemory(const Texture2D::Header& header, const uint8_t* pixel_data)
+bool Sprite::LoadFromMemory(const Deki::Texture2D::Header& header, const uint8_t* pixel_data)
 {
     // Call base class implementation
-    if (!Texture2D::LoadFromMemory(header, pixel_data))
+    if (!Deki::Texture2D::LoadFromMemory(header, pixel_data))
     {
         return false;
     }
@@ -597,7 +597,7 @@ Sprite* Sprite::CreateSolid(int32_t width, int32_t height, uint8_t r, uint8_t g,
     Sprite* sprite = new Sprite();
     sprite->width = width;
     sprite->height = height;
-    sprite->format = Texture2D::TextureFormat::RGB565;  // Use RGB565 directly - native format!
+    sprite->format = Deki::Texture2D::TextureFormat::RGB565;  // Use RGB565 directly - native format!
     sprite->hasTransparency = false;
     sprite->hasAlpha = false;
 
@@ -640,7 +640,7 @@ Sprite* Sprite::CreateSolidRGBA(int32_t width, int32_t height, uint8_t r, uint8_
     Sprite* sprite = new Sprite();
     sprite->width = width;
     sprite->height = height;
-    sprite->format = Texture2D::TextureFormat::RGB565A8;
+    sprite->format = Deki::Texture2D::TextureFormat::RGB565A8;
     sprite->hasTransparency = false;
     sprite->hasAlpha = true;
 
@@ -674,7 +674,7 @@ Sprite* Sprite::CreateSolidRGBA(int32_t width, int32_t height, uint8_t r, uint8_
 
 void Sprite::BakeTiledInto(uint8_t* dst, int32_t dst_w, int32_t dst_h, const Sprite* source)
 {
-    uint32_t bytes_per_pixel = Texture2D::GetBytesPerPixel(source->format);
+    uint32_t bytes_per_pixel = Deki::Texture2D::GetBytesPerPixel(source->format);
 
     for (int32_t y = 0; y < dst_h; ++y)
     {
@@ -721,7 +721,7 @@ Sprite* Sprite::CreateTiled(Sprite* source, int32_t target_width, int32_t target
     // dimensions, so source spans don't apply. Render falls back to per-pixel
     // chroma compare for tiled sprites — uncommon and small perf cost.
 
-    uint32_t bytes_per_pixel = Texture2D::GetBytesPerPixel(source->format);
+    uint32_t bytes_per_pixel = Deki::Texture2D::GetBytesPerPixel(source->format);
     size_t tiled_data_size = target_width * target_height * bytes_per_pixel;
     tiled->data = (uint8_t*)Deki::Memory::Allocate(tiled_data_size, Deki::Memory::External);
 
@@ -759,7 +759,7 @@ bool Sprite::SetNineSliceBorders(uint16_t left, uint16_t right, uint16_t top, ui
 
 void Sprite::BakeNineSliceInto(uint8_t* dst, int32_t target_width, int32_t target_height, const Sprite* source)
 {
-    uint32_t bytes_per_pixel = Texture2D::GetBytesPerPixel(source->format);
+    uint32_t bytes_per_pixel = Deki::Texture2D::GetBytesPerPixel(source->format);
 
     // Calculate region dimensions
     // Source regions
@@ -928,7 +928,7 @@ Sprite* Sprite::CreateNineSlice(Sprite* source, int32_t target_width, int32_t ta
     result->nineSliceTop = source->nineSliceTop;
     result->nineSliceBottom = source->nineSliceBottom;
 
-    uint32_t bytes_per_pixel = Texture2D::GetBytesPerPixel(source->format);
+    uint32_t bytes_per_pixel = Deki::Texture2D::GetBytesPerPixel(source->format);
     size_t result_data_size = target_width * target_height * bytes_per_pixel;
     result->data = (uint8_t*)Deki::Memory::Allocate(result_data_size, Deki::Memory::External);
 

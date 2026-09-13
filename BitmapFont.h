@@ -4,7 +4,7 @@
 
 #include <cstdint>
 #include <string>
-#include "Texture2D.h"
+#include <deki/assets/Texture2D.h>
 
 /**
  * @brief Glyph metrics for a single character
@@ -201,7 +201,7 @@ public:
      * @param baseline Y offset from top to baseline
      * @return Created font or nullptr on failure
      */
-    static BitmapFont* CreateFromMemory(Texture2D* atlas,
+    static BitmapFont* CreateFromMemory(Deki::Texture2D* atlas,
                                         Deki::Buffer<GlyphInfo>&& glyphs,
                                         uint8_t m_FirstChar,
                                         uint8_t m_LastChar,
@@ -292,7 +292,7 @@ public:
      * @brief Get the texture atlas (loads lazily on first call)
      * @return Pointer to atlas texture
      */
-    Texture2D* GetAtlas() const;
+    Deki::Texture2D* GetAtlas() const;
 
     /**
      * @brief Get the resolved atlas path.
@@ -335,7 +335,7 @@ public:
     int32_t GetVisualCenterY() const;
 
 private:
-    mutable Texture2D* atlas;  // Glyph atlas texture (lazy-loaded)
+    mutable Deki::Texture2D* atlas;  // Glyph atlas texture (lazy-loaded)
     // Owning: the destructor used to free these, and did it with delete[]
     // against a Deki::Memory allocation. Every loader can now bail out on
     // any error without an unwind, which is where the mistakes were.
