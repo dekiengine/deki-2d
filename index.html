@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">deki-2d<span id="projectnumber">&#160;0.10.0</span>
+   <div id="projectname">deki-2d<span id="projectnumber">&#160;0.15.0</span>
    </div>
    <div id="projectbrief">Deki package reference</div>
   </td>
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="mainpage"></a></p>
 <p>Sprites, text, animations, gradients, buttons, scrolling</p>
-<p>Repository: <a href="https://github.com/dekiengine/deki-2d">github.com/dekiengine/deki-2d</a> · Latest release: 0.10.0 · Requires: <a href="https://dekiengine.github.io/deki-rendering/">deki-rendering</a>, <a href="https://dekiengine.github.io/deki-input/">deki-input</a></p>
+<p>Repository: <a href="https://github.com/dekiengine/deki-2d">github.com/dekiengine/deki-2d</a> · Latest release: 0.15.0 · Needs engine 0.15.0+ · Requires: <a href="https://dekiengine.github.io/deki-rendering/">deki-rendering</a>, <a href="https://dekiengine.github.io/deki-input/">deki-input</a></p>
 <p>Install: <span class="tt">DekiEditor --packages-add deki-2d &lt;project&gt;</span>, or add it in the Package Manager. Part of <a href="https://dekiengine.github.io/docs/">Deki</a>; the engine's own components and the C++ API are documented there.</p>
 <p>Shown in the editor as <b>2D</b>.</p>
 <h1 class="doxsection"><a class="anchor" id="autotoc_md0"></a>
@@ -112,11 +112,36 @@ Components</h1>
 <td class="markdownTableBodyNone"><a class="el" href="#c-textcomponent" title="TextComponent">TextComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">Draws text with a bitmap font, alignment and word wrap.  </td></tr>
 </table>
 <h1 class="doxsection"><a class="anchor" id="autotoc_md1"></a>
+Feature flags</h1>
+<p>Compile-time features the package exposes (<span class="tt">package.json</span>):</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Feature  </th><th class="markdownTableHeadNone">Define  </th><th class="markdownTableHeadNone">Default  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Sprites  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SPRITE</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Text  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_TEXT</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Animation  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_ANIMATION</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Gradients  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_GRADIENT</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Buttons  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_BUTTON</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Scrolling  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SCROLL</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Rollers  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_ROLLER</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Clipping  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_CLIP</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Sorting Groups  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SORTING_GROUP</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+</table>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
 Component reference</h1>
 <h2 class="doxsection"><a class="anchor" id="c-animationcomponent"></a>
 AnimationComponent</h2>
 <p>Plays a frame animation asset on the object's sprite.</p>
-<p>Inspector name: Animation Component · Category: 2D · Type GUID: <span class="tt">05f70a7a-334f-492f-9779-f3e351f64d9a</span></p>
+<p>Inspector name: Animation Component · Category: 2D · Type: <span class="tt">AnimationComponent</span></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
@@ -136,7 +161,7 @@ AnimationComponent</h2>
 <h2 class="doxsection"><a class="anchor" id="c-buttoncomponent"></a>
 ButtonComponent</h2>
 <p>Makes the object a button: tracks hover and press, and fires a click callback.</p>
-<p>Inspector name: Button Component · Category: 2D · Type GUID: <span class="tt">e6bb6f32-be31-4af1-a152-32cd21f490f3</span></p>
+<p>Inspector name: Button Component · Category: 2D · Type: <span class="tt">ButtonComponent</span></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
@@ -150,7 +175,7 @@ ButtonComponent</h2>
 <h2 class="doxsection"><a class="anchor" id="c-buttonstylecomponent"></a>
 ButtonStyleComponent</h2>
 <p>Gives a button its look per state, by tinting or by swapping sprites.</p>
-<p>Inspector name: Button Style Component · Category: 2D · Type GUID: <span class="tt">0c34e973-6cd1-45d2-b2c6-f010ba320707</span></p>
+<p>Inspector name: Button Style Component · Category: 2D · Type: <span class="tt">ButtonStyleComponent</span></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
@@ -180,7 +205,7 @@ ButtonStyleComponent</h2>
 <h2 class="doxsection"><a class="anchor" id="c-clipcomponent"></a>
 ClipComponent</h2>
 <p>Clips its children's rendering to a rectangle.</p>
-<p>Inspector name: Clip Component · Category: Core · Type GUID: <span class="tt">063a42d4-bfe1-49b9-b620-0cbf87ad720f</span></p>
+<p>Inspector name: Clip Component · Category: Core · Type: <span class="tt">ClipComponent</span></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
@@ -194,7 +219,7 @@ ClipComponent</h2>
 <h2 class="doxsection"><a class="anchor" id="c-gradientcomponent"></a>
 GradientComponent</h2>
 <p>Draws a procedural gradient: linear, radial or conical.</p>
-<p>Inspector name: Gradient Component · Category: 2D · Type GUID: <span class="tt">8d84cca3-7eb9-4b92-ba49-968ceec203c8</span></p>
+<p>Inspector name: Gradient Component · Category: 2D · Type: <span class="tt">GradientComponent</span></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
@@ -245,7 +270,7 @@ GradientComponent</h2>
 <h2 class="doxsection"><a class="anchor" id="c-rollercomponent"></a>
 RollerComponent</h2>
 <p>Picker wheel: spins through a list of values with momentum and snaps to one.</p>
-<p>Inspector name: Roller Component · Category: 2D · Type GUID: <span class="tt">72e6d6c3-ec5d-4c8f-8411-4d31824b944e</span></p>
+<p>Inspector name: Roller Component · Category: 2D · Type: <span class="tt">RollerComponent</span></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
@@ -283,7 +308,7 @@ RollerComponent</h2>
 <h2 class="doxsection"><a class="anchor" id="c-scrollcomponent"></a>
 ScrollComponent</h2>
 <p>Scrolls its children by dragging, with momentum.</p>
-<p>Inspector name: Scroll Component · Category: 2D · Type GUID: <span class="tt">2d1b84cb-8881-4457-8361-98dec7a84498</span></p>
+<p>Inspector name: Scroll Component · Category: 2D · Type: <span class="tt">ScrollComponent</span></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
@@ -319,7 +344,7 @@ ScrollComponent</h2>
 <h2 class="doxsection"><a class="anchor" id="c-scrollelement"></a>
 ScrollElement</h2>
 <p>Declares one list item's size so its Scroll Component can lay the list out.</p>
-<p>Inspector name: Scroll Element · Category: 2D · Type GUID: <span class="tt">dcc9b892-ec9b-4eae-90d5-561b5591860a</span></p>
+<p>Inspector name: Scroll Element · Category: 2D · Type: <span class="tt">ScrollElement</span></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
@@ -331,7 +356,7 @@ ScrollElement</h2>
 <h2 class="doxsection"><a class="anchor" id="c-sortinggroupcomponent"></a>
 SortingGroupComponent</h2>
 <p>Makes its children sort together as one unit against the rest of the scene.</p>
-<p>Inspector name: Sorting Group Component · Category: 2D · Type GUID: <span class="tt">8d743475-7905-4cca-b12c-9c397162851d</span></p>
+<p>Inspector name: Sorting Group Component · Category: 2D · Type: <span class="tt">SortingGroupComponent</span></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
@@ -341,7 +366,7 @@ SortingGroupComponent</h2>
 <h2 class="doxsection"><a class="anchor" id="c-spritecomponent"></a>
 SpriteComponent</h2>
 <p>Draws a sprite, with tint, flip, and tiled or 9-slice modes.</p>
-<p>Inspector name: Sprite Component · Category: 2D · Type GUID: <span class="tt">ca17ba76-f46d-484d-97ff-6e8e5497ef8d</span></p>
+<p>Inspector name: Sprite Component · Category: 2D · Type: <span class="tt">SpriteComponent</span></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
@@ -352,6 +377,10 @@ SpriteComponent</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><span class="tt">renderMode</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">Normal</span>  </td><td class="markdownTableBodyNone"><span class="tt">Normal</span>, <span class="tt">Tiled</span>, <span class="tt">NineSlice</span>  </td><td class="markdownTableBodyNone"></td></tr>
 <tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">flipHorizontal</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">flipVertical</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td></tr>
+<tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m; shown when <span class="tt">renderMode</span> allows  </td><td class="markdownTableBodyNone"></td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m; shown when <span class="tt">renderMode</span> allows  </td><td class="markdownTableBodyNone"></td></tr>
@@ -360,7 +389,7 @@ SpriteComponent</h2>
 <h2 class="doxsection"><a class="anchor" id="c-textcomponent"></a>
 TextComponent</h2>
 <p>Draws text with a bitmap font, alignment and word wrap.</p>
-<p>Inspector name: Text Component · Category: 2D · Type GUID: <span class="tt">5447ea24-d11f-4161-ae10-2f11e0a18d09</span></p>
+<p>Inspector name: Text Component · Category: 2D · Type: <span class="tt">TextComponent</span></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
@@ -386,8 +415,26 @@ TextComponent</h2>
 <td class="markdownTableBodyNone"><span class="tt">verticalAlign</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">CapCenter</span>  </td><td class="markdownTableBodyNone"><span class="tt">Top</span>, <span class="tt">Middle</span>, <span class="tt">Bottom</span>, <span class="tt">CapCenter</span>, <span class="tt">XCenter</span>, <span class="tt">TypoCenter</span>, <span class="tt">Baseline</span>  </td><td class="markdownTableBodyNone"></td></tr>
 </table>
 <p>Inherits <span class="tt">sortingOrder</span>, <span class="tt">ignoreClip</span>, <span class="tt">pixelSnap</span>, <span class="tt">alphaMode</span> from <a href="https://dekiengine.github.io/docs/engine-core.html#engine-renderercomponent">RendererComponent</a>.</p>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
+Changelog</h1>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
+0.15.0</h2>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
+Changed</h2>
+<ul>
+<li>Allocations name their region explicitly. Every <span class="tt">Deki::Buffer</span> and <span class="tt">Memory::Allocate</span> here passes <span class="tt">Deki::Memory::Internal</span> or <span class="tt">Deki::Memory::External</span>; the old <span class="tt">MemoryUse</span> enum, its <span class="tt">Auto</span> placement and the <span class="tt">Hot</span>/<span class="tt">Buffer</span> labels are gone.</li>
+<li>Every allocation goes through the engine's memory system. <span class="tt">new[]</span>, <span class="tt">malloc</span> and the hand-unwound cleanup paths are replaced by owning buffers, so a sprite, a bitmap font or a baked gradient releases itself rather than depending on an error branch remembering to.</li>
+<li>Blit sources are built from a named <span class="tt">PixelLayout</span> instead of positional booleans, and <span class="tt">Texture2D</span> comes from the engine core rather than this package.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md6"></a>
+Fixed</h2>
+<ul>
+<li>A gradient that will not fit no longer reboots the board. The allocation fails and is reported; it used to reach <span class="tt">new[]</span>, which aborts on ESP-IDF because exceptions are off.</li>
+<li><span class="tt">BuildOpaqueRowSpans</span> moved to <span class="tt">SpriteRowSpans.h</span> so the opaque-run rule can be tested directly, with eleven tests covering it — longest run rather than first-to-last, soft pixels breaking a run, ties, the empty-row span, and per-row independence. The renderer's golden blit hashes are unchanged.</li>
+</ul>
+<p>Earlier releases: <a href="https://github.com/dekiengine/deki-2d/blob/master/CHANGELOG.md">CHANGELOG.md</a>.</p>
 <hr  />
-<p>Generated from the package's reflection metadata by the Deki documentation build (engine 0.10.0). Reflected property names are the keys scene files use; a rename ships with an alias, see <a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">COMPATIBILITY.md</a>. </p>
+<p>Generated from the package's reflection metadata by the Deki documentation build (engine 0.15.0). Reflected property names are the keys scene files use; a rename ships with an alias, see <a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">COMPATIBILITY.md</a>. </p>
 </div></div><!-- PageDoc -->
 <a href="doxygen_crawl.html"></a>
 </div><!-- contents -->
