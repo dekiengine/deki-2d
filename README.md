@@ -6,6 +6,20 @@ Documentation: https://dekiengine.github.io/deki-2d/ (components and properties,
 
 Part of the [Deki Engine](https://github.com/dekiengine/deki-engine) package ecosystem.
 
+## Namespace
+
+This package's types live in `Deki2D`. Scene files store the qualified
+name, so a component is `Deki2D::SomeComponent` there, and code naming one
+needs the namespace:
+
+```cpp
+using namespace Deki2D;
+obj->AddComponent<SomeComponent>();
+```
+
+Scenes saved before 0.16.0 used bare names and still load: every component
+records what it used to be called, and a save writes the current name.
+
 ## Installation
 
 Install via the Package Manager inside the Deki Editor.
