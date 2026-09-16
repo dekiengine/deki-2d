@@ -40,6 +40,7 @@ public:
 
     // Sprite asset - uses AssetRef for automatic GUID storage and loading
     DEKI_EXPORT
+    DEKI_TOOLTIP("The image to draw. Sprites come from a texture asset, either whole or cut out of a spritesheet.")
     Deki::AssetRef<Sprite> sprite;
 
     // Frame rectangle (for sprite atlas/sub-texture rendering)
@@ -51,18 +52,22 @@ public:
 
     // Tint color (white = no tint)
     DEKI_EXPORT
+    DEKI_TOOLTIP("Multiplied into every pixel. White leaves the image alone; darker tints shade it, and the alpha fades it out.")
     Deki::Color tintColor;
 
     // Render mode: single quad / tiled / 9-slice
     DEKI_EXPORT
+    DEKI_TOOLTIP("Normal draws the sprite once. Tiled repeats it to fill the size below. Nine-slice stretches the middle and leaves the corners intact, which is what you want for panels and buttons.")
     SpriteRenderMode renderMode = SpriteRenderMode::Normal;
 
     /** @brief Mirror left to right. */
     DEKI_EXPORT
+    DEKI_TOOLTIP("Mirror left to right. Cheaper than a second sprite and the usual way to face a character the other way.")
     bool flipHorizontal = false;
 
     /** @brief Mirror top to bottom. */
     DEKI_EXPORT
+    DEKI_TOOLTIP("Mirror top to bottom.")
     bool flipVertical = false;
 
     // Rendered size in meters, used by Tiled and NineSlice modes (0 = sprite
@@ -71,11 +76,13 @@ public:
     // scale stays the same.
     DEKI_VISIBLE_WHEN(renderMode, Tiled, NineSlice)
     DEKI_EXPORT
+    DEKI_TOOLTIP("Drawn size in meters. Left at 0 the sprite's own pixel size is used, converted through the project's pixels-per-meter.")
     DEKI_UNIT(Distance)
     float width;
 
     DEKI_VISIBLE_WHEN(renderMode, Tiled, NineSlice)
     DEKI_EXPORT
+    DEKI_TOOLTIP("Drawn size in meters. Left at 0 the sprite's own pixel size is used, converted through the project's pixels-per-meter.")
     DEKI_UNIT(Distance)
     float height;
 

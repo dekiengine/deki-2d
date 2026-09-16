@@ -425,7 +425,7 @@ void RollerComponent::SetSelectedIndex(int32_t index, bool animated)
 
     int32_t oldIndex = selectedIndex;
     selectedIndex = index;
-    m_LastSyncedSelectedIndex = index;  // DekiFsm::Track programmatic change
+    m_LastSyncedSelectedIndex = index;  // Track programmatic change
 
     if (animated)
     {
@@ -664,7 +664,7 @@ void RollerComponent::UpdateSelection()
     if (newIndex != selectedIndex)
     {
         selectedIndex = newIndex;
-        m_LastSyncedSelectedIndex = newIndex;  // DekiFsm::Track internal change
+        m_LastSyncedSelectedIndex = newIndex;  // Track internal change
 
         if (m_OnSelectionChanged)
         {

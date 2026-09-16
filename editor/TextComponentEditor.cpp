@@ -73,9 +73,9 @@ private:
     // these member variables start fresh for each component and don't persist
     // across different components.
     std::string m_LastSource;
-    int32_t m_LastRenderSize = 0;      // DekiFsm::Track the actual render size used
-    bool m_LastPreviewEnabled = false; // DekiFsm::Track preview state changes
-    int32_t m_LastPreviewSize = 0;     // DekiFsm::Track preview size for cache invalidation
+    int32_t m_LastRenderSize = 0;      // Track the actual render size used
+    bool m_LastPreviewEnabled = false; // Track preview state changes
+    int32_t m_LastPreviewSize = 0;     // Track preview size for cache invalidation
 
     /**
      * @brief Read the baked font sizes from the font's .data file

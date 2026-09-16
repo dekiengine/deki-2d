@@ -151,7 +151,7 @@ extern "C" {
 #ifndef DEKI_PLUGIN_EXPORTS
 DEKI_PLUGIN_API const char* DekiPlugin_GetName(void)
 {
-    return "DekiRendering::Deki 2D Package";
+    return "Deki 2D Package";
 }
 
 DEKI_PLUGIN_API const char* DekiPlugin_GetVersion(void)

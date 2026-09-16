@@ -704,7 +704,7 @@ void FrameAnimationEditorWindow::DrawFramePalette()
 
         ui.SameLine();
         char frameLabelBuf[64];
-        std::snprintf(frameLabelBuf, sizeof(frameLabelBuf), "DekiTiledMap::Frame %d", frame.index);
+        std::snprintf(frameLabelBuf, sizeof(frameLabelBuf), "Frame %d", frame.index);
         ui.Text(frameLabelBuf);
 
         ui.PopID();
@@ -989,7 +989,7 @@ void FrameAnimationEditorWindow::DrawPreview()
     if (timelineFrames && !timelineFrames->empty())
     {
         char frameCounterBuf[64];
-        std::snprintf(frameCounterBuf, sizeof(frameCounterBuf), "DekiTiledMap::Frame %d / %zu", m_PreviewFrame + 1, timelineFrames->size());
+        std::snprintf(frameCounterBuf, sizeof(frameCounterBuf), "Frame %d / %zu", m_PreviewFrame + 1, timelineFrames->size());
         ui.Text(frameCounterBuf);
     }
     else

@@ -18,8 +18,8 @@ struct SpriteFrame
     char guid[37];  // 36 chars + null terminator (UUID format)
     int32_t x;      // X position in parent texture
     int32_t y;      // Y position in parent texture
-    int32_t width;  // DekiTiledMap::Frame width
-    int32_t height; // DekiTiledMap::Frame height
+    int32_t width;  // Frame width
+    int32_t height; // Frame height
 };
 
 /**

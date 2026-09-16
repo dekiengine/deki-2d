@@ -222,7 +222,7 @@ Sprite* Sprite::Load(const char* file_path)
                 DEKI_LOG_INTERNAL("  Sprite metadata: frame %dx%d, 9-slice=%d",
                                   frameWidth, frameHeight, sprite->hasNineSlice ? 1 : 0);
             }
-            else if (chunk_type == 2 && chunk_size >= 2)  // DekiTiledMap::Frame list chunk
+            else if (chunk_type == 2 && chunk_size >= 2)  // Frame list chunk
             {
                 uint16_t frameCount = *(uint16_t*)(metadata + offset);
                 uint32_t frame_offset = sizeof(uint16_t);
@@ -251,7 +251,7 @@ Sprite* Sprite::Load(const char* file_path)
                         frame.height = *(int32_t*)(metadata + offset + frame_offset);
                         frame_offset += sizeof(int32_t);
                     }
-                    DEKI_LOG_INTERNAL("  DekiTiledMap::Frame list: %u frames", frameCount);
+                    DEKI_LOG_INTERNAL("  Frame list: %u frames", frameCount);
                 }
             }
             else if (chunk_type == 3 && chunk_size >= 8)  // Chroma key chunk

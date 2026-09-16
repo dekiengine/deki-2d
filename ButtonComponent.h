@@ -67,12 +67,15 @@ class ButtonComponent : public Deki::Component
 
     // DekiInput::InputCollider reference (required for receiving input)
     DEKI_EXPORT
+    DEKI_TOOLTIP("The hit area that makes this button clickable. Without one the button has no way to notice a press.")
     Deki::ObjectRef<DekiInput::InputCollider> inputCollider;
 
     // State management
     DEKI_EXPORT
+    DEKI_TOOLTIP("Normal, hovered, pressed or disabled. Set by input; a style component watches it to decide what to draw.")
     ButtonState state;
     DEKI_EXPORT
+    DEKI_TOOLTIP("A disabled button ignores input and reports the disabled state, so it can be greyed out rather than hidden.")
     bool isEnabled;
 
     // Callbacks (not exposed to editor - runtime only)

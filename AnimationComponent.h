@@ -27,14 +27,17 @@ public:
     SpriteComponent* spriteComponent;         // Associated sprite component
 
     DEKI_EXPORT
-    Deki::AssetRef<FrameAnimationData> animation;  // DekiTiledMap::Frame animation asset reference (.frameanim)
+    DEKI_TOOLTIP("A frame animation asset, which lists the frames and how long each is held.")
+    Deki::AssetRef<FrameAnimationData> animation;  // Frame animation asset reference (.frameanim)
 
     FrameAnimationData* animationData;        // Loaded frame animation data
     bool ownsAnimationData;                  // True if we own animationData
 
     DEKI_EXPORT
+    DEKI_TOOLTIP("Which named sequence is playing, by index. Sequences are the separate animations inside one asset, such as idle and walk.")
     int32_t currentSequence;                 // Current animation sequence index
     DEKI_EXPORT
+    DEKI_TOOLTIP("Frame within the current sequence. Set it to scrub; it is also useful to read while debugging.")
     int32_t currentFrame;                    // Current frame index within sequence
     uint32_t frameStartTime;                // When current frame started (in ms)
 
@@ -46,10 +49,13 @@ public:
     const FrameAnimationData* m_ResolvedData = nullptr;
     void ResolveFrames(const Sprite* sprite);
     DEKI_EXPORT
+    DEKI_TOOLTIP("Whether the animation is advancing. Clearing this freezes it on the current frame rather than resetting it.")
     bool isPlaying;                          // Whether animation is currently playing
     DEKI_EXPORT
+    DEKI_TOOLTIP("Set when a non-looping sequence reaches its last frame. Read it to know when to move on.")
     bool hasFinished;                        // Whether non-looping animation has finished
     DEKI_EXPORT
+    DEKI_TOOLTIP("Play the current sequence once even if the asset marks it as looping. Cleared when the sequence changes.")
     bool playOnceOverride;                  // Override loop setting to play once
 
     std::function<void()> completion_callback; // Callback to execute when animation completes

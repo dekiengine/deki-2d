@@ -63,15 +63,18 @@ public:
 
     /** @brief Text to display (editor-editable) */
     DEKI_EXPORT
+    DEKI_TOOLTIP("The string to draw. Newlines start a new line; the box below does not wrap it for you.")
     std::string text;
 
     /** @brief Font asset reference (GUID stored in editor, auto-loaded) */
     DEKI_EXPORT
+    DEKI_TOOLTIP("A bitmap font asset. Fonts are baked to a fixed size, so pick one close to the size you want rather than scaling far from it.")
     Deki::AssetRef<BitmapFont> font;
 
 #ifdef DEKI_EDITOR
     /** @brief Font size in pixels (maps to baked variant) */
     DEKI_EXPORT
+    DEKI_TOOLTIP("Size used for the editor preview only. What the device draws is the size the font asset was baked at.")
     DEKI_EDITOR_ONLY
     int32_t fontSize = 16;
 
@@ -277,16 +280,19 @@ public:
 
     /** @brief Text box width in meters */
     DEKI_EXPORT
+    DEKI_TOOLTIP("Width of the text box in meters. Alignment is measured against this, so it matters even when the text is shorter.")
     DEKI_UNIT(Distance)
     float width = 6.25f;
 
     /** @brief Text box height in meters */
     DEKI_EXPORT
+    DEKI_TOOLTIP("Height of the text box in meters. Vertical alignment is measured against this.")
     DEKI_UNIT(Distance)
     float height = 1.5f;
 
     /** @brief Text color */
     DEKI_EXPORT
+    DEKI_TOOLTIP("Colour of the glyphs.")
     Deki::Color color;
 
     /**
@@ -295,18 +301,22 @@ public:
      * than None. Ignored for plain alpha fonts.
      */
     DEKI_EXPORT
+    DEKI_TOOLTIP("Colour of the outline or shadow, when the font asset was baked with one. Ignored by a plain font.")
     Deki::Color decorationColor;
 
     /** @brief Pixel scale for bitmap fonts (1x, 2x, 3x nearest-neighbor) */
     DEKI_EXPORT
+    DEKI_TOOLTIP("Whole-number magnification. 2 draws every glyph pixel as a 2x2 block, which keeps a pixel font crisp instead of blurring it.")
     int32_t pixelScale = 1;
 
     /** @brief Horizontal text alignment */
     DEKI_EXPORT
+    DEKI_TOOLTIP("Horizontal placement inside the width above.")
     TextAlign align = TextAlign::Left;
 
     /** @brief Vertical text alignment (new components default to cap-center for optical centering) */
     DEKI_EXPORT
+    DEKI_TOOLTIP("Vertical placement inside the height above. Cap-centre lines up the capital letters, which usually looks centred to the eye; true centre includes descenders.")
     TextVerticalAlign verticalAlign = TextVerticalAlign::CapCenter;
 
     // Invalidate the render cache (call when text/font/color/size changes)

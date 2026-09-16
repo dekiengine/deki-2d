@@ -82,10 +82,13 @@ class GradientComponent : public DekiRendering::RendererComponent
 
     // Gradient properties
     DEKI_EXPORT
+    DEKI_TOOLTIP("Linear runs the colours along the angle below. Radial runs them out from the centre point.")
     GradientType gradientType;
     DEKI_EXPORT
+    DEKI_TOOLTIP("What happens past the last stop: hold the end colour, repeat the ramp, or mirror it back.")
     GradientTileMode tileMode;
     DEKI_EXPORT
+    DEKI_TOOLTIP("Dithering hides the banding a smooth ramp shows on a 16-bit display, by trading it for a fine speckle.")
     GradientDitherMode ditherMode;
 
     /**
@@ -97,25 +100,32 @@ class GradientComponent : public DekiRendering::RendererComponent
      * Non power-of-2 values snap down to the nearest power of 2 (so 3→2, 7→4).
      */
     DEKI_EXPORT
+    DEKI_TOOLTIP("How strong the speckle is. Raise it until the bands disappear, then stop: past that it is just noise.")
     uint8_t ditherScale;
 
     // Area to fill (meters)
     DEKI_EXPORT
+    DEKI_TOOLTIP("Width of the gradient in meters.")
     DEKI_UNIT(Distance)
     float width;
     DEKI_EXPORT
+    DEKI_TOOLTIP("Height of the gradient in meters.")
     DEKI_UNIT(Distance)
     float height;
 
     // Gradient parameters
     DEKI_EXPORT
+    DEKI_TOOLTIP("Direction a linear gradient runs, in radians. 0 runs left to right.")
     DEKI_UNIT(Angle)
     float angle;  // Linear gradient angle. Stored in radians (0 = horizontal, π/2 = vertical); inspector displays degrees.
     DEKI_EXPORT
+    DEKI_TOOLTIP("Centre of a radial gradient across the width, 0 to 1. 0.5 is the middle.")
     float centerX;  // For radial/conical gradients (0.0 to 1.0)
     DEKI_EXPORT
+    DEKI_TOOLTIP("Centre of a radial gradient down the height, 0 to 1.")
     float centerY;  // For radial/conical gradients (0.0 to 1.0)
     DEKI_EXPORT
+    DEKI_TOOLTIP("How far a radial gradient reaches before the last stop, relative to the size.")
     float radius;  // For radial gradients (0.0 to 1.0)
 
     // Color stops (up to 4 stops for memory efficiency)
@@ -123,44 +133,55 @@ class GradientComponent : public DekiRendering::RendererComponent
     GradientStop stops[MAX_STOPS];
 
     DEKI_EXPORT
+    DEKI_TOOLTIP("How many of the four colour stops are used. The rest are ignored.")
     uint8_t stopCount;
 
     // Individual color stop properties for editor serialization
     // Stop 1 is always visible (minimum 1 stop required)
     DEKI_EXPORT
+    DEKI_TOOLTIP("Where the first stop sits along the ramp, 0 to 1.")
     float stop1Position;
     DEKI_EXPORT
+    DEKI_TOOLTIP("Colour at the first stop.")
     Deki::Color stop1Color;
 
     // Stop 2 visible when stopCount >= 2
     DEKI_EXPORT
+    DEKI_TOOLTIP("Where the second stop sits along the ramp, 0 to 1.")
     DEKI_VISIBLE_WHEN(stopCount, 2)
     float stop2Position;
     DEKI_EXPORT
+    DEKI_TOOLTIP("Colour at the second stop.")
     DEKI_VISIBLE_WHEN(stopCount, 2)
     Deki::Color stop2Color;
 
     // Stop 3 visible when stopCount >= 3
     DEKI_EXPORT
+    DEKI_TOOLTIP("Where the third stop sits, 0 to 1. Used when the stop count is 3 or more.")
     DEKI_VISIBLE_WHEN(stopCount, 3)
     float stop3Position;
     DEKI_EXPORT
+    DEKI_TOOLTIP("Colour at the third stop.")
     DEKI_VISIBLE_WHEN(stopCount, 3)
     Deki::Color stop3Color;
 
     // Stop 4 visible when stopCount >= 4
     DEKI_EXPORT
+    DEKI_TOOLTIP("Where the fourth stop sits, 0 to 1. Used when the stop count is 4.")
     DEKI_VISIBLE_WHEN(stopCount, 4)
     float stop4Position;
     DEKI_EXPORT
+    DEKI_TOOLTIP("Colour at the fourth stop.")
     DEKI_VISIBLE_WHEN(stopCount, 4)
     Deki::Color stop4Color;
 
     // Tile properties (world meters; 0 = use component width/height)
     DEKI_EXPORT
+    DEKI_TOOLTIP("Width of one repeat when the tile mode repeats or mirrors.")
     DEKI_UNIT(Distance)
     float tileWidth;
     DEKI_EXPORT
+    DEKI_TOOLTIP("Height of one repeat when the tile mode repeats or mirrors.")
     DEKI_UNIT(Distance)
     float tileHeight;
 

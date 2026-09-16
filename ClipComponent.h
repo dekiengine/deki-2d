@@ -35,16 +35,19 @@ public:
 
     /** @brief Width of clip region in meters */
     DEKI_EXPORT
+    DEKI_TOOLTIP("Width of the clipping window in meters. Children are cut off at this edge.")
     DEKI_UNIT(Distance)
     float width = 6.25f;
 
     /** @brief Height of clip region in meters */
     DEKI_EXPORT
+    DEKI_TOOLTIP("Height of the clipping window in meters.")
     DEKI_UNIT(Distance)
     float height = 6.25f;
 
     /** @brief Sorting order for this clip region (lower = behind) */
     DEKI_EXPORT
+    DEKI_TOOLTIP("Draw order of the clipped group as a whole against everything outside it.")
     int32_t sortingOrder = 0;
 
     ClipComponent() = default;

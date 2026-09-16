@@ -69,36 +69,44 @@ public:
 
     // DekiInput::InputCollider reference (required for receiving input)
     DEKI_EXPORT
+    DEKI_TOOLTIP("The hit area that catches the drag. Without one the roller cannot be spun.")
     Deki::ObjectRef<DekiInput::InputCollider> inputCollider;
 
     /** @brief Width of the roller in meters */
     DEKI_EXPORT
+    DEKI_TOOLTIP("Width of the roller in meters.")
     DEKI_UNIT(Distance)
     float width;
 
     /** @brief Height of each item row in meters */
     DEKI_EXPORT
+    DEKI_TOOLTIP("Height of one unselected row, in meters.")
     DEKI_UNIT(Distance)
     float itemHeight;
 
     /** @brief Number of visible rows (should be odd for centered selection) */
     DEKI_EXPORT
+    DEKI_TOOLTIP("How many rows are shown at once, including the selected one. Odd numbers centre the selection.")
     int32_t visibleRows;
 
     /** @brief Enable infinite scrolling (wrap around) */
     DEKI_EXPORT
+    DEKI_TOOLTIP("Wrap around from the last option to the first, so the roller spins without ends.")
     bool infiniteScroll;
 
     /** @brief Reverse drag direction (default: drag follows touch) */
     DEKI_EXPORT
+    DEKI_TOOLTIP("Invert the drag direction.")
     bool reverseDrag;
 
     /** @brief List of options (editable in editor) */
     DEKI_EXPORT
+    DEKI_TOOLTIP("The list of choices, in order.")
     std::vector<std::string> options;
 
     /** @brief Currently selected index */
     DEKI_EXPORT
+    DEKI_TOOLTIP("Which option is currently chosen, counting from 0.")
     int32_t selectedIndex;
 
     // Visual properties are edited directly on child objects:
@@ -108,33 +116,40 @@ public:
 
     /** @brief Physics deceleration rate (0.0-1.0, higher = slower stop) */
     DEKI_EXPORT
+    DEKI_TOOLTIP("How quickly a flick slows down. Higher settles sooner.")
     float deceleration;
 
     /** @brief Snap animation speed (higher = faster) */
     DEKI_EXPORT
+    DEKI_TOOLTIP("How fast the roller settles onto the nearest option once it has slowed. Higher snaps harder.")
     float snapSpeed;
 
     /** @brief Height of the selected (center) item row in meters */
     DEKI_EXPORT
+    DEKI_TOOLTIP("Height of the selected row, in meters. Making it taller than the others is what marks the selection.")
     DEKI_UNIT(Distance)
     float selectedItemHeight;
 
     /** @brief Color for selected (center) item text */
     DEKI_EXPORT
+    DEKI_TOOLTIP("Text colour of the selected row.")
     Deki::Color selectedColor;
 
     /** @brief Color for non-selected item text */
     DEKI_EXPORT
+    DEKI_TOOLTIP("Text colour of the rows either side.")
     Deki::Color normalColor;
 
 #ifdef DEKI_EDITOR
     /** @brief Font size for selected item (editor only, for sharp text) */
     DEKI_EXPORT
+    DEKI_TOOLTIP("Editor preview size for the selected row. The device draws at the font asset's baked size.")
     DEKI_EDITOR_ONLY
     int32_t selectedFontSize;
 
     /** @brief Font size for non-selected items (editor only) */
     DEKI_EXPORT
+    DEKI_TOOLTIP("Editor preview size for the unselected rows.")
     DEKI_EDITOR_ONLY
     int32_t normalFontSize;
 #endif

@@ -35,6 +35,7 @@ public:
 
     /** @brief Sorting order for this group (affects where all children render in scene) */
     DEKI_EXPORT
+    DEKI_TOOLTIP("Draw order for this object's whole subtree, treated as one unit. Children keep their order relative to each other but the group moves together, which stops one child sorting between another group's children.")
     int32_t sortingOrder = 0;
 
     SortingGroupComponent() = default;

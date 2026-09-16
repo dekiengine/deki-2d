@@ -24,10 +24,12 @@ class ScrollElement : public Deki::Component
 public:
 
     DEKI_EXPORT
+    DEKI_TOOLTIP("Width of one item in meters. The scroll uses it to work out spacing and how far it can travel.")
     DEKI_UNIT(Distance)
     float width = 6.25f;
 
     DEKI_EXPORT
+    DEKI_TOOLTIP("Height of one item in meters.")
     DEKI_UNIT(Distance)
     float height = 3.75f;
 

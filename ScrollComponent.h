@@ -77,51 +77,65 @@ public:
 
     // DekiInput::InputCollider reference (required for receiving input)
     DEKI_EXPORT
+    DEKI_TOOLTIP("The hit area that catches the drag. Without one nothing can scroll it.")
     Deki::ObjectRef<DekiInput::InputCollider> inputCollider;
 
     DEKI_EXPORT
+    DEKI_TOOLTIP("Whether items come from the children already present or are spawned from the scene below as they are needed.")
     ScrollMode mode = ScrollMode::NonTemplate;
 
     DEKI_VISIBLE_WHEN(mode, Template)
     DEKI_EXPORT
+    DEKI_TOOLTIP("Scene spawned once per item, in the spawning mode. Each copy is filled in as it scrolls into view.")
     Deki::AssetRef<Deki::Scene> itemScene;
 
     DEKI_EXPORT
+    DEKI_TOOLTIP("Vertical or horizontal travel.")
     ScrollDirection direction = ScrollDirection::Vertical;
 
     DEKI_EXPORT
+    DEKI_TOOLTIP("Gap between items in meters.")
     DEKI_UNIT(Distance)
     float itemSpacing;
 
     DEKI_EXPORT
+    DEKI_TOOLTIP("Empty space before the first item, in meters.")
     DEKI_UNIT(Distance)
     float paddingTop;
 
     DEKI_EXPORT
+    DEKI_TOOLTIP("Empty space after the last item, in meters.")
     DEKI_UNIT(Distance)
     float paddingBottom;
 
     DEKI_EXPORT
+    DEKI_TOOLTIP("Empty space at the left edge, in meters.")
     DEKI_UNIT(Distance)
     float paddingLeft;
 
     DEKI_EXPORT
+    DEKI_TOOLTIP("Empty space at the right edge, in meters.")
     DEKI_UNIT(Distance)
     float paddingRight;
 
     DEKI_EXPORT
+    DEKI_TOOLTIP("How quickly a flick slows down. Higher stops sooner; lower keeps gliding.")
     float deceleration;
 
     DEKI_EXPORT
+    DEKI_TOOLTIP("How hard the list springs back after being dragged past its end. Higher snaps back faster.")
     float bounceStiffness;
 
     DEKI_EXPORT
+    DEKI_TOOLTIP("Let the list be dragged past its end and spring back. Off, it stops dead at the edge.")
     bool enableBounce;
 
     DEKI_EXPORT
+    DEKI_TOOLTIP("Keep moving after the finger lifts. Off, the list stops the moment the drag ends.")
     bool enableInertia;
 
     DEKI_EXPORT
+    DEKI_TOOLTIP("Invert the drag direction, so content follows the finger the other way.")
     bool reverseDrag;
 
     // === Construction ===
