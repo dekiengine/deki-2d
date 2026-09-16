@@ -9,6 +9,9 @@
 #include <deki/Color.h>
 #include "Sprite.h"
 
+namespace Deki2D
+{
+
 // Forward declarations
 class ButtonComponent;
 class SpriteComponent;
@@ -50,6 +53,7 @@ enum class ButtonStyleMode : uint8_t
  */
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Gives a button its look per state, by tinting or by swapping sprites.")
+DEKI_FORMER_NAME("ButtonStyleComponent")
 class ButtonStyleComponent : public Deki::Component
 {
 
@@ -110,3 +114,5 @@ private:
 };
 
 // Generated property metadata (after class definition for offsetof)
+
+}  // namespace Deki2D

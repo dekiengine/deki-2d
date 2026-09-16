@@ -17,6 +17,7 @@
 #include <SDL3/SDL_opengl.h>
 #include <nlohmann/json.hpp>
 
+
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 
@@ -201,8 +202,8 @@ void SpritesheetEditorWindow::DrawSlicingControls()
     if (m_UIMode == SlicingUIMode::Grid)
     {
         // Grid mode controls
-        ui.InputInt("Frame Width", &m_FrameWidth);
-        ui.InputInt("Frame Height", &m_FrameHeight);
+        ui.InputInt("DekiTiledMap::Frame Width", &m_FrameWidth);
+        ui.InputInt("DekiTiledMap::Frame Height", &m_FrameHeight);
 
         // Clamp to valid range
         if (m_FrameWidth < 0) m_FrameWidth = 0;
@@ -255,7 +256,7 @@ void SpritesheetEditorWindow::DrawSlicingControls()
             for (size_t i = 0; i < m_AtlasFrames.size(); ++i)
             {
                 const auto& frame = m_AtlasFrames[i];
-                std::snprintf(buf, sizeof(buf), "Frame %zu: X=%d Y=%d W=%d H=%d",
+                std::snprintf(buf, sizeof(buf), "DekiTiledMap::Frame %zu: X=%d Y=%d W=%d H=%d",
                               i, frame.x, frame.y, frame.width, frame.height);
                 ui.Text(buf);
             }

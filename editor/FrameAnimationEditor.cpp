@@ -20,6 +20,7 @@
 #include <filesystem>
 #include <fstream>
 
+
 namespace DekiEditor
 {
 
@@ -40,7 +41,7 @@ AssetCacheResult HandleFrameAnimCache(const AssetCacheContext& ctx)
     {
         nlohmann::json j;
         file >> j;
-        FrameAnimationData engineData = Deki::Deserialize<FrameAnimationData>(j);
+        Deki2D::FrameAnimationData engineData = Deki::Deserialize<Deki2D::FrameAnimationData>(j);
 
         std::filesystem::path outPath(ctx.cachePath);
         std::filesystem::path parentDir = outPath.parent_path();
@@ -71,7 +72,7 @@ static FrameAnimCacheRegistrar s_FrameAnimCacheRegistrar;
 class FrameAnimationEditor : public AssetTypeEditor
 {
 public:
-    // typeName "Animation" matches FrameAnimationData::AssetTypeName and the
+    // typeName "Animation" matches Deki2D::FrameAnimationData::AssetTypeName and the
     // runtime AssetManager loader registered in FrameAnimationMsgPack.cpp, so
     // editor-side and runtime-side asset lookups agree.
     const char* GetTypeName() const override { return "Animation"; }
@@ -111,7 +112,7 @@ public:
 
         // Deserialize JSON to engine struct
         nlohmann::json j = nlohmann::json::parse(jsonData);
-        FrameAnimationData engineData = Deki::Deserialize<FrameAnimationData>(j);
+        Deki2D::FrameAnimationData engineData = Deki::Deserialize<Deki2D::FrameAnimationData>(j);
 
         // Save as MessagePack
         return FrameAnimationMsgPackHelper::SaveAnimation(cachePath.c_str(), &engineData);

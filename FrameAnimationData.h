@@ -5,6 +5,9 @@
 #include <cstdint>
 #include <deki/reflection/Property.h>
 
+namespace Deki2D
+{
+
 /**
  * @brief Single frame reference in a frame animation
  * References a sprite frame sub-asset by GUID
@@ -43,3 +46,5 @@ struct DEKI_SERIALIZABLE FrameAnimationData
 #include "generated/FrameAnimFrame.gen.h"
 #include "generated/FrameAnimSequence.gen.h"
 #include "generated/FrameAnimationData.gen.h"
+
+}  // namespace Deki2D

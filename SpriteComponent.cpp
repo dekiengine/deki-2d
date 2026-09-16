@@ -11,6 +11,9 @@
 #include <algorithm>
 #include <cmath>
 
+namespace Deki2D
+{
+
 namespace
 {
     // Populate chroma-key fields on a QuadBlit::Source from a Sprite. Quantizes
@@ -352,3 +355,5 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
 }
 
 // Platform-specific helpers removed - rendering now done via QuadBlit
+
+}  // namespace Deki2D

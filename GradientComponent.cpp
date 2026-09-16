@@ -10,6 +10,9 @@
 #include <cmath>
 #include <algorithm>
 
+namespace Deki2D
+{
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -49,7 +52,7 @@ static const uint8_t BAYER_16x16[256] = {
 
 
 GradientComponent::GradientComponent(float w, float h)
-: RendererComponent()
+: DekiRendering::RendererComponent()
 , gradientType(GradientType::Linear)
 , tileMode(GradientTileMode::None)
 , ditherMode(GradientDitherMode::Ordered4x4)
@@ -581,3 +584,5 @@ bool GradientComponent::RenderContent(const Deki::Object* owner,
 
     return true;
 }
+
+}  // namespace Deki2D

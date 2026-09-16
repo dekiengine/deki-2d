@@ -2,6 +2,9 @@
 
 #include <cstdint>
 
+namespace Deki2D
+{
+
 // Per-row opaque spans for RGB565A8 pixels: [start, end) of the LONGEST run of
 // fully opaque pixels in each row.
 //
@@ -48,3 +51,5 @@ inline void BuildOpaqueRowSpans(const uint8_t* pixel_data, int32_t w, int32_t h,
         spans[y * 2 + 1] = (int16_t)bestEnd;
     }
 }
+
+}  // namespace Deki2D

@@ -13,6 +13,9 @@
 #include <iomanip>
 #include <unordered_map>
 
+namespace Deki2D
+{
+
 
 // Font resolve callback — set by editor to handle GUID sync, preview, baking
 TextComponent::FontResolveCallback TextComponent::s_fontResolveCallback = nullptr;
@@ -26,7 +29,7 @@ void TextComponent::SetFontResolveCallback(FontResolveCallback cb) { s_fontResol
 // TextComponent.gen.h (included at end of TextComponent.h)
 
 TextComponent::TextComponent()
-    : RendererComponent(),
+    : DekiRendering::RendererComponent(),
       color(255, 255, 255, 255),
       decorationColor(0, 0, 0, 255)
 {
@@ -688,3 +691,5 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
     outTintA = 255;
     return true;
 }
+
+}  // namespace Deki2D

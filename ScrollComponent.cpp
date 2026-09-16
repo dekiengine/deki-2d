@@ -11,6 +11,9 @@
 
 #include <deki/Scene.h>
 
+namespace Deki2D
+{
+
 // All layout/scroll math here works in world meters — matching the engine's
 // meters-internal convention. ScrollElement / ClipComponent / padding values
 // are float meters, transform x/y are meters, and pointer callbacks deliver
@@ -37,8 +40,8 @@ ScrollComponent::ScrollComponent()
 ScrollComponent::~ScrollComponent()
 {
     // Release gesture if we own it (prevents stuck input after destruction mid-drag)
-    if (InputDispatch::IsGestureClaimedBy(this))
-        InputDispatch::ReleaseGesture();
+    if (DekiInput::InputDispatch::IsGestureClaimedBy(this))
+        DekiInput::InputDispatch::ReleaseGesture();
 
     m_ClipObj = nullptr;
     m_TemplateObj = nullptr;
@@ -597,7 +600,7 @@ void ScrollComponent::HandlePointerMove(float x, float y)
     if (!m_IsDragging) return;
 
     // If another component claimed the gesture, stop tracking
-    if (InputDispatch::IsGestureClaimed() && !InputDispatch::IsGestureClaimedBy(this))
+    if (DekiInput::InputDispatch::IsGestureClaimed() && !DekiInput::InputDispatch::IsGestureClaimedBy(this))
     {
         m_IsDragging = false;
         return;
@@ -613,7 +616,7 @@ void ScrollComponent::HandlePointerMove(float x, float y)
             return;
 
         m_DragConfirmed = true;
-        InputDispatch::ClaimGesture(this);
+        DekiInput::InputDispatch::ClaimGesture(this);
         if (m_ClipObj)
             CancelChildInput(m_ClipObj);
     }
@@ -651,7 +654,7 @@ void ScrollComponent::HandlePointerUp(float x, float y)
         return;
     }
 
-    InputDispatch::ReleaseGesture();
+    DekiInput::InputDispatch::ReleaseGesture();
     m_DragConfirmed = false;
 
     // Compute velocity from ring buffer average (sum in float then back to float).
@@ -689,16 +692,16 @@ void ScrollComponent::Start()
     if (GetOwner())
         SyncChildObjects(GetOwner());
 
-    InputCollider* collider = inputCollider.Get();
+    DekiInput::InputCollider* collider = inputCollider.Get();
     if (!collider)
     {
-        DEKI_LOG_WARNING("ScrollComponent: No InputCollider referenced on '%s'",
+        DEKI_LOG_WARNING("ScrollComponent: No DekiInput::InputCollider referenced on '%s'",
                          GetOwner()->GetName().c_str());
         return;
     }
 
     // Don't consume input — let children (buttons, nested scrolls) also receive events.
-    // Scroll will claim the gesture via InputDispatch when drag threshold is exceeded.
+    // Scroll will claim the gesture via DekiInput::InputDispatch when drag threshold is exceeded.
     collider->consumeInput = false;
 
     collider->onPointerDown.push_back([this](float x, float y) {
@@ -750,13 +753,15 @@ void ScrollComponent::CancelChildInput(Deki::Object* obj)
     {
         for (Deki::Component* comp : child->GetComponents())
         {
-            if (comp->GetType() == ::Deki::TypeId<InputCollider>() ||
-                comp->GetBaseType() == ::Deki::TypeId<InputCollider>())
+            if (comp->GetType() == ::Deki::TypeId<DekiInput::InputCollider>() ||
+                comp->GetBaseType() == ::Deki::TypeId<DekiInput::InputCollider>())
             {
-                static_cast<InputCollider*>(comp)->CancelInput();
+                static_cast<DekiInput::InputCollider*>(comp)->CancelInput();
                 break;
             }
         }
         CancelChildInput(child);
     }
 }
+
+}  // namespace Deki2D

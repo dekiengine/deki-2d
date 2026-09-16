@@ -6,6 +6,9 @@
 #include <deki/IClipProvider.h>
 #include <deki/ISortableProvider.h>
 
+namespace Deki2D
+{
+
 /**
  * @brief Component that clips children to a rectangular region
  *
@@ -25,6 +28,7 @@
  */
 DEKI_CATEGORY("Core")
 DEKI_DESCRIPTION("Clips its children's rendering to a rectangle.")
+DEKI_FORMER_NAME("ClipComponent")
 class ClipComponent : public Deki::Component, public Deki::IClipProvider, public Deki::ISortableProvider
 {
 public:
@@ -55,3 +59,5 @@ public:
 };
 
 // Generated property metadata (after class definition for offsetof)
+
+}  // namespace Deki2D

@@ -4,6 +4,9 @@
 #include <deki/Object.h>
 #include <deki/LogSystem.h>
 
+namespace Deki2D
+{
+
 ButtonStyleComponent::ButtonStyleComponent()
     : transition(ButtonStyleMode::ColorTint),
       normalColor(Deki::Color::White),
@@ -85,3 +88,5 @@ void ButtonStyleComponent::ApplyState(ButtonState state)
     }
     }
 }
+
+}  // namespace Deki2D

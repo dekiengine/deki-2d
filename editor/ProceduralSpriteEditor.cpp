@@ -18,6 +18,7 @@
 #include <cmath>
 #include <cstdio>
 
+
 namespace DekiEditor
 {
 

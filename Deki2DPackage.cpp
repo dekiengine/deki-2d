@@ -68,6 +68,10 @@ namespace Deki2D
 BitmapFont* EditorFontResolve(TextComponent* tc);
 }
 
+// The exports below are C symbols at global scope; the package's own
+// registration helpers and statics live in its namespace.
+using namespace Deki2D;
+
 extern "C" {
 
 #ifndef DEKI_PLUGIN_EXPORTS
@@ -82,14 +86,14 @@ extern "C" {
 DEKI_2D_API int Deki2D_EnsureRegistered(void)
 {
     if (s_Registered)
-        return Deki2D_GetAutoComponentCount();
+        return ::Deki2D_GetAutoComponentCount();
     s_Registered = true;
 
     // Auto-generated: registers all 2D components with ComponentRegistry + ComponentFactory
-    Deki2D_RegisterComponents();
+    ::Deki2D_RegisterComponents();
 
-    // Clipping needs no pass: Standard2DRenderer pushes a clip rect for every
-    // object that provides IClipProvider (ClipComponent) while it draws.
+    // Clipping needs no pass: DekiRendering::Standard2DRenderer pushes a clip rect for every
+    // object that provides IClipProvider (Deki2D::ClipComponent) while it draws.
 
     // Register font-related editor features
     Deki2D::RegisterFontSyncHandlers();
@@ -99,19 +103,19 @@ DEKI_2D_API int Deki2D_EnsureRegistered(void)
     // Initialize font preview callbacks for live editing in SceneView
     Deki2D::InitializeFontPreviewCallbacks();
 
-    // Register font resolve callback for TextComponent (GUID sync, preview, baking)
-    TextComponent::SetFontResolveCallback(Deki2D::EditorFontResolve);
+    // Register font resolve callback for Deki2D::TextComponent (GUID sync, preview, baking)
+    Deki2D::TextComponent::SetFontResolveCallback(Deki2D::EditorFontResolve);
 
     // Register image loader and font factory with EditorAssets
     DekiEditor::EditorAssets::RegisterImageLoader(Deki::Texture2D::LoadAsRGBA);
     DekiEditor::EditorAssets::RegisterFontFactory(
-        // Font factory: load a BitmapFont (handles v1/v2/v3/v4) and, separately,
+        // Font factory: load a Deki2D::BitmapFont (handles v1/v2/v3/v4) and, separately,
         // hand the editor the raw RGBA bytes of the atlas so it can upload a
         // preview texture.
         [](const char* dfontPath, uint8_t** outAtlasRGBA, int32_t& outW, int32_t& outH) -> void* {
             if (!dfontPath) return nullptr;
 
-            BitmapFont* font = BitmapFont::Load(dfontPath);
+            Deki2D::BitmapFont* font = Deki2D::BitmapFont::Load(dfontPath);
             if (!font) return nullptr;
 
             const std::string& atlasAbsPath = font->GetAtlasPath();
@@ -128,10 +132,10 @@ DEKI_2D_API int Deki2D_EnsureRegistered(void)
             return font;
         },
         // Font destroyer
-        [](void* f) { delete static_cast<BitmapFont*>(f); }
+        [](void* f) { delete static_cast<Deki2D::BitmapFont*>(f); }
     );
 
-    return Deki2D_GetAutoComponentCount();
+    return ::Deki2D_GetAutoComponentCount();
 }
 
 #endif // DEKI_PLUGIN_EXPORTS
@@ -147,7 +151,7 @@ extern "C" {
 #ifndef DEKI_PLUGIN_EXPORTS
 DEKI_PLUGIN_API const char* DekiPlugin_GetName(void)
 {
-    return "Deki 2D Package";
+    return "DekiRendering::Deki 2D Package";
 }
 
 DEKI_PLUGIN_API const char* DekiPlugin_GetVersion(void)
@@ -173,12 +177,12 @@ DEKI_PLUGIN_API void DekiPlugin_Shutdown(void)
 
 DEKI_PLUGIN_API int DekiPlugin_GetComponentCount(void)
 {
-    return Deki2D_GetAutoComponentCount();
+    return ::Deki2D_GetAutoComponentCount();
 }
 
 DEKI_PLUGIN_API const Deki::ComponentMeta* DekiPlugin_GetComponentMeta(int index)
 {
-    return Deki2D_GetAutoComponentMeta(index);
+    return ::Deki2D_GetAutoComponentMeta(index);
 }
 
 DEKI_PLUGIN_API void DekiPlugin_RegisterComponents(void)
@@ -213,7 +217,7 @@ DEKI_PLUGIN_API void DekiPlugin_OnPlayModeStart(void* scenePtr)
     std::function<void(Deki::Object*)> setFontGuidsRecursive = [&](Deki::Object* obj) {
         if (!obj) return;
 
-        TextComponent* textComp = obj->GetComponent<TextComponent>();
+        Deki2D::TextComponent* textComp = obj->GetComponent<Deki2D::TextComponent>();
         if (textComp && !textComp->font.source.empty())
         {
             // Detect BDF vs TTF to use correct GUID convention
@@ -247,7 +251,7 @@ DEKI_PLUGIN_API void DekiPlugin_OnPlayModeStart(void* scenePtr)
 
 DEKI_PLUGIN_API void DekiPlugin_OnPlayModeStop(void)
 {
-    // Nothing to reset: AnimationComponent drives itself from Update().
+    // Nothing to reset: Deki2D::AnimationComponent drives itself from Update().
 }
 
 // =============================================================================

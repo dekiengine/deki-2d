@@ -5,6 +5,9 @@
 #include <deki/reflection/Property.h>
 #include <deki/ISortableProvider.h>
 
+namespace Deki2D
+{
+
 /**
  * @brief Component that groups children for sorting purposes
  *
@@ -25,6 +28,7 @@
  */
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Makes its children sort together as one unit against the rest of the scene.")
+DEKI_FORMER_NAME("SortingGroupComponent")
 class SortingGroupComponent : public Deki::Component, public Deki::ISortableProvider
 {
 public:
@@ -41,3 +45,5 @@ public:
 };
 
 // Generated property metadata (after class definition for offsetof)
+
+}  // namespace Deki2D

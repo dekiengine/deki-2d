@@ -10,6 +10,9 @@
 #include <deki/Color.h>
 #include <deki/assets/AssetRef.h>
 
+namespace Deki2D
+{
+
 /**
  * @brief Text alignment options
  */
@@ -46,7 +49,8 @@ enum class TextVerticalAlign : uint8_t
  */
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Draws text with a bitmap font, alignment and word wrap.")
-class TextComponent : public RendererComponent
+DEKI_FORMER_NAME("TextComponent")
+class TextComponent : public DekiRendering::RendererComponent
 {
 public:
 
@@ -332,3 +336,5 @@ private:
 };
 
 // Generated property metadata (after class definition for offsetof)
+
+}  // namespace Deki2D

@@ -10,7 +10,11 @@
 
 // Forward declarations
 namespace Deki { class Object; }
-class InputCollider;
+
+namespace DekiInput { class InputCollider; }
+
+namespace Deki2D
+{
 
 /**
  * @brief Button states for interaction feedback
@@ -32,18 +36,18 @@ using ButtonCallback = std::function<void()>;
  * @brief Pure interaction component for clickable buttons
  *
  * ButtonComponent handles interaction logic (clicks, hover, state).
- * Requires an InputCollider component on the same or related object
+ * Requires an DekiInput::InputCollider component on the same or related object
  * to receive input events (like Unity's Collider2D requirement).
  *
  * Features:
  * - Multiple interaction states (normal, hovered, pressed, disabled)
  * - Callback system for click, press, release, hover events
- * - Configurable via ObjectRef to InputCollider
+ * - Configurable via ObjectRef to DekiInput::InputCollider
  *
  * Usage example:
  * @code
  * auto* entity = new Deki::Object("Button");
- * auto* collider = entity->AddComponent<InputCollider>();
+ * auto* collider = entity->AddComponent<DekiInput::InputCollider>();
  * collider->width = 100;
  * collider->height = 40;
  * auto* button = entity->AddComponent<ButtonComponent>();
@@ -56,13 +60,14 @@ using ButtonCallback = std::function<void()>;
  */
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Makes the object a button: tracks hover and press, and fires a click callback.")
+DEKI_FORMER_NAME("ButtonComponent")
 class ButtonComponent : public Deki::Component
 {
    public:
 
-    // InputCollider reference (required for receiving input)
+    // DekiInput::InputCollider reference (required for receiving input)
     DEKI_EXPORT
-    Deki::ObjectRef<InputCollider> inputCollider;
+    Deki::ObjectRef<DekiInput::InputCollider> inputCollider;
 
     // State management
     DEKI_EXPORT
@@ -130,3 +135,5 @@ class ButtonComponent : public Deki::Component
 };
 
 // Generated property metadata (after class definition for offsetof)
+
+}  // namespace Deki2D

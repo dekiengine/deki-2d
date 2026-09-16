@@ -15,6 +15,9 @@
 #include <initializer_list>
 #include <vector>
 
+// The package's types moved into its namespace; tests name them unqualified.
+using namespace Deki2D;
+
 namespace
 {
 

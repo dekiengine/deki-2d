@@ -9,6 +9,9 @@
 #include <deki/assets/AssetRef.h>
 #include "FrameAnimationData.h"
 
+namespace Deki2D
+{
+
 /**
  * @brief Component for handling sprite frame animations
  *
@@ -16,6 +19,7 @@
  */
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Plays a frame animation asset on the object's sprite.")
+DEKI_FORMER_NAME("AnimationComponent")
 class AnimationComponent : public Deki::Component
 {
 public:
@@ -23,7 +27,7 @@ public:
     SpriteComponent* spriteComponent;         // Associated sprite component
 
     DEKI_EXPORT
-    Deki::AssetRef<FrameAnimationData> animation;  // Frame animation asset reference (.frameanim)
+    Deki::AssetRef<FrameAnimationData> animation;  // DekiTiledMap::Frame animation asset reference (.frameanim)
 
     FrameAnimationData* animationData;        // Loaded frame animation data
     bool ownsAnimationData;                  // True if we own animationData
@@ -169,3 +173,5 @@ private:
 };
 
 // Generated property metadata (after class definition for offsetof)
+
+}  // namespace Deki2D

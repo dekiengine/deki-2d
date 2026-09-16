@@ -2,7 +2,9 @@
 #include <deki/ComponentInterfaceAdapters.h>
 #include <deki/ISortableProvider.h>
 
-// Explicit registration function — called from Deki2D_RegisterComponents()
+using namespace Deki2D;
+
+// Explicit registration function — called from ::Deki2D_RegisterComponents()
 void Deki2D_RegisterSortingGroupAdapters()
 {
     static bool s_registered = false;
@@ -21,3 +23,5 @@ void Deki2D_RegisterSortingGroupAdapters()
 static struct SortingGroupInterfaceRegistrar {
     SortingGroupInterfaceRegistrar() { Deki2D_RegisterSortingGroupAdapters(); }
 } s_sortingGroupInterfaceRegistrar;
+
+

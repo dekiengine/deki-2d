@@ -3,6 +3,9 @@
 #include <deki/Object.h>
 #include <deki/LogSystem.h>
 
+namespace Deki2D
+{
+
 ButtonComponent::ButtonComponent()
     : state(ButtonState::Normal),
       isEnabled(true),
@@ -16,15 +19,15 @@ ButtonComponent::~ButtonComponent()
 
 void ButtonComponent::Start()
 {
-    InputCollider* collider = inputCollider.Get();
+    DekiInput::InputCollider* collider = inputCollider.Get();
     if (!collider)
     {
-        DEKI_LOG_WARNING("ButtonComponent: No InputCollider referenced on '%s'",
+        DEKI_LOG_WARNING("ButtonComponent: No DekiInput::InputCollider referenced on '%s'",
                          GetOwner()->GetName().c_str());
         return;
     }
 
-    // Register pointer callbacks on InputCollider
+    // Register pointer callbacks on DekiInput::InputCollider
     collider->onPointerDown.push_back([this](float x, float y) {
         (void)x; (void)y;
         if (!isEnabled) return;
@@ -41,7 +44,7 @@ void ButtonComponent::Start()
             InvokeCallbacks(onRelease);
 
             // Click = was pressed inside and released inside collider
-            InputCollider* col = inputCollider.Get();
+            DekiInput::InputCollider* col = inputCollider.Get();
             if (col && col->IsPointerInside())
             {
                 SetState(ButtonState::Normal);
@@ -165,3 +168,5 @@ void ButtonComponent::InvokeCallbacks(const std::vector<ButtonCallback>& callbac
         if (cb) cb();
     }
 }
+
+}  // namespace Deki2D

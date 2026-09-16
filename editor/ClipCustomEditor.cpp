@@ -14,6 +14,9 @@
 #include "ClipComponent.h"
 #include <deki/Engine.h>  // for DekiEngineSettings::Global()
 
+// Editor extensions live in DekiEditor; the package's own types are in Deki2D.
+using namespace Deki2D;
+
 namespace DekiEditor
 {
 

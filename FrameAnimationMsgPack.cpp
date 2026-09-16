@@ -10,9 +10,15 @@
 #include <vector>
 
 #ifdef DEKI_EDITOR
-// Editor-only: save serializes through the generated reflection serializer.
 #include <nlohmann/json.hpp>
 #include <deki/reflection/Serialization.h>
+#endif
+
+namespace Deki2D
+{
+
+#ifdef DEKI_EDITOR
+// Editor-only: save serializes through the generated reflection serializer.
 using json = nlohmann::json;
 #endif
 
@@ -168,3 +174,5 @@ namespace {
     };
     static _AnimLoaderReg s_animLoaderReg;
 }
+
+}  // namespace Deki2D

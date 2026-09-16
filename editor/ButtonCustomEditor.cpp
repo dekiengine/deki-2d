@@ -14,6 +14,9 @@
 #include "deki-input/InputCollider.h"
 #include <deki/Engine.h>
 
+// Editor extensions live in DekiEditor; the package's own types are in Deki2D.
+using namespace Deki2D;
+
 namespace DekiEditor
 {
 
@@ -32,7 +35,7 @@ public:
         if (!button)
             return false;
 
-        InputCollider* collider = button->inputCollider.Get();
+        DekiInput::InputCollider* collider = button->inputCollider.Get();
         if (!collider)
             return false;
 
@@ -49,11 +52,11 @@ public:
         if (!button)
             return false;
 
-        InputCollider* collider = button->inputCollider.Get();
+        DekiInput::InputCollider* collider = button->inputCollider.Get();
         if (!collider)
             return false;
 
-        Bounds2D bounds = collider->GetBounds();
+        Deki2D::Bounds2D bounds = collider->GetBounds();
         float halfW = width * 0.5f;
         float halfH = height * 0.5f;
 
@@ -66,7 +69,7 @@ public:
         return (localX >= left && localX <= right && localY >= top && localY <= bottom);
     }
 
-    // Resize gizmo not exposed: the button's hit area lives on InputCollider,
+    // Resize gizmo not exposed: the button's hit area lives on DekiInput::InputCollider,
     // whose width/height are float (world units), but GetResizeTarget hands the
     // gizmo int32_t* fields. Until the editor API gains a float variant, the
     // collider is sized via the inspector instead.

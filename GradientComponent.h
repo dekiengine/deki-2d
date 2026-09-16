@@ -6,6 +6,9 @@
 #include "deki-rendering/RendererComponent.h"
 #include <deki/Color.h>
 
+namespace Deki2D
+{
+
 /**
  * @brief Gradient types for procedural generation
  */
@@ -72,7 +75,8 @@ struct GradientStop
  */
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Draws a procedural gradient: linear, radial or conical.")
-class GradientComponent : public RendererComponent
+DEKI_FORMER_NAME("GradientComponent")
+class GradientComponent : public DekiRendering::RendererComponent
 {
    public:
 
@@ -327,4 +331,6 @@ class GradientComponent : public RendererComponent
     // not overwrite AddColorStop()/SetSimpleGradient() with stale values.
     void WriteStopsToProperties();
 };
+
+}  // namespace Deki2D
 

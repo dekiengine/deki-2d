@@ -20,6 +20,9 @@
 #include <SDL3/SDL_opengl.h>
 #include <nlohmann/json.hpp>
 
+// Editor extensions live in DekiEditor; the package's own types are in Deki2D.
+using namespace Deki2D;
+
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 
@@ -701,7 +704,7 @@ void FrameAnimationEditorWindow::DrawFramePalette()
 
         ui.SameLine();
         char frameLabelBuf[64];
-        std::snprintf(frameLabelBuf, sizeof(frameLabelBuf), "Frame %d", frame.index);
+        std::snprintf(frameLabelBuf, sizeof(frameLabelBuf), "DekiTiledMap::Frame %d", frame.index);
         ui.Text(frameLabelBuf);
 
         ui.PopID();
@@ -886,7 +889,7 @@ void FrameAnimationEditorWindow::DrawProperties()
     {
         ui.Separator();
         char selFrameBuf[64];
-        std::snprintf(selFrameBuf, sizeof(selFrameBuf), "Selected Frame: %d", m_SelectedTimelineIndex);
+        std::snprintf(selFrameBuf, sizeof(selFrameBuf), "Selected DekiTiledMap::Frame: %d", m_SelectedTimelineIndex);
         ui.Text(selFrameBuf);
 
         auto& frame = currentAnim.frames[m_SelectedTimelineIndex];
@@ -986,7 +989,7 @@ void FrameAnimationEditorWindow::DrawPreview()
     if (timelineFrames && !timelineFrames->empty())
     {
         char frameCounterBuf[64];
-        std::snprintf(frameCounterBuf, sizeof(frameCounterBuf), "Frame %d / %zu", m_PreviewFrame + 1, timelineFrames->size());
+        std::snprintf(frameCounterBuf, sizeof(frameCounterBuf), "DekiTiledMap::Frame %d / %zu", m_PreviewFrame + 1, timelineFrames->size());
         ui.Text(frameCounterBuf);
     }
     else

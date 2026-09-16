@@ -10,6 +10,9 @@
 #include <deki/assets/AssetRef.h>
 #include <deki/reflection/Property.h>
 
+namespace Deki2D
+{
+
 /**
  * @brief How a SpriteComponent draws its sprite.
  *
@@ -30,7 +33,8 @@ enum class SpriteRenderMode : uint8_t
  */
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Draws a sprite, with tint, flip, and tiled or 9-slice modes.")
-class SpriteComponent : public RendererComponent
+DEKI_FORMER_NAME("SpriteComponent")
+class SpriteComponent : public DekiRendering::RendererComponent
 {
 public:
 
@@ -145,3 +149,5 @@ private:
 };
 
 // Generated property metadata (after class definition for offsetof)
+
+}  // namespace Deki2D

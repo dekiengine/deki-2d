@@ -6,6 +6,9 @@
 #include <string>
 #include <deki/assets/Texture2D.h>
 
+namespace Deki2D
+{
+
 /**
  * @brief Glyph metrics for a single character
  */
@@ -30,7 +33,7 @@ struct GlyphInfo
  */
 struct FontHeader
 {
-    char magic[4];           // "DFNT" (Deki Font)
+    char magic[4];           // "DFNT" (DekiRendering::Deki Font)
     uint32_t version;        // Format version (1)
     uint8_t m_FirstChar;      // First ASCII character in font (usually 32 = space)
     uint8_t m_LastChar;       // Last ASCII character in font (usually 126 = ~)
@@ -51,7 +54,7 @@ struct FontHeader
  */
 struct FontHeaderV2
 {
-    char magic[4];           // "DFNT" (Deki Font)
+    char magic[4];           // "DFNT" (DekiRendering::Deki Font)
     uint32_t version;        // Format version (2)
     uint32_t firstCodepoint;// First codepoint (for info/range display)
     uint32_t lastCodepoint; // Last codepoint (for info/range display)
@@ -360,3 +363,5 @@ private:
     mutable int32_t m_VisualMinY = 0;
     mutable int32_t m_VisualMaxY = 0;
 };
+
+}  // namespace Deki2D

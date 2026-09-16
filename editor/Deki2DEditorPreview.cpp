@@ -44,21 +44,21 @@
 
 namespace Deki2D
 {
-// Installed as TextComponent's font resolve callback by Deki2D_EnsureRegistered.
-BitmapFont* EditorFontResolve(TextComponent* tc);
+// Installed as Deki2D::TextComponent's font resolve callback by Deki2D_EnsureRegistered.
+Deki2D::BitmapFont* EditorFontResolve(Deki2D::TextComponent* tc);
 }
 
 // =============================================================================
-// Preview Font Management (moved from TextComponent.cpp for clean separation)
+// Preview Font Management (moved from Deki2D::TextComponent.cpp for clean separation)
 // =============================================================================
 
 namespace {
-    static BitmapFont* s_PreviewFont = nullptr;
+    static Deki2D::BitmapFont* s_PreviewFont = nullptr;
     static std::string s_PreviewFontGuid;
     static int s_PreviewFontSize = 0;
 } // anonymous namespace
 
-static BitmapFont* GetEditorFontVariant(const std::string& fontGuid, int fontSize)
+static Deki2D::BitmapFont* GetEditorFontVariant(const std::string& fontGuid, int fontSize)
 {
     if (fontGuid.empty() || fontSize <= 0)
         return nullptr;
@@ -113,11 +113,11 @@ static BitmapFont* GetEditorFontVariant(const std::string& fontGuid, int fontSiz
     if (!atlas->data) { delete atlas; return nullptr; }
     memcpy(atlas->data, result.atlasRGBA.data(), atlasSize);
 
-    Deki::Buffer<GlyphInfo> glyphsCopy(result.glyphs.size(), Deki::Memory::Internal);
+    Deki::Buffer<Deki2D::GlyphInfo> glyphsCopy(result.glyphs.size(), Deki::Memory::Internal);
     if (!glyphsCopy) { delete atlas; return nullptr; }
     memcpy(glyphsCopy.Data(), result.glyphs.data(), glyphsCopy.Bytes());
 
-    BitmapFont* font = BitmapFont::CreateFromMemory(
+    Deki2D::BitmapFont* font = Deki2D::BitmapFont::CreateFromMemory(
         atlas, std::move(glyphsCopy),
         result.firstChar, result.lastChar,
         result.lineHeight, result.baseline);
@@ -150,10 +150,10 @@ static std::string ComputeBakedFontGuid(const std::string& sourceGuid, int fontS
 }
 
 // The baked variant's GUID for the component's (font.source, fontSize),
-// recomputed only when either changed. This runs for every TextComponent on
+// recomputed only when either changed. This runs for every Deki2D::TextComponent on
 // every frame in play and edit mode, and ComputeBakedFontGuid builds strings,
 // hashes a deterministic GUID and resolves an asset path each time.
-static const std::string& SyncedBakedFontGuid(TextComponent* tc)
+static const std::string& SyncedBakedFontGuid(Deki2D::TextComponent* tc)
 {
     if (tc->editorSyncedFontSize != tc->fontSize || tc->editorSyncedFontSource != tc->font.source)
     {
@@ -164,7 +164,7 @@ static const std::string& SyncedBakedFontGuid(TextComponent* tc)
     return tc->editorSyncedFontGuid;
 }
 
-BitmapFont* Deki2D::EditorFontResolve(TextComponent* tc)
+Deki2D::BitmapFont* Deki2D::EditorFontResolve(Deki2D::TextComponent* tc)
 {
     if (Deki::Engine::IsRuntimeMode())
     {
@@ -261,11 +261,11 @@ bool SetPreviewFontFromData(
     if (!atlas->data) { delete atlas; return false; }
     memcpy(atlas->data, atlasRGBA, atlasSize);
 
-    Deki::Buffer<GlyphInfo> glyphsCopy(glyphCount, Deki::Memory::Internal);
+    Deki::Buffer<Deki2D::GlyphInfo> glyphsCopy(glyphCount, Deki::Memory::Internal);
     if (!glyphsCopy) { delete atlas; return false; }
     memcpy(glyphsCopy.Data(), glyphs, glyphsCopy.Bytes());
 
-    BitmapFont* font = BitmapFont::CreateFromMemory(
+    Deki2D::BitmapFont* font = Deki2D::BitmapFont::CreateFromMemory(
         atlas, std::move(glyphsCopy),
         firstChar, lastChar,
         lineHeight, baseline);
@@ -283,7 +283,7 @@ bool HasPreviewFont(const std::string& sourceGuid, int fontSize)
     return s_PreviewFont && s_PreviewFontGuid == sourceGuid && s_PreviewFontSize == fontSize;
 }
 
-BitmapFont* GetPreviewFont(const std::string& sourceGuid, int fontSize)
+Deki2D::BitmapFont* GetPreviewFont(const std::string& sourceGuid, int fontSize)
 {
     if (s_PreviewFont && s_PreviewFontGuid == sourceGuid && s_PreviewFontSize == fontSize)
         return s_PreviewFont;
@@ -397,8 +397,8 @@ namespace Deki2D {
 void InitializeFontPreviewCallbacks()
 {
     DekiEditor::EditorAssets::Get()->SetFontBakingCallbacks(
-        // Font callback - returns BitmapFont for text metrics
-        [](const std::string& sourceGuid, int fontSize) -> BitmapFont* {
+        // Font callback - returns Deki2D::BitmapFont for text metrics
+        [](const std::string& sourceGuid, int fontSize) -> Deki2D::BitmapFont* {
             DEKI_LOG_EDITOR("FontPreview: GetBitmapFontWithBaking called for %s @ %d px", sourceGuid.c_str(), fontSize);
 
             if (sourceGuid.empty() || fontSize <= 0)
@@ -408,7 +408,7 @@ void InitializeFontPreviewCallbacks()
             std::string variantGuid = GetVariantGuidFromData(sourceGuid, fontSize);
             if (!variantGuid.empty())
             {
-                BitmapFont* baked = DekiEditor::EditorAssets::Get()->GetBitmapFont(variantGuid);
+                Deki2D::BitmapFont* baked = DekiEditor::EditorAssets::Get()->GetBitmapFont(variantGuid);
                 if (baked)
                 {
                     DEKI_LOG_EDITOR("FontPreview: Found baked font for %s @ %d px (variant %s)", sourceGuid.c_str(), fontSize, variantGuid.c_str());
@@ -419,7 +419,7 @@ void InitializeFontPreviewCallbacks()
             // 2. Check if preview font already exists AND has GPU texture
             // Use "preview:" prefix to keep separate from baked font GUIDs
             std::string cacheKey = "preview:" + sourceGuid + ":" + std::to_string(fontSize);
-            BitmapFont* preview = Deki2D::GetPreviewFont(sourceGuid, fontSize);
+            Deki2D::BitmapFont* preview = Deki2D::GetPreviewFont(sourceGuid, fontSize);
             if (preview)
             {
                 // Make sure GPU texture exists too

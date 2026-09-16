@@ -3,7 +3,9 @@
 #include <deki/IClipProvider.h>
 #include <deki/ISortableProvider.h>
 
-// Explicit registration function — called from Deki2D_RegisterComponents()
+using namespace Deki2D;
+
+// Explicit registration function — called from ::Deki2D_RegisterComponents()
 // to ensure interface adapters are registered even when the linker strips
 // object files with only static initializers (e.g., ESP-IDF static libs).
 void Deki2D_RegisterClipAdapters()
@@ -30,3 +32,5 @@ void Deki2D_RegisterClipAdapters()
 static struct ClipInterfaceRegistrar {
     ClipInterfaceRegistrar() { Deki2D_RegisterClipAdapters(); }
 } s_clipInterfaceRegistrar;
+
+

@@ -15,6 +15,9 @@
 #include <string>
 #include <cstdio>
 
+// Editor extensions live in DekiEditor; the package's own types are in Deki2D.
+using namespace Deki2D;
+
 namespace DekiEditor
 {
 

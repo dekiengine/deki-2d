@@ -5,6 +5,9 @@
 #include <deki/Time.h>
 #include <deki/Object.h>
 
+namespace Deki2D
+{
+
 // ============================================================================
 
 AnimationComponent::AnimationComponent(SpriteComponent* sprite_comp)
@@ -351,3 +354,5 @@ void AnimationComponent::InitializeToFirstFrame()
     currentFrame = 0;
     ApplyCurrentFrame();
 }
+
+}  // namespace Deki2D

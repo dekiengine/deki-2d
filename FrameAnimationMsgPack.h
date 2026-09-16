@@ -3,6 +3,9 @@
 #include <cstdint>
 #include <cstddef>
 
+namespace Deki2D
+{
+
 /**
  * @brief MessagePack-based frame animation cache format
  *
@@ -60,3 +63,5 @@ public:
     static bool SaveAnimation(const char* msgpack_path, const FrameAnimationData* anim_data);
 #endif
 };
+
+}  // namespace Deki2D

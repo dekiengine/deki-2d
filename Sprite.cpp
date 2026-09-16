@@ -11,6 +11,9 @@
 #include <deki/Time.h>
 #include <deki/assets/AssetManager.h>
 
+namespace Deki2D
+{
+
 Sprite::Sprite() : Deki::Texture2D()
 {
     SetDefaultSpriteProperties();
@@ -37,7 +40,7 @@ void Sprite::SetDefaultSpriteProperties()
     pivotX = 0.5f;  // Center pivot
     pivotY = 0.5f;  // Center pivot
     // Default 16 to match the project's default pixelsPerMeter. This value
-    // is *ignored* in Pixels mode (Standard2DRenderer overrides to 1.0 — see
+    // is *ignored* in Pixels mode (DekiRendering::Standard2DRenderer overrides to 1.0 — see
     // its drawScale block) so backward-compat for legacy/Pixel-mode projects
     // is preserved. In Meters mode, it makes a 16-px sprite occupy 1 m × 1 m
     // by default (the natural mental model for retro tile workflows).
@@ -219,7 +222,7 @@ Sprite* Sprite::Load(const char* file_path)
                 DEKI_LOG_INTERNAL("  Sprite metadata: frame %dx%d, 9-slice=%d",
                                   frameWidth, frameHeight, sprite->hasNineSlice ? 1 : 0);
             }
-            else if (chunk_type == 2 && chunk_size >= 2)  // Frame list chunk
+            else if (chunk_type == 2 && chunk_size >= 2)  // DekiTiledMap::Frame list chunk
             {
                 uint16_t frameCount = *(uint16_t*)(metadata + offset);
                 uint32_t frame_offset = sizeof(uint16_t);
@@ -248,7 +251,7 @@ Sprite* Sprite::Load(const char* file_path)
                         frame.height = *(int32_t*)(metadata + offset + frame_offset);
                         frame_offset += sizeof(int32_t);
                     }
-                    DEKI_LOG_INTERNAL("  Frame list: %u frames", frameCount);
+                    DEKI_LOG_INTERNAL("  DekiTiledMap::Frame list: %u frames", frameCount);
                 }
             }
             else if (chunk_type == 3 && chunk_size >= 8)  // Chroma key chunk
@@ -936,3 +939,5 @@ namespace {
     };
     static _SpriteLoaderReg s_spriteLoaderReg;
 }
+
+}  // namespace Deki2D

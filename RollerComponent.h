@@ -13,12 +13,16 @@
 
 // Forward declarations
 namespace Deki { class Object; }
+
+namespace DekiInput { class InputCollider; }
+
+namespace Deki2D
+{
 class BitmapFont;
 class TextComponent;
 class SpriteComponent;
 class ClipComponent;
 class Sprite;
-class InputCollider;
 
 /**
  * @brief Callback function type for roller selection changes
@@ -51,6 +55,7 @@ using RollerCallback = std::function<void(int32_t index, const std::string& valu
  */
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Picker wheel: spins through a list of values with momentum and snaps to one.")
+DEKI_FORMER_NAME("RollerComponent")
 class RollerComponent : public Deki::Component
 {
 public:
@@ -62,9 +67,9 @@ public:
     // Editor-visible properties
     // ========================================================================
 
-    // InputCollider reference (required for receiving input)
+    // DekiInput::InputCollider reference (required for receiving input)
     DEKI_EXPORT
-    Deki::ObjectRef<InputCollider> inputCollider;
+    Deki::ObjectRef<DekiInput::InputCollider> inputCollider;
 
     /** @brief Width of the roller in meters */
     DEKI_EXPORT
@@ -319,10 +324,12 @@ private:
      */
     void UpdateSelection();
 
-    // Input handlers (registered on InputCollider in Start())
+    // Input handlers (registered on DekiInput::InputCollider in Start())
     void HandlePointerDown(float x, float y);
     void HandlePointerMove(float x, float y);
     void HandlePointerUp(float x, float y);
 };
 
 // Generated property metadata (after class definition for offsetof)
+
+}  // namespace Deki2D

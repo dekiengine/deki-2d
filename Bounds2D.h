@@ -2,6 +2,9 @@
 
 #include <stdint.h>
 
+namespace Deki2D
+{
+
 /**
  * @brief 2D axis-aligned bounding box
  *
@@ -68,3 +71,5 @@ struct Bounds2D
                y <= height + paddingBottom;
     }
 };
+
+}  // namespace Deki2D

@@ -8,6 +8,9 @@
 #include <deki/assets/AssetPackReader.h>
 #include <cstring>
 #include <utility>
+
+namespace Deki2D
+{
  
 BitmapFont::BitmapFont()
     : atlas(nullptr)
@@ -912,3 +915,5 @@ uint32_t BitmapFont::DecodeUtf8(const char* str, size_t len, size_t& i)
     i += 1;  // skip the invalid byte
     return 0xFFFD;
 }
+
+}  // namespace Deki2D

@@ -20,6 +20,9 @@
 #include <cstring>
 #include <sstream>
 
+namespace Deki2D
+{
+
 // All sizes/positions in this file are world meters (matches the engine's
 // meters-internal convention; transform x/y and pointer callbacks are
 // meters too). No pixels-per-meter conversions needed.
@@ -422,7 +425,7 @@ void RollerComponent::SetSelectedIndex(int32_t index, bool animated)
 
     int32_t oldIndex = selectedIndex;
     selectedIndex = index;
-    m_LastSyncedSelectedIndex = index;  // Track programmatic change
+    m_LastSyncedSelectedIndex = index;  // DekiFsm::Track programmatic change
 
     if (animated)
     {
@@ -661,7 +664,7 @@ void RollerComponent::UpdateSelection()
     if (newIndex != selectedIndex)
     {
         selectedIndex = newIndex;
-        m_LastSyncedSelectedIndex = newIndex;  // Track internal change
+        m_LastSyncedSelectedIndex = newIndex;  // DekiFsm::Track internal change
 
         if (m_OnSelectionChanged)
         {
@@ -867,10 +870,10 @@ void RollerComponent::Start()
     if (GetOwner())
         SyncChildObjects(GetOwner());
 
-    InputCollider* collider = inputCollider.Get();
+    DekiInput::InputCollider* collider = inputCollider.Get();
     if (!collider)
     {
-        DEKI_LOG_WARNING("RollerComponent: No InputCollider referenced on '%s'",
+        DEKI_LOG_WARNING("RollerComponent: No DekiInput::InputCollider referenced on '%s'",
                          GetOwner()->GetName().c_str());
         return;
     }
@@ -909,3 +912,5 @@ void RollerComponent::OnPropertyChanged(const char* propertyName)
         SyncChildObjects(GetOwner());
     }
 }
+
+}  // namespace Deki2D

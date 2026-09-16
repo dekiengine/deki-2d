@@ -12,10 +12,15 @@
 
 // Forward declarations
 namespace Deki { class Object; }
+
+namespace Deki { class Scene; }
+
+namespace DekiInput { class InputCollider; }
+
+namespace Deki2D
+{
 class ClipComponent;
 class ScrollElement;
-namespace Deki { class Scene; }
-class InputCollider;
 
 /**
  * @brief Scroll direction enum
@@ -60,6 +65,7 @@ using ScrollItemCallback = std::function<void(Deki::Object* slot, int32_t itemIn
  */
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Scrolls its children by dragging, with momentum.")
+DEKI_FORMER_NAME("ScrollComponent")
 class ScrollComponent : public Deki::Component
 {
     public:
@@ -69,9 +75,9 @@ public:
 
     // === Editor-visible properties ===
 
-    // InputCollider reference (required for receiving input)
+    // DekiInput::InputCollider reference (required for receiving input)
     DEKI_EXPORT
-    Deki::ObjectRef<InputCollider> inputCollider;
+    Deki::ObjectRef<DekiInput::InputCollider> inputCollider;
 
     DEKI_EXPORT
     ScrollMode mode = ScrollMode::NonTemplate;
@@ -213,7 +219,7 @@ private:
     // Callback (Template mode)
     ScrollItemCallback m_OnBindItem;
 
-    // Input handlers (registered on InputCollider in Start()).
+    // Input handlers (registered on DekiInput::InputCollider in Start()).
     // Pointer x/y are world meters (input FFI contract).
     void HandlePointerDown(float x, float y);
     void HandlePointerMove(float x, float y);
@@ -232,3 +238,5 @@ private:
 };
 
 // Generated property metadata (after class definition for offsetof)
+
+}  // namespace Deki2D

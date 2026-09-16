@@ -1,6 +1,9 @@
 #pragma once
 #include "Sprite.h"
 
+namespace Deki2D
+{
+
 /**
  * @brief Base interface for sprite loaders
  *
@@ -33,3 +36,5 @@ class ISpriteLoader
      */
     virtual void RegisterLoader() = 0;
 };
+
+}  // namespace Deki2D
