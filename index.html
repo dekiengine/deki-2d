@@ -139,7 +139,7 @@ Components</h1>
 </table>
 <h1 class="doxsection"><a class="anchor" id="autotoc_md1"></a>
 Feature flags</h1>
-<p>Parts you can leave out of a build. A feature with no define is stripped with its components instead.</p>
+<p>Parts you can leave out of a build. A feature with a define is switched there; the rest are stripped with their components.</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Feature  </th><th class="markdownTableHeadNone">Define  </th><th class="markdownTableHeadNone">Default  </th></tr>
@@ -448,7 +448,7 @@ Changelog</h1>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
 Changed</h2>
 <ul>
-<li><b>Moved into the <span class="tt">Deki2D</span> namespace.</b> Every component was declared at global scope, which made its identity a bare class name — the name a scene file stores and the name the registry keys on — so two packages defining one name collided there with nothing to tell them apart. Each component carries <span class="tt">DEKI_FORMER_NAME</span> with the name it was saved under before, so existing scenes load unchanged and are written back qualified on the next save. Code naming these types needs the namespace: <span class="tt">using namespace Deki2D;</span> or a qualified name.</li>
+<li><b>Moved into the <span class="tt">Deki2D</span> namespace.</b> Every component was declared at global scope, which made its identity a bare class name - the name a scene file stores and the name the registry keys on - so two packages defining one name collided there with nothing to tell them apart. Each component carries <span class="tt">DEKI_FORMER_NAME</span> with the name it was saved under before, so existing scenes load unchanged and are written back qualified on the next save. Code naming these types needs the namespace: <span class="tt">using namespace Deki2D;</span> or a qualified name.</li>
 <li>Enum properties are stored by name rather than by number, so appending to an enum or reordering one no longer changes what a saved scene means. Files written before this still read.</li>
 <li><span class="tt">minEngine</span> 0.16.0. Reflection ABI 17: the package must be rebuilt.</li>
 </ul>
@@ -465,7 +465,7 @@ Changed</h2>
 Fixed</h2>
 <ul>
 <li>A gradient that will not fit no longer reboots the board. The allocation fails and is reported; it used to reach <span class="tt">new[]</span>, which aborts on ESP-IDF because exceptions are off.</li>
-<li><span class="tt">BuildOpaqueRowSpans</span> moved to <span class="tt">SpriteRowSpans.h</span> so the opaque-run rule can be tested directly, with eleven tests covering it — longest run rather than first-to-last, soft pixels breaking a run, ties, the empty-row span, and per-row independence. The renderer's golden blit hashes are unchanged.</li>
+<li><span class="tt">BuildOpaqueRowSpans</span> moved to <span class="tt">SpriteRowSpans.h</span> so the opaque-run rule can be tested directly, with eleven tests covering it - longest run rather than first-to-last, soft pixels breaking a run, ties, the empty-row span, and per-row independence. The renderer's golden blit hashes are unchanged.</li>
 </ul>
 <p>Earlier releases: <a href="https://github.com/dekiengine/deki-2d/blob/master/CHANGELOG.md">CHANGELOG.md</a>.</p>
 <hr  />
