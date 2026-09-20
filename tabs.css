@@ -80,7 +80,7 @@
     position: absolute;
     height: 2px;
     width: 24px;
-    background: #364D7C;
+    background: #B6C4DF;
     -webkit-transition: all .25s;
     transition: all .25s
 }
@@ -144,7 +144,7 @@
 }
 
 .sm-dox {
-    background-color: white
+    background-color: #05070C
 }
 
 .sm-dox a,.sm-dox a:active,.sm-dox a:focus,.sm-dox a:hover {
@@ -153,12 +153,12 @@
     font-size: 13px;
     line-height: 36px;
     text-decoration: none;
-    color: #283A5D;
+    color: #B6C4DF;
     outline: 0
 }
 
 .sm-dox a:hover {
-    background-color: #DCE2EF;
+    background-color: #1D2A43;
     border-radius: 5px
 }
 
@@ -216,7 +216,7 @@
 }
 
 .sm-dox ul {
-    background: white
+    background: #05070C
 }
 
 .sm-dox ul a,.sm-dox ul a:active,.sm-dox ul a:focus,.sm-dox ul a:hover {
@@ -224,12 +224,12 @@
     border-left: 8px solid transparent;
     line-height: 36px;
     text-shadow: none;
-    background-color: white;
+    background-color: #05070C;
     background-image: none
 }
 
 .sm-dox ul a:hover {
-    background-color: #DCE2EF;
+    background-color: #1D2A43;
     border-radius: 5px
 }
 
@@ -255,7 +255,7 @@
     width: 12em;
     border: 1px solid #bbb;
     padding: 5px 0;
-    background: white;
+    background: #05070C;
     -moz-border-radius: 5px!important;
     -webkit-border-radius: 5px;
     border-radius: 5px!important;
@@ -291,7 +291,7 @@
 }
 
 .sm-dox,.sm-dox a span.sub-arrow {
-    background-color: white
+    background-color: #05070C
 }
 
 .sm-dox {
@@ -308,8 +308,8 @@
     display: inline-block;
     width: 5px;
     height: 5px;
-    border-right: 2px solid #B6C4DF;
-    border-bottom: 2px solid #B6C4DF;
+    border-right: 2px solid #4665A2;
+    border-bottom: 2px solid #4665A2;
     transform: rotate(45deg);
     -moz-border-radius: 0;
     -webkit-border-radius: 0;
@@ -321,14 +321,14 @@
 }
 
 .sm-dox a:hover {
-    background-color: #DCE2EF;
+    background-color: #1D2A43;
     border-radius: 5px!important
 }
 
 .sm-dox a:hover span.sub-arrow {
-    background-color: #DCE2EF;
-    border-right: 2px solid #90A5CE;
-    border-bottom: 2px solid #90A5CE
+    background-color: #1D2A43;
+    border-right: 2px solid #6884BD;
+    border-bottom: 2px solid #6884BD
 }
 
 .sm-dox a.has-submenu {
@@ -352,7 +352,7 @@
     top: -16px;
     left: 31px;
     border-width: 8px;
-    border-color: transparent transparent white transparent
+    border-color: transparent transparent #05070C transparent
 }
 
 .sm-dox ul a span.sub-arrow {
@@ -361,14 +361,14 @@
 }
 
 .sm-dox ul a,.sm-dox ul a.highlighted,.sm-dox ul a:active,.sm-dox ul a:focus,.sm-dox ul a:hover {
-    color: #555555;
+    color: #BBBBBB;
     background-image: none;
     line-height: normal;
     border: 0!important
 }
 
 .sm-dox ul a:hover {
-    background-color: #DCE2EF;
+    background-color: #1D2A43;
     border-radius: 5px
 }
 
@@ -377,7 +377,7 @@
     display: none;
     visibility: hidden;
     overflow: hidden;
-    background: white;
+    background: #05070C;
     height: 36px
 }
 
@@ -403,13 +403,13 @@
     overflow: hidden;
     border-width: 6px;
     border-style: dashed dashed solid;
-    border-color: transparent transparent #555555 transparent
+    border-color: transparent transparent #BBBBBB transparent
 }
 
 .sm-dox span.scroll-down-arrow {
     top: 8px;
     border-style: solid dashed dashed;
-    border-color: #555555 transparent transparent transparent
+    border-color: #BBBBBB transparent transparent transparent
 }
 
 .sm-dox.sm-rtl a.has-submenu {
@@ -476,7 +476,7 @@
 }
 
 .sm-dox.sm-vertical ul a.disabled {
-    background: white
+    background: #05070C
 }
 }
 

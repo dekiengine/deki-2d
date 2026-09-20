@@ -1,3 +1,7 @@
+<!-- HTML header for doxygen 1.18.0 - Deki.
+     Doxygen's own template plus the site's webfonts and the dekiengine.com
+     bar. The $-placeholders and the BEGIN/END comment markers are Doxygen's
+     template language, not commentary. See README.md in this directory. -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
@@ -6,6 +10,9 @@
 <meta name="generator" content="Doxygen 1.18.0"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>deki-2d: deki-2d</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="codefolding.js"></script>
 <script type="text/javascript" src="clipboard.js"></script>
@@ -19,13 +26,28 @@
 <link href="deki.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>
+<div class="deki-bar">
+  <a class="deki-brand" href="https://dekiengine.com/">
+    <span class="deki-mark"><span class="deki-dot"></span></span>
+    <span class="deki-brand-name">DEKI<span class="deki-slash">/</span>ENGINE</span>
+  </a>
+  <span class="deki-bar-tag">docs</span>
+  <div class="deki-bar-links">
+    <a href="https://dekiengine.com/"><span class="deki-nav-label">site</span></a>
+    <a href="https://dekiengine.com/packages/"><span class="deki-nav-label">packages</span></a>
+    <a href="https://dekiengine.com/blog/"><span class="deki-nav-label">blog</span></a>
+    <span class="deki-bar-sep"></span>
+    <a class="deki-chip" href="https://github.com/orgs/dekiengine/repositories" rel="noopener"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg><span>github</span></a>
+    <a class="deki-chip deki-chip-accent" href="https://dekiengine.com/discord" rel="noopener"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></svg><span>discord</span></a>
+  </div>
+</div>
 <div id="top"><!-- do not remove this div, it is closed by doxygen! -->
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">deki-2d<span id="projectnumber">&#160;0.15.0</span>
+   <div id="projectname">deki-2d<span id="projectnumber">&#160;0.16.0</span>
    </div>
    <div id="projectbrief">Deki package reference</div>
   </td>
@@ -79,8 +101,11 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="mainpage"></a></p>
-<p>Sprites, text, animations, gradients, buttons, scrolling</p>
-<p>Repository: <a href="https://github.com/dekiengine/deki-2d">github.com/dekiengine/deki-2d</a> · Latest release: 0.15.0 · Needs engine 0.15.0+ · Requires: <a href="https://dekiengine.github.io/deki-rendering/">deki-rendering</a>, <a href="https://dekiengine.github.io/deki-input/">deki-input</a></p>
+<div class="image">
+<img src="deki-2d.png" alt=""/>
+</div>
+    <p>Sprites, text, animations, gradients, buttons, scrolling</p>
+<p>Repository: <a href="https://github.com/dekiengine/deki-2d">github.com/dekiengine/deki-2d</a> · Latest release: 0.16.0 · Needs engine 0.16.0+ · Requires: <a href="https://dekiengine.github.io/deki-rendering/">deki-rendering</a>, <a href="https://dekiengine.github.io/deki-input/">deki-input</a></p>
 <p>Install with <span class="tt">DekiEditor --packages-add deki-2d &lt;project&gt;</span>, or from the Package Manager. The engine's own components and C++ API are in the <a href="https://dekiengine.github.io/docs/">Deki docs</a>.</p>
 <p>Shown in the editor as <b>2D</b>.</p>
 <h1 class="doxsection"><a class="anchor" id="autotoc_md0"></a>
@@ -141,292 +166,301 @@ Component reference</h1>
 <h2 class="doxsection"><a class="anchor" id="c-animationcomponent"></a>
 AnimationComponent</h2>
 <p>Plays a frame animation asset on the object's sprite.</p>
-<p>Inspector name: Animation Component · Category: 2D · Type: <span class="tt">AnimationComponent</span></p>
+<p>Inspector name: Animation Component · Category: 2D · Type: <span class="tt">Deki2D::AnimationComponent</span></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th></tr>
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Description  </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">animation</span>  </td><td class="markdownTableBodyNone">AssetRef (FrameAnimationData)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">animation</span>  </td><td class="markdownTableBodyNone">AssetRef (FrameAnimationData)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone">A frame animation asset, which lists the frames and how long each is held.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">currentSequence</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">currentSequence</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">Which named sequence is playing, by index. Sequences are the separate animations inside one asset, such as idle and walk.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">currentFrame</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">currentFrame</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">Frame within the current sequence. Set it to scrub; it is also useful to read while debugging.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">isPlaying</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">isPlaying</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone">Whether the animation is advancing. Clearing this freezes it on the current frame rather than resetting it.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">hasFinished</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">hasFinished</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone">Set when a non-looping sequence reaches its last frame. Read it to know when to move on.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">playOnceOverride</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">playOnceOverride</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone">Play the current sequence once even if the asset marks it as looping. Cleared when the sequence changes.  </td></tr>
 </table>
 <h2 class="doxsection"><a class="anchor" id="c-buttoncomponent"></a>
 ButtonComponent</h2>
 <p>Makes the object a button: tracks hover and press, and fires a click callback.</p>
-<p>Inspector name: Button Component · Category: 2D · Type: <span class="tt">ButtonComponent</span></p>
+<p>Inspector name: Button Component · Category: 2D · Type: <span class="tt">Deki2D::ButtonComponent</span></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th></tr>
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The hit area that makes this button clickable. Without one the button has no way to notice a press.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">state</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">Normal</span>  </td><td class="markdownTableBodyNone"><span class="tt">Normal</span>, <span class="tt">Hovered</span>, <span class="tt">Pressed</span>, <span class="tt">Disabled</span>  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">state</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Normal"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Normal</span>, <span class="tt">Hovered</span>, <span class="tt">Pressed</span>, <span class="tt">Disabled</span>  </td><td class="markdownTableBodyNone">Normal, hovered, pressed or disabled. Set by input; a style component watches it to decide what to draw.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">A disabled button ignores input and reports the disabled state, so it can be greyed out rather than hidden.  </td></tr>
 </table>
 <h2 class="doxsection"><a class="anchor" id="c-buttonstylecomponent"></a>
 ButtonStyleComponent</h2>
 <p>Gives a button its look per state, by tinting or by swapping sprites.</p>
-<p>Inspector name: Button Style Component · Category: 2D · Type: <span class="tt">ButtonStyleComponent</span></p>
+<p>Inspector name: Button Style Component · Category: 2D · Type: <span class="tt">Deki2D::ButtonStyleComponent</span></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th></tr>
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">button</span>  </td><td class="markdownTableBodyNone">ObjectRef (ButtonComponent)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">button</span>  </td><td class="markdownTableBodyNone">ObjectRef (ButtonComponent)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The button whose state drives this styling. Usually the button on the same object.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">sprite</span>  </td><td class="markdownTableBodyNone">ObjectRef (SpriteComponent)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">sprite</span>  </td><td class="markdownTableBodyNone">ObjectRef (SpriteComponent)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The sprite this styling changes. Usually the sprite on the same object.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">transition</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">ColorTint</span>  </td><td class="markdownTableBodyNone"><span class="tt">ColorTint</span>, <span class="tt">SpriteSwap</span>  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">transition</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"ColorTint"</span>  </td><td class="markdownTableBodyNone"><span class="tt">ColorTint</span>, <span class="tt">SpriteSwap</span>  </td><td class="markdownTableBodyNone">Whether pressing swaps the tint colour or swaps the sprite outright. Colour is cheaper; separate sprites let the shape change.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">normalColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">0xFFFFFFFF</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">transition</span> allows  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">normalColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#FFFFFFFF"</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">transition</span> allows  </td><td class="markdownTableBodyNone">Tint while the button is idle.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">hoveredColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">0xC8C8C8FF</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">transition</span> allows  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">hoveredColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#C8C8C8FF"</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">transition</span> allows  </td><td class="markdownTableBodyNone">Tint while the pointer is over it. On a touch-only device this is rarely seen.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">pressedColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">0xA0A0A0FF</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">transition</span> allows  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">pressedColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#A0A0A0FF"</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">transition</span> allows  </td><td class="markdownTableBodyNone">Tint while it is held down. This is the feedback that tells someone the press registered.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">disabledColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">0x80808080</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">transition</span> allows  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">disabledColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#80808080"</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">transition</span> allows  </td><td class="markdownTableBodyNone">Tint while the button is disabled. Usually faded or desaturated.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">normalSprite</span>  </td><td class="markdownTableBodyNone">AssetRef (Sprite)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">transition</span> allows  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">normalSprite</span>  </td><td class="markdownTableBodyNone">AssetRef (Sprite)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">transition</span> allows  </td><td class="markdownTableBodyNone">Sprite while idle, in sprite-swap mode.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">hoveredSprite</span>  </td><td class="markdownTableBodyNone">AssetRef (Sprite)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">transition</span> allows  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">hoveredSprite</span>  </td><td class="markdownTableBodyNone">AssetRef (Sprite)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">transition</span> allows  </td><td class="markdownTableBodyNone">Sprite while hovered, in sprite-swap mode.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">pressedSprite</span>  </td><td class="markdownTableBodyNone">AssetRef (Sprite)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">transition</span> allows  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">pressedSprite</span>  </td><td class="markdownTableBodyNone">AssetRef (Sprite)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">transition</span> allows  </td><td class="markdownTableBodyNone">Sprite while held, in sprite-swap mode.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">disabledSprite</span>  </td><td class="markdownTableBodyNone">AssetRef (Sprite)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">transition</span> allows  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">disabledSprite</span>  </td><td class="markdownTableBodyNone">AssetRef (Sprite)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">transition</span> allows  </td><td class="markdownTableBodyNone">Sprite while disabled, in sprite-swap mode.  </td></tr>
 </table>
 <h2 class="doxsection"><a class="anchor" id="c-clipcomponent"></a>
 ClipComponent</h2>
 <p>Clips its children's rendering to a rectangle.</p>
-<p>Inspector name: Clip Component · Category: Core · Type: <span class="tt">ClipComponent</span></p>
+<p>Inspector name: Clip Component · Category: Core · Type: <span class="tt">Deki2D::ClipComponent</span></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th></tr>
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.25</span>  </td><td class="markdownTableBodyNone">in m  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.25</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Width of the clipping window in meters. Children are cut off at this edge.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.25</span>  </td><td class="markdownTableBodyNone">in m  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.25</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Height of the clipping window in meters.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">sortingOrder</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">sortingOrder</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Draw order of the clipped group as a whole against everything outside it.  </td></tr>
 </table>
 <h2 class="doxsection"><a class="anchor" id="c-gradientcomponent"></a>
 GradientComponent</h2>
 <p>Draws a procedural gradient: linear, radial or conical.</p>
-<p>Inspector name: Gradient Component · Category: 2D · Type: <span class="tt">GradientComponent</span></p>
+<p>Inspector name: Gradient Component · Category: 2D · Type: <span class="tt">Deki2D::GradientComponent</span></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th></tr>
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">gradientType</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">Linear</span>  </td><td class="markdownTableBodyNone"><span class="tt">Linear</span>, <span class="tt">Radial</span>, <span class="tt">Conical</span>  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">gradientType</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Linear"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Linear</span>, <span class="tt">Radial</span>, <span class="tt">Conical</span>  </td><td class="markdownTableBodyNone">Linear runs the colours along the angle below. Radial runs them out from the centre point.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">tileMode</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">None</span>  </td><td class="markdownTableBodyNone"><span class="tt">None</span>, <span class="tt">Horizontal</span>, <span class="tt">Vertical</span>, <span class="tt">Both</span>, <span class="tt">Mirror</span>  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">tileMode</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"None"</span>  </td><td class="markdownTableBodyNone"><span class="tt">None</span>, <span class="tt">Horizontal</span>, <span class="tt">Vertical</span>, <span class="tt">Both</span>, <span class="tt">Mirror</span>  </td><td class="markdownTableBodyNone">What happens past the last stop: hold the end colour, repeat the ramp, or mirror it back.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">ditherMode</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">Ordered4x4</span>  </td><td class="markdownTableBodyNone"><span class="tt">None</span>, <span class="tt">Ordered2x2</span>, <span class="tt">Ordered4x4</span>, <span class="tt">Ordered8x8</span>, <span class="tt">Ordered16x16</span>  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">ditherMode</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Ordered4x4"</span>  </td><td class="markdownTableBodyNone"><span class="tt">None</span>, <span class="tt">Ordered2x2</span>, <span class="tt">Ordered4x4</span>, <span class="tt">Ordered8x8</span>, <span class="tt">Ordered16x16</span>  </td><td class="markdownTableBodyNone">Dithering hides the banding a smooth ramp shows on a 16-bit display, by trading it for a fine speckle.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">ditherScale</span>  </td><td class="markdownTableBodyNone">uint8  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">ditherScale</span>  </td><td class="markdownTableBodyNone">uint8  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">How strong the speckle is. Raise it until the bands disappear, then stop: past that it is just noise.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Width of the gradient in meters.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Height of the gradient in meters.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">angle</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in rad  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">angle</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in rad  </td><td class="markdownTableBodyNone">Direction a linear gradient runs, in radians. 0 runs left to right.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">centerX</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.5</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">centerX</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.5</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Centre of a radial gradient across the width, 0 to 1. 0.5 is the middle.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">centerY</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.5</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">centerY</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.5</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Centre of a radial gradient down the height, 0 to 1.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">radius</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.5</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">radius</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.5</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">How far a radial gradient reaches before the last stop, relative to the size.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">stopCount</span>  </td><td class="markdownTableBodyNone">uint8  </td><td class="markdownTableBodyNone"><span class="tt">2</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">stopCount</span>  </td><td class="markdownTableBodyNone">uint8  </td><td class="markdownTableBodyNone"><span class="tt">2</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">How many of the four colour stops are used. The rest are ignored.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">stop1Position</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">stop1Position</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Where the first stop sits along the ramp, 0 to 1.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">stop1Color</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">0xFFFFFFFF</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">stop1Color</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#FFFFFFFF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Colour at the first stop.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">stop2Position</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">stopCount</span> allows  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">stop2Position</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">stopCount</span> allows  </td><td class="markdownTableBodyNone">Where the second stop sits along the ramp, 0 to 1.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">stop2Color</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">0x000000FF</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">stopCount</span> allows  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">stop2Color</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#000000FF"</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">stopCount</span> allows  </td><td class="markdownTableBodyNone">Colour at the second stop.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">stop3Position</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">stopCount</span> allows  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">stop3Position</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">stopCount</span> allows  </td><td class="markdownTableBodyNone">Where the third stop sits, 0 to 1. Used when the stop count is 3 or more.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">stop3Color</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">0x000000FF</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">stopCount</span> allows  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">stop3Color</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#000000FF"</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">stopCount</span> allows  </td><td class="markdownTableBodyNone">Colour at the third stop.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">stop4Position</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">stopCount</span> allows  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">stop4Position</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">stopCount</span> allows  </td><td class="markdownTableBodyNone">Where the fourth stop sits, 0 to 1. Used when the stop count is 4.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">stop4Color</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">0x000000FF</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">stopCount</span> allows  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">stop4Color</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#000000FF"</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">stopCount</span> allows  </td><td class="markdownTableBodyNone">Colour at the fourth stop.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">tileWidth</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">tileWidth</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Width of one repeat when the tile mode repeats or mirrors.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">tileHeight</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">tileHeight</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Height of one repeat when the tile mode repeats or mirrors.  </td></tr>
 </table>
 <p>Inherits <span class="tt">sortingOrder</span>, <span class="tt">ignoreClip</span>, <span class="tt">pixelSnap</span>, <span class="tt">alphaMode</span> from <a href="https://dekiengine.github.io/docs/engine-core.html#engine-renderercomponent">RendererComponent</a>.</p>
 <h2 class="doxsection"><a class="anchor" id="c-rollercomponent"></a>
 RollerComponent</h2>
 <p>Picker wheel: spins through a list of values with momentum and snaps to one.</p>
-<p>Inspector name: Roller Component · Category: 2D · Type: <span class="tt">RollerComponent</span></p>
+<p>Inspector name: Roller Component · Category: 2D · Type: <span class="tt">Deki2D::RollerComponent</span></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th></tr>
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The hit area that catches the drag. Without one the roller cannot be spun.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.25</span>  </td><td class="markdownTableBodyNone">in m  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.25</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Width of the roller in meters.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">itemHeight</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.875</span>  </td><td class="markdownTableBodyNone">in m  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">itemHeight</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.875</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Height of one unselected row, in meters.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">visibleRows</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">3</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">visibleRows</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">3</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">How many rows are shown at once, including the selected one. Odd numbers centre the selection.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">infiniteScroll</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">infiniteScroll</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Wrap around from the last option to the first, so the roller spins without ends.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">reverseDrag</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">reverseDrag</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Invert the drag direction.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">options</span>  </td><td class="markdownTableBodyNone">Array&lt;string&gt;  </td><td class="markdownTableBodyNone"><span class="tt">[]</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">options</span>  </td><td class="markdownTableBodyNone">Array&lt;string&gt;  </td><td class="markdownTableBodyNone"><span class="tt">[]</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The list of choices, in order.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">selectedIndex</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">selectedIndex</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Which option is currently chosen, counting from 0.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">deceleration</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.95</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">deceleration</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.95</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">How quickly a flick slows down. Higher settles sooner.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">snapSpeed</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">8</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">snapSpeed</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">8</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">How fast the roller settles onto the nearest option once it has slowed. Higher snaps harder.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">selectedItemHeight</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">2.5</span>  </td><td class="markdownTableBodyNone">in m  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">selectedItemHeight</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">2.5</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Height of the selected row, in meters. Making it taller than the others is what marks the selection.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">selectedColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">0xFFFFFFFF</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">selectedColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#FFFFFFFF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Text colour of the selected row.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">normalColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">0x808080FF</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">normalColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#808080FF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Text colour of the rows either side.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">selectedFontSize</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">24</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">selectedFontSize</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">24</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Editor preview size for the selected row. The device draws at the font asset's baked size.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">normalFontSize</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">16</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">normalFontSize</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">16</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Editor preview size for the unselected rows.  </td></tr>
 </table>
 <h2 class="doxsection"><a class="anchor" id="c-scrollcomponent"></a>
 ScrollComponent</h2>
 <p>Scrolls its children by dragging, with momentum.</p>
-<p>Inspector name: Scroll Component · Category: 2D · Type: <span class="tt">ScrollComponent</span></p>
+<p>Inspector name: Scroll Component · Category: 2D · Type: <span class="tt">Deki2D::ScrollComponent</span></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th></tr>
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The hit area that catches the drag. Without one nothing can scroll it.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">mode</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">NonTemplate</span>  </td><td class="markdownTableBodyNone"><span class="tt">NonTemplate</span>, <span class="tt">Template</span>  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">mode</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"NonTemplate"</span>  </td><td class="markdownTableBodyNone"><span class="tt">NonTemplate</span>, <span class="tt">Template</span>  </td><td class="markdownTableBodyNone">Whether items come from the children already present or are spawned from the scene below as they are needed.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">itemScene</span>  </td><td class="markdownTableBodyNone">AssetRef (Scene)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">mode</span> allows  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">itemScene</span>  </td><td class="markdownTableBodyNone">AssetRef (Scene)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">mode</span> allows  </td><td class="markdownTableBodyNone">Scene spawned once per item, in the spawning mode. Each copy is filled in as it scrolls into view.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">direction</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">Vertical</span>  </td><td class="markdownTableBodyNone"><span class="tt">Vertical</span>, <span class="tt">Horizontal</span>  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">direction</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Vertical"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Vertical</span>, <span class="tt">Horizontal</span>  </td><td class="markdownTableBodyNone">Vertical or horizontal travel.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">itemSpacing</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">itemSpacing</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Gap between items in meters.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">paddingTop</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">paddingTop</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Empty space before the first item, in meters.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">paddingBottom</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">paddingBottom</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Empty space after the last item, in meters.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">paddingLeft</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">paddingLeft</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Empty space at the left edge, in meters.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">paddingRight</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">paddingRight</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Empty space at the right edge, in meters.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">deceleration</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.95</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">deceleration</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.95</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">How quickly a flick slows down. Higher stops sooner; lower keeps gliding.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">bounceStiffness</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.15</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">bounceStiffness</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.15</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">How hard the list springs back after being dragged past its end. Higher snaps back faster.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">enableBounce</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">enableBounce</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Let the list be dragged past its end and spring back. Off, it stops dead at the edge.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">enableInertia</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">enableInertia</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Keep moving after the finger lifts. Off, the list stops the moment the drag ends.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">reverseDrag</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">reverseDrag</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Invert the drag direction, so content follows the finger the other way.  </td></tr>
 </table>
 <h2 class="doxsection"><a class="anchor" id="c-scrollelement"></a>
 ScrollElement</h2>
 <p>Declares one list item's size so its Scroll Component can lay the list out.</p>
-<p>Inspector name: Scroll Element · Category: 2D · Type: <span class="tt">ScrollElement</span></p>
+<p>Inspector name: Scroll Element · Category: 2D · Type: <span class="tt">Deki2D::ScrollElement</span></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th></tr>
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.25</span>  </td><td class="markdownTableBodyNone">in m  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.25</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Width of one item in meters. The scroll uses it to work out spacing and how far it can travel.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">3.75</span>  </td><td class="markdownTableBodyNone">in m  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">3.75</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Height of one item in meters.  </td></tr>
 </table>
 <h2 class="doxsection"><a class="anchor" id="c-sortinggroupcomponent"></a>
 SortingGroupComponent</h2>
 <p>Makes its children sort together as one unit against the rest of the scene.</p>
-<p>Inspector name: Sorting Group Component · Category: 2D · Type: <span class="tt">SortingGroupComponent</span></p>
+<p>Inspector name: Sorting Group Component · Category: 2D · Type: <span class="tt">Deki2D::SortingGroupComponent</span></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th></tr>
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Description  </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">sortingOrder</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">sortingOrder</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">Draw order for this object's whole subtree, treated as one unit. Children keep their order relative to each other but the group moves together, which stops one child sorting between another group's children.  </td></tr>
 </table>
 <h2 class="doxsection"><a class="anchor" id="c-spritecomponent"></a>
 SpriteComponent</h2>
 <p>Draws a sprite, with tint, flip, and tiled or 9-slice modes.</p>
-<p>Inspector name: Sprite Component · Category: 2D · Type: <span class="tt">SpriteComponent</span></p>
+<p>Inspector name: Sprite Component · Category: 2D · Type: <span class="tt">Deki2D::SpriteComponent</span></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th></tr>
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">sprite</span>  </td><td class="markdownTableBodyNone">AssetRef (Sprite)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">sprite</span>  </td><td class="markdownTableBodyNone">AssetRef (Sprite)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The image to draw. Sprites come from a texture asset, either whole or cut out of a spritesheet.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">tintColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">0xFFFFFFFF</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">tintColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#FFFFFFFF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Multiplied into every pixel. White leaves the image alone; darker tints shade it, and the alpha fades it out.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">renderMode</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">Normal</span>  </td><td class="markdownTableBodyNone"><span class="tt">Normal</span>, <span class="tt">Tiled</span>, <span class="tt">NineSlice</span>  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">renderMode</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Normal"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Normal</span>, <span class="tt">Tiled</span>, <span class="tt">NineSlice</span>  </td><td class="markdownTableBodyNone">Normal draws the sprite once. Tiled repeats it to fill the size below. Nine-slice stretches the middle and leaves the corners intact, which is what you want for panels and buttons.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">flipHorizontal</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">flipHorizontal</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Mirror left to right. Cheaper than a second sprite and the usual way to face a character the other way.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">flipVertical</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">flipVertical</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Mirror top to bottom.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m; shown when <span class="tt">renderMode</span> allows  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m; shown when <span class="tt">renderMode</span> allows  </td><td class="markdownTableBodyNone">Drawn size in meters. Left at 0 the sprite's own pixel size is used, converted through the project's pixels-per-meter.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m; shown when <span class="tt">renderMode</span> allows  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m; shown when <span class="tt">renderMode</span> allows  </td><td class="markdownTableBodyNone">Drawn size in meters. Left at 0 the sprite's own pixel size is used, converted through the project's pixels-per-meter.  </td></tr>
 </table>
 <p>Inherits <span class="tt">sortingOrder</span>, <span class="tt">ignoreClip</span>, <span class="tt">pixelSnap</span>, <span class="tt">alphaMode</span> from <a href="https://dekiengine.github.io/docs/engine-core.html#engine-renderercomponent">RendererComponent</a>.</p>
 <h2 class="doxsection"><a class="anchor" id="c-textcomponent"></a>
 TextComponent</h2>
 <p>Draws text with a bitmap font, alignment and word wrap.</p>
-<p>Inspector name: Text Component · Category: 2D · Type: <span class="tt">TextComponent</span></p>
+<p>Inspector name: Text Component · Category: 2D · Type: <span class="tt">Deki2D::TextComponent</span></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th></tr>
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">text</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">text</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The string to draw. Newlines start a new line; the box below does not wrap it for you.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">font</span>  </td><td class="markdownTableBodyNone">AssetRef (BitmapFont)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">font</span>  </td><td class="markdownTableBodyNone">AssetRef (BitmapFont)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">A bitmap font asset. Fonts are baked to a fixed size, so pick one close to the size you want rather than scaling far from it.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">fontSize</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">16</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">fontSize</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">16</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Size used for the editor preview only. What the device draws is the size the font asset was baked at.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.25</span>  </td><td class="markdownTableBodyNone">in m  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.25</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Width of the text box in meters. Alignment is measured against this, so it matters even when the text is shorter.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.5</span>  </td><td class="markdownTableBodyNone">in m  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.5</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Height of the text box in meters. Vertical alignment is measured against this.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">color</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">0xFFFFFFFF</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">color</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#FFFFFFFF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Colour of the glyphs.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">decorationColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">0x000000FF</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">decorationColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#000000FF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Colour of the outline or shadow, when the font asset was baked with one. Ignored by a plain font.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">pixelScale</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone"><span class="tt">pixelScale</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Whole-number magnification. 2 draws every glyph pixel as a 2x2 block, which keeps a pixel font crisp instead of blurring it.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">align</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">Left</span>  </td><td class="markdownTableBodyNone"><span class="tt">Left</span>, <span class="tt">Center</span>, <span class="tt">Right</span>  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">align</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Left"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Left</span>, <span class="tt">Center</span>, <span class="tt">Right</span>  </td><td class="markdownTableBodyNone">Horizontal placement inside the width above.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">verticalAlign</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">CapCenter</span>  </td><td class="markdownTableBodyNone"><span class="tt">Top</span>, <span class="tt">Middle</span>, <span class="tt">Bottom</span>, <span class="tt">CapCenter</span>, <span class="tt">XCenter</span>, <span class="tt">TypoCenter</span>, <span class="tt">Baseline</span>  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">verticalAlign</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"CapCenter"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Top</span>, <span class="tt">Middle</span>, <span class="tt">Bottom</span>, <span class="tt">CapCenter</span>, <span class="tt">XCenter</span>, <span class="tt">TypoCenter</span>, <span class="tt">Baseline</span>  </td><td class="markdownTableBodyNone">Vertical placement inside the height above. Cap-centre lines up the capital letters, which usually looks centred to the eye; true centre includes descenders.  </td></tr>
 </table>
 <p>Inherits <span class="tt">sortingOrder</span>, <span class="tt">ignoreClip</span>, <span class="tt">pixelSnap</span>, <span class="tt">alphaMode</span> from <a href="https://dekiengine.github.io/docs/engine-core.html#engine-renderercomponent">RendererComponent</a>.</p>
 <h1 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
 Changelog</h1>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
-0.15.0</h2>
+0.16.0</h2>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
+Changed</h2>
+<ul>
+<li><b>Moved into the <span class="tt">Deki2D</span> namespace.</b> Every component was declared at global scope, which made its identity a bare class name — the name a scene file stores and the name the registry keys on — so two packages defining one name collided there with nothing to tell them apart. Each component carries <span class="tt">DEKI_FORMER_NAME</span> with the name it was saved under before, so existing scenes load unchanged and are written back qualified on the next save. Code naming these types needs the namespace: <span class="tt">using namespace Deki2D;</span> or a qualified name.</li>
+<li>Enum properties are stored by name rather than by number, so appending to an enum or reordering one no longer changes what a saved scene means. Files written before this still read.</li>
+<li><span class="tt">minEngine</span> 0.16.0. Reflection ABI 17: the package must be rebuilt.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md6"></a>
+0.15.0</h2>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md7"></a>
 Changed</h2>
 <ul>
 <li>Allocations name their region explicitly. Every <span class="tt">Deki::Buffer</span> and <span class="tt">Memory::Allocate</span> here passes <span class="tt">Deki::Memory::Internal</span> or <span class="tt">Deki::Memory::External</span>; the old <span class="tt">MemoryUse</span> enum, its <span class="tt">Auto</span> placement and the <span class="tt">Hot</span>/<span class="tt">Buffer</span> labels are gone.</li>
 <li>Every allocation goes through the engine's memory system. <span class="tt">new[]</span>, <span class="tt">malloc</span> and the hand-unwound cleanup paths are replaced by owning buffers, so a sprite, a bitmap font or a baked gradient releases itself rather than depending on an error branch remembering to.</li>
 <li>Blit sources are built from a named <span class="tt">PixelLayout</span> instead of positional booleans, and <span class="tt">Texture2D</span> comes from the engine core rather than this package.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md6"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md8"></a>
 Fixed</h2>
 <ul>
 <li>A gradient that will not fit no longer reboots the board. The allocation fails and is reported; it used to reach <span class="tt">new[]</span>, which aborts on ESP-IDF because exceptions are off.</li>
@@ -434,7 +468,7 @@ Fixed</h2>
 </ul>
 <p>Earlier releases: <a href="https://github.com/dekiengine/deki-2d/blob/master/CHANGELOG.md">CHANGELOG.md</a>.</p>
 <hr  />
-<p>Generated from this package's reflection metadata (engine 0.15.0). Property names are the keys scene files use, and a rename ships with an alias (<a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">compatibility</a>). </p>
+<p>Generated from this package's reflection metadata (engine 0.16.0). Property names are the keys scene files use, and a rename ships with an alias (<a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">compatibility</a>). </p>
 </div></div><!-- PageDoc -->
 <a href="doxygen_crawl.html"></a>
 </div><!-- contents -->
