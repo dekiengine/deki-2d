@@ -8,6 +8,12 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
+## Unreleased
+
+### Changed
+- The button's editor reads the input collider's padding fields directly;
+  `InputCollider::GetBounds()` is gone from deki-input.
+
 ## 0.16.0
 
 ### Changed

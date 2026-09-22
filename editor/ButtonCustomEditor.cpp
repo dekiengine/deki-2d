@@ -56,15 +56,14 @@ public:
         if (!collider)
             return false;
 
-        Deki2D::Bounds2D bounds = collider->GetBounds();
         float halfW = width * 0.5f;
         float halfH = height * 0.5f;
 
         // Expand hit area by padding
-        float left = -halfW - bounds.paddingLeft;
-        float right = halfW + bounds.paddingRight;
-        float top = -halfH - bounds.paddingTop;
-        float bottom = halfH + bounds.paddingBottom;
+        float left = -halfW - collider->paddingLeft;
+        float right = halfW + collider->paddingRight;
+        float top = -halfH - collider->paddingTop;
+        float bottom = halfH + collider->paddingBottom;
 
         return (localX >= left && localX <= right && localY >= top && localY <= bottom);
     }
