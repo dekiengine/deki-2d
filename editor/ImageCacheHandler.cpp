@@ -1,11 +1,17 @@
 /**
  * @file ImageCacheHandler.cpp
- * @brief Cache handler for source images (.png/.jpg/.jpeg/.bmp/.tga/.gif).
+ * @brief Cache handler and export encoder for source images
+ *        (.png/.jpg/.jpeg/.bmp/.tga/.gif).
  *
  * Migrated from AssetPipeline.cpp::HandleImageCache so the engine has no
  * built-in knowledge of sprite-source extensions or sprite-settings shape.
  * deki-editor.dll exposes DecodeImageFile() — a thin wrapper over stb_image —
  * so this handler doesn't carry its own image-decode dependency.
+ *
+ * One compile serves both: the editor cache is the image stored for the
+ * editor's target (the project's active platform), and an export for another
+ * target runs the same compile for that one. Which format each gets is
+ * ResolveTextureFormat's answer (TextureFormatResolve.h).
  *
  * Registration happens via a static initializer that hooks AssetPipeline::OnStarted.
  * On package unload, ClearOnStartedCallbacks() drops the std::function before
@@ -18,6 +24,7 @@
 #include <deki-editor/AssetTypeRegistry.h>
 #include <deki-editor/TextureImporter.h>
 #include <deki-editor/TextureData.h>
+#include <deki-editor/TextureFormatResolve.h>
 #include <deki-editor/SubAsset.h>
 #include <deki/LogSystem.h>
 #include <nlohmann/json.hpp>
@@ -36,313 +43,245 @@ namespace DekiEditor
 namespace
 {
 
+// Everything an image's sidecar (<image>.data) says about how it is stored.
+struct ImageSidecar
+{
+    bool exists = false;
+    json data;                     // the whole file, for the staleness checks
+    SpriteSettings sprite;
+    ChromaKeySettings chromaKey;
+    std::string format;            // settings.texture.format ("" or "Automatic" = Automatic)
+    json targets = json::object();  // settings.texture.targets: platform id -> format
+
+    std::string FormatFor(const std::string& platformId) const
+    {
+        if (!platformId.empty() && targets.contains(platformId) && targets[platformId].is_string())
+            return targets[platformId].get<std::string>();
+        return {};
+    }
+};
+
+ImageSidecar ReadImageSidecar(const std::string& imagePath)
+{
+    ImageSidecar out;
+    const std::string dataPath = imagePath + ".data";
+    if (!fs::exists(dataPath))
+        return out;
+    std::ifstream dataFile(dataPath);
+    if (!dataFile.is_open())
+        return out;
+    try
+    {
+        out.data = json::parse(dataFile);
+        out.exists = true;
+    }
+    catch (const json::exception& e)
+    {
+        DEKI_LOG_WARNING("ImageCache: JSON parse error in %s: %s", dataPath.c_str(), e.what());
+        return out;
+    }
+    const json& d = out.data;
+
+    if (d.contains("settings") && d["settings"].contains("sprite"))
+    {
+        const auto& sprite = d["settings"]["sprite"];
+        const std::string modeStr = sprite.value("mode", "grid");
+        if (modeStr == "atlas")
+        {
+            out.sprite.mode = SpriteSlicingMode::Atlas;
+            if (sprite.contains("frames") && sprite["frames"].is_array())
+            {
+                for (const auto& frameJson : sprite["frames"])
+                {
+                    AtlasFrame frame;
+                    frame.x = frameJson.value("x", 0);
+                    frame.y = frameJson.value("y", 0);
+                    frame.width = frameJson.value("width", 0);
+                    frame.height = frameJson.value("height", 0);
+                    frame.name = frameJson.value("name", "");
+                    out.sprite.frames.push_back(frame);
+                }
+            }
+        }
+        else if (sprite.contains("frameWidth") || sprite.contains("frameHeight"))
+        {
+            out.sprite.mode = SpriteSlicingMode::Grid;
+            out.sprite.frameWidth = sprite.value("frameWidth", 0);
+            out.sprite.frameHeight = sprite.value("frameHeight", 0);
+        }
+    }
+    else if (d.contains("sprite"))
+    {
+        const auto& sprite = d["sprite"];
+        out.sprite.mode = SpriteSlicingMode::Grid;
+        out.sprite.frameWidth = sprite.value("frameWidth", 0);
+        out.sprite.frameHeight = sprite.value("frameHeight", 0);
+    }
+
+    // Optional 9-slice borders: "nine_slice": [top, right, bottom, left]
+    const json* nineSliceNode = nullptr;
+    if (d.contains("settings") && d["settings"].contains("nine_slice"))
+        nineSliceNode = &d["settings"]["nine_slice"];
+    else if (d.contains("nine_slice"))
+        nineSliceNode = &d["nine_slice"];
+    if (nineSliceNode && nineSliceNode->is_array() && nineSliceNode->size() >= 4)
+    {
+        out.sprite.hasNineSlice = true;
+        out.sprite.nineSliceTop = static_cast<uint16_t>((*nineSliceNode)[0].get<int>());
+        out.sprite.nineSliceRight = static_cast<uint16_t>((*nineSliceNode)[1].get<int>());
+        out.sprite.nineSliceBottom = static_cast<uint16_t>((*nineSliceNode)[2].get<int>());
+        out.sprite.nineSliceLeft = static_cast<uint16_t>((*nineSliceNode)[3].get<int>());
+    }
+
+    if (d.contains("settings") && d["settings"].contains("texture"))
+    {
+        const auto& tex = d["settings"]["texture"];
+        out.format = tex.value("format", std::string());
+        if (tex.contains("targets") && tex["targets"].is_object())
+            out.targets = tex["targets"];
+        if (tex.contains("chroma_key"))
+        {
+            const auto& ck = tex["chroma_key"];
+            out.chromaKey.enabled = ck.value("enabled", false);
+            out.chromaKey.r = static_cast<uint8_t>(ck.value("r", 255));
+            out.chromaKey.g = static_cast<uint8_t>(ck.value("g", 0));
+            out.chromaKey.b = static_cast<uint8_t>(ck.value("b", 255));
+        }
+    }
+    return out;
+}
+
+/// The cached file's format and whether its source had alpha, from its header.
+bool ReadCachedFormat(const std::string& cachePath, TextureFormat& format, bool& hasAlpha)
+{
+    std::ifstream f(cachePath, std::ios::binary);
+    TexHeader header{};
+    if (!f.read(reinterpret_cast<char*>(&header), sizeof(header)))
+        return false;
+    format = static_cast<TextureFormat>(header.format);
+    hasAlpha = (header.flags & static_cast<uint32_t>(TexFlags::HasAlpha)) != 0;
+    return true;
+}
+
+/// Decode the image and write it as `target` stores it. Registers the sprite
+/// frames with `pipeline` when given (the editor cache); an export passes null.
+bool CompileImage(const std::string& imagePath, const std::string& guid, const ImageSidecar& sidecar,
+                  const AssetExportTarget& target, const std::string& outPath, AssetPipeline* pipeline)
+{
+    DecodedImage decoded;
+    if (!DecodeImageFile(imagePath, decoded))
+        return false;
+
+    const size_t pixelCount = static_cast<size_t>(decoded.width) * static_cast<size_t>(decoded.height);
+    const bool hasAlpha = TextureImporter::HasAlphaChannel(decoded.rgba.data(), pixelCount);
+    const TextureFormat format = ResolveTextureFormat(sidecar.format, sidecar.FormatFor(target.platformId),
+                                                      target.colorFormat, hasAlpha);
+
+    std::vector<SubAssetInfo> subAssets;
+    if (sidecar.sprite.HasData())
+    {
+        subAssets = TextureImporter::GenerateFrameSubAssets(guid, decoded.width, decoded.height, sidecar.sprite);
+        if (pipeline)
+            pipeline->RegisterSubAssets(guid, subAssets);
+    }
+
+    const SpriteSettings* settingsPtr = sidecar.sprite.HasData() ? &sidecar.sprite : nullptr;
+    const std::vector<SubAssetInfo>* subAssetsPtr = subAssets.empty() ? nullptr : &subAssets;
+    const ChromaKeySettings* chromaPtr = sidecar.chromaKey.enabled ? &sidecar.chromaKey : nullptr;
+    return TextureImporter::WriteTexFile(outPath, decoded.rgba.data(), static_cast<uint32_t>(decoded.width),
+                                         static_cast<uint32_t>(decoded.height), format, settingsPtr, subAssetsPtr,
+                                         chromaPtr);
+}
+
+/// Whether the sidecar changed after the cache was written, in a way that
+/// changes the cache.
+bool SidecarNewerThanCache(const ImageSidecar& sidecar, const std::string& imagePath, const std::string& cachePath)
+{
+    if (!sidecar.exists)
+        return false;
+    const std::string dataPath = imagePath + ".data";
+    std::error_code ec;
+    const auto dataTime = fs::last_write_time(dataPath, ec);
+    const auto cacheTime = fs::last_write_time(cachePath, ec);
+    return !ec && dataTime > cacheTime;
+}
+
 AssetCacheResult HandleSpriteImageCache(const AssetCacheContext& ctx)
 {
     bool result = ctx.hasCachedVersion;
+    const ImageSidecar sidecar = ReadImageSidecar(ctx.absolutePath);
+    const AssetExportTarget& editorTarget = ctx.pipeline->GetEditorTarget();
 
     // Check for staleness if cache exists
     if (result)
     {
-        std::string dataPath = ctx.absolutePath + ".data";
-        if (fs::exists(dataPath))
+        bool needsRegen = false;
+        if (sidecar.sprite.HasData() && !TextureImporter::HasFrameListChunk(ctx.cachePath))
         {
-            std::ifstream dataFile(dataPath);
-            if (dataFile.is_open())
+            DEKI_LOG_EDITOR("ImageCache: Cache missing FrameList for %s, regenerating", ctx.relativePath.c_str());
+            needsRegen = true;
+        }
+        else if (SidecarNewerThanCache(sidecar, ctx.absolutePath, ctx.cachePath))
+        {
+            DEKI_LOG_EDITOR("ImageCache: Settings newer than cache for %s, regenerating", ctx.relativePath.c_str());
+            needsRegen = true;
+        }
+        else
+        {
+            // Stored for another target (the active platform changed, or the
+            // image predates Automatic): store it for this one.
+            TextureFormat cachedFormat;
+            bool cachedHasAlpha = false;
+            if (ReadCachedFormat(ctx.cachePath, cachedFormat, cachedHasAlpha))
             {
-                try
+                const TextureFormat wanted =
+                    ResolveTextureFormat(sidecar.format, sidecar.FormatFor(editorTarget.platformId),
+                                         editorTarget.colorFormat, cachedHasAlpha);
+                if (wanted != cachedFormat)
                 {
-                    json dataJson = json::parse(dataFile);
-                    bool hasFrameSettings = false;
-
-                    if (dataJson.contains("settings") && dataJson["settings"].contains("sprite"))
-                    {
-                        auto& sprite = dataJson["settings"]["sprite"];
-                        std::string modeStr = sprite.value("mode", "grid");
-                        if (modeStr == "atlas" && sprite.contains("frames") && sprite["frames"].is_array())
-                            hasFrameSettings = !sprite["frames"].empty();
-                        else if (sprite.contains("frameWidth") || sprite.contains("frameHeight"))
-                            hasFrameSettings = sprite.value("frameWidth", 0) > 0 || sprite.value("frameHeight", 0) > 0;
-                    }
-                    else if (dataJson.contains("sprite"))
-                    {
-                        auto& sprite = dataJson["sprite"];
-                        hasFrameSettings = sprite.value("frameWidth", 0) > 0 || sprite.value("frameHeight", 0) > 0;
-                    }
-
-                    bool needsRegen = false;
-                    if (hasFrameSettings && !TextureImporter::HasFrameListChunk(ctx.cachePath))
-                    {
-                        DEKI_LOG_EDITOR("ImageCache: Cache missing FrameList for %s, regenerating", ctx.relativePath.c_str());
-                        needsRegen = true;
-                    }
-                    else if (hasFrameSettings)
-                    {
-                        auto dataTime = fs::last_write_time(dataPath);
-                        auto cacheTime = fs::last_write_time(ctx.cachePath);
-                        if (dataTime > cacheTime)
-                        {
-                            DEKI_LOG_EDITOR("ImageCache: Data file newer than cache for %s, regenerating", ctx.relativePath.c_str());
-                            needsRegen = true;
-                        }
-                    }
-
-                    if (!needsRegen && dataJson.contains("settings") && dataJson["settings"].contains("texture"))
-                    {
-                        auto dataTime = fs::last_write_time(dataPath);
-                        auto cacheTime = fs::last_write_time(ctx.cachePath);
-                        if (dataTime > cacheTime)
-                        {
-                            DEKI_LOG_EDITOR("ImageCache: Texture settings newer than cache for %s, regenerating", ctx.relativePath.c_str());
-                            needsRegen = true;
-                        }
-                    }
-
-                    bool hasNineSliceSettings =
-                        (dataJson.contains("settings") && dataJson["settings"].contains("nine_slice")) ||
-                        dataJson.contains("nine_slice");
-                    if (!needsRegen && hasNineSliceSettings)
-                    {
-                        auto dataTime = fs::last_write_time(dataPath);
-                        auto cacheTime = fs::last_write_time(ctx.cachePath);
-                        if (dataTime > cacheTime)
-                        {
-                            DEKI_LOG_EDITOR("ImageCache: 9-slice settings newer than cache for %s, regenerating", ctx.relativePath.c_str());
-                            needsRegen = true;
-                        }
-                    }
-
-                    if (needsRegen)
-                    {
-                        fs::remove(ctx.cachePath);
-                        result = false;
-                    }
+                    DEKI_LOG_EDITOR("ImageCache: %s is %s, the editor's target wants %s; regenerating",
+                                    ctx.relativePath.c_str(), TextureFormatName(cachedFormat),
+                                    TextureFormatName(wanted));
+                    needsRegen = true;
                 }
-                catch (const json::exception&) {}
             }
+        }
+
+        if (needsRegen)
+        {
+            fs::remove(ctx.cachePath);
+            result = false;
         }
     }
 
     // Generate cache if not cached
     if (!result)
-    {
-        DecodedImage decoded;
-        if (DecodeImageFile(ctx.absolutePath, decoded))
-        {
-            int width = decoded.width;
-            int height = decoded.height;
-
-            size_t pixelCount = static_cast<size_t>(width) * static_cast<size_t>(height);
-            bool hasAlpha = TextureImporter::HasAlphaChannel(decoded.rgba.data(), pixelCount);
-
-            SpriteSettings spriteSettings;
-            ChromaKeySettings chromaKey;  // populated from .data sidecar below if present
-            TextureFormat textureFormat = hasAlpha ? TextureFormat::RGB565A8
-                                                   : TextureFormat::RGB565;
-            std::string dataPath = ctx.absolutePath + ".data";
-            if (fs::exists(dataPath))
-            {
-                std::ifstream dataFile(dataPath);
-                if (dataFile.is_open())
-                {
-                    try
-                    {
-                        json dataJson = json::parse(dataFile);
-                        if (dataJson.contains("settings") && dataJson["settings"].contains("sprite"))
-                        {
-                            auto& sprite = dataJson["settings"]["sprite"];
-                            std::string modeStr = sprite.value("mode", "grid");
-                            if (modeStr == "atlas")
-                            {
-                                spriteSettings.mode = SpriteSlicingMode::Atlas;
-                                if (sprite.contains("frames") && sprite["frames"].is_array())
-                                {
-                                    for (const auto& frameJson : sprite["frames"])
-                                    {
-                                        AtlasFrame frame;
-                                        frame.x = frameJson.value("x", 0);
-                                        frame.y = frameJson.value("y", 0);
-                                        frame.width = frameJson.value("width", 0);
-                                        frame.height = frameJson.value("height", 0);
-                                        frame.name = frameJson.value("name", "");
-                                        spriteSettings.frames.push_back(frame);
-                                    }
-                                }
-                            }
-                            else if (sprite.contains("frameWidth") || sprite.contains("frameHeight"))
-                            {
-                                spriteSettings.mode = SpriteSlicingMode::Grid;
-                                spriteSettings.frameWidth = sprite.value("frameWidth", 0);
-                                spriteSettings.frameHeight = sprite.value("frameHeight", 0);
-                            }
-                        }
-                        else if (dataJson.contains("sprite"))
-                        {
-                            auto& sprite = dataJson["sprite"];
-                            spriteSettings.mode = SpriteSlicingMode::Grid;
-                            spriteSettings.frameWidth = sprite.value("frameWidth", 0);
-                            spriteSettings.frameHeight = sprite.value("frameHeight", 0);
-                        }
-
-                        // Optional 9-slice borders: "nine_slice": [top, right, bottom, left]
-                        const json* nineSliceNode = nullptr;
-                        if (dataJson.contains("settings") && dataJson["settings"].contains("nine_slice"))
-                            nineSliceNode = &dataJson["settings"]["nine_slice"];
-                        else if (dataJson.contains("nine_slice"))
-                            nineSliceNode = &dataJson["nine_slice"];
-                        if (nineSliceNode && nineSliceNode->is_array() && nineSliceNode->size() >= 4)
-                        {
-                            spriteSettings.hasNineSlice    = true;
-                            spriteSettings.nineSliceTop    = static_cast<uint16_t>((*nineSliceNode)[0].get<int>());
-                            spriteSettings.nineSliceRight  = static_cast<uint16_t>((*nineSliceNode)[1].get<int>());
-                            spriteSettings.nineSliceBottom = static_cast<uint16_t>((*nineSliceNode)[2].get<int>());
-                            spriteSettings.nineSliceLeft   = static_cast<uint16_t>((*nineSliceNode)[3].get<int>());
-                        }
-
-                        if (dataJson.contains("settings") && dataJson["settings"].contains("texture"))
-                        {
-                            std::string fmtStr = dataJson["settings"]["texture"].value("format", "RGB565A8");
-                            if (fmtStr == "RGB888") textureFormat = TextureFormat::RGB888;
-                            else if (fmtStr == "RGBA8888") textureFormat = TextureFormat::RGBA8888;
-                            else if (fmtStr == "RGB565") textureFormat = TextureFormat::RGB565;
-                            else if (fmtStr == "RGB565A8") textureFormat = TextureFormat::RGB565A8;
-                            else if (fmtStr == "ALPHA8") textureFormat = TextureFormat::ALPHA8;
-                        }
-
-                        if (dataJson.contains("settings") &&
-                            dataJson["settings"].contains("texture") &&
-                            dataJson["settings"]["texture"].contains("chroma_key"))
-                        {
-                            auto& ck = dataJson["settings"]["texture"]["chroma_key"];
-                            chromaKey.enabled = ck.value("enabled", false);
-                            chromaKey.r = static_cast<uint8_t>(ck.value("r", 255));
-                            chromaKey.g = static_cast<uint8_t>(ck.value("g", 0));
-                            chromaKey.b = static_cast<uint8_t>(ck.value("b", 255));
-                        }
-                    }
-                    catch (const json::exception&) {}
-                }
-            }
-
-            std::vector<SubAssetInfo> subAssets;
-            if (spriteSettings.HasData())
-            {
-                subAssets = TextureImporter::GenerateFrameSubAssets(
-                    ctx.guid, width, height, spriteSettings);
-                ctx.pipeline->RegisterSubAssets(ctx.guid, subAssets);
-            }
-
-            const SpriteSettings* settingsPtr = spriteSettings.HasData() ? &spriteSettings : nullptr;
-            const std::vector<SubAssetInfo>* subAssetsPtr = subAssets.empty() ? nullptr : &subAssets;
-            const ChromaKeySettings* chromaPtr = chromaKey.enabled ? &chromaKey : nullptr;
-            if (TextureImporter::WriteTexFile(ctx.cachePath, decoded.rgba.data(),
-                                              static_cast<uint32_t>(width),
-                                              static_cast<uint32_t>(height),
-                                              textureFormat, settingsPtr, subAssetsPtr,
-                                              chromaPtr))
-            {
-                result = true;
-            }
-        }
-    }
+        result = CompileImage(ctx.absolutePath, ctx.guid, sidecar, editorTarget, ctx.cachePath, ctx.pipeline);
 
     // Always register sub-assets for cached images (warm-cache path)
-    if (result)
+    if (result && sidecar.sprite.HasData())
     {
-        DEKI_LOG_EDITOR("ImageCache: Checking subassets for '%s' (guid=%s)",
-                      ctx.relativePath.c_str(), ctx.guid.c_str());
-
-        SpriteSettings spriteSettings;
-        std::string dataPath = ctx.absolutePath + ".data";
-        if (fs::exists(dataPath))
+        TexData texData;
+        if (TextureImporter::ReadTexFile(ctx.cachePath, texData) && texData.isValid())
         {
-            DEKI_LOG_EDITOR("ImageCache: Found .data file at '%s'", dataPath.c_str());
-            std::ifstream dataFile(dataPath);
-            if (dataFile.is_open())
-            {
-                try
-                {
-                    json dataJson = json::parse(dataFile);
-                    if (dataJson.contains("settings") && dataJson["settings"].contains("sprite"))
-                    {
-                        auto& sprite = dataJson["settings"]["sprite"];
-                        std::string modeStr = sprite.value("mode", "grid");
-                        DEKI_LOG_EDITOR("ImageCache: Sprite mode='%s'", modeStr.c_str());
-                        if (modeStr == "atlas")
-                        {
-                            spriteSettings.mode = SpriteSlicingMode::Atlas;
-                            if (sprite.contains("frames") && sprite["frames"].is_array())
-                            {
-                                for (const auto& frameJson : sprite["frames"])
-                                {
-                                    AtlasFrame frame;
-                                    frame.x = frameJson.value("x", 0);
-                                    frame.y = frameJson.value("y", 0);
-                                    frame.width = frameJson.value("width", 0);
-                                    frame.height = frameJson.value("height", 0);
-                                    frame.name = frameJson.value("name", "");
-                                    spriteSettings.frames.push_back(frame);
-                                }
-                                DEKI_LOG_EDITOR("ImageCache: Atlas mode with %zu frames", spriteSettings.frames.size());
-                            }
-                        }
-                        else if (sprite.contains("frameWidth") || sprite.contains("frameHeight"))
-                        {
-                            spriteSettings.mode = SpriteSlicingMode::Grid;
-                            spriteSettings.frameWidth = sprite.value("frameWidth", 0);
-                            spriteSettings.frameHeight = sprite.value("frameHeight", 0);
-                            DEKI_LOG_EDITOR("ImageCache: Grid mode with frameWidth=%d, frameHeight=%d",
-                                          spriteSettings.frameWidth, spriteSettings.frameHeight);
-                        }
-                    }
-                    else if (dataJson.contains("sprite"))
-                    {
-                        auto& sprite = dataJson["sprite"];
-                        spriteSettings.mode = SpriteSlicingMode::Grid;
-                        spriteSettings.frameWidth = sprite.value("frameWidth", 0);
-                        spriteSettings.frameHeight = sprite.value("frameHeight", 0);
-                        DEKI_LOG_EDITOR("ImageCache: Legacy grid mode with frameWidth=%d, frameHeight=%d",
-                                      spriteSettings.frameWidth, spriteSettings.frameHeight);
-                    }
-                    else
-                    {
-                        DEKI_LOG_EDITOR("ImageCache: No sprite settings in .data file");
-                    }
-                }
-                catch (const json::exception& e)
-                {
-                    DEKI_LOG_WARNING("ImageCache: JSON parse error in .data file: %s", e.what());
-                }
-            }
+            auto subAssets = TextureImporter::GenerateFrameSubAssets(
+                ctx.guid, texData.header.width, texData.header.height, sidecar.sprite);
+            DEKI_LOG_EDITOR("ImageCache: Registering %zu subassets for '%s'", subAssets.size(), ctx.guid.c_str());
+            ctx.pipeline->RegisterSubAssets(ctx.guid, subAssets);
         }
         else
         {
-            DEKI_LOG_EDITOR("ImageCache: No .data file found");
-        }
-
-        if (spriteSettings.HasData())
-        {
-            DEKI_LOG_EDITOR("ImageCache: Generating subassets for '%s'", ctx.relativePath.c_str());
-            TexData texData;
-            if (TextureImporter::ReadTexFile(ctx.cachePath, texData) && texData.isValid())
-            {
-                auto subAssets = TextureImporter::GenerateFrameSubAssets(
-                    ctx.guid, texData.header.width, texData.header.height, spriteSettings);
-                DEKI_LOG_EDITOR("ImageCache: Registering %zu subassets for '%s'",
-                              subAssets.size(), ctx.guid.c_str());
-                ctx.pipeline->RegisterSubAssets(ctx.guid, subAssets);
-            }
-            else
-            {
-                DEKI_LOG_WARNING("ImageCache: Failed to read cached texture '%s'", ctx.cachePath.c_str());
-            }
-        }
-        else
-        {
-            DEKI_LOG_EDITOR("ImageCache: No frame settings, skipping subasset generation");
+            DEKI_LOG_WARNING("ImageCache: Failed to read cached texture '%s'", ctx.cachePath.c_str());
         }
     }
 
     return result ? AssetCacheResult::Cached : AssetCacheResult::NotCached;
+}
+
+bool EncodeImageForTarget(const AssetExportContext& ctx)
+{
+    const ImageSidecar sidecar = ReadImageSidecar(ctx.absolutePath);
+    return CompileImage(ctx.absolutePath, ctx.guid, sidecar, ctx.target, ctx.outPath, nullptr);
 }
 
 struct ImageCacheRegistrar
@@ -351,7 +290,10 @@ struct ImageCacheRegistrar
     {
         AssetPipeline::OnStarted([](AssetPipeline* p) {
             for (const char* ext : {".png", ".jpg", ".jpeg", ".bmp", ".tga", ".gif"})
+            {
                 p->RegisterCacheHandler(ext, HandleSpriteImageCache);
+                p->RegisterExportEncoder(ext, EncodeImageForTarget);
+            }
         });
         // Claim the Texture category for raster image extensions so the
         // editor's UI classification (icons, browser grouping, file dialogs)

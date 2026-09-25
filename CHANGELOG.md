@@ -11,6 +11,9 @@ alongside one that has them.
 ## Unreleased
 
 ### Changed
+- An image's Format may be Automatic (the default) and set per target
+  (`settings.texture.targets`); its cache follows the editor's active
+  platform, and an export for another target re-encodes it for that one.
 - The button's editor reads the input collider's padding fields directly;
   `InputCollider::GetBounds()` is gone from deki-input.
 
