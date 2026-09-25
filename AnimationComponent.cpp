@@ -1,4 +1,5 @@
 #include "AnimationComponent.h"
+#include <deki/assets/AssetManager.h>
 #include "FrameAnimationMsgPack.h"
 #include "Sprite.h"
 #include <deki/LogSystem.h>
@@ -300,7 +301,8 @@ void AnimationComponent::ApplyCurrentFrame()
         return;
     }
 
-    if (m_ResolvedSprite != sprite || m_ResolvedData != animationData)
+    const uint64_t epoch = Deki::AssetManager::Get() ? Deki::AssetManager::Get()->GetEpoch() : 0;
+    if (m_ResolvedSprite != sprite || m_ResolvedData != animationData || m_ResolvedEpoch != epoch)
         ResolveFrames(sprite);
 
     const SpriteFrame* spriteFrame = nullptr;
@@ -315,7 +317,7 @@ void AnimationComponent::ApplyCurrentFrame()
         return;
     }
 
-    spriteComponent->SetFrameRect(spriteFrame->x, spriteFrame->y, spriteFrame->width, spriteFrame->height);
+    spriteComponent->SetFrame(*spriteFrame);
 }
 
 void AnimationComponent::ResolveFrames(const Sprite* sprite)
@@ -323,6 +325,7 @@ void AnimationComponent::ResolveFrames(const Sprite* sprite)
     m_ResolvedFrames.clear();
     m_ResolvedSprite = sprite;
     m_ResolvedData = animationData;
+    m_ResolvedEpoch = Deki::AssetManager::Get() ? Deki::AssetManager::Get()->GetEpoch() : 0;
     if (!sprite || !animationData)
         return;
 

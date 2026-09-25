@@ -119,6 +119,14 @@ public:
      */
     void SetFrameRect(int32_t x, int32_t y, int32_t w, int32_t h);
 
+    /**
+     * @brief Show one of the sprite's frames. Unlike SetFrameRect the frame
+     * is remembered by its GUID, so when the sprite is reloaded (a reimport:
+     * new frames, a different Max Size) the rect is looked up again rather
+     * than kept in the old texture's pixels.
+     */
+    void SetFrame(const SpriteFrame& frame);
+
     // Unified rendering - returns sprite data for QuadBlit
     bool RenderContent(const Deki::Object* owner,
                        QuadBlit::Source& outSource,
@@ -151,6 +159,13 @@ private:
     Deki::Buffer<uint8_t> m_cachedRenderBuffer;
     int32_t          m_cachedRenderW      = 0;
     int32_t          m_cachedRenderH      = 0;
+    // The frame SetFrame showed, by GUID ("" after SetFrameRect), and the
+    // asset epoch its rect was read at; RenderContent re-reads it when the
+    // epoch has moved.
+    char m_FrameGuid[37] = {};
+    uint64_t m_FrameEpoch = 0;
+    void RefreshFrame(const Sprite* spr);
+
     const Sprite*    m_cachedRenderSrc    = nullptr;
     SpriteRenderMode m_cachedRenderMode   = SpriteRenderMode::Normal;
 };

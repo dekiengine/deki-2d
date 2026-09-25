@@ -6,8 +6,10 @@
 #include "deki-rendering/CameraComponent.h"
 #include <deki/profiling/Profiler.h>
 #include <deki/LogSystem.h>
+#include <deki/assets/AssetManager.h>
 
 #include <cstddef>
+#include <cstring>
 #include <algorithm>
 #include <cmath>
 
@@ -86,6 +88,35 @@ void SpriteComponent::SetFrameRect(int32_t x, int32_t y, int32_t w, int32_t h)
     frameY = y;
     frameWidth = w;
     frameHeight = h;
+    m_FrameGuid[0] = '\0';  // a bare rect: nothing to look up again
+}
+
+void SpriteComponent::SetFrame(const SpriteFrame& frame)
+{
+    frameX = frame.x;
+    frameY = frame.y;
+    frameWidth = frame.width;
+    frameHeight = frame.height;
+    std::memcpy(m_FrameGuid, frame.guid, sizeof(m_FrameGuid));
+    m_FrameGuid[sizeof(m_FrameGuid) - 1] = '\0';
+    m_FrameEpoch = Deki::AssetManager::Get() ? Deki::AssetManager::Get()->GetEpoch() : 0;
+}
+
+void SpriteComponent::RefreshFrame(const Sprite* spr)
+{
+    if (m_FrameGuid[0] == '\0' || !spr)
+        return;
+    const uint64_t epoch = Deki::AssetManager::Get() ? Deki::AssetManager::Get()->GetEpoch() : 0;
+    if (epoch == m_FrameEpoch)
+        return;
+    m_FrameEpoch = epoch;
+    if (const SpriteFrame* frame = spr->FindFrame(m_FrameGuid))
+    {
+        frameX = frame->x;
+        frameY = frame->y;
+        frameWidth = frame->width;
+        frameHeight = frame->height;
+    }
 }
 
 void SpriteComponent::OnAssetRefResolved(const char* propertyName, void* asset, const char* guid)
@@ -102,12 +133,7 @@ void SpriteComponent::OnAssetRefResolved(const char* propertyName, void* asset, 
     // Sprites without frames (e.g. procedural assets) are normal - no warning needed
     const SpriteFrame* frame = spr->FindFrame(guid);
     if (frame)
-    {
-        frameX = frame->x;
-        frameY = frame->y;
-        frameWidth = frame->width;
-        frameHeight = frame->height;
-    }
+        SetFrame(*frame);
 }
 
 // NOTE: Lifecycle methods (LoadAssets, UnloadAssets) are no longer needed
@@ -151,8 +177,9 @@ bool SpriteComponent::GetContentExtents(float& outWidth, float& outHeight) const
         return false;
     if (renderMode == SpriteRenderMode::Tiled || renderMode == SpriteRenderMode::NineSlice)
     {
-        // The bake is width x height meters (0 = the sprite's native size).
-        const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
+        // The bake is width x height meters (0 = the sprite's native size), in
+        // the sprite's stored pixels (fewer when Max Size shrank it).
+        const float ppm = Deki::EngineSettings::Global().pixelsPerMeter * spr->sourceScale;
         outWidth = (width > 0.0f) ? width : static_cast<float>(spr->width) / (ppm > 0.0f ? ppm : 1.0f);
         outHeight = (height > 0.0f) ? height : static_cast<float>(spr->height) / (ppm > 0.0f ? ppm : 1.0f);
         return true;
@@ -192,6 +219,7 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
     Sprite* spr = sprite.Get();
     if (!spr || !spr->data)
         return false;
+    RefreshFrame(spr);
 
     // Output tint color
     outTintR = tintColor.r;
@@ -210,8 +238,9 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
     // frameWidth=0 convention elsewhere in this component).
     if (renderMode == SpriteRenderMode::Tiled || renderMode == SpriteRenderMode::NineSlice)
     {
-        // width/height are world meters; pixel-baking math runs in source pixels.
-        const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
+        // width/height are world meters; pixel-baking math runs in the
+        // sprite's stored pixels (fewer when Max Size shrank it).
+        const float ppm = Deki::EngineSettings::Global().pixelsPerMeter * spr->sourceScale;
         int32_t target_w = (width  > 0.0f) ? static_cast<int32_t>(width  * ppm) : spr->width;
         int32_t target_h = (height > 0.0f) ? static_cast<int32_t>(height * ppm) : spr->height;
 

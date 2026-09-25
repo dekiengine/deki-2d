@@ -11,7 +11,8 @@
  * One compile serves both: the editor cache is the image stored for the
  * editor's target (the project's active platform), and an export for another
  * target runs the same compile for that one. Which format each gets is
- * ResolveTextureFormat's answer (TextureFormatResolve.h).
+ * ResolveTextureFormat's answer (TextureFormatResolve.h); how big, the
+ * target's Max Size (TextureSettings.h).
  *
  * Registration happens via a static initializer that hooks AssetPipeline::OnStarted.
  * On package unload, ClearOnStartedCallbacks() drops the std::function before
@@ -25,6 +26,7 @@
 #include <deki-editor/TextureImporter.h>
 #include <deki-editor/TextureData.h>
 #include <deki-editor/TextureFormatResolve.h>
+#include <deki-editor/TextureSettings.h>
 #include <deki-editor/SubAsset.h>
 #include <deki/LogSystem.h>
 #include <nlohmann/json.hpp>
@@ -32,6 +34,8 @@
 #include <fstream>
 #include <vector>
 #include <string>
+
+#include "ImageResample.h"
 
 
 namespace fs = std::filesystem;
@@ -50,15 +54,7 @@ struct ImageSidecar
     json data;                     // the whole file, for the staleness checks
     SpriteSettings sprite;
     ChromaKeySettings chromaKey;
-    std::string format;            // settings.texture.format ("" or "Automatic" = Automatic)
-    json targets = json::object();  // settings.texture.targets: platform id -> format
-
-    std::string FormatFor(const std::string& platformId) const
-    {
-        if (!platformId.empty() && targets.contains(platformId) && targets[platformId].is_string())
-            return targets[platformId].get<std::string>();
-        return {};
-    }
+    TextureSettings texture;  // settings.texture: format and Max Size, per target
 };
 
 ImageSidecar ReadImageSidecar(const std::string& imagePath)
@@ -136,9 +132,7 @@ ImageSidecar ReadImageSidecar(const std::string& imagePath)
     if (d.contains("settings") && d["settings"].contains("texture"))
     {
         const auto& tex = d["settings"]["texture"];
-        out.format = tex.value("format", std::string());
-        if (tex.contains("targets") && tex["targets"].is_object())
-            out.targets = tex["targets"];
+        out.texture = ReadTextureSettings(tex);
         if (tex.contains("chroma_key"))
         {
             const auto& ck = tex["chroma_key"];
@@ -163,8 +157,38 @@ bool ReadCachedFormat(const std::string& cachePath, TextureFormat& format, bool&
     return true;
 }
 
-/// Decode the image and write it as `target` stores it. Registers the sprite
-/// frames with `pipeline` when given (the editor cache); an export passes null.
+/// The parts of the image that must not bleed into each other when it is
+/// shrunk: its sprite frames, and the nine parts of a nine-slice image.
+std::vector<Deki2DEditor::PixelRect> ShrinkRegions(const SpriteSettings& sprite, int w, int h)
+{
+    std::vector<Deki2DEditor::PixelRect> out;
+    if (sprite.mode == SpriteSlicingMode::Atlas)
+    {
+        for (const AtlasFrame& f : sprite.frames)
+            out.push_back({ f.x, f.y, f.x + f.width, f.y + f.height });
+    }
+    else if (sprite.mode == SpriteSlicingMode::Grid && (sprite.frameWidth > 0 || sprite.frameHeight > 0))
+    {
+        const int fw = sprite.frameWidth > 0 ? sprite.frameWidth : w;
+        const int fh = sprite.frameHeight > 0 ? sprite.frameHeight : h;
+        for (int y = 0; y + fh <= h; y += fh)
+            for (int x = 0; x + fw <= w; x += fw)
+                out.push_back({ x, y, x + fw, y + fh });
+    }
+    if (sprite.hasNineSlice)
+    {
+        const int xs[4] = { 0, sprite.nineSliceLeft, w - sprite.nineSliceRight, w };
+        const int ys[4] = { 0, sprite.nineSliceTop, h - sprite.nineSliceBottom, h };
+        for (int j = 0; j < 3; ++j)
+            for (int i = 0; i < 3; ++i)
+                out.push_back({ xs[i], ys[j], xs[i + 1], ys[j + 1] });
+    }
+    return out;
+}
+
+/// Decode the image and write it as `target` stores it: its format, and
+/// shrunk to the target's Max Size. Registers the sprite frames with
+/// `pipeline` when given (the editor cache); an export passes null.
 bool CompileImage(const std::string& imagePath, const std::string& guid, const ImageSidecar& sidecar,
                   const AssetExportTarget& target, const std::string& outPath, AssetPipeline* pipeline)
 {
@@ -174,8 +198,24 @@ bool CompileImage(const std::string& imagePath, const std::string& guid, const I
 
     const size_t pixelCount = static_cast<size_t>(decoded.width) * static_cast<size_t>(decoded.height);
     const bool hasAlpha = TextureImporter::HasAlphaChannel(decoded.rgba.data(), pixelCount);
-    const TextureFormat format = ResolveTextureFormat(sidecar.format, sidecar.FormatFor(target.platformId),
+    const TextureFormat format = ResolveTextureFormat(sidecar.texture.format,
+                                                      sidecar.texture.TargetFormat(target.platformId),
                                                       target.colorFormat, hasAlpha);
+
+    // Max Size. Frames, nine-slice borders and the frame list stay in the
+    // image's pixels; the file records the image's size and the runtime maps
+    // them to the stored ones.
+    int storedW = decoded.width, storedH = decoded.height;
+    MaxSizeDims(decoded.width, decoded.height, sidecar.texture.MaxSizeFor(target.platformId), storedW, storedH);
+    std::vector<uint8_t> shrunk;
+    const uint8_t* pixels = decoded.rgba.data();
+    if (storedW != decoded.width || storedH != decoded.height)
+    {
+        shrunk = Deki2DEditor::ShrinkImage(decoded.rgba.data(), decoded.width, decoded.height, storedW, storedH,
+                                           ShrinkRegions(sidecar.sprite, decoded.width, decoded.height),
+                                           sidecar.chromaKey.enabled);
+        pixels = shrunk.data();
+    }
 
     std::vector<SubAssetInfo> subAssets;
     if (sidecar.sprite.HasData())
@@ -188,9 +228,9 @@ bool CompileImage(const std::string& imagePath, const std::string& guid, const I
     const SpriteSettings* settingsPtr = sidecar.sprite.HasData() ? &sidecar.sprite : nullptr;
     const std::vector<SubAssetInfo>* subAssetsPtr = subAssets.empty() ? nullptr : &subAssets;
     const ChromaKeySettings* chromaPtr = sidecar.chromaKey.enabled ? &sidecar.chromaKey : nullptr;
-    return TextureImporter::WriteTexFile(outPath, decoded.rgba.data(), static_cast<uint32_t>(decoded.width),
-                                         static_cast<uint32_t>(decoded.height), format, settingsPtr, subAssetsPtr,
-                                         chromaPtr);
+    return TextureImporter::WriteTexFile(outPath, pixels, static_cast<uint32_t>(storedW), static_cast<uint32_t>(storedH),
+                                         format, settingsPtr, subAssetsPtr, chromaPtr,
+                                         static_cast<uint32_t>(decoded.width), static_cast<uint32_t>(decoded.height));
 }
 
 /// Whether the sidecar changed after the cache was written, in a way that
@@ -235,13 +275,28 @@ AssetCacheResult HandleSpriteImageCache(const AssetCacheContext& ctx)
             if (ReadCachedFormat(ctx.cachePath, cachedFormat, cachedHasAlpha))
             {
                 const TextureFormat wanted =
-                    ResolveTextureFormat(sidecar.format, sidecar.FormatFor(editorTarget.platformId),
+                    ResolveTextureFormat(sidecar.texture.format, sidecar.texture.TargetFormat(editorTarget.platformId),
                                          editorTarget.colorFormat, cachedHasAlpha);
                 if (wanted != cachedFormat)
                 {
                     DEKI_LOG_EDITOR("ImageCache: %s is %s, the editor's target wants %s; regenerating",
                                     ctx.relativePath.c_str(), TextureFormatName(cachedFormat),
                                     TextureFormatName(wanted));
+                    needsRegen = true;
+                }
+            }
+            // ... and at that target's Max Size.
+            TexData cached;
+            int sourceW = 0, sourceH = 0;
+            if (!needsRegen && TextureImporter::ReadTexFile(ctx.cachePath, cached) &&
+                TextureImporter::ReadSourceSize(ctx.cachePath, sourceW, sourceH))
+            {
+                int wantW = 0, wantH = 0;
+                MaxSizeDims(sourceW, sourceH, sidecar.texture.MaxSizeFor(editorTarget.platformId), wantW, wantH);
+                if (static_cast<int>(cached.header.width) != wantW || static_cast<int>(cached.header.height) != wantH)
+                {
+                    DEKI_LOG_EDITOR("ImageCache: %s is stored at %ux%u, the editor's target wants %dx%d; regenerating",
+                                    ctx.relativePath.c_str(), cached.header.width, cached.header.height, wantW, wantH);
                     needsRegen = true;
                 }
             }
@@ -258,14 +313,14 @@ AssetCacheResult HandleSpriteImageCache(const AssetCacheContext& ctx)
     if (!result)
         result = CompileImage(ctx.absolutePath, ctx.guid, sidecar, editorTarget, ctx.cachePath, ctx.pipeline);
 
-    // Always register sub-assets for cached images (warm-cache path)
+    // Always register sub-assets for cached images (warm-cache path). In the
+    // image's pixels, which a shrunk cache records.
     if (result && sidecar.sprite.HasData())
     {
-        TexData texData;
-        if (TextureImporter::ReadTexFile(ctx.cachePath, texData) && texData.isValid())
+        int sourceW = 0, sourceH = 0;
+        if (TextureImporter::ReadSourceSize(ctx.cachePath, sourceW, sourceH))
         {
-            auto subAssets = TextureImporter::GenerateFrameSubAssets(
-                ctx.guid, texData.header.width, texData.header.height, sidecar.sprite);
+            auto subAssets = TextureImporter::GenerateFrameSubAssets(ctx.guid, sourceW, sourceH, sidecar.sprite);
             DEKI_LOG_EDITOR("ImageCache: Registering %zu subassets for '%s'", subAssets.size(), ctx.guid.c_str());
             ctx.pipeline->RegisterSubAssets(ctx.guid, subAssets);
         }

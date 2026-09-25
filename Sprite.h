@@ -86,6 +86,31 @@ class Sprite : public Deki::Texture2D
     // Each frame has its own GUID for sub-asset addressing
     std::vector<SpriteFrame> frames;
 
+    // The image's size when the texture was stored smaller than it (Max
+    // Size), 0 otherwise. The file's frames and nine-slice borders are in the
+    // image's pixels; the loader has already brought them, and
+    // pixelsPerMeter, to the stored pixels, so the sprite is the same size in
+    // the world. Anything else that addresses the image in its own pixels (a
+    // tileset) maps them with SourceToStoredX/Y.
+    int32_t sourceWidth;
+    int32_t sourceHeight;
+    // Stored pixels per image pixel: width / sourceWidth, 1 when not shrunk.
+    float sourceScale;
+
+    /// An image-pixel coordinate (a rect edge) in stored pixels.
+    int32_t SourceToStoredX(int32_t v) const { return SourceToStored(v, sourceWidth, width); }
+    int32_t SourceToStoredY(int32_t v) const { return SourceToStored(v, sourceHeight, height); }
+
+    /// round(v * stored / source): the rule the editor's encoder resamples
+    /// frames with (DekiEditor::SourceToStored), so the two agree.
+    static int32_t SourceToStored(int32_t v, int32_t sourceSize, int32_t storedSize)
+    {
+        if (sourceSize <= 0 || sourceSize == storedSize)
+            return v;
+        return static_cast<int32_t>((static_cast<int64_t>(v) * storedSize * 2 + sourceSize) /
+                                    (2 * static_cast<int64_t>(sourceSize)));
+    }
+
     Sprite();
     virtual ~Sprite();
 
@@ -110,6 +135,14 @@ class Sprite : public Deki::Texture2D
      * @return Loaded sprite or nullptr on failure
      */
     static Sprite* LoadFromFileData(const uint8_t* data, size_t size);
+
+    /**
+     * @brief Bring a texture stored smaller than its image to its stored
+     * pixels: frames, the default frame size, nine-slice borders and
+     * pixelsPerMeter. The loaders call it with the SourceSize chunk; nothing
+     * happens when the size is the stored one.
+     */
+    void ApplySourceSize(int32_t imageWidth, int32_t imageHeight);
 
     /**
      * @brief Creates a solid color sprite

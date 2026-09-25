@@ -357,23 +357,22 @@ void SpritesheetEditorWindow::DrawTexturePreview()
 
 void SpritesheetEditorWindow::LoadTextureData()
 {
-    if (m_TextureCachePath.empty())
+    if (m_TexturePath.empty())
         return;
 
-    // Read cached texture
-    TexData texData;
-    if (!TextureImporter::ReadTexFile(m_TextureCachePath, texData) || !texData.isValid())
+    // The original image, not the cache: frames are authored in the image's
+    // own pixels, and a cache shrunk by Max Size has fewer of them.
+    DecodedImage decoded;
+    if (!DecodeImageFile(m_TexturePath, decoded))
     {
-        m_StatusMessage = "Failed to load texture cache";
+        m_StatusMessage = "Failed to load the image";
         m_StatusIsError = true;
         return;
     }
 
-    m_TextureWidth = texData.header.width;
-    m_TextureHeight = texData.header.height;
-
-    // Convert to RGBA for OpenGL
-    std::vector<uint8_t> rgba = TextureImporter::ConvertToRGBA(texData);
+    m_TextureWidth = decoded.width;
+    m_TextureHeight = decoded.height;
+    const std::vector<uint8_t>& rgba = decoded.rgba;
 
     // Copy to member buffer
     if (m_TextureData)

@@ -10,6 +10,26 @@ alongside one that has them.
 
 ## Unreleased
 
+### Fixed
+- A sprite showing a frame kept the frame's old rect after its image was
+  reimported (new frames, another Max Size), drawing the wrong part of the new
+  texture until the scene reloaded. `SpriteComponent::SetFrame` remembers the
+  frame by GUID and looks it up again when assets reload; the animation's
+  resolved frames are keyed on the asset epoch as well as the sprite.
+
+### Added
+- **Max Size.** Images are stored at their target's Max Size (the texture
+  inspector's Targets table): scaled so the larger side is exactly Max Size,
+  each sprite frame and nine-slice part resampled on its own so none bleeds
+  into another, chroma-keyed images by picking pixels. The file records the
+  image's size (SourceSize chunk); `Sprite::ApplySourceSize` brings frames,
+  nine-slice borders and `pixelsPerMeter` to the stored pixels at load, so a
+  sprite keeps its size in the world. `sourceWidth/Height`, `sourceScale` and
+  `SourceToStoredX/Y` are on `Sprite`. Tiled and nine-slice sprites bake in
+  the stored pixels.
+- The Spritesheet editor works on the original image, not the editor cache,
+  so frames are authored in the image's own pixels whatever the Max Size.
+
 ### Changed
 - An image's Format may be Automatic (the default) and set per target
   (`settings.texture.targets`); its cache follows the editor's active

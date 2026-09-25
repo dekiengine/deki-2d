@@ -61,6 +61,43 @@ void Sprite::SetDefaultSpriteProperties()
     // Spritesheet defaults
     defaultFrameWidth = 0;
     defaultFrameHeight = 0;
+
+    sourceWidth = 0;
+    sourceHeight = 0;
+    sourceScale = 1.0f;
+}
+
+void Sprite::ApplySourceSize(int32_t imageWidth, int32_t imageHeight)
+{
+    if (imageWidth <= 0 || imageHeight <= 0 || (imageWidth == width && imageHeight == height))
+        return;
+    sourceWidth = imageWidth;
+    sourceHeight = imageHeight;
+    sourceScale = static_cast<float>(width) / static_cast<float>(imageWidth);
+
+    // Rect edges, not sizes, so frames that touch in the image still touch.
+    for (SpriteFrame& f : frames)
+    {
+        const int32_t x0 = SourceToStoredX(f.x), x1 = SourceToStoredX(f.x + f.width);
+        const int32_t y0 = SourceToStoredY(f.y), y1 = SourceToStoredY(f.y + f.height);
+        f.x = x0;
+        f.y = y0;
+        f.width = x1 > x0 ? x1 - x0 : 1;
+        f.height = y1 > y0 ? y1 - y0 : 1;
+    }
+    if (defaultFrameWidth > 0)
+        defaultFrameWidth = SourceToStoredX(defaultFrameWidth) > 0 ? SourceToStoredX(defaultFrameWidth) : 1;
+    if (defaultFrameHeight > 0)
+        defaultFrameHeight = SourceToStoredY(defaultFrameHeight) > 0 ? SourceToStoredY(defaultFrameHeight) : 1;
+    if (hasNineSlice)
+    {
+        nineSliceLeft = static_cast<uint16_t>(SourceToStoredX(nineSliceLeft));
+        nineSliceRight = static_cast<uint16_t>(width - SourceToStoredX(imageWidth - nineSliceRight));
+        nineSliceTop = static_cast<uint16_t>(SourceToStoredY(nineSliceTop));
+        nineSliceBottom = static_cast<uint16_t>(height - SourceToStoredY(imageHeight - nineSliceBottom));
+    }
+    // Fewer pixels for the same meters.
+    pixelsPerMeter *= sourceScale;
 }
 
 // Loading functions - same for simulator and editor
@@ -187,6 +224,7 @@ Sprite* Sprite::Load(const char* file_path)
         uint32_t offset = 0;
         uint32_t num_chunks = *(uint32_t*)(metadata + offset);
         offset += sizeof(uint32_t);
+        int32_t imageWidth = 0, imageHeight = 0;  // SourceSize chunk, applied after the rest
 
         for (uint32_t i = 0; i < num_chunks && offset + 8 <= header.metadataSize; ++i)
         {
@@ -286,9 +324,15 @@ Sprite* Sprite::Load(const char* file_path)
                 DEKI_LOG_INTERNAL("  Chroma key: enabled=%d rgb=(%u,%u,%u) spans=%u",
                                   (int)enabled, p[1], p[2], p[3], spansCount);
             }
+            else if (chunk_type == 4 && chunk_size >= 8)  // Source size (Max Size)
+            {
+                imageWidth = *(int32_t*)(metadata + offset);
+                imageHeight = *(int32_t*)(metadata + offset + sizeof(int32_t));
+            }
             // Skip to next chunk
             offset += chunk_size;
         }
+        sprite->ApplySourceSize(imageWidth, imageHeight);
 
         Deki::Memory::Free(metadata);
     }
@@ -413,6 +457,7 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
         {
             uint32_t num_chunks = *(uint32_t*)(metadata + offset);
             offset += sizeof(uint32_t);
+            int32_t imageWidth = 0, imageHeight = 0;  // SourceSize chunk, applied after the rest
 
             for (uint32_t i = 0; i < num_chunks && offset + 8 <= header.metadataSize; ++i)
             {
@@ -491,8 +536,14 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
                                              (unsigned)spansCount);
                     }
                 }
+                else if (chunk_type == 4 && chunk_size >= 8)  // Source size (Max Size)
+                {
+                    imageWidth = *(int32_t*)(metadata + offset);
+                    imageHeight = *(int32_t*)(metadata + offset + sizeof(int32_t));
+                }
                 offset += chunk_size;
             }
+            sprite->ApplySourceSize(imageWidth, imageHeight);
         }
     }
 

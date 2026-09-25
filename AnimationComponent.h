@@ -47,6 +47,10 @@ public:
     std::vector<std::vector<const SpriteFrame*>> m_ResolvedFrames;
     const Sprite* m_ResolvedSprite = nullptr;
     const FrameAnimationData* m_ResolvedData = nullptr;
+    // The asset manager's epoch at resolve time. A reimported sprite can come
+    // back at the same address with new frames, which the pointers above
+    // cannot tell apart; the epoch moves on every reimport.
+    uint64_t m_ResolvedEpoch = 0;
     void ResolveFrames(const Sprite* sprite);
     DEKI_EXPORT
     DEKI_TOOLTIP("Whether the animation is advancing. Clearing this freezes it on the current frame rather than resetting it.")
