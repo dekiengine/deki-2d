@@ -11,6 +11,12 @@ alongside one that has them.
 ## Unreleased
 
 ### Fixed
+- A dithered gradient drawn at a fractional scale (a design area fitted to a
+  screen that is not a whole multiple of it, e.g. 1280x720 art on a 480x320
+  screen) showed seams: it was baked on the art grid and then scaled, which
+  repeats or drops pixels unevenly. It is now baked at the density the view
+  draws it at, 1:1 on the screen, with the dither laid out in whole screen
+  pixels. At a whole-number scale the pixels are the same as before.
 - A sprite showing a frame kept the frame's old rect after its image was
   reimported (new frames, another Max Size), drawing the wrong part of the new
   texture until the scene reloaded. `SpriteComponent::SetFrame` remembers the

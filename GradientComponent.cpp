@@ -405,15 +405,17 @@ void GradientComponent::RenderPixel(
     buffer16[y * screen_width + x] = color;
 }
 
-void GradientComponent::RenderToBuffer(uint8_t* buffer)
+void GradientComponent::RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t outH, int32_t artW, int32_t artH,
+                                       int32_t ditherCell)
 {
     if (!buffer || stopCount == 0) return;
 
-    // width/height are world meters; rasterization runs in pixels.
+    // width/height are world meters; the layout runs on the art grid.
     const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
-    const int32_t widthPx = static_cast<int32_t>(width * ppm);
-    const int32_t heightPx = static_cast<int32_t>(height * ppm);
-    if (widthPx <= 0 || heightPx <= 0) return;
+    const int32_t widthPx = artW;
+    const int32_t heightPx = artH;
+    if (widthPx <= 0 || heightPx <= 0 || outW <= 0 || outH <= 0) return;
+    if (ditherCell < 1) ditherCell = 1;
 
     // Sync color stops from property members (for editor serialization)
     SyncStopsFromProperties();
@@ -429,22 +431,15 @@ void GradientComponent::RenderToBuffer(uint8_t* buffer)
     int32_t actual_tile_width = tile_w_px > 0 ? tile_w_px : render_width;
     int32_t actual_tile_height = tile_h_px > 0 ? tile_h_px : render_height;
 
-    // Snap ditherScale down to the nearest power of 2 and convert to a shift,
-    // so the per-pixel cost stays a single bit-shift (no integer division on
-    // the Xtensa hot path).
-    int dither_shift = 0;
+    for (int32_t oy = 0; oy < outH; oy++)
     {
-        uint8_t s = ditherScale;
-        if (s >= 16)     dither_shift = 4;
-        else if (s >= 8) dither_shift = 3;
-        else if (s >= 4) dither_shift = 2;
-        else if (s >= 2) dither_shift = 1;
-    }
-
-    for (int32_t y = 0; y < render_height; y++)
-    {
-        for (int32_t x = 0; x < render_width; x++)
+        // The art row this output row covers (the same row for every output
+        // row of a whole-number upscale).
+        const int32_t y = static_cast<int32_t>((static_cast<int64_t>(oy) * render_height) / outH);
+        const int32_t cellY = oy / ditherCell;
+        for (int32_t ox = 0; ox < outW; ox++)
         {
+            const int32_t x = static_cast<int32_t>((static_cast<int64_t>(ox) * render_width) / outW);
             float norm_x = 0.0f, norm_y = 0.0f;
 
             // Handle tiling
@@ -506,14 +501,15 @@ void GradientComponent::RenderToBuffer(uint8_t* buffer)
             else
             {
                 // Pixelorama-style stipple dither: pick one of the bracketing
-                // stop colors based on a Bayer threshold. Coordinates are
-                // shifted by dither_shift so each Bayer cell spans an N×N block.
-                float threshold = SampleBayerThreshold(x >> dither_shift, y >> dither_shift);
+                // stop colors based on a Bayer threshold. The pattern is laid
+                // out in output pixels, each Bayer cell ditherCell wide, so it
+                // stays regular whatever the scale.
+                float threshold = SampleBayerThreshold(ox / ditherCell, cellY);
                 PickStopByThreshold(grad_pos, threshold, &r, &g, &b);
             }
 
-            // Convert to RGB565 and write directly to buffer at (x, y)
-            buffer16[y * render_width + x] = ConvertToRGB565(r, g, b);
+            // Convert to RGB565 and write directly to buffer at (ox, oy)
+            buffer16[oy * outW + ox] = ConvertToRGB565(r, g, b);
         }
     }
 }
@@ -529,18 +525,49 @@ bool GradientComponent::RenderContent(const Deki::Object* owner,
 {
     if (!owner || stopCount == 0) return false;
 
-    // width/height are world meters; raster buffer sized in pixels via ppm.
-    const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
-    const int32_t widthPx = static_cast<int32_t>(width * ppm);
-    const int32_t heightPx = static_cast<int32_t>(height * ppm);
-    if (widthPx <= 0 || heightPx <= 0) return false;
+    // width/height are world meters. The layout is on the art grid (the
+    // project's pixels per meter); the bake is at the density the view draws
+    // it at, so it lands 1:1 on the screen (see RenderToBuffer).
+    const float artPPM = Deki::EngineSettings::Global().pixelsPerMeter;
+    const int32_t artW = static_cast<int32_t>(width * artPPM);
+    const int32_t artH = static_cast<int32_t>(height * artPPM);
+    if (artW <= 0 || artH <= 0) return false;
+
+    float bakePPM = artPPM;
+    const DekiRendering::DrawView& view = DekiRendering::CurrentDrawView();
+    if (view.pixelsPerMeter > 0.0f)
+    {
+        bakePPM = view.pixelsPerMeter;
+        // At most twice the view's own area: zoomed far in (the editor's
+        // scene view), a big gradient would otherwise ask for a bake many
+        // screens wide. Past that it is scaled up a little as it is drawn.
+        const double viewArea = static_cast<double>(view.width) * view.height;
+        const double bakeArea = static_cast<double>(width) * bakePPM * height * bakePPM;
+        if (viewArea > 0.0 && bakeArea > viewArea * 2.0)
+            bakePPM *= static_cast<float>(std::sqrt(viewArea * 2.0 / bakeArea));
+    }
+    const int32_t widthPx = std::max<int32_t>(1, static_cast<int32_t>(std::lround(width * bakePPM)));
+    const int32_t heightPx = std::max<int32_t>(1, static_cast<int32_t>(std::lround(height * bakePPM)));
+
+    // A Bayer cell covers ditherScale art pixels (a power of two, 1..16),
+    // rounded to whole output pixels so every cell is the same size.
+    int32_t ditherArt = 1;
+    if (ditherScale >= 16) ditherArt = 16;
+    else if (ditherScale >= 8) ditherArt = 8;
+    else if (ditherScale >= 4) ditherArt = 4;
+    else if (ditherScale >= 2) ditherArt = 2;
+    const int32_t ditherCell =
+        std::max<int32_t>(1, static_cast<int32_t>(std::lround(ditherArt * bakePPM / artPPM)));
 
     // Sync color stops from property members (for editor serialization)
     SyncStopsFromProperties();
 
     // Re-bake only when an input changed. The bake is the expensive part
     // (per-pixel trig for radial/conical); the blit reuses it every frame.
-    const uint64_t key = ComputeBakeKey(widthPx, heightPx);
+    uint64_t key = ComputeBakeKey(widthPx, heightPx);
+    key = (key ^ static_cast<uint64_t>(artW)) * 1099511628211ull;
+    key = (key ^ static_cast<uint64_t>(artH)) * 1099511628211ull;
+    key = (key ^ static_cast<uint64_t>(ditherCell)) * 1099511628211ull;
     const size_t need = static_cast<size_t>(widthPx) * static_cast<size_t>(heightPx) * 2;  // RGB565
     // A size already refused is not attempted again.
     if (m_BakeFailedSize == need)
@@ -562,7 +589,7 @@ bool GradientComponent::RenderContent(const Deki::Object* owner,
         }
         m_BakeFailedSize = 0;
 
-        RenderToBuffer(m_Baked.Data());
+        RenderToBuffer(m_Baked.Data(), widthPx, heightPx, artW, artH, ditherCell);
         m_BakeKey = key;
     }
 
@@ -573,7 +600,9 @@ bool GradientComponent::RenderContent(const Deki::Object* owner,
         heightPx, QuadBlit::PixelLayout::RGB565(),   // isRGB565
         false   // ownsPixels - the component owns its bake
     );
-    outSource.pixelsPerMeter = Deki::EngineSettings::Global().pixelsPerMeter;
+    // The bake's own density: the renderer then scales it by the object's
+    // scale alone, 1:1 for an unscaled object.
+    outSource.pixelsPerMeter = static_cast<float>(widthPx) / width;
 
     // Gradient uses center pivot (0.5, 0.5)
     outPivotX = 0.5f;

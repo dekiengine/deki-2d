@@ -262,7 +262,18 @@ class GradientComponent : public DekiRendering::RendererComponent
      *
      * @param buffer Output buffer (RGB565 format)
      */
-    void RenderToBuffer(uint8_t* buffer);
+    /**
+     * @brief Bake the gradient into an RGB565 buffer of outW x outH pixels.
+     *
+     * The gradient is laid out on its art grid (artW x artH: its size at the
+     * project's pixels per meter); each output pixel takes the art position
+     * it covers, and the dither pattern is laid out in output pixels, cells
+     * `ditherCell` wide. Baked at the density it is drawn at, a gradient
+     * lands 1:1 on the screen at any scale, so the pattern stays regular
+     * where a scaled bake would repeat or drop pixels and show seams. At a
+     * whole-number scale the result is exactly the art-grid bake, scaled.
+     */
+    void RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t outH, int32_t artW, int32_t artH, int32_t ditherCell);
 
     // Unified rendering via QuadBlit
     // Culling extents (meters): the box the content is baked into.
