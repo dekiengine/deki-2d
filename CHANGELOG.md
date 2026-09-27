@@ -17,9 +17,9 @@ alongside one that has them.
   failed with "No loader registered for asset type: Animation". It is now
   registered by `Deki2D_InitSystem()` (`Deki2DInit.h`), which the generated
   firmware and simulator code call, and by `DekiPlugin_Init` in the editor.
-- A dithered gradient drawn at a fractional scale (a design area fitted to a
-  screen that is not a whole multiple of it, e.g. 1280x720 art on a 480x320
-  screen) showed seams: it was baked on the art grid and then scaled, which
+- A dithered gradient drawn at a fractional scale (a camera showing 1280x720
+  of art on a 480x320 screen, which is not a whole multiple of it) showed
+  seams: it was baked on the art grid and then scaled, which
   repeats or drops pixels unevenly. It is now baked at the density the view
   draws it at, 1:1 on the screen, with the dither laid out in whole screen
   pixels. At a whole-number scale the pixels are the same as before.
