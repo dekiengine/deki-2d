@@ -10,6 +10,7 @@
  */
 
 #include "Deki2DPackage.h"
+#include "Deki2DInit.h"
 #include <deki/interop/Plugin.h>
 // The editor's font sync below reaches into TextComponent and friends. A
 // device build takes its components from Deki2DPackage.h, feature by feature,
@@ -165,7 +166,7 @@ DEKI_PLUGIN_API const char* DekiPlugin_GetVersion(void)
 
 DEKI_PLUGIN_API int DekiPlugin_Init(void)
 {
-    // No special initialization needed
+    Deki2D_InitSystem();
     return 0;
 }
 

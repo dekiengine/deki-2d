@@ -147,32 +147,40 @@ bool FrameAnimationMsgPackHelper::SaveAnimation(const char* msgpack_path, const 
 }
 #endif
 
-// Self-register animation loader with AssetManager. The memLoader lets packed
+// Registers the animation loader with AssetManager. The memLoader lets packed
 // animations load straight from a .dpack on device (previously missing, so packed
 // animations could only load as loose cache files).
+//
+// Called, not a static registrar: a firmware links the game from an archive,
+// and the linker drops an object nothing references, registrar and all. That
+// is how animations went unloadable on the device.
 namespace {
-    struct _AnimLoaderReg {
-        _AnimLoaderReg() {
-            auto loader = [](const char* p) -> void* {
-                auto* data = new FrameAnimationData();
-                if (FrameAnimationMsgPackHelper::LoadAnimation(p, data))
-                    return data;
-                delete data;
-                return nullptr;
-            };
-            auto unloader = [](void* a) { delete static_cast<FrameAnimationData*>(a); };
-            auto memLoader = [](const uint8_t* d, size_t n) -> void* {
-                auto* data = new FrameAnimationData();
-                if (FrameAnimationMsgPackHelper::LoadAnimationFromMemory(d, n, data))
-                    return data;
-                delete data;
-                return nullptr;
-            };
-            Deki::AssetManager::RegisterLoader("FrameAnimationData", loader, unloader, memLoader);
-            Deki::AssetManager::RegisterLoader("Animation", loader, unloader, memLoader);
-        }
+    bool s_AnimLoaderRegistered = false;
+}
+
+void RegisterAnimationLoader()
+{
+    if (s_AnimLoaderRegistered)
+        return;
+    s_AnimLoaderRegistered = true;
+
+    auto loader = [](const char* p) -> void* {
+        auto* data = new FrameAnimationData();
+        if (FrameAnimationMsgPackHelper::LoadAnimation(p, data))
+            return data;
+        delete data;
+        return nullptr;
     };
-    static _AnimLoaderReg s_animLoaderReg;
+    auto unloader = [](void* a) { delete static_cast<FrameAnimationData*>(a); };
+    auto memLoader = [](const uint8_t* d, size_t n) -> void* {
+        auto* data = new FrameAnimationData();
+        if (FrameAnimationMsgPackHelper::LoadAnimationFromMemory(d, n, data))
+            return data;
+        delete data;
+        return nullptr;
+    };
+    Deki::AssetManager::RegisterLoader("FrameAnimationData", loader, unloader, memLoader);
+    Deki::AssetManager::RegisterLoader("Animation", loader, unloader, memLoader);
 }
 
 }  // namespace Deki2D

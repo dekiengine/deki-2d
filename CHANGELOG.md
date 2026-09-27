@@ -11,6 +11,12 @@ alongside one that has them.
 ## Unreleased
 
 ### Fixed
+- **Animations load on a device.** The animation loader registered itself
+  from a static object in a file nothing else referenced, and a firmware links
+  the game from an archive, so the linker dropped that file and every `.anim`
+  failed with "No loader registered for asset type: Animation". It is now
+  registered by `Deki2D_InitSystem()` (`Deki2DInit.h`), which the generated
+  firmware and simulator code call, and by `DekiPlugin_Init` in the editor.
 - A dithered gradient drawn at a fractional scale (a design area fitted to a
   screen that is not a whole multiple of it, e.g. 1280x720 art on a 480x320
   screen) showed seams: it was baked on the art grid and then scaled, which

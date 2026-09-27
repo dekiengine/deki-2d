@@ -64,4 +64,9 @@ public:
 #endif
 };
 
+// Registers the "Animation" asset loader. Idempotent. Called from
+// Deki2D_InitSystem (Deki2DInit.h), which is also what gets this file into a
+// firmware.
+void RegisterAnimationLoader();
+
 }  // namespace Deki2D
