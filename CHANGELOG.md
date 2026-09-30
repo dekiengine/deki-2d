@@ -8,7 +8,7 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
-## Unreleased
+## 0.17.0
 
 ### Fixed
 - **Animations load on a device.** The animation loader registered itself
@@ -43,6 +43,7 @@ alongside one that has them.
   so frames are authored in the image's own pixels whatever the Max Size.
 
 ### Changed
+- `minEngine` 0.17.0. Reflection ABI 20: the package must be rebuilt.
 - An image's Format may be Automatic (the default) and set per target
   (`settings.texture.targets`); its cache follows the editor's active
   platform, and an export for another target re-encodes it for that one.
