@@ -321,7 +321,7 @@ AssetCacheResult HandleSpriteImageCache(const AssetCacheContext& ctx)
         if (TextureImporter::ReadSourceSize(ctx.cachePath, sourceW, sourceH))
         {
             auto subAssets = TextureImporter::GenerateFrameSubAssets(ctx.guid, sourceW, sourceH, sidecar.sprite);
-            DEKI_LOG_EDITOR("ImageCache: Registering %zu subassets for '%s'", subAssets.size(), ctx.guid.c_str());
+            DEKI_LOG_DEBUG("ImageCache: Registering %zu subassets for '%s'", subAssets.size(), ctx.guid.c_str());
             ctx.pipeline->RegisterSubAssets(ctx.guid, subAssets);
         }
         else

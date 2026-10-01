@@ -717,7 +717,6 @@ static BdfFileInspector s_BdfFileInspector;
 void RegisterBdfFileInspector()
 {
     DekiEditor::FileInspectorRegistry::Instance().Register(&s_BdfFileInspector);
-    DEKI_LOG_EDITOR("BdfFileInspector registered for .bdf files");
 }
 
 } // namespace Deki2D

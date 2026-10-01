@@ -97,12 +97,11 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
     // Reload settings if asset changed
     if (m_CurrentAssetPath != assetPath)
     {
-        DEKI_LOG_EDITOR("FontInspector: Asset changed, loading settings for %s (guid=%s)", assetPath.c_str(), assetGuid.c_str());
+        DEKI_LOG_DEBUG("FontInspector: Asset changed, loading settings for %s (guid=%s)", assetPath.c_str(), assetGuid.c_str());
         LoadSettings(assetPath);
         m_CurrentAssetPath = assetPath;
         m_SettingsModified = false;
         m_VariantCacheDirty = true;
-        DEKI_LOG_EDITOR("FontInspector: Loaded %zu sizes", m_Sizes.size());
     }
 
     // Font info header
@@ -972,7 +971,7 @@ void FontFileInspector::GeneratePreview(const std::string& assetPath, int fontSi
     m_PreviewTextureHeight = bufferHeight;
     m_LastPreviewSize = fontSize;
 
-    DEKI_LOG_EDITOR("Generated font preview: %s @ %d px (%dx%d)", assetPath.c_str(), fontSize, bufferWidth, bufferHeight);
+    DEKI_LOG_DEBUG("Generated font preview: %s @ %d px (%dx%d)", assetPath.c_str(), fontSize, bufferWidth, bufferHeight);
 }
 
 void FontFileInspector::CleanupPreview()
@@ -993,7 +992,6 @@ static FontFileInspector s_FontFileInspector;
 void RegisterFontFileInspector()
 {
     DekiEditor::FileInspectorRegistry::Instance().Register(&s_FontFileInspector);
-    DEKI_LOG_EDITOR("FontFileInspector registered for .ttf and .otf files");
 }
 
 } // namespace Deki2D

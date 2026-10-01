@@ -117,18 +117,13 @@ static void HandleFontSync(
     const std::string& fontGuid,
     const std::string& projectPath)
 {
-    DEKI_LOG_EDITOR("FontSync: HandleFontSync called for %s (guid=%s, projectPath=%s)",
-        absolutePath.c_str(), fontGuid.c_str(), projectPath.c_str());
-
     // Read .data sidecar for configured sizes
     std::string dataPath = absolutePath + ".data";
-    DEKI_LOG_EDITOR("FontSync: Checking .data file at %s", dataPath.c_str());
     if (!fs::exists(dataPath))
     {
-        DEKI_LOG_EDITOR("FontSync: No .data file found at %s", dataPath.c_str());
+        DEKI_LOG_DEBUG("FontSync: No .data file found at %s", dataPath.c_str());
         return;
     }
-    DEKI_LOG_EDITOR("FontSync: .data file exists");
 
     std::ifstream file(dataPath);
     if (!file.is_open())
@@ -147,17 +142,16 @@ static void HandleFontSync(
         DEKI_LOG_WARNING("FontSync: Failed to parse .data file: %s", e.what());
         return;
     }
-    DEKI_LOG_EDITOR("FontSync: Parsed .data file successfully");
 
     if (!j.contains("fontSettings"))
     {
-        DEKI_LOG_EDITOR("FontSync: No fontSettings in .data file");
+        DEKI_LOG_DEBUG("FontSync: No fontSettings in .data file");
         return;
     }
 
     if (!j["fontSettings"].contains("sizes"))
     {
-        DEKI_LOG_EDITOR("FontSync: No sizes array in fontSettings");
+        DEKI_LOG_DEBUG("FontSync: No sizes array in fontSettings");
         return;
     }
 
@@ -187,7 +181,6 @@ static void HandleFontSync(
     int shadowDy = settings.value("shadowDy", 1);
     if (shadowDy < -3) shadowDy = -3;
     if (shadowDy > 3) shadowDy = 3;
-    DEKI_LOG_EDITOR("FontSync: Found %zu sizes configured", settings["sizes"].size());
 
     std::string cacheDir = DekiEditor::GetCacheDirectory(projectPath);
     fs::create_directories(cacheDir);
@@ -225,15 +218,11 @@ static void HandleFontSync(
         std::string dfontPath = cacheDir + "/" + variantGuid;
         std::string atlasPath = cacheDir + "/" + atlasGuid;
 
-        DEKI_LOG_EDITOR("FontSync: Checking cache at %s", dfontPath.c_str());
         // Only skip if BOTH dfont and atlas exist - if atlas is missing, re-bake.
         // AssetManager registration happens centrally in RegisterFontSubAssets via
         // OnImportComplete, so we don't need to register here.
         if (fs::exists(dfontPath) && fs::exists(atlasPath))
-        {
-            DEKI_LOG_EDITOR("FontSync: Already cached: %s", variantGuid.c_str());
             continue;
-        }
 
         // Delete stale dfont file if atlas is missing (will re-bake below)
         if (fs::exists(dfontPath) && !fs::exists(atlasPath))
@@ -241,8 +230,6 @@ static void HandleFontSync(
             DEKI_LOG_EDITOR("FontSync: Deleting stale dfont (atlas missing): %s", dfontPath.c_str());
             fs::remove(dfontPath);
         }
-
-        DEKI_LOG_EDITOR("FontSync: Auto-baking %s @ %d px", absolutePath.c_str(), fontSize);
 
         // Bake the variant
         FontCompiler::CompileOptions options;
@@ -283,7 +270,7 @@ static void HandleFontSync(
 
         // AssetManager registration happens centrally in RegisterFontSubAssets via
         // OnImportComplete (after ImportAllAssets). No per-size RegisterGuid needed here.
-        DEKI_LOG_EDITOR("FontSync: Successfully baked %s @ %d px -> font=%s, atlas=%s",
+        DEKI_LOG_EDITOR("FontSync: baked %s @ %d px -> font=%s, atlas=%s",
             absolutePath.c_str(), fontSize, variantGuid.c_str(), atlasGuid.c_str());
 
         dataFileModified = true;
@@ -296,7 +283,7 @@ static void HandleFontSync(
         if (outFile.is_open())
         {
             outFile << j.dump(2);
-            DEKI_LOG_EDITOR("FontSync: Updated .data file with new GUIDs: %s", dataPath.c_str());
+            DEKI_LOG_DEBUG("FontSync: Updated .data file with new GUIDs: %s", dataPath.c_str());
         }
     }
 
@@ -360,8 +347,6 @@ static void HandleBdfSync(
     const std::string& fontGuid,
     const std::string& projectPath)
 {
-    DEKI_LOG_EDITOR("BdfSync: HandleBdfSync called for %s (guid=%s)", absolutePath.c_str(), fontGuid.c_str());
-
     // Read .data sidecar
     std::string dataPath = absolutePath + ".data";
     json j;
@@ -414,10 +399,10 @@ static void HandleBdfSync(
         selectedChars = FontCompiler::GetBdfCodepoints(absolutePath);
         if (selectedChars.empty())
         {
-            DEKI_LOG_EDITOR("BdfSync: No glyphs found in BDF file");
+            DEKI_LOG_WARNING("BdfSync: No glyphs found in %s", absolutePath.c_str());
             return;
         }
-        DEKI_LOG_EDITOR("BdfSync: Auto-selecting all %zu chars for %s", selectedChars.size(), absolutePath.c_str());
+        DEKI_LOG_DEBUG("BdfSync: Auto-selecting all %zu chars for %s", selectedChars.size(), absolutePath.c_str());
 
         // Save default settings to .data so future syncs use them
         std::sort(selectedChars.begin(), selectedChars.end());
@@ -445,16 +430,11 @@ static void HandleBdfSync(
     // Skip if already cached. AssetManager registration + sub-asset registration
     // happen centrally in RegisterBdfSubAssets via OnImportComplete.
     if (fs::exists(dfontPath) && fs::exists(atlasPath))
-    {
-        DEKI_LOG_EDITOR("BdfSync: Already cached: %s", variantGuid.c_str());
         return;
-    }
 
     // Delete stale dfont if atlas missing
     if (fs::exists(dfontPath) && !fs::exists(atlasPath))
         fs::remove(dfontPath);
-
-    DEKI_LOG_EDITOR("BdfSync: Baking BDF font %s", absolutePath.c_str());
 
     // Compile
     FontCompiler::BdfCompileOptions options;
@@ -488,7 +468,7 @@ static void HandleBdfSync(
         return;
     }
 
-    DEKI_LOG_EDITOR("BdfSync: Baked -> font=%s, atlas=%s", variantGuid.c_str(), atlasGuid.c_str());
+    DEKI_LOG_EDITOR("BdfSync: baked %s -> font=%s, atlas=%s", absolutePath.c_str(), variantGuid.c_str(), atlasGuid.c_str());
 
     // Save .data with variant GUIDs
     std::ofstream outFile(dataPath);
@@ -504,20 +484,13 @@ static bool s_FontSyncRegistrationSetup = false;
 
 void RegisterFontSyncHandlers()
 {
-    DEKI_LOG_EDITOR("FontSync: RegisterFontSyncHandlers() called, setup=%d", s_FontSyncRegistrationSetup ? 1 : 0);
-
     // Only add the callback once - it will be invoked every time a pipeline starts
     // (because AssetPipeline::Stop() clears m_SyncHandlers)
     if (s_FontSyncRegistrationSetup)
-    {
-        DEKI_LOG_EDITOR("FontSync: Already registered, skipping");
         return;
-    }
     s_FontSyncRegistrationSetup = true;
 
-    DEKI_LOG_EDITOR("FontSync: Adding OnStarted callback");
     DekiEditor::AssetPipeline::OnStarted([](DekiEditor::AssetPipeline* pipeline) {
-        DEKI_LOG_EDITOR("FontSync: OnStarted callback invoked, registering handlers");
         pipeline->RegisterSyncHandler(".ttf", HandleFontSync);
         pipeline->RegisterSyncHandler(".otf", HandleFontSync);
         pipeline->RegisterSyncHandler(".bdf", HandleBdfSync);
@@ -552,8 +525,6 @@ void RegisterFontSyncHandlers()
                 valid.insert(Deki::GenerateDeterministicGuid(info.guid + ":bdf"));
                 valid.insert(Deki::GenerateDeterministicGuid(info.guid + ":bdf:atlas"));
             });
-
-        DEKI_LOG_EDITOR("FontSync: Handlers registered for .ttf, .otf, .bdf, .dfont");
     });
 
     // After all assets are imported, scan for existing baked font variants
@@ -668,7 +639,7 @@ void EnsureFontSizeBaked(const std::string& sourceGuid, int fontSize)
     // here closes that window; RegisterFontSubAssets is idempotent.
     RegisterFontSubAssets(sourceGuid, pipeline->GetProjectPath());
 
-    DEKI_LOG_EDITOR("FontSync: EnsureFontSizeBaked completed for %s @ %d px", sourceGuid.c_str(), fontSize);
+    DEKI_LOG_DEBUG("FontSync: EnsureFontSizeBaked completed for %s @ %d px", sourceGuid.c_str(), fontSize);
 }
 
 } // namespace Deki2D

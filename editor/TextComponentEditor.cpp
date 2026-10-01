@@ -458,8 +458,8 @@ public:
                     // Log when preview settings change
                     if (prevPreviewEnabled != textComp->previewEnabled || prevPreviewSize != textComp->previewSize)
                     {
-                        DEKI_LOG_EDITOR("TextComponentEditor: Preview changed - enabled=%d, size=%d (component=%p)",
-                                      textComp->previewEnabled, textComp->previewSize, (void*)textComp);
+                        DEKI_LOG_DEBUG("TextComponentEditor: Preview changed - enabled=%d, size=%d",
+                                       textComp->previewEnabled, textComp->previewSize);
                     }
 
                     // Show preview atlas

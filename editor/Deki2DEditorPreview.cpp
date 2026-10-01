@@ -399,8 +399,6 @@ void InitializeFontPreviewCallbacks()
     DekiEditor::EditorAssets::Get()->SetFontBakingCallbacks(
         // Font callback - returns Deki2D::BitmapFont for text metrics
         [](const std::string& sourceGuid, int fontSize) -> Deki2D::BitmapFont* {
-            DEKI_LOG_EDITOR("FontPreview: GetBitmapFontWithBaking called for %s @ %d px", sourceGuid.c_str(), fontSize);
-
             if (sourceGuid.empty() || fontSize <= 0)
                 return nullptr;
 
@@ -410,10 +408,7 @@ void InitializeFontPreviewCallbacks()
             {
                 Deki2D::BitmapFont* baked = DekiEditor::EditorAssets::Get()->GetBitmapFont(variantGuid);
                 if (baked)
-                {
-                    DEKI_LOG_EDITOR("FontPreview: Found baked font for %s @ %d px (variant %s)", sourceGuid.c_str(), fontSize, variantGuid.c_str());
                     return baked;
-                }
             }
 
             // 2. Check if preview font already exists AND has GPU texture
@@ -425,12 +420,9 @@ void InitializeFontPreviewCallbacks()
                 // Make sure GPU texture exists too
                 auto texIt = s_PreviewTextureCache.find(cacheKey);
                 if (texIt != s_PreviewTextureCache.end() && texIt->second.textureId != 0)
-                {
-                    DEKI_LOG_EDITOR("FontPreview: Found preview font for %s @ %d px", sourceGuid.c_str(), fontSize);
                     return preview;
-                }
                 // Font exists but no texture - need to recompile to get texture
-                DEKI_LOG_EDITOR("FontPreview: Preview font exists but no GPU texture, recompiling %s @ %d px", sourceGuid.c_str(), fontSize);
+                DEKI_LOG_DEBUG("FontPreview: Preview font exists but no GPU texture, recompiling %s @ %d px", sourceGuid.c_str(), fontSize);
             }
 
             // 3. Compile font on-demand
@@ -440,8 +432,6 @@ void InitializeFontPreviewCallbacks()
                 DEKI_LOG_WARNING("FontPreview: TTF not found for %s", sourceGuid.c_str());
                 return nullptr;
             }
-
-            DEKI_LOG_EDITOR("FontPreview: Compiling %s @ %d px", sourceGuid.c_str(), fontSize);
 
             Deki2D::FontCompiler::CompileOptions options;
             options.fontSize = fontSize;
@@ -489,8 +479,8 @@ void InitializeFontPreviewCallbacks()
                 s_PreviewTextureCache[cacheKey] = cached;
             }
 
-            DEKI_LOG_EDITOR("FontPreview: Ready %s @ %d px (atlas %ux%u)",
-                          sourceGuid.c_str(), fontSize, result.atlasWidth, result.atlasHeight);
+            DEKI_LOG_EDITOR("FontPreview: compiled %s @ %d px (atlas %ux%u)",
+                            sourceGuid.c_str(), fontSize, result.atlasWidth, result.atlasHeight);
 
             // Return the font we just created
             return Deki2D::GetPreviewFont(sourceGuid, fontSize);
@@ -498,8 +488,6 @@ void InitializeFontPreviewCallbacks()
 
         // Atlas callback - returns GPU texture for rendering
         [](const std::string& sourceGuid, int fontSize, uint32_t* outW, uint32_t* outH) -> uint32_t {
-            DEKI_LOG_EDITOR("FontPreview: LoadFontAtlasWithBaking called for %s @ %d px", sourceGuid.c_str(), fontSize);
-
             if (sourceGuid.empty() || fontSize <= 0)
             {
                 if (outW) *outW = 0;
@@ -513,10 +501,7 @@ void InitializeFontPreviewCallbacks()
             {
                 uint32_t bakedAtlas = DekiEditor::EditorAssets::Get()->LoadFontAtlas(variantGuid, outW, outH);
                 if (bakedAtlas != 0)
-                {
-                    DEKI_LOG_EDITOR("FontPreview: Found baked atlas for %s @ %d px (variant %s)", sourceGuid.c_str(), fontSize, variantGuid.c_str());
                     return bakedAtlas;
-                }
             }
 
             // 2. Check preview texture cache
@@ -525,15 +510,12 @@ void InitializeFontPreviewCallbacks()
             auto it = s_PreviewTextureCache.find(cacheKey);
             if (it != s_PreviewTextureCache.end() && it->second.textureId != 0)
             {
-                DEKI_LOG_EDITOR("FontPreview: Found cached preview atlas for %s @ %d px", sourceGuid.c_str(), fontSize);
                 if (outW) *outW = it->second.width;
                 if (outH) *outH = it->second.height;
                 return it->second.textureId;
             }
 
             // 3. Not found - compile on demand
-            DEKI_LOG_EDITOR("FontPreview: Compiling on-demand for atlas %s @ %d px", sourceGuid.c_str(), fontSize);
-
             std::string ttfPath = ResolveTTFPath(sourceGuid);
             if (ttfPath.empty() || !std::filesystem::exists(ttfPath))
             {
@@ -585,8 +567,8 @@ void InitializeFontPreviewCallbacks()
                 if (outW) *outW = result.atlasWidth;
                 if (outH) *outH = result.atlasHeight;
 
-                DEKI_LOG_EDITOR("FontPreview: Compiled and uploaded atlas %s @ %d px (%ux%u)",
-                              sourceGuid.c_str(), fontSize, result.atlasWidth, result.atlasHeight);
+                DEKI_LOG_EDITOR("FontPreview: compiled atlas %s @ %d px (%ux%u)",
+                                sourceGuid.c_str(), fontSize, result.atlasWidth, result.atlasHeight);
                 return texId;
             }
 
@@ -595,8 +577,6 @@ void InitializeFontPreviewCallbacks()
             return 0;
         }
     );
-
-    DEKI_LOG_EDITOR("Deki2D: Font preview callbacks initialized");
 }
 
 void ClearPreviewTextureCache()
@@ -610,7 +590,7 @@ void ClearPreviewTextureCache()
         }
     }
     s_PreviewTextureCache.clear();
-    DEKI_LOG_EDITOR("Deki2D: Preview texture cache cleared");
+    DEKI_LOG_DEBUG("Deki2D: Preview texture cache cleared");
 }
 
 } // namespace Deki2D
