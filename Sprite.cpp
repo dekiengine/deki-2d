@@ -193,11 +193,13 @@ Sprite* Sprite::Load(const char* file_path)
         DEKI_LOG_INTERNAL("Loading non-sprite texture as sprite: %s", file_path);
     }
 
-    // Validate file size
-    size_t expected_size = sizeof(Deki::Texture2D::Header) + header.dataSize + header.metadataSize;
-    if (file_size < expected_size)
+    // Validate file size, in 64 bits: on a 32-bit board a corrupt dataSize
+    // plus metadataSize wrapped to a small number and passed.
+    const uint64_t expected_size =
+        uint64_t(sizeof(Deki::Texture2D::Header)) + uint64_t(header.dataSize) + uint64_t(header.metadataSize);
+    if (file_size < 0 || uint64_t(file_size) < expected_size)
     {
-        DEKI_LOG_ERROR("File size mismatch. Expected: %zu, Got: %ld", expected_size, file_size);
+        DEKI_LOG_ERROR("File size mismatch. Expected: %llu, Got: %ld", (unsigned long long)expected_size, file_size);
         fs->CloseFile(file);
         return nullptr;
     }
@@ -270,7 +272,8 @@ Sprite* Sprite::Load(const char* file_path)
             uint32_t chunk_size = *(uint32_t*)(metadata + offset);
             offset += sizeof(uint32_t);
 
-            if (offset + chunk_size > header.metadataSize)
+            // Written so it cannot wrap: offset + a huge chunk_size did, on 32 bits.
+            if (chunk_size > header.metadataSize - offset)
                 break;  // Corrupted metadata
 
             if (chunk_type == 1 && chunk_size >= 8)  // Sprite chunk
@@ -456,8 +459,9 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
         return nullptr;
     }
 
-    size_t expected_size = sizeof(Deki::Texture2D::Header) + header.dataSize + header.metadataSize;
-    if (fileSize < expected_size)
+    const uint64_t expected_size =
+        uint64_t(sizeof(Deki::Texture2D::Header)) + uint64_t(header.dataSize) + uint64_t(header.metadataSize);
+    if (uint64_t(fileSize) < expected_size)
     {
         DEKI_LOG_ERROR("Sprite::LoadFromFileData: file size mismatch");
         return nullptr;
@@ -504,7 +508,7 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
                 uint32_t chunk_size = *(uint32_t*)(metadata + offset);
                 offset += sizeof(uint32_t);
 
-                if (offset + chunk_size > header.metadataSize) break;
+                if (chunk_size > header.metadataSize - offset) break;  // cannot wrap, unlike offset + size
 
                 if (chunk_type == 1 && chunk_size >= 8)
                 {
