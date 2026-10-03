@@ -257,7 +257,14 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
         {
             if (!spr->hasNineSlice)
             {
-                DEKI_LOG_ERROR("SpriteComponent: NineSlice mode but sprite has no 9-slice borders");
+                // Once per sprite: the bake is retried every frame, and this
+                // used to log ~180 times a second.
+                if (!m_WarnedNoNineSlice)
+                {
+                    m_WarnedNoNineSlice = true;
+                    DEKI_LOG_WARNING("SpriteComponent: '%s' is in 9-slice mode but its sprite has no 9-slice borders",
+                                     owner ? owner->GetName().c_str() : "?");
+                }
                 return false;
             }
             int32_t min_w = spr->nineSliceLeft + spr->nineSliceRight;

@@ -5,6 +5,7 @@
 #include <deki/assets/Texture2D.h>
 #include <deki-editor/EditorUI.h>
 #include <deki-editor/EditorApplication.h>
+#include <cctype>
 #include <deki-editor/AssetDatabase.h>
 #include <deki-editor/TextureImporter.h>
 #include <deki-editor/TextureData.h>
@@ -179,7 +180,22 @@ void SpritesheetEditorWindow::DrawSlicingControls()
 
     if (m_TextureWidth == 0 || m_TextureHeight == 0)
     {
-        ui.TextColored(1, 0.5f, 0, 1, "No texture loaded");
+        // Nothing open: offer the image selected in the Asset Browser. (Opened
+        // from the Tools menu there was no way to load one at all.)
+        const std::string& selected = EditorApplication::Get().GetSelectedAssetPath();
+        std::string ext = fs::path(selected).extension().string();
+        for (char& c : ext)
+            c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        if (!selected.empty() && CanOpenFile(ext.c_str()) && !m_ProjectPath.empty())
+        {
+            ui.TextWrapped(("Selected: " + fs::path(selected).filename().string()).c_str());
+            if (ui.Button("Open Selected Image"))
+                OpenFile((fs::path(m_ProjectPath) / selected).string().c_str(), "");
+        }
+        else
+        {
+            ui.TextWrapped("Select an image in the Asset Browser to slice it.");
+        }
         return;
     }
 

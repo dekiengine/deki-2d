@@ -168,6 +168,8 @@ private:
 
     const Sprite*    m_cachedRenderSrc    = nullptr;
     SpriteRenderMode m_cachedRenderMode   = SpriteRenderMode::Normal;
+    // The "9-slice mode without borders" warning was logged for this sprite.
+    mutable bool     m_WarnedNoNineSlice  = false;
 };
 
 // Generated property metadata (after class definition for offsetof)

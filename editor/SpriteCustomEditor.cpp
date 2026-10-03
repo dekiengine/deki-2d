@@ -443,7 +443,7 @@ public:
             ui.SameLine();
             if (ui.Button("Edit 9-Slice..."))
             {
-                EditorApplication::Get().RequestOpenTool(assetPath, /*cachePath*/ "");
+                EditorApplication::Get().RequestOpenTool(assetPath, /*cachePath*/ "", "9-Slice Editor");
             }
         }
 
@@ -515,7 +515,7 @@ private:
         ui.SameLine();
         if (ui.Button("Edit 9-Slice..."))
         {
-            EditorApplication::Get().RequestOpenTool(assetPath, /*cachePath*/ "");
+            EditorApplication::Get().RequestOpenTool(assetPath, /*cachePath*/ "", "9-Slice Editor");
         }
     }
 };

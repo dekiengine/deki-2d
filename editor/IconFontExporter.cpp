@@ -1071,6 +1071,12 @@ void IconFontExporter::LoadExportManifest(const std::string& manifestPath)
 void IconFontExporter::OnGUI()
 {
     auto& ui = EditorUI::Get();
+    // A real first size and a floor: left to auto-fit, the window took the
+    // size of its first, nearly empty frame (365 x 92) and kept it, hiding the
+    // download controls that appear once a font is being added.
+    const float dpi = ui.GetDpiScale();
+    ui.SetNextWindowSize(560.0f * dpi, 520.0f * dpi, true);
+    ui.SetNextWindowSizeConstraints(420.0f * dpi, 300.0f * dpi, 100000.0f, 100000.0f);
     ui.Begin(GetTitle(), &m_IsOpen);
 
     if (!m_FtLibrary)
