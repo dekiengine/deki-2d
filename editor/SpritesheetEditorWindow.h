@@ -53,6 +53,8 @@ private:
     void DrawTexturePreview();
     void DrawSlicingControls();
     void SaveAndReimport();      // write .png.data, re-import so the frames exist
+    void OnSettingsLoaded();     // after a load: the saved baseline, the mode
+    bool IsDirty() const;        // the frames differ from what is saved
 
     // File I/O
     void LoadTextureData();      // Load pixel data from cache
@@ -96,6 +98,10 @@ private:
     float m_LastMousePosX = 0.0f;
     float m_LastMousePosY = 0.0f;
     bool m_FitPending = true;    // fit the image to the canvas on its next draw
+
+    std::vector<DekiEditor::AtlasFrame> m_SavedFrames;  // as last loaded or saved
+    int m_SelectedFrame = -1;    // picked in the list or on the canvas
+    int m_HoveredFrame = -1;     // under the mouse, in either
 
     // Status
     std::string m_StatusMessage;

@@ -78,6 +78,8 @@ void SpritesheetEditorWindow::OnClose()
     m_FrameWidth = 0;
     m_FrameHeight = 0;
     m_AtlasFrames.clear();
+    m_SavedFrames.clear();
+    m_SelectedFrame = m_HoveredFrame = -1;
 
     // Reset UI state
     m_UIMode = SlicingUIMode::Grid;
@@ -131,6 +133,46 @@ void SpritesheetEditorWindow::OpenFile(const char* filePath, const char* cachePa
     // Load texture and settings
     LoadTextureData();
     LoadSliceSettings();
+    OnSettingsLoaded();
+}
+
+namespace
+{
+bool SameFrames(const std::vector<DekiEditor::AtlasFrame>& a, const std::vector<DekiEditor::AtlasFrame>& b)
+{
+    if (a.size() != b.size())
+        return false;
+    for (size_t i = 0; i < a.size(); ++i)
+        if (a[i].x != b[i].x || a[i].y != b[i].y || a[i].width != b[i].width || a[i].height != b[i].height)
+            return false;
+    return true;
+}
+
+ImU32 AccentWithAlpha(float alpha)
+{
+    ImVec4 c = DekiEditor::Palette::Accent;
+    c.w = alpha;
+    return ImGui::ColorConvertFloat4ToU32(c);
+}
+}  // namespace
+
+bool SpritesheetEditorWindow::IsDirty() const
+{
+    return !SameFrames(m_AtlasFrames, m_SavedFrames);
+}
+
+void SpritesheetEditorWindow::OnSettingsLoaded()
+{
+    m_SavedFrames = m_AtlasFrames;
+    m_SelectedFrame = -1;
+    m_HoveredFrame = -1;
+    // Frames that are not a uniform grid came from Detect (or a hand-made atlas).
+    m_UIMode = (m_AtlasFrames.empty() || IsUniformGrid()) ? SlicingUIMode::Grid : SlicingUIMode::Free;
+    if (m_UIMode == SlicingUIMode::Grid && !m_AtlasFrames.empty())
+    {
+        m_FrameWidth = m_AtlasFrames[0].width;
+        m_FrameHeight = m_AtlasFrames[0].height;
+    }
 }
 
 void SpritesheetEditorWindow::OnGUI()
@@ -150,19 +192,24 @@ void SpritesheetEditorWindow::OnGUI()
     ui.SetNextWindowSize(860.0f * dpi, 560.0f * dpi, true);
     ui.SetNextWindowSizeConstraints(560.0f * dpi, 360.0f * dpi, FLT_MAX, FLT_MAX);
 
-    if (ui.Begin("Sprite Slicer###SpriteSlicer", &isOpen, 0))
+    std::string title = "Sprite Slicer";
+    if (IsDirty())
+        title += " *";
+    title += "###SpriteSlicer";
+
+    if (ui.Begin(title.c_str(), &isOpen, 0))
     {
         const bool hasImage = m_TextureWidth > 0 && m_TextureHeight > 0;
+        const bool dirty = hasImage && IsDirty();
 
-        // ── Toolbar (full-bleed strip, as in the other tool windows) ────────
+        // ── Toolbar ─────────────────────────────────────────────────────────
         ui.BeginToolbar();
-        if (ui.ToolbarButton("Save", hasImage))
+        if (ui.ToolbarButton(dirty ? "Save*" : "Save", dirty))
             SaveAndReimport();
-        if (ui.ToolbarButton("Clear", hasImage && !m_AtlasFrames.empty()))
+        if (ui.ToolbarButton("Revert", dirty))
         {
-            m_FrameWidth = 0;
-            m_FrameHeight = 0;
-            m_AtlasFrames.clear();
+            LoadSliceSettings();
+            OnSettingsLoaded();
         }
         if (ui.ToolbarButton("Fit View", hasImage))
             m_FitPending = true;
@@ -181,7 +228,7 @@ void SpritesheetEditorWindow::OnGUI()
             // Settings on the left, the image on the right, meeting at a seam.
             float availW = 0.0f, availH = 0.0f;
             ui.GetContentRegionAvail(&availW, &availH);
-            const float settingsW = std::min(300.0f * dpi, availW * 0.45f);
+            const float settingsW = std::min(290.0f * dpi, availW * 0.45f);
             if (ui.BeginChild("##slicer_settings", settingsW, availH, false))
                 DrawSlicingControls();
             ui.EndChild();
@@ -189,6 +236,8 @@ void SpritesheetEditorWindow::OnGUI()
             float seamX = 0.0f, seamY = 0.0f;
             ui.GetCursorScreenPos(&seamX, &seamY);
             ui.DrawLine(seamX, seamY, seamX, seamY + availH, ImGui::ColorConvertFloat4ToU32(DekiEditor::Palette::Line2), 1.0f);
+            ui.Dummy(1.0f, availH);
+            ui.SameLine(0.0f, 0.0f);
             if (ui.BeginChild("##slicer_canvas", 0.0f, availH, false))
                 DrawTexturePreview();
             ui.EndChild();
@@ -208,8 +257,9 @@ void SpritesheetEditorWindow::SaveAndReimport()
         m_StatusIsError = true;
         return;
     }
-    m_StatusMessage = "Saved. The frames are ready to use.";
+    m_StatusMessage.clear();
     m_StatusIsError = false;
+    m_SavedFrames = m_AtlasFrames;
 
     // Re-import so the frames are generated
     if (!m_TextureGuid.empty())
@@ -224,6 +274,7 @@ void SpritesheetEditorWindow::SaveAndReimport()
 void SpritesheetEditorWindow::DrawSlicingControls()
 {
     auto& ui = EditorUI::Get();
+    const float dpi = ui.GetDpiScale();
 
     if (m_TextureWidth == 0 || m_TextureHeight == 0)
     {
@@ -238,7 +289,10 @@ void SpritesheetEditorWindow::DrawSlicingControls()
             ui.TextWrapped(("Selected: " + fs::path(selected).filename().string()).c_str());
             ui.Spacing();
             if (ui.Button("Open Selected Image"))
+            {
                 OpenFile((fs::path(m_ProjectPath) / selected).string().c_str(), "");
+                OnSettingsLoaded();
+            }
         }
         else
         {
@@ -247,84 +301,144 @@ void SpritesheetEditorWindow::DrawSlicingControls()
         return;
     }
 
-    char buf[256];
+    char buf[160];
 
-    // ── Image ────────────────────────────────────────────────────────────
-    if (ui.SectionHeader("Image"))
+    // ── Header: the image, as the column's title ─────────────────────────
     {
-        DekiEditor::BeginPropertyContext();
-        ui.PropertyRow("File");
-        ui.TextWrapped(fs::path(m_TexturePath).filename().string().c_str());
-        ui.PropertyRow("Size");
+        const float pad = 14.0f * dpi;
+        ui.Dummy(0.0f, 10.0f * dpi);
+        ui.Indent(pad);
+        ui.Text(fs::path(m_TexturePath).filename().string().c_str());
         std::snprintf(buf, sizeof(buf), "%d x %d px", m_TextureWidth, m_TextureHeight);
         ui.TextDisabled(buf);
-        DekiEditor::EndPropertyContext();
+        ui.Unindent(pad);
+        ui.Dummy(0.0f, 8.0f * dpi);
     }
 
-    // ── Slicing ──────────────────────────────────────────────────────────
-    if (ui.SectionHeader("Slicing"))
+    // ── How it is cut: Grid or Detect, as tabs ───────────────────────────
+    ui.BeginTabLinks();
+    if (ui.TabLink("Grid", m_UIMode == SlicingUIMode::Grid))
+        m_UIMode = SlicingUIMode::Grid;
+    if (ui.TabLink("Detect", m_UIMode == SlicingUIMode::Free))
+        m_UIMode = SlicingUIMode::Free;
+    ui.EndTabLinks();
+    ui.Dummy(0.0f, 6.0f * dpi);
+
+    DekiEditor::BeginPropertyContext();
+    if (m_UIMode == SlicingUIMode::Grid)
     {
-        DekiEditor::BeginPropertyContext();
-        static const char* const kModes[] = { "Grid", "Detect" };
-        int currentMode = (int)m_UIMode;
-        ui.PropertyRow("Mode");
-        ui.SetNextItemWidth(-FLT_MIN);
-        if (ui.Combo("##mode", &currentMode, kModes, 2))
-            m_UIMode = (SlicingUIMode)currentMode;
-
-        if (m_UIMode == SlicingUIMode::Grid)
+        // One row, two fields around an x; the grid follows them live.
+        ui.PropertyRow("Frame Size");
+        const float gap = ImGui::GetStyle().ItemSpacing.x;
+        const float fieldW = (ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("x").x - gap * 2.0f) * 0.5f;
+        bool changed = false;
+        ImGui::SetNextItemWidth(fieldW);
+        changed |= DekiEditor::SchematicDragInt("##fw", &m_FrameWidth, 0.25f, 0, m_TextureWidth, "%d px");
+        ImGui::SameLine(0.0f, gap);
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextColored(DekiEditor::Palette::Dim, "x");
+        ImGui::SameLine(0.0f, gap);
+        ImGui::SetNextItemWidth(fieldW);
+        changed |= DekiEditor::SchematicDragInt("##fh", &m_FrameHeight, 0.25f, 0, m_TextureHeight, "%d px");
+        m_FrameWidth = std::clamp(m_FrameWidth, 0, m_TextureWidth);
+        m_FrameHeight = std::clamp(m_FrameHeight, 0, m_TextureHeight);
+        if (changed)
         {
-            ui.PropertyRow("Frame Width");
-            ui.SetNextItemWidth(-FLT_MIN);
-            ui.DragInt("##fw", &m_FrameWidth, 0.25f, 0, m_TextureWidth);
-            ui.PropertyRow("Frame Height");
-            ui.SetNextItemWidth(-FLT_MIN);
-            ui.DragInt("##fh", &m_FrameHeight, 0.25f, 0, m_TextureHeight);
-            m_FrameWidth = std::clamp(m_FrameWidth, 0, m_TextureWidth);
-            m_FrameHeight = std::clamp(m_FrameHeight, 0, m_TextureHeight);
-
+            m_SelectedFrame = -1;
             if (m_FrameWidth > 0 && m_FrameHeight > 0)
-            {
-                const int cols = m_TextureWidth / m_FrameWidth;
-                const int rows = m_TextureHeight / m_FrameHeight;
-                std::snprintf(buf, sizeof(buf), "%d x %d grid, %d frames", cols, rows, rows * cols);
-                ui.PropertyRow("");
-                ui.TextDisabled(buf);
-            }
-            ui.PropertyRow("");
-            if (ui.Button("Make Grid", -FLT_MIN))
                 GenerateGrid();
+            else
+                m_AtlasFrames.clear();
+        }
+
+        ui.PropertyRow("");
+        if (m_FrameWidth > 0 && m_FrameHeight > 0)
+        {
+            const int cols = m_TextureWidth / m_FrameWidth;
+            const int rows = m_TextureHeight / m_FrameHeight;
+            std::snprintf(buf, sizeof(buf), "%d x %d grid", cols, rows);
+            ui.TextDisabled(buf);
+            // Pixels the grid does not cover are dropped; say so.
+            const int restX = m_TextureWidth - cols * m_FrameWidth;
+            const int restY = m_TextureHeight - rows * m_FrameHeight;
+            if (restX > 0 || restY > 0)
+            {
+                ui.PropertyRow("");
+                if (restX > 0 && restY > 0)
+                    std::snprintf(buf, sizeof(buf), "%d px on the right and %d px at the bottom are not used", restX, restY);
+                else if (restX > 0)
+                    std::snprintf(buf, sizeof(buf), "%d px on the right are not used", restX);
+                else
+                    std::snprintf(buf, sizeof(buf), "%d px at the bottom are not used", restY);
+                ImGui::PushStyleColor(ImGuiCol_Text, DekiEditor::Palette::Amber);
+                ui.TextWrapped(buf);
+                ImGui::PopStyleColor();
+            }
         }
         else
         {
-            ui.PropertyRow("");
-            ui.TextWrapped("Finds each sprite by the transparent space around it.");
-            ui.PropertyRow("");
-            if (ui.Button("Detect Sprites", -FLT_MIN))
-                RunAutoCut();
+            ui.TextDisabled("Set the size of one frame.");
         }
-        DekiEditor::EndPropertyContext();
     }
+    else
+    {
+        ui.PropertyRow("");
+        ImGui::PushStyleColor(ImGuiCol_Text, DekiEditor::Palette::Dim);
+        ui.TextWrapped("Finds each sprite by the transparent space around it.");
+        ImGui::PopStyleColor();
+        ui.PropertyRow("");
+        if (ui.Button("Detect Sprites", -FLT_MIN))
+        {
+            m_SelectedFrame = -1;
+            RunAutoCut();
+        }
+    }
+    DekiEditor::EndPropertyContext();
+    ui.Dummy(0.0f, 6.0f * dpi);
 
-    // ── Frames ───────────────────────────────────────────────────────────
+    // ── Frames: the list, tied to the canvas ─────────────────────────────
     std::snprintf(buf, sizeof(buf), "Frames (%zu)###frames", m_AtlasFrames.size());
     if (ui.SectionHeader(buf))
     {
-        DekiEditor::BeginPropertyContext();
         if (m_AtlasFrames.empty())
         {
-            ui.TextDisabled("None yet. Make a grid or detect the sprites.");
+            DekiEditor::BeginPropertyContext();
+            ui.TextDisabled("None yet.");
+            DekiEditor::EndPropertyContext();
         }
+        const float pad = 14.0f * dpi;
+        const float rowH = ImGui::GetTextLineHeight() + 8.0f * dpi;
+        int hoveredRow = -1;
         for (size_t i = 0; i < m_AtlasFrames.size(); ++i)
         {
             const auto& frame = m_AtlasFrames[i];
-            char label[32];
-            std::snprintf(label, sizeof(label), "Frame %zu", i);
-            ui.PropertyRow(label);
-            std::snprintf(buf, sizeof(buf), "%d, %d   %d x %d", frame.x, frame.y, frame.width, frame.height);
-            ui.TextDisabled(buf);
+            ImGui::PushID(static_cast<int>(i));
+            const ImVec2 rowMin = ImGui::GetCursorScreenPos();
+            const bool selected = static_cast<int>(i) == m_SelectedFrame;
+            const bool highlighted = selected || static_cast<int>(i) == m_HoveredFrame;
+            if (ImGui::Selectable("##frame", highlighted, 0, ImVec2(0.0f, rowH)))
+                m_SelectedFrame = selected ? -1 : static_cast<int>(i);
+            if (ImGui::IsItemHovered())
+                hoveredRow = static_cast<int>(i);
+            const float rowW = ImGui::GetItemRectSize().x;
+            const float textY = rowMin.y + (rowH - ImGui::GetTextLineHeight()) * 0.5f;
+            ImDrawList* dl = ImGui::GetWindowDrawList();
+            char idx[16], pos[32], size[32];
+            std::snprintf(idx, sizeof(idx), "%zu", i);
+            std::snprintf(pos, sizeof(pos), "%d, %d", frame.x, frame.y);
+            std::snprintf(size, sizeof(size), "%d x %d", frame.width, frame.height);
+            const ImU32 dimCol = ImGui::ColorConvertFloat4ToU32(DekiEditor::Palette::Dim);
+            const ImU32 textCol = ImGui::GetColorU32(ImGuiCol_Text);
+            dl->AddText(ImVec2(rowMin.x + pad, textY), selected ? AccentWithAlpha(1.0f) : dimCol, idx);
+            dl->AddText(ImVec2(rowMin.x + pad + 34.0f * dpi, textY), textCol, pos);
+            const float sizeW = ImGui::CalcTextSize(size).x;
+            dl->AddText(ImVec2(rowMin.x + rowW - pad - sizeW, textY), dimCol, size);
+            ImGui::PopID();
         }
-        DekiEditor::EndPropertyContext();
+        // The list hovers the canvas' frame, and (in DrawTexturePreview) the
+        // canvas hovers the list's row.
+        if (hoveredRow >= 0)
+            m_HoveredFrame = hoveredRow;
     }
 
     if (!m_StatusMessage.empty())
@@ -332,8 +446,7 @@ void SpritesheetEditorWindow::DrawSlicingControls()
         ui.Spacing();
         DekiEditor::BeginPropertyContext();
         if (m_StatusIsError)
-            ui.TextColored(DekiEditor::Palette::Red.x, DekiEditor::Palette::Red.y, DekiEditor::Palette::Red.z, 1.0f,
-                           m_StatusMessage.c_str());
+            ImGui::TextColored(DekiEditor::Palette::Red, "%s", m_StatusMessage.c_str());
         else
             ui.TextDisabled(m_StatusMessage.c_str());
         DekiEditor::EndPropertyContext();
@@ -349,6 +462,7 @@ void SpritesheetEditorWindow::DrawTexturePreview()
         return;
     }
 
+    const float dpi = ui.GetDpiScale();
     float originX, originY, availX, availY;
     ui.GetCursorScreenPos(&originX, &originY);
     ui.GetContentRegionAvail(&availX, &availY);
@@ -358,7 +472,7 @@ void SpritesheetEditorWindow::DrawTexturePreview()
     if (m_FitPending)
     {
         m_FitPending = false;
-        const float margin = 32.0f * ui.GetDpiScale();
+        const float margin = 32.0f * dpi;
         const float fit = std::min((availX - margin * 2.0f) / (float)m_TextureWidth,
                                    (availY - margin * 2.0f) / (float)m_TextureHeight);
         m_Zoom = std::clamp(fit, 0.1f, 32.0f);
@@ -387,40 +501,84 @@ void SpritesheetEditorWindow::DrawTexturePreview()
     ui.DrawImage(m_TextureId, imgX, imgY, imgX + displayW, imgY + displayH);
     ui.DrawRect(imgX, imgY, imgX + displayW, imgY + displayH, EditorUI::Rgba(90, 95, 105, 255));
 
-    // Frames in the theme accent
-    const uint32_t accent = ui.GetStyleColor(EditorUI::Col::CheckMark);
-    for (const auto& frame : m_AtlasFrames)
+    // Which frame is under the mouse
+    float mx = 0.0f, my = 0.0f;
+    ui.GetMousePos(&mx, &my);
+    int underMouse = -1;
+    if (hovered)
+        for (size_t i = 0; i < m_AtlasFrames.size(); ++i)
+        {
+            const auto& f = m_AtlasFrames[i];
+            const float x1 = imgX + f.x * m_Zoom, y1 = imgY + f.y * m_Zoom;
+            if (mx >= x1 && mx < x1 + f.width * m_Zoom && my >= y1 && my < y1 + f.height * m_Zoom)
+                underMouse = static_cast<int>(i);
+        }
+
+    // Frames: outlined in the accent; the hovered one tinted, the selected
+    // one tinted more, each numbered when there is room for it.
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+    const ImU32 outline = AccentWithAlpha(0.75f);
+    const float numberRoom = ImGui::GetTextLineHeight() * 1.2f;
+    for (size_t i = 0; i < m_AtlasFrames.size(); ++i)
     {
+        const auto& frame = m_AtlasFrames[i];
         const float x1 = imgX + frame.x * m_Zoom;
         const float y1 = imgY + frame.y * m_Zoom;
-        ui.DrawRect(x1, y1, x1 + frame.width * m_Zoom, y1 + frame.height * m_Zoom, accent, 1.0f);
+        const float x2 = x1 + frame.width * m_Zoom;
+        const float y2 = y1 + frame.height * m_Zoom;
+        const bool selected = static_cast<int>(i) == m_SelectedFrame;
+        const bool isHovered = static_cast<int>(i) == underMouse || static_cast<int>(i) == m_HoveredFrame;
+        if (selected || isHovered)
+            dl->AddRectFilled(ImVec2(x1, y1), ImVec2(x2, y2), AccentWithAlpha(selected ? 0.22f : 0.12f));
+        dl->AddRect(ImVec2(x1, y1), ImVec2(x2, y2), selected ? AccentWithAlpha(1.0f) : outline, 0.0f, 0,
+                    selected ? 2.0f : 1.0f);
+        if (x2 - x1 >= numberRoom && y2 - y1 >= numberRoom)
+        {
+            char n[16];
+            std::snprintf(n, sizeof(n), "%zu", i);
+            dl->AddText(ImVec2(x1 + 3.0f * dpi, y1 + 1.0f * dpi), selected ? AccentWithAlpha(1.0f) : outline, n);
+        }
     }
+    m_HoveredFrame = underMouse;  // the list draws next frame with this
 
-    // Wheel zooms about the cursor; a drag pans; a double-click fits.
+    // Wheel zooms about the cursor; a drag pans; a click picks a frame; a
+    // double-click fits.
     if (hovered && ui.GetMouseWheel() != 0.0f)
     {
-        float mx, my;
-        ui.GetMousePos(&mx, &my);
         const float before = m_Zoom;
         m_Zoom = std::clamp(m_Zoom * (ui.GetMouseWheel() > 0.0f ? 1.2f : 1.0f / 1.2f), 0.1f, 32.0f);
         const float fx = (mx - imgX) / before, fy = (my - imgY) / before;
         m_PanOffsetX += mx - (originX + (availX - m_TextureWidth * m_Zoom) * 0.5f + m_PanOffsetX + fx * m_Zoom);
         m_PanOffsetY += my - (originY + (availY - m_TextureHeight * m_Zoom) * 0.5f + m_PanOffsetY + fy * m_Zoom);
     }
-    if (ui.IsItemActive() && (ui.IsMouseDragging(0, 0.0f) || ui.IsMouseDragging(2, 0.0f)))
+    if (ui.IsItemActive() && (ui.IsMouseDragging(0) || ui.IsMouseDragging(2, 0.0f)))
     {
         float dx, dy;
         ui.GetMouseDelta(&dx, &dy);
         m_PanOffsetX += dx;
         m_PanOffsetY += dy;
     }
+    if (hovered && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && ImGui::GetIO().MouseDragMaxDistanceSqr[0] < 16.0f)
+        m_SelectedFrame = underMouse;
     if (hovered && ui.IsMouseDoubleClicked(0))
         m_FitPending = true;
 
-    char info[64];
-    std::snprintf(info, sizeof(info), "%.0f%%   Scroll: zoom   |   Drag: pan   |   Double-click: fit", m_Zoom * 100.0f);
-    ui.DrawTextAt(0.0f, originX + 8.0f, originY + availY - ui.GetTextLineHeight() - 6.0f,
-                  EditorUI::Rgba(120, 120, 116, 200), info);
+    // Corner readouts: zoom and frame count; the selected frame's rect
+    char info[96];
+    std::snprintf(info, sizeof(info), "%.0f%%   %zu frame%s", m_Zoom * 100.0f, m_AtlasFrames.size(),
+                  m_AtlasFrames.size() == 1 ? "" : "s");
+    const uint32_t readout = EditorUI::Rgba(150, 150, 146, 230);
+    ui.DrawTextAt(0.0f, originX + 10.0f * dpi, originY + 8.0f * dpi, readout, info);
+    if (m_SelectedFrame >= 0 && m_SelectedFrame < static_cast<int>(m_AtlasFrames.size()))
+    {
+        const auto& f = m_AtlasFrames[m_SelectedFrame];
+        std::snprintf(info, sizeof(info), "Frame %d   %d, %d   %d x %d px", m_SelectedFrame, f.x, f.y, f.width, f.height);
+        float tw = 0.0f;
+        ui.MeasureText(info, &tw, nullptr);
+        ui.DrawTextAt(0.0f, originX + availX - tw - 10.0f * dpi, originY + 8.0f * dpi, AccentWithAlpha(1.0f), info);
+    }
+    ui.DrawTextAt(0.0f, originX + 10.0f * dpi, originY + availY - ui.GetTextLineHeight() - 8.0f * dpi,
+                  EditorUI::Rgba(120, 120, 116, 200), "Scroll: zoom   |   Drag: pan   |   Click: pick a frame   |   Double-click: fit");
     ui.PopClipRect();
 }
 
@@ -674,7 +832,7 @@ void SpritesheetEditorWindow::GenerateGrid()
         }
     }
 
-    m_StatusMessage = "Generated " + std::to_string(m_AtlasFrames.size()) + " grid frames";
+    m_StatusMessage.clear();
     m_StatusIsError = false;
 }
 
@@ -699,12 +857,12 @@ void SpritesheetEditorWindow::RunAutoCut()
 
     if (m_AtlasFrames.empty())
     {
-        m_StatusMessage = "No sprites detected";
+        m_StatusMessage = "No sprites found: the image has no transparent space between them.";
         m_StatusIsError = true;
     }
     else
     {
-        m_StatusMessage = "Detected " + std::to_string(m_AtlasFrames.size()) + " sprites";
+        m_StatusMessage.clear();
         m_StatusIsError = false;
     }
 }
