@@ -52,6 +52,7 @@ private:
     // UI Drawing
     void DrawTexturePreview();
     void DrawSlicingControls();
+    void SaveAndReimport();      // write .png.data, re-import so the frames exist
 
     // File I/O
     void LoadTextureData();      // Load pixel data from cache
@@ -94,6 +95,7 @@ private:
     bool m_IsPanning = false;
     float m_LastMousePosX = 0.0f;
     float m_LastMousePosY = 0.0f;
+    bool m_FitPending = true;    // fit the image to the canvas on its next draw
 
     // Status
     std::string m_StatusMessage;
