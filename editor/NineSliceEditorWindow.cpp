@@ -6,6 +6,8 @@
 #include <deki-editor/EditorAssets.h>
 #include <deki-editor/AssetDatabase.h>
 #include <deki-editor/EditorUI.h>
+#include <deki-editor/SubAsset.h>
+#include <deki-editor/TextureImporter.h>
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
@@ -25,6 +27,16 @@ namespace DekiEditor
 static uint32_t WithAlpha(uint32_t rgba, uint32_t alpha)
 {
     return (rgba & 0x00FFFFFFu) | (alpha << 24u);
+}
+
+namespace
+{
+int s_NextFrame = -1;  // SetNextFrame, taken by the next OpenFile
+}
+
+void NineSliceEditorWindow::SetNextFrame(int frameIndex)
+{
+    s_NextFrame = frameIndex;
 }
 
 // ============================================================================
@@ -60,6 +72,9 @@ void NineSliceEditorWindow::OnClose()
     m_CachePath.clear();
     m_AssetGuid.clear();
     m_DisplayName.clear();
+    m_FrameIndex = -1;
+    m_FrameGuid.clear();
+    m_FrameW = m_FrameH = 0;
     m_Current = m_Saved = {};
     m_UndoStack.clear();
     m_RedoStack.clear();
@@ -97,6 +112,30 @@ void NineSliceEditorWindow::OpenFile(const char* filePath, const char* cachePath
         for (char& c : relStr)
             if (c == '\\') c = '/';
         m_AssetGuid = AssetDatabase::AssetPathToGUID(relStr);
+    }
+
+    // One frame of a sheet, when the Sprite inspector asked for it.
+    m_FrameIndex = -1;
+    m_FrameGuid.clear();
+    m_FrameW = m_FrameH = 0;
+    const int frame = s_NextFrame;
+    s_NextFrame = -1;
+    if (frame >= 0 && m_Source == Source::NormalSprite && !m_AssetGuid.empty())
+    {
+        if (const auto* subs = AssetDatabase::GetSubAssets(m_AssetGuid))
+            for (const SubAssetInfo& sub : *subs)
+                if (sub.subAssetIndex == frame)
+                {
+                    const SpriteFrameData* rect = TextureImporter::GetFrameData(sub.guid);
+                    if (!rect || rect->width <= 0 || rect->height <= 0)
+                        break;
+                    m_FrameIndex = frame;
+                    m_FrameGuid = sub.guid;
+                    m_FrameW = rect->width;
+                    m_FrameH = rect->height;
+                    m_DisplayName += "  >  " + (sub.name.empty() ? "Frame " + std::to_string(frame) : sub.name);
+                    break;
+                }
     }
 
     LoadFromDisk();
@@ -150,7 +189,14 @@ void NineSliceEditorWindow::LoadFromDisk()
             nlohmann::json j;
             in >> j;
             const nlohmann::json* node = nullptr;
-            if (j.contains("settings") && j["settings"].contains("nine_slice"))
+            if (m_FrameIndex >= 0)
+            {
+                const std::string key = std::to_string(m_FrameIndex);
+                if (j.contains("settings") && j["settings"].contains("frame_nine_slice") &&
+                    j["settings"]["frame_nine_slice"].contains(key))
+                    node = &j["settings"]["frame_nine_slice"][key];
+            }
+            else if (j.contains("settings") && j["settings"].contains("nine_slice"))
                 node = &j["settings"]["nine_slice"];
             else if (j.contains("nine_slice"))
                 node = &j["nine_slice"];
@@ -223,7 +269,20 @@ void NineSliceEditorWindow::SaveToDisk()
         }
 
         bool topLevel = j.contains("nine_slice") && !j.contains("settings");
-        if (clear)
+        if (m_FrameIndex >= 0)
+        {
+            const std::string key = std::to_string(m_FrameIndex);
+            nlohmann::json& frames = j["settings"]["frame_nine_slice"];
+            if (!frames.is_object())
+                frames = nlohmann::json::object();
+            if (clear)
+                frames.erase(key);
+            else
+                frames[key] = {m_Current.top, m_Current.right, m_Current.bottom, m_Current.left};
+            if (frames.empty())
+                j["settings"].erase("frame_nine_slice");
+        }
+        else if (clear)
         {
             if (j.contains("settings") && j["settings"].contains("nine_slice"))
                 j["settings"].erase("nine_slice");
@@ -246,7 +305,15 @@ void NineSliceEditorWindow::SaveToDisk()
             if (out.is_open())
                 out << j.dump(2);
         }
-        // AssetPipeline mtime check on the .data sidecar will re-bake the .dtex.
+        // Re-import the image now: its cache handler sees the sidecar is newer
+        // and re-bakes the .dtex. Waiting for a refresh to notice left the
+        // scene drawing the old borders.
+        if (!m_ProjectPath.empty())
+        {
+            std::string relStr = fs::relative(fs::path(m_AssetPath), m_ProjectPath).string();
+            for (char& c : relStr) if (c == '\\') c = '/';
+            AssetDatabase::ImportAsset(relStr);
+        }
     }
 
     m_Saved = m_Current;
@@ -324,6 +391,18 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
         ui.TextDisabled("(Sprite preview unavailable — asset not cached)");
         return false;
     }
+    // A frame: show just it, and measure the borders in its pixels.
+    float u0 = 0.0f, v0 = 0.0f, u1 = 1.0f, v1 = 1.0f;
+    if (m_FrameIndex >= 0)
+    {
+        if (!EditorAssets::Get()->GetFrameUVs(m_FrameGuid, &u0, &v0, &u1, &v1))
+        {
+            ui.TextDisabled("(Frame preview unavailable)");
+            return false;
+        }
+        texW = static_cast<uint32_t>(m_FrameW);
+        texH = static_cast<uint32_t>(m_FrameH);
+    }
     m_TexW = texW;
     m_TexH = texH;
 
@@ -375,7 +454,7 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
             }
     }
 
-    ui.DrawImage(texId, spriteX, spriteY, spriteX + displayW, spriteY + displayH);
+    ui.DrawImage(texId, spriteX, spriteY, spriteX + displayW, spriteY + displayH, u0, v0, u1, v1);
 
     // Wheel zoom around the cursor
     if (canvasHovered && ui.GetMouseWheel() != 0.0f)
@@ -736,6 +815,10 @@ void NineSliceEditorWindow::OnGUI()
     auto& ui = EditorUI::Get();
     // Begin returns false when window is collapsed; we still want to End and run the modal.
     bool wantOpen = m_IsOpen;
+    // Room for the canvas, centred; auto-size left it a strip at the top left.
+    const float dpi = ui.GetDpiScale();
+    ui.SetNextWindowSize(640.0f * dpi, 560.0f * dpi, true);
+    ui.SetNextWindowSizeConstraints(420.0f * dpi, 320.0f * dpi, 100000.0f, 100000.0f);
     bool visible = ui.Begin(GetTitle(), &wantOpen, EditorUI::WinNoSavedSettings);
 
     // Veto close-via-X if there are unsaved changes — open prompt instead
@@ -763,15 +846,22 @@ void NineSliceEditorWindow::OnGUI()
             m_FitViewPending = true;
         ui.EndToolbar();
 
+        // Padding around the header rows; the canvas below runs edge to edge.
+        const float dpi = ui.GetDpiScale();
+        const float pad = 12.0f * dpi;
+
         if (!hasSprite)
         {
-            ui.Spacing();
+            ui.Dummy(0.0f, pad);
+            ui.Indent(pad);
             ui.TextDisabled("No sprite open. Use 'Edit 9-Slice...' from a Sprite inspector or the Asset Browser.");
+            ui.Unindent(pad);
         }
         else
         {
             // ── Info row: bold sprite name + dim dimensions/zoom ────────────
-            ui.Spacing();
+            ui.Dummy(0.0f, pad * 0.75f);
+            ui.Indent(pad);
             ui.PushBoldFont();
             ui.Text(m_DisplayName.c_str());
             ui.PopFont();
@@ -780,9 +870,10 @@ void NineSliceEditorWindow::OnGUI()
                 char info[64];
                 std::snprintf(info, sizeof(info), "%u x %u px   %.0f%%",
                               m_TexW, m_TexH, m_Zoom * 100.0f);
-                ui.SameLine(0.0f, 12.0f);
+                ui.SameLine(0.0f, 12.0f * dpi);
                 ui.TextDisabled(info);
             }
+            ui.Dummy(0.0f, 4.0f * dpi);
 
             // ── Border fields (one undo step per edit session) ──────────────
             // Snapshot the pre-edit values while no field is active; drags span
@@ -791,28 +882,37 @@ void NineSliceEditorWindow::OnGUI()
                 m_FieldsSnapshot = m_Current;
 
             bool anyActive = false, anyCommitted = false;
-            const float fieldW = ui.GetTextLineHeight() * 4.0f;
+            // Four equal columns across the window, each a dim label on the
+            // field's baseline and the field filling the rest.
+            const float colGap = 14.0f * dpi;
+            float availW = 0.0f;
+            ui.GetContentRegionAvail(&availW, nullptr);
+            const float colW = (availW - pad - colGap * 3.0f) / 4.0f;
             auto borderField = [&](const char* label, int32_t* v)
             {
-                ui.Text(label);
-                ui.SameLine();
-                ui.SetNextItemWidth(fieldW);
+                float labelW = 0.0f;
+                ui.MeasureText(label, &labelW, nullptr);
+                ui.AlignTextToFramePadding();
+                ui.TextDisabled(label);
+                ui.SameLine(0.0f, 6.0f * dpi);
+                ui.SetNextItemWidth(std::max(colW - labelW - 6.0f * dpi, 24.0f * dpi));
                 char id[24];
                 std::snprintf(id, sizeof(id), "##ns%s", label);
                 ui.DragInt(id, v, 1.0f, 0, 8192);
                 anyActive    |= ui.IsItemActive();
                 anyCommitted |= ui.IsItemDeactivatedAfterEdit();
             };
-            borderField("Left",   &m_Current.left);   ui.SameLine(0.0f, 14.0f);
-            borderField("Top",    &m_Current.top);    ui.SameLine(0.0f, 14.0f);
-            borderField("Right",  &m_Current.right);  ui.SameLine(0.0f, 14.0f);
+            borderField("Left",   &m_Current.left);   ui.SameLine(0.0f, colGap);
+            borderField("Top",    &m_Current.top);    ui.SameLine(0.0f, colGap);
+            borderField("Right",  &m_Current.right);  ui.SameLine(0.0f, colGap);
             borderField("Bottom", &m_Current.bottom);
 
             if (anyCommitted)
                 PushUndoSnapshot(m_FieldsSnapshot);
             m_FieldEditActive = anyActive;
 
-            ui.Spacing();
+            ui.Unindent(pad);
+            ui.Dummy(0.0f, pad * 0.75f);
             DrawCanvasAndHandles();
         }
 

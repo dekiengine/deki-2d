@@ -20,6 +20,13 @@ struct SpriteFrame
     int32_t y;      // Y position in parent texture
     int32_t width;  // Frame width
     int32_t height; // Frame height
+
+    // The frame's own 9-slice borders, measured inside the frame.
+    bool hasNineSlice = false;
+    uint16_t nineSliceLeft = 0;
+    uint16_t nineSliceRight = 0;
+    uint16_t nineSliceTop = 0;
+    uint16_t nineSliceBottom = 0;
 };
 
 /**
@@ -227,6 +234,22 @@ class Sprite : public Deki::Texture2D
      * @param source Source sprite with valid 9-slice metadata
      */
     static void BakeNineSliceInto(uint8_t* dst, int32_t dst_w, int32_t dst_h, const Sprite* source);
+
+    /// A rectangle of a sprite (a frame, or all of it) and the 9-slice
+    /// borders inside that rectangle.
+    struct SliceRegion
+    {
+        int32_t x = 0, y = 0, width = 0, height = 0;
+        uint16_t left = 0, right = 0, top = 0, bottom = 0;
+    };
+
+    /// The two bakes above, reading only `region` of the source. The caller
+    /// checks that the region lies inside the source and that its borders
+    /// leave a center.
+    static void BakeTiledRegion(uint8_t* dst, int32_t dst_w, int32_t dst_h, const Sprite* source,
+                                const SliceRegion& region);
+    static void BakeNineSliceRegion(uint8_t* dst, int32_t dst_w, int32_t dst_h, const Sprite* source,
+                                    const SliceRegion& region);
 
     /**
      * @brief Sets 9-slice borders for this sprite

@@ -177,11 +177,14 @@ bool SpriteComponent::GetContentExtents(float& outWidth, float& outHeight) const
         return false;
     if (renderMode == SpriteRenderMode::Tiled || renderMode == SpriteRenderMode::NineSlice)
     {
-        // The bake is width x height meters (0 = the sprite's native size), in
-        // the sprite's stored pixels (fewer when Max Size shrank it).
+        // The bake is width x height meters (0 = the frame's or sprite's
+        // native size), in the sprite's stored pixels (fewer when Max Size
+        // shrank it).
+        bool hasBorders = false;
+        const Sprite::SliceRegion region = SliceSource(spr, hasBorders);
         const float ppm = Deki::EngineSettings::Global().pixelsPerMeter * spr->sourceScale;
-        outWidth = (width > 0.0f) ? width : static_cast<float>(spr->width) / (ppm > 0.0f ? ppm : 1.0f);
-        outHeight = (height > 0.0f) ? height : static_cast<float>(spr->height) / (ppm > 0.0f ? ppm : 1.0f);
+        outWidth = (width > 0.0f) ? width : static_cast<float>(region.width) / (ppm > 0.0f ? ppm : 1.0f);
+        outHeight = (height > 0.0f) ? height : static_cast<float>(region.height) / (ppm > 0.0f ? ppm : 1.0f);
         return true;
     }
     // Normal: the drawn region at the sprite's own pixels-per-meter. A frame
@@ -197,6 +200,35 @@ bool SpriteComponent::GetContentExtents(float& outWidth, float& outHeight) const
     outWidth = static_cast<float>(drawnW) / ppm;
     outHeight = static_cast<float>(drawnH) / ppm;
     return true;
+}
+
+Sprite::SliceRegion SpriteComponent::SliceSource(const Sprite* spr, bool& hasBorders) const
+{
+    Sprite::SliceRegion region;
+    region.width = spr->width;
+    region.height = spr->height;
+    hasBorders = spr->hasNineSlice;
+    region.left = spr->nineSliceLeft;
+    region.right = spr->nineSliceRight;
+    region.top = spr->nineSliceTop;
+    region.bottom = spr->nineSliceBottom;
+
+    // A shown frame, clamped to the texture.
+    if (frameWidth <= 0 || frameHeight <= 0)
+        return region;
+    const int32_t x0 = std::clamp(frameX, 0, spr->width - 1);
+    const int32_t y0 = std::clamp(frameY, 0, spr->height - 1);
+    region.x = x0;
+    region.y = y0;
+    region.width = std::min(frameWidth, spr->width - x0);
+    region.height = std::min(frameHeight, spr->height - y0);
+    const SpriteFrame* frame = m_FrameGuid[0] ? spr->FindFrame(m_FrameGuid) : nullptr;
+    hasBorders = frame && frame->hasNineSlice;
+    region.left = hasBorders ? frame->nineSliceLeft : 0;
+    region.right = hasBorders ? frame->nineSliceRight : 0;
+    region.top = hasBorders ? frame->nineSliceTop : 0;
+    region.bottom = hasBorders ? frame->nineSliceBottom : 0;
+    return region;
 }
 
 void SpriteComponent::ApplyFlip(QuadBlit::Source& src) const
@@ -240,22 +272,27 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
     {
         // width/height are world meters; pixel-baking math runs in the
         // sprite's stored pixels (fewer when Max Size shrank it).
+        if (spr->width <= 0 || spr->height <= 0)
+            return false;
+        // The shown frame, or the whole sprite.
+        bool hasBorders = false;
+        const Sprite::SliceRegion region = SliceSource(spr, hasBorders);
         const float ppm = Deki::EngineSettings::Global().pixelsPerMeter * spr->sourceScale;
-        int32_t target_w = (width  > 0.0f) ? static_cast<int32_t>(width  * ppm) : spr->width;
-        int32_t target_h = (height > 0.0f) ? static_cast<int32_t>(height * ppm) : spr->height;
+        int32_t target_w = (width  > 0.0f) ? static_cast<int32_t>(width  * ppm) : region.width;
+        int32_t target_h = (height > 0.0f) ? static_cast<int32_t>(height * ppm) : region.height;
 
         // Hard guard: bake helpers assume positive dims and at least 1 source
         // pixel per axis. Refuse degenerate input rather than crash.
-        if (target_w <= 0 || target_h <= 0 || spr->width <= 0 || spr->height <= 0)
+        if (target_w <= 0 || target_h <= 0 || region.width <= 0 || region.height <= 0)
         {
-            DEKI_LOG_ERROR("SpriteComponent: invalid dims (target %dx%d, sprite %dx%d)",
-                           target_w, target_h, spr->width, spr->height);
+            DEKI_LOG_ERROR("SpriteComponent: invalid dims (target %dx%d, source %dx%d)",
+                           target_w, target_h, region.width, region.height);
             return false;
         }
 
         if (renderMode == SpriteRenderMode::NineSlice)
         {
-            if (!spr->hasNineSlice)
+            if (!hasBorders)
             {
                 // Once per sprite: the bake is retried every frame, and this
                 // used to log ~180 times a second.
@@ -267,14 +304,14 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
                 }
                 return false;
             }
-            int32_t min_w = spr->nineSliceLeft + spr->nineSliceRight;
-            int32_t min_h = spr->nineSliceTop  + spr->nineSliceBottom;
-            // Borders must also fit inside the SOURCE — otherwise BakeNineSliceInto
+            int32_t min_w = region.left + region.right;
+            int32_t min_h = region.top  + region.bottom;
+            // Borders must also fit inside the SOURCE — otherwise the bake
             // computes a negative center region and corner reads can underflow.
-            if (min_w >= spr->width || min_h >= spr->height)
+            if (min_w >= region.width || min_h >= region.height)
             {
                 DEKI_LOG_ERROR("SpriteComponent: 9-slice borders %dx%d exceed source size %dx%d",
-                               min_w, min_h, spr->width, spr->height);
+                               min_w, min_h, region.width, region.height);
                 return false;
             }
             if (target_w < min_w || target_h < min_h)
@@ -286,10 +323,16 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
         }
 
         // (Re-)bake when source / size / mode changed
+        const Sprite::SliceRegion& was = m_cachedRenderRegion;
+        const bool regionChanged = was.x != region.x || was.y != region.y || was.width != region.width ||
+                                   was.height != region.height || was.left != region.left ||
+                                   was.right != region.right || was.top != region.top ||
+                                   was.bottom != region.bottom;
         if (m_cachedRenderSrc != spr ||
             m_cachedRenderW   != target_w ||
             m_cachedRenderH   != target_h ||
-            m_cachedRenderMode != renderMode)
+            m_cachedRenderMode != renderMode ||
+            regionChanged)
         {
             size_t need = (size_t)target_w * (size_t)target_h * (size_t)bytesPerPixel;
             // Allocate() leaves an unchanged size alone, so the reuse path
@@ -303,10 +346,11 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
                 return false;
             }
             if (renderMode == SpriteRenderMode::NineSlice)
-                Sprite::BakeNineSliceInto(m_cachedRenderBuffer.Data(), target_w, target_h, spr);
+                Sprite::BakeNineSliceRegion(m_cachedRenderBuffer.Data(), target_w, target_h, spr, region);
             else
-                Sprite::BakeTiledInto(m_cachedRenderBuffer.Data(), target_w, target_h, spr);
+                Sprite::BakeTiledRegion(m_cachedRenderBuffer.Data(), target_w, target_h, spr, region);
 
+            m_cachedRenderRegion = region;
             m_cachedRenderSrc  = spr;
             m_cachedRenderW    = target_w;
             m_cachedRenderH    = target_h;

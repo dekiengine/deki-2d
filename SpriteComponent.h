@@ -168,6 +168,12 @@ private:
 
     const Sprite*    m_cachedRenderSrc    = nullptr;
     SpriteRenderMode m_cachedRenderMode   = SpriteRenderMode::Normal;
+    Sprite::SliceRegion m_cachedRenderRegion;
+
+    // What Tiled and NineSlice stretch: the shown frame, or the whole sprite
+    // when none is, with that frame's (or the sprite's) 9-slice borders.
+    // `hasBorders` is false when it has none.
+    Sprite::SliceRegion SliceSource(const Sprite* spr, bool& hasBorders) const;
     // The "9-slice mode without borders" warning was logged for this sprite.
     mutable bool     m_WarnedNoNineSlice  = false;
 };

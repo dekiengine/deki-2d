@@ -36,6 +36,11 @@ public:
     void OpenFile(const char* filePath, const char* cachePath) override;
     void OnGUI() override;
 
+    // The next OpenFile edits this frame of the image (its index among the
+    // image's frames) instead of the whole image. The Sprite inspector sets
+    // it for a sprite that shows one frame of a sheet.
+    static void SetNextFrame(int frameIndex);
+
 private:
     enum class Source { None, ProceduralAsset, NormalSprite };
 
@@ -77,6 +82,12 @@ private:
     std::string  m_CachePath;          // baked .dtex (optional)
     std::string  m_AssetGuid;
     std::string  m_DisplayName;        // basename for title bar
+    // The frame being edited (-1: the whole image), its GUID and its rect in
+    // the image's pixels. Its borders live in the sidecar's
+    // settings.frame_nine_slice under its index.
+    int          m_FrameIndex = -1;
+    std::string  m_FrameGuid;
+    int          m_FrameW = 0, m_FrameH = 0;
 
     Borders      m_Current;            // values being edited
     Borders      m_Saved;              // last value persisted to disk

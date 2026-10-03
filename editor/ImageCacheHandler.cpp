@@ -32,6 +32,8 @@
 #include <nlohmann/json.hpp>
 #include <filesystem>
 #include <fstream>
+#include <array>
+#include <map>
 #include <vector>
 #include <string>
 
@@ -53,6 +55,8 @@ struct ImageSidecar
     bool exists = false;
     json data;                     // the whole file, for the staleness checks
     SpriteSettings sprite;
+    // Frames' own 9-slice borders, by frame index: [top, right, bottom, left].
+    std::map<int, std::array<int, 4>> frameNineSlice;
     ChromaKeySettings chromaKey;
     TextureSettings texture;  // settings.texture: format and Max Size, per target
 };
@@ -129,6 +133,23 @@ ImageSidecar ReadImageSidecar(const std::string& imagePath)
         out.sprite.nineSliceLeft = static_cast<uint16_t>((*nineSliceNode)[3].get<int>());
     }
 
+    // Per-frame 9-slice: "frame_nine_slice": { "<frame index>": [top, right, bottom, left] }
+    if (d.contains("settings") && d["settings"].contains("frame_nine_slice") &&
+        d["settings"]["frame_nine_slice"].is_object())
+    {
+        for (const auto& [key, borders] : d["settings"]["frame_nine_slice"].items())
+        {
+            if (!borders.is_array() || borders.size() < 4)
+                continue;
+            try
+            {
+                out.frameNineSlice[std::stoi(key)] = { borders[0].get<int>(), borders[1].get<int>(),
+                                                       borders[2].get<int>(), borders[3].get<int>() };
+            }
+            catch (...) {}
+        }
+    }
+
     if (d.contains("settings") && d["settings"].contains("texture"))
     {
         const auto& tex = d["settings"]["texture"];
@@ -157,10 +178,26 @@ bool ReadCachedFormat(const std::string& cachePath, TextureFormat& format, bool&
     return true;
 }
 
-/// The parts of the image that must not bleed into each other when it is
-/// shrunk: its sprite frames, and the nine parts of a nine-slice image.
-std::vector<Deki2DEditor::PixelRect> ShrinkRegions(const SpriteSettings& sprite, int w, int h)
+/// Register the frames' own 9-slice borders for WriteTexFile, and forget
+/// those of frames that no longer have any.
+void RegisterFrameNineSlices(const ImageSidecar& sidecar, const std::vector<SubAssetInfo>& subAssets)
 {
+    for (const SubAssetInfo& sub : subAssets)
+    {
+        auto it = sidecar.frameNineSlice.find(sub.subAssetIndex);
+        const bool has = it != sidecar.frameNineSlice.end();
+        auto u16 = [](int v) { return static_cast<uint16_t>(v < 0 ? 0 : v); };
+        TextureImporter::SetFrameNineSlice(sub.guid, has, has ? u16(it->second[3]) : 0, has ? u16(it->second[1]) : 0,
+                                           has ? u16(it->second[0]) : 0, has ? u16(it->second[2]) : 0);
+    }
+}
+
+/// The parts of the image that must not bleed into each other when it is
+/// shrunk: its sprite frames, and the nine parts of a nine-slice image or
+/// frame.
+std::vector<Deki2DEditor::PixelRect> ShrinkRegions(const ImageSidecar& sidecar, int w, int h)
+{
+    const SpriteSettings& sprite = sidecar.sprite;
     std::vector<Deki2DEditor::PixelRect> out;
     if (sprite.mode == SpriteSlicingMode::Atlas)
     {
@@ -183,6 +220,22 @@ std::vector<Deki2DEditor::PixelRect> ShrinkRegions(const SpriteSettings& sprite,
             for (int i = 0; i < 3; ++i)
                 out.push_back({ xs[i], ys[j], xs[i + 1], ys[j + 1] });
     }
+    // A bordered frame's nine parts. Frame rects are listed above in frame
+    // order (atlas frames, or the grid row by row), so the index finds them.
+    const size_t frameCount = out.size() - (sprite.hasNineSlice ? 9 : 0);
+    std::vector<Deki2DEditor::PixelRect> frameParts;
+    for (const auto& [index, b] : sidecar.frameNineSlice)
+    {
+        if (index < 0 || static_cast<size_t>(index) >= frameCount)
+            continue;
+        const Deki2DEditor::PixelRect f = out[static_cast<size_t>(index)];
+        const int xs[4] = { f.x0, f.x0 + b[3], f.x1 - b[1], f.x1 };
+        const int ys[4] = { f.y0, f.y0 + b[0], f.y1 - b[2], f.y1 };
+        for (int j = 0; j < 3; ++j)
+            for (int i = 0; i < 3; ++i)
+                frameParts.push_back({ xs[i], ys[j], xs[i + 1], ys[j + 1] });
+    }
+    out.insert(out.end(), frameParts.begin(), frameParts.end());
     return out;
 }
 
@@ -212,7 +265,7 @@ bool CompileImage(const std::string& imagePath, const std::string& guid, const I
     if (storedW != decoded.width || storedH != decoded.height)
     {
         shrunk = Deki2DEditor::ShrinkImage(decoded.rgba.data(), decoded.width, decoded.height, storedW, storedH,
-                                           ShrinkRegions(sidecar.sprite, decoded.width, decoded.height),
+                                           ShrinkRegions(sidecar, decoded.width, decoded.height),
                                            sidecar.chromaKey.enabled);
         pixels = shrunk.data();
     }
@@ -221,6 +274,7 @@ bool CompileImage(const std::string& imagePath, const std::string& guid, const I
     if (sidecar.sprite.HasData())
     {
         subAssets = TextureImporter::GenerateFrameSubAssets(guid, decoded.width, decoded.height, sidecar.sprite);
+        RegisterFrameNineSlices(sidecar, subAssets);
         if (pipeline)
             pipeline->RegisterSubAssets(guid, subAssets);
     }
@@ -321,6 +375,7 @@ AssetCacheResult HandleSpriteImageCache(const AssetCacheContext& ctx)
         if (TextureImporter::ReadSourceSize(ctx.cachePath, sourceW, sourceH))
         {
             auto subAssets = TextureImporter::GenerateFrameSubAssets(ctx.guid, sourceW, sourceH, sidecar.sprite);
+            RegisterFrameNineSlices(sidecar, subAssets);
             DEKI_LOG_DEBUG("ImageCache: Registering %zu subassets for '%s'", subAssets.size(), ctx.guid.c_str());
             ctx.pipeline->RegisterSubAssets(ctx.guid, subAssets);
         }

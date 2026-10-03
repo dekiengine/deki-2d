@@ -25,6 +25,36 @@ Sprite::~Sprite()
     // chromaRowSpans frees itself.
 }
 
+namespace
+{
+// The frame list may end with the frames' own 9-slice borders: a u16 count,
+// then per bordered frame u16 index, left, right, top, bottom. Older files
+// stop after the entries; older loaders ignore the tail.
+void ReadFrameNineSlices(std::vector<SpriteFrame>& frames, const uint8_t* chunk, uint32_t chunkSize,
+                         uint32_t entriesEnd)
+{
+    if (chunkSize < entriesEnd + sizeof(uint16_t))
+        return;
+    uint16_t count = 0;
+    std::memcpy(&count, chunk + entriesEnd, sizeof(count));
+    const uint32_t kEntry = 5 * sizeof(uint16_t);
+    uint32_t at = entriesEnd + sizeof(uint16_t);
+    for (uint16_t i = 0; i < count && at + kEntry <= chunkSize; ++i, at += kEntry)
+    {
+        uint16_t v[5];
+        std::memcpy(v, chunk + at, sizeof(v));
+        if (v[0] >= frames.size())
+            continue;
+        SpriteFrame& f = frames[v[0]];
+        f.hasNineSlice = true;
+        f.nineSliceLeft = v[1];
+        f.nineSliceRight = v[2];
+        f.nineSliceTop = v[3];
+        f.nineSliceBottom = v[4];
+    }
+}
+}  // namespace
+
 const SpriteFrame* Sprite::FindFrame(const std::string& guid) const
 {
     for (size_t i = 0; i < frames.size(); i++)
@@ -80,6 +110,13 @@ void Sprite::ApplySourceSize(int32_t imageWidth, int32_t imageHeight)
     {
         const int32_t x0 = SourceToStoredX(f.x), x1 = SourceToStoredX(f.x + f.width);
         const int32_t y0 = SourceToStoredY(f.y), y1 = SourceToStoredY(f.y + f.height);
+        if (f.hasNineSlice)
+        {
+            f.nineSliceLeft = static_cast<uint16_t>(SourceToStoredX(f.x + f.nineSliceLeft) - x0);
+            f.nineSliceRight = static_cast<uint16_t>(x1 - SourceToStoredX(f.x + f.width - f.nineSliceRight));
+            f.nineSliceTop = static_cast<uint16_t>(SourceToStoredY(f.y + f.nineSliceTop) - y0);
+            f.nineSliceBottom = static_cast<uint16_t>(y1 - SourceToStoredY(f.y + f.height - f.nineSliceBottom));
+        }
         f.x = x0;
         f.y = y0;
         f.width = x1 > x0 ? x1 - x0 : 1;
@@ -289,6 +326,7 @@ Sprite* Sprite::Load(const char* file_path)
                         frame.height = *(int32_t*)(metadata + offset + frame_offset);
                         frame_offset += sizeof(int32_t);
                     }
+                    ReadFrameNineSlices(sprite->frames, metadata + offset, chunk_size, frame_offset);
                     DEKI_LOG_INTERNAL("  Frame list: %u frames", frameCount);
                 }
             }
@@ -506,6 +544,7 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
                             frame.width = *(int32_t*)(metadata + offset + frame_offset); frame_offset += sizeof(int32_t);
                             frame.height = *(int32_t*)(metadata + offset + frame_offset); frame_offset += sizeof(int32_t);
                         }
+                        ReadFrameNineSlices(sprite->frames, metadata + offset, chunk_size, frame_offset);
                     }
                 }
                 else if (chunk_type == 3 && chunk_size >= 8)
@@ -692,14 +731,23 @@ Sprite* Sprite::CreateSolidRGBA(int32_t width, int32_t height, uint8_t r, uint8_
 
 void Sprite::BakeTiledInto(uint8_t* dst, int32_t dst_w, int32_t dst_h, const Sprite* source)
 {
+    SliceRegion all;
+    all.width = source->width;
+    all.height = source->height;
+    BakeTiledRegion(dst, dst_w, dst_h, source, all);
+}
+
+void Sprite::BakeTiledRegion(uint8_t* dst, int32_t dst_w, int32_t dst_h, const Sprite* source,
+                             const SliceRegion& region)
+{
     uint32_t bytes_per_pixel = Deki::Texture2D::GetBytesPerPixel(source->format);
 
     for (int32_t y = 0; y < dst_h; ++y)
     {
-        int32_t src_y = y % source->height;
+        int32_t src_y = region.y + y % region.height;
         for (int32_t x = 0; x < dst_w; ++x)
         {
-            int32_t src_x = x % source->width;
+            int32_t src_x = region.x + x % region.width;
 
             int32_t dst_idx = (y * dst_w + x) * bytes_per_pixel;
             int32_t src_idx = (src_y * source->width + src_x) * bytes_per_pixel;
@@ -777,16 +825,30 @@ bool Sprite::SetNineSliceBorders(uint16_t left, uint16_t right, uint16_t top, ui
 
 void Sprite::BakeNineSliceInto(uint8_t* dst, int32_t target_width, int32_t target_height, const Sprite* source)
 {
+    SliceRegion all;
+    all.width = source->width;
+    all.height = source->height;
+    all.left = source->nineSliceLeft;
+    all.right = source->nineSliceRight;
+    all.top = source->nineSliceTop;
+    all.bottom = source->nineSliceBottom;
+    BakeNineSliceRegion(dst, target_width, target_height, source, all);
+}
+
+void Sprite::BakeNineSliceRegion(uint8_t* dst, int32_t target_width, int32_t target_height, const Sprite* source,
+                                 const SliceRegion& region)
+{
     uint32_t bytes_per_pixel = Deki::Texture2D::GetBytesPerPixel(source->format);
 
     // Calculate region dimensions
-    // Source regions
-    int32_t src_left = source->nineSliceLeft;
-    int32_t src_right = source->nineSliceRight;
-    int32_t src_top = source->nineSliceTop;
-    int32_t src_bottom = source->nineSliceBottom;
-    int32_t src_center_w = source->width - src_left - src_right;
-    int32_t src_center_h = source->height - src_top - src_bottom;
+    // Source regions, inside `region`
+    const int32_t rx = region.x, ry = region.y, rw = region.width, rh = region.height;
+    int32_t src_left = region.left;
+    int32_t src_right = region.right;
+    int32_t src_top = region.top;
+    int32_t src_bottom = region.bottom;
+    int32_t src_center_w = rw - src_left - src_right;
+    int32_t src_center_h = rh - src_top - src_bottom;
 
     // Destination regions
     int32_t dst_left = src_left;
@@ -797,16 +859,17 @@ void Sprite::BakeNineSliceInto(uint8_t* dst, int32_t target_width, int32_t targe
     int32_t dst_center_h = target_height - dst_top - dst_bottom;
 
     // Helper lambda to copy a pixel region with nearest-neighbor scaling
-    auto CopyRegion = [](uint8_t* dst, int32_t dst_width, int32_t dst_x, int32_t dst_y,
-                         int32_t dst_w, int32_t dst_h,
-                         const uint8_t* src, int32_t src_width, int32_t src_x, int32_t src_y,
-                         int32_t src_w, int32_t src_h, uint32_t bytes_per_pixel)
+    // src_x/src_y are inside the region; the region's offset is added here.
+    auto CopyRegion = [rx, ry](uint8_t* dst, int32_t dst_width, int32_t dst_x, int32_t dst_y,
+                               int32_t dst_w, int32_t dst_h,
+                               const uint8_t* src, int32_t src_width, int32_t src_x, int32_t src_y,
+                               int32_t src_w, int32_t src_h, uint32_t bytes_per_pixel)
     {
         for (int32_t dy = 0; dy < dst_h; dy++)
         {
             // Calculate source Y using nearest-neighbor
             int32_t sy = (dy * src_h) / dst_h;
-            const uint8_t* src_row = src + ((src_y + sy) * src_width + src_x) * bytes_per_pixel;
+            const uint8_t* src_row = src + ((ry + src_y + sy) * src_width + rx + src_x) * bytes_per_pixel;
             uint8_t* dst_row = dst + ((dst_y + dy) * dst_width + dst_x) * bytes_per_pixel;
 
             for (int32_t dx = 0; dx < dst_w; dx++)
@@ -852,7 +915,7 @@ void Sprite::BakeNineSliceInto(uint8_t* dst, int32_t target_width, int32_t targe
     if (src_right > 0 && src_top > 0)
     {
         CopyRegion(dst, target_width, target_width - dst_right, 0, dst_right, dst_top,
-                  source->data, source->width, source->width - src_right, 0, src_right, src_top, bytes_per_pixel);
+                  source->data, source->width, rw - src_right, 0, src_right, src_top, bytes_per_pixel);
     }
 
     // Left edge (stretch vertically)
@@ -873,28 +936,28 @@ void Sprite::BakeNineSliceInto(uint8_t* dst, int32_t target_width, int32_t targe
     if (src_right > 0 && src_center_h > 0)
     {
         CopyRegion(dst, target_width, target_width - dst_right, dst_top, dst_right, dst_center_h,
-                  source->data, source->width, source->width - src_right, src_top, src_right, src_center_h, bytes_per_pixel);
+                  source->data, source->width, rw - src_right, src_top, src_right, src_center_h, bytes_per_pixel);
     }
 
     // Bottom-left corner (copy as-is)
     if (src_left > 0 && src_bottom > 0)
     {
         CopyRegion(dst, target_width, 0, target_height - dst_bottom, dst_left, dst_bottom,
-                  source->data, source->width, 0, source->height - src_bottom, src_left, src_bottom, bytes_per_pixel);
+                  source->data, source->width, 0, rh - src_bottom, src_left, src_bottom, bytes_per_pixel);
     }
 
     // Bottom edge (stretch horizontally)
     if (src_center_w > 0 && src_bottom > 0)
     {
         CopyRegion(dst, target_width, dst_left, target_height - dst_bottom, dst_center_w, dst_bottom,
-                  source->data, source->width, src_left, source->height - src_bottom, src_center_w, src_bottom, bytes_per_pixel);
+                  source->data, source->width, src_left, rh - src_bottom, src_center_w, src_bottom, bytes_per_pixel);
     }
 
     // Bottom-right corner (copy as-is)
     if (src_right > 0 && src_bottom > 0)
     {
         CopyRegion(dst, target_width, target_width - dst_right, target_height - dst_bottom, dst_right, dst_bottom,
-                  source->data, source->width, source->width - src_right, source->height - src_bottom, src_right, src_bottom, bytes_per_pixel);
+                  source->data, source->width, rw - src_right, rh - src_bottom, src_right, src_bottom, bytes_per_pixel);
     }
 }
 

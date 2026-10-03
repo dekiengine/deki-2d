@@ -13,6 +13,8 @@
 #include <deki-editor/CustomEditor.h>
 #include <deki-editor/EditorUI.h>
 #include <deki-editor/AssetDatabase.h>
+#include <deki-editor/SubAsset.h>
+#include "NineSliceEditorWindow.h"
 #include "SpriteComponent.h"
 #include <deki/Engine.h>
 #include <deki/LogSystem.h>
@@ -279,10 +281,19 @@ public:
         EditorUI::Get().PropertyField("width");
         EditorUI::Get().PropertyField("height");
 
+        // One frame of a sheet: its borders are its own, kept in the
+        // sheet's sidecar under the frame's index.
+        int frameIndex = -1;
+        if (const SubAssetInfo* sub = AssetDatabase::GetSubAsset(spriteGuid))
+        {
+            assetPath = AssetDatabase::GUIDToAbsolutePath(sub->parentGuid);
+            frameIndex = sub->subAssetIndex;
+        }
+
         if (!IsProceduralSpriteAsset(assetPath))
         {
             // Regular sprite: expose 9-slice border editing via the .png.data sidecar.
-            DrawNormalSpriteNineSliceUI(assetPath, spriteGuid);
+            DrawNormalSpriteNineSliceUI(assetPath, frameIndex);
             return;
         }
 
@@ -472,9 +483,8 @@ private:
     // Reads the current 9-slice borders from the .png.data sidecar (if any) and
     // shows a summary line + "Edit 9-Slice..." button. The window handles the
     // actual edit + save round-trip.
-    void DrawNormalSpriteNineSliceUI(const std::string& assetPath, const std::string& spriteGuid)
+    void DrawNormalSpriteNineSliceUI(const std::string& assetPath, int frameIndex)
     {
-        (void)spriteGuid;
         if (assetPath.empty())
             return;
 
@@ -493,7 +503,14 @@ private:
                     nlohmann::json dataJson;
                     in >> dataJson;
                     const nlohmann::json* node = nullptr;
-                    if (dataJson.contains("settings") && dataJson["settings"].contains("nine_slice"))
+                    const std::string key = std::to_string(frameIndex);
+                    if (frameIndex >= 0)
+                    {
+                        if (dataJson.contains("settings") && dataJson["settings"].contains("frame_nine_slice") &&
+                            dataJson["settings"]["frame_nine_slice"].contains(key))
+                            node = &dataJson["settings"]["frame_nine_slice"][key];
+                    }
+                    else if (dataJson.contains("settings") && dataJson["settings"].contains("nine_slice"))
                         node = &dataJson["settings"]["nine_slice"];
                     else if (dataJson.contains("nine_slice"))
                         node = &dataJson["nine_slice"];
@@ -515,6 +532,7 @@ private:
         ui.SameLine();
         if (ui.Button("Edit 9-Slice..."))
         {
+            NineSliceEditorWindow::SetNextFrame(frameIndex);
             EditorApplication::Get().RequestOpenTool(assetPath, /*cachePath*/ "", "9-Slice Editor");
         }
     }
