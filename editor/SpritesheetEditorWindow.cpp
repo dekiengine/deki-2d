@@ -82,6 +82,7 @@ void SpritesheetEditorWindow::OnClose()
     m_FrameHeight = 0;
     m_AtlasFrames.clear();
     m_SavedFrames.clear();
+    m_NextFrameId = 0;
     m_SelectedFrame = m_HoveredFrame = -1;
 
     // Reset UI state
@@ -900,6 +901,8 @@ bool SpritesheetEditorWindow::LoadSliceSettings()
                         frame.y = frameJson.value("y", 0);
                         frame.width = frameJson.value("width", 0);
                         frame.height = frameJson.value("height", 0);
+                        frame.name = frameJson.value("name", "");
+                        frame.id = frameJson.value("id", -1);
                         m_AtlasFrames.push_back(frame);
                     }
                 }
@@ -928,8 +931,21 @@ bool SpritesheetEditorWindow::LoadSliceSettings()
                             m_AtlasFrames.push_back(frame);
                         }
                     }
+                    if (sprite.contains("frameIds") && sprite["frameIds"].is_array())
+                        for (size_t i = 0; i < sprite["frameIds"].size() && i < m_AtlasFrames.size(); ++i)
+                            if (sprite["frameIds"][i].is_number_integer())
+                                m_AtlasFrames[i].id = sprite["frameIds"][i].get<int32_t>();
                 }
             }
+            m_NextFrameId = sprite.value("nextFrameId", 0);
+        }
+
+        // Every frame has an id from here on (a file without them: its position).
+        for (size_t i = 0; i < m_AtlasFrames.size(); ++i)
+        {
+            if (m_AtlasFrames[i].id < 0)
+                m_AtlasFrames[i].id = static_cast<int32_t>(i);
+            m_NextFrameId = std::max(m_NextFrameId, m_AtlasFrames[i].id + 1);
         }
 
         return true;
@@ -965,24 +981,37 @@ bool SpritesheetEditorWindow::SaveSliceSettings()
         }
     }
 
+    // Frame ids are written only when they say something: a sheet whose
+    // frames were never re-sliced keeps the file it always had (ids = positions).
+    bool idsArePositions = m_NextFrameId <= static_cast<int32_t>(m_AtlasFrames.size());
+    for (size_t i = 0; i < m_AtlasFrames.size() && idsArePositions; ++i)
+        idsArePositions = m_AtlasFrames[i].id == static_cast<int32_t>(i);
+
     // Intelligently choose storage format
+    json sprite = json::object();
     if (m_AtlasFrames.empty())
     {
         // No slicing
-        j["settings"]["sprite"] = json::object();
     }
     else if (IsUniformGrid())
     {
         // Save as grid mode for ESP32 optimization
-        j["settings"]["sprite"]["mode"] = "grid";
-        j["settings"]["sprite"]["frameWidth"] = m_AtlasFrames[0].width;
-        j["settings"]["sprite"]["frameHeight"] = m_AtlasFrames[0].height;
+        sprite["mode"] = "grid";
+        sprite["frameWidth"] = m_AtlasFrames[0].width;
+        sprite["frameHeight"] = m_AtlasFrames[0].height;
+        if (!idsArePositions)
+        {
+            json ids = json::array();
+            for (const auto& frame : m_AtlasFrames)
+                ids.push_back(frame.id);
+            sprite["frameIds"] = ids;
+        }
     }
     else
     {
         // Save as atlas mode
-        j["settings"]["sprite"]["mode"] = "atlas";
-        j["settings"]["sprite"]["frames"] = json::array();
+        sprite["mode"] = "atlas";
+        sprite["frames"] = json::array();
 
         for (const auto& frame : m_AtlasFrames)
         {
@@ -991,9 +1020,16 @@ bool SpritesheetEditorWindow::SaveSliceSettings()
             frameJson["y"] = frame.y;
             frameJson["width"] = frame.width;
             frameJson["height"] = frame.height;
-            j["settings"]["sprite"]["frames"].push_back(frameJson);
+            if (!frame.name.empty())
+                frameJson["name"] = frame.name;
+            if (!idsArePositions)
+                frameJson["id"] = frame.id;
+            sprite["frames"].push_back(frameJson);
         }
     }
+    if (!idsArePositions)
+        sprite["nextFrameId"] = m_NextFrameId;
+    j["settings"]["sprite"] = sprite;
 
     // Write back in one step (temp file + rename): a torn sidecar loses the GUID.
     std::string err;
@@ -1031,6 +1067,10 @@ void SpritesheetEditorWindow::GenerateGrid()
             m_AtlasFrames.push_back(frame);
         }
     }
+    // Frames keep the ids of the saved frames they replace, so scenes keep
+    // pointing at the same picture (a frame was its position, and a new grid
+    // size moved every reference to a different frame).
+    DekiEditor::TextureImporter::CarryFrameIds(m_SavedFrames, m_AtlasFrames, m_NextFrameId);
 
     m_StatusMessage.clear();
     m_StatusIsError = false;
@@ -1054,6 +1094,7 @@ void SpritesheetEditorWindow::RunAutoCut()
         1,   // min width
         1    // min height
     );
+    DekiEditor::TextureImporter::CarryFrameIds(m_SavedFrames, m_AtlasFrames, m_NextFrameId);
 
     if (m_AtlasFrames.empty())
     {

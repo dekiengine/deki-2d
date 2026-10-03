@@ -56,7 +56,7 @@ struct ImageSidecar
     json data;                     // the whole file, for the staleness checks
     SpriteSettings sprite;
     // Frames' own 9-slice borders, by frame index: [top, right, bottom, left].
-    std::map<int, std::array<int, 4>> frameNineSlice;
+    std::map<int, std::array<int, 4>> frameNineSlice;  // by frame id (AtlasFrame::id)
     ChromaKeySettings chromaKey;
     TextureSettings texture;  // settings.texture: format and Max Size, per target
 };
@@ -99,6 +99,7 @@ ImageSidecar ReadImageSidecar(const std::string& imagePath)
                     frame.width = frameJson.value("width", 0);
                     frame.height = frameJson.value("height", 0);
                     frame.name = frameJson.value("name", "");
+                    frame.id = frameJson.value("id", -1);
                     out.sprite.frames.push_back(frame);
                 }
             }
@@ -108,6 +109,9 @@ ImageSidecar ReadImageSidecar(const std::string& imagePath)
             out.sprite.mode = SpriteSlicingMode::Grid;
             out.sprite.frameWidth = sprite.value("frameWidth", 0);
             out.sprite.frameHeight = sprite.value("frameHeight", 0);
+            if (sprite.contains("frameIds") && sprite["frameIds"].is_array())
+                for (const auto& id : sprite["frameIds"])
+                    out.sprite.frameIds.push_back(id.is_number_integer() ? id.get<int32_t>() : -1);
         }
     }
     else if (d.contains("sprite"))
@@ -133,7 +137,8 @@ ImageSidecar ReadImageSidecar(const std::string& imagePath)
         out.sprite.nineSliceLeft = static_cast<uint16_t>((*nineSliceNode)[3].get<int>());
     }
 
-    // Per-frame 9-slice: "frame_nine_slice": { "<frame index>": [top, right, bottom, left] }
+    // Per-frame 9-slice: "frame_nine_slice": { "<frame id>": [top, right, bottom, left] }
+    // (a frame's id is its position in files from before frames had ids)
     if (d.contains("settings") && d["settings"].contains("frame_nine_slice") &&
         d["settings"]["frame_nine_slice"].is_object())
     {
@@ -184,7 +189,7 @@ void RegisterFrameNineSlices(const ImageSidecar& sidecar, const std::vector<SubA
 {
     for (const SubAssetInfo& sub : subAssets)
     {
-        auto it = sidecar.frameNineSlice.find(sub.subAssetIndex);
+        auto it = sidecar.frameNineSlice.find(sub.frameId >= 0 ? sub.frameId : sub.subAssetIndex);
         const bool has = it != sidecar.frameNineSlice.end();
         auto u16 = [](int v) { return static_cast<uint16_t>(v < 0 ? 0 : v); };
         TextureImporter::SetFrameNineSlice(sub.guid, has, has ? u16(it->second[3]) : 0, has ? u16(it->second[1]) : 0,
@@ -221,14 +226,18 @@ std::vector<Deki2DEditor::PixelRect> ShrinkRegions(const ImageSidecar& sidecar, 
                 out.push_back({ xs[i], ys[j], xs[i + 1], ys[j + 1] });
     }
     // A bordered frame's nine parts. Frame rects are listed above in frame
-    // order (atlas frames, or the grid row by row), so the index finds them.
+    // order (atlas frames, or the grid row by row); borders are keyed by id.
     const size_t frameCount = out.size() - (sprite.hasNineSlice ? 9 : 0);
+    std::map<int32_t, size_t> positionOfId;
+    for (size_t i = 0; i < frameCount; ++i)
+        positionOfId[sprite.FrameId(i)] = i;
     std::vector<Deki2DEditor::PixelRect> frameParts;
-    for (const auto& [index, b] : sidecar.frameNineSlice)
+    for (const auto& [id, b] : sidecar.frameNineSlice)
     {
-        if (index < 0 || static_cast<size_t>(index) >= frameCount)
+        auto pos = positionOfId.find(id);
+        if (pos == positionOfId.end())
             continue;
-        const Deki2DEditor::PixelRect f = out[static_cast<size_t>(index)];
+        const Deki2DEditor::PixelRect f = out[pos->second];
         const int xs[4] = { f.x0, f.x0 + b[3], f.x1 - b[1], f.x1 };
         const int ys[4] = { f.y0, f.y0 + b[0], f.y1 - b[2], f.y1 };
         for (int j = 0; j < 3; ++j)

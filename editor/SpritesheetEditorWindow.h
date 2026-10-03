@@ -100,6 +100,7 @@ private:
     bool m_FitPending = true;    // fit the image to the canvas on its next draw
 
     std::vector<DekiEditor::AtlasFrame> m_SavedFrames;  // as last loaded or saved
+    int32_t m_NextFrameId = 0;  // never reused: a reference to a deleted frame must not find a new one
     int m_SelectedFrame = -1;    // picked in the list or on the canvas
     int m_HoveredFrame = -1;     // under the mouse, in either
 

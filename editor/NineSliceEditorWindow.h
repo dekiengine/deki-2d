@@ -86,6 +86,7 @@ private:
     // the image's pixels. Its borders live in the sidecar's
     // settings.frame_nine_slice under its index.
     int          m_FrameIndex = -1;
+    int          m_FrameKey = -1;    // its id: what frame_nine_slice is keyed by
     std::string  m_FrameGuid;
     int          m_FrameW = 0, m_FrameH = 0;
 

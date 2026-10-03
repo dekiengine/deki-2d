@@ -132,6 +132,7 @@ void NineSliceEditorWindow::OpenFile(const char* filePath, const char* cachePath
                     if (!rect || rect->width <= 0 || rect->height <= 0)
                         break;
                     m_FrameIndex = frame;
+                    m_FrameKey = sub.frameId >= 0 ? sub.frameId : frame;
                     m_FrameGuid = sub.guid;
                     m_FrameW = rect->width;
                     m_FrameH = rect->height;
@@ -193,7 +194,7 @@ void NineSliceEditorWindow::LoadFromDisk()
             const nlohmann::json* node = nullptr;
             if (m_FrameIndex >= 0)
             {
-                const std::string key = std::to_string(m_FrameIndex);
+                const std::string key = std::to_string(m_FrameKey);
                 if (j.contains("settings") && j["settings"].contains("frame_nine_slice") &&
                     j["settings"]["frame_nine_slice"].contains(key))
                     node = &j["settings"]["frame_nine_slice"][key];
@@ -294,7 +295,7 @@ void NineSliceEditorWindow::SaveToDisk()
         bool topLevel = j.contains("nine_slice") && !j.contains("settings");
         if (m_FrameIndex >= 0)
         {
-            const std::string key = std::to_string(m_FrameIndex);
+            const std::string key = std::to_string(m_FrameKey);
             nlohmann::json& frames = j["settings"]["frame_nine_slice"];
             if (!frames.is_object())
                 frames = nlohmann::json::object();
