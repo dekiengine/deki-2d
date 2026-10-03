@@ -8,6 +8,8 @@
 #include <deki-editor/EditorUI.h>
 #include <deki-editor/SubAsset.h>
 #include <deki-editor/TextureImporter.h>
+#include <deki-editor/FileIO.h>
+#include <deki/LogSystem.h>
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
@@ -213,6 +215,44 @@ void NineSliceEditorWindow::LoadFromDisk()
     m_Saved = m_Current;
 }
 
+namespace
+{
+// Load a JSON file that is about to be changed and written back. A missing
+// file gives an empty object; one that is there but does not parse (a merge
+// conflict) refuses, because writing over it drops the GUID it carries and
+// every reference to the asset with it. That used to happen silently.
+bool ReadJsonToChange(const std::string& path, nlohmann::json& j)
+{
+    j = nlohmann::json::object();
+    std::error_code ec;
+    if (!fs::exists(path, ec))
+        return true;
+    std::string text, err;
+    if (!DekiEditor::ReadFileToString(path, text, err))
+    {
+        DEKI_LOG_ERROR("9-Slice: %s", err.c_str());
+        return false;
+    }
+    j = nlohmann::json::parse(text, nullptr, false);
+    if (j.is_discarded() || !j.is_object())
+    {
+        DEKI_LOG_ERROR("9-Slice: %s could not be read (a merge conflict?). Fix it, then save again; it was "
+                       "left as it is.", path.c_str());
+        return false;
+    }
+    return true;
+}
+
+bool WriteJson(const std::string& path, const nlohmann::json& j)
+{
+    std::string err;
+    if (DekiEditor::AtomicWriteFile(path, j.dump(2), err))
+        return true;
+    DEKI_LOG_ERROR("9-Slice: could not save %s: %s", path.c_str(), err.c_str());
+    return false;
+}
+}  // namespace
+
 void NineSliceEditorWindow::SaveToDisk()
 {
     if (m_Source == Source::None || m_AssetPath.empty())
@@ -223,27 +263,17 @@ void NineSliceEditorWindow::SaveToDisk()
 
     if (m_Source == Source::ProceduralAsset)
     {
-        nlohmann::json j = nlohmann::json::object();
-        {
-            std::ifstream in(m_AssetPath);
-            if (in.is_open())
-            {
-                try { in >> j; }
-                catch (...) { j = nlohmann::json::object(); }
-            }
-        }
+        nlohmann::json j;
+        if (!ReadJsonToChange(m_AssetPath, j))
+            return;
         if (clear)
             j.erase("nine_slice");
         else
             j["nine_slice"] = {m_Current.top, m_Current.right, m_Current.bottom, m_Current.left};
 
-        // Scope the ofstream so its destructor flushes + closes the file
-        // BEFORE we trigger the re-import that reads it back.
-        {
-            std::ofstream out(m_AssetPath, std::ios::trunc);
-            if (out.is_open())
-                out << j.dump(2);
-        }
+        // Written in one step, and before the re-import that reads it back.
+        if (!WriteJson(m_AssetPath, j))
+            return;
 
         // Force re-bake of the .dtex so the runtime sees the new metadata
         if (!m_ProjectPath.empty())
@@ -257,16 +287,9 @@ void NineSliceEditorWindow::SaveToDisk()
     else // NormalSprite
     {
         std::string sidecar = m_AssetPath + ".data";
-        nlohmann::json j = nlohmann::json::object();
-        if (fs::exists(sidecar))
-        {
-            std::ifstream in(sidecar);
-            if (in.is_open())
-            {
-                try { in >> j; }
-                catch (...) { j = nlohmann::json::object(); }
-            }
-        }
+        nlohmann::json j;
+        if (!ReadJsonToChange(sidecar, j))
+            return;
 
         bool topLevel = j.contains("nine_slice") && !j.contains("settings");
         if (m_FrameIndex >= 0)
@@ -298,13 +321,8 @@ void NineSliceEditorWindow::SaveToDisk()
                 j["settings"]["nine_slice"] = arr;
         }
 
-        // Scope the ofstream so the destructor flushes/closes before the
-        // pipeline's mtime check sees it on the next refresh.
-        {
-            std::ofstream out(sidecar, std::ios::trunc);
-            if (out.is_open())
-                out << j.dump(2);
-        }
+        if (!WriteJson(sidecar, j))
+            return;
         // Re-import the image now: its cache handler sees the sidecar is newer
         // and re-bakes the .dtex. Waiting for a refresh to notice left the
         // scene drawing the old borders.

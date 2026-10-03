@@ -11,6 +11,8 @@
 #include <deki-editor/AssetDatabase.h>
 #include <deki-editor/TextureImporter.h>
 #include <deki-editor/TextureData.h>
+#include <deki-editor/FileIO.h>
+#include <deki/LogSystem.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -945,17 +947,22 @@ bool SpritesheetEditorWindow::SaveSliceSettings()
 
     std::string dataPath = m_TexturePath + ".data";
 
-    // Read existing file to preserve other settings (like GUID)
+    // Read existing file to preserve other settings (like GUID). One that is
+    // there but does not parse (a merge conflict) is left alone: writing over
+    // it dropped the GUID, and every reference to the texture with it.
     json j;
     if (fs::exists(dataPath))
     {
-        try
+        std::string text, err;
+        if (!DekiEditor::ReadFileToString(dataPath, text, err))
+            return false;
+        j = json::parse(text, nullptr, false);
+        if (j.is_discarded() || !j.is_object())
         {
-            std::ifstream file(dataPath);
-            if (file.is_open())
-                file >> j;
+            DEKI_LOG_ERROR("Sprite Slicer: %s could not be read (a merge conflict?). Fix it, then save again; "
+                           "it was left as it is.", dataPath.c_str());
+            return false;
         }
-        catch (...) {}
     }
 
     // Intelligently choose storage format
@@ -988,20 +995,14 @@ bool SpritesheetEditorWindow::SaveSliceSettings()
         }
     }
 
-    // Write back
-    try
+    // Write back in one step (temp file + rename): a torn sidecar loses the GUID.
+    std::string err;
+    if (!DekiEditor::AtomicWriteFile(dataPath, j.dump(2), err))
     {
-        std::ofstream file(dataPath);
-        if (!file.is_open())
-            return false;
-
-        file << j.dump(2);
-        return true;
-    }
-    catch (...)
-    {
+        DEKI_LOG_ERROR("Sprite Slicer: could not save %s: %s", dataPath.c_str(), err.c_str());
         return false;
     }
+    return true;
 }
 
 void SpritesheetEditorWindow::GenerateGrid()
