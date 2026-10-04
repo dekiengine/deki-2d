@@ -126,7 +126,7 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
     // Rasterization settings (decoration — outline or shadow — baked into atlas)
     if (ui.CollapsingHeader("Rasterization", nullptr, true))
     {
-        static const char* kDecorationLabels[] = { "None", "Outline", "Shadow" };
+        static const char* const kDecorationLabels[] = { "None", "Outline", "Shadow" };
         static const FontCompiler::DecorationMode kDecorationValues[] = {
             FontCompiler::DecorationMode::None,
             FontCompiler::DecorationMode::Outline,

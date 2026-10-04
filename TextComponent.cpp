@@ -17,10 +17,10 @@ namespace Deki2D
 {
 
 // Font resolve callback — set by editor to handle GUID sync, preview, baking
-TextComponent::FontResolveCallback TextComponent::s_fontResolveCallback = nullptr;
+TextComponent::FontResolveCallback TextComponent::s_FontResolveCallback = nullptr;
 void TextComponent::SetFontResolveCallback(FontResolveCallback cb)
 {
-    s_fontResolveCallback = cb;
+    s_FontResolveCallback = cb;
 }
 
 // ============================================================================
@@ -38,7 +38,7 @@ TextComponent::TextComponent()
 
 TextComponent::~TextComponent()
 {
-    m_cachedBuffer.Reset();
+    m_CachedBuffer.Reset();
 }
 
 void TextComponent::UnloadAssets()
@@ -56,7 +56,7 @@ void TextComponent::UnloadAssets()
 
 void TextComponent::InvalidateRenderCache()
 {
-    m_cachedBuffer.Reset();
+    m_CachedBuffer.Reset();
 }
 
 void TextComponent::SetText(const char* newText)
@@ -391,9 +391,9 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
     BitmapFont* fontPtr = nullptr;
 
     // Editor hook: let external code handle font resolution (GUID sync, preview, baking)
-    if (s_fontResolveCallback)
+    if (s_FontResolveCallback)
     {
-        fontPtr = s_fontResolveCallback(this);
+        fontPtr = s_FontResolveCallback(this);
     }
 
     // Runtime path: direct load from AssetRef
@@ -418,19 +418,19 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
     }
 
     // Check if we can reuse the cached buffer
-    bool cacheValid = static_cast<bool>(m_cachedBuffer) && m_cachedText == text && m_cachedWidth == widthPx &&
-                      m_cachedHeight == heightPx && m_cachedColor == color &&
-                      m_cachedDecorationColor == decorationColor && m_cachedAlign == align &&
-                      m_cachedVerticalAlign == verticalAlign && m_cachedFont == fontPtr &&
-                      m_cachedPixelScale == pixelScale;
+    bool cacheValid = static_cast<bool>(m_CachedBuffer) && m_CachedText == text && m_CachedWidth == widthPx &&
+                      m_CachedHeight == heightPx && m_CachedColor == color &&
+                      m_CachedDecorationColor == decorationColor && m_CachedAlign == align &&
+                      m_CachedVerticalAlign == verticalAlign && m_CachedFont == fontPtr &&
+                      m_CachedPixelScale == pixelScale;
 
     if (cacheValid)
     {
-        outSource = QuadBlit::MakeSource(m_cachedBuffer.Data() + m_cropFirstRow * widthPx * 3, widthPx, m_cropHeight,
+        outSource = QuadBlit::MakeSource(m_CachedBuffer.Data() + m_CropFirstRow * widthPx * 3, widthPx, m_CropHeight,
                                          QuadBlit::PixelLayout::RGB565A8(), false);
         outSource.pixelsPerMeter = ppm;
         outPivotX = 0.5f;
-        outPivotY = m_cropPivotY;
+        outPivotY = m_CropPivotY;
         outTintR = 255;
         outTintG = 255;
         outTintB = 255;
@@ -445,21 +445,21 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
     // Allocate() leaves an unchanged size alone, so the reuse path costs
     // nothing. This is the object's size in pixels times three, which a device
     // can refuse; undrawn text beats a reboot.
-    if (!m_cachedBuffer.Allocate(bufferSize, Deki::Memory::External))
+    if (!m_CachedBuffer.Allocate(bufferSize, Deki::Memory::External))
     {
         DEKI_LOG_WARNING("TextComponent: no room for a %dx%d text bake (%u bytes); "
                          "not drawing it",
                          (int)widthPx, (int)heightPx, (unsigned)bufferSize);
         return false;
     }
-    memset(m_cachedBuffer.Data(), 0, bufferSize);  // Clear to transparent
+    memset(m_CachedBuffer.Data(), 0, bufferSize);  // Clear to transparent
 
     // Calculate glyph layout using shared method
     std::vector<GlyphLayout> glyphLayouts;
     CalculateGlyphLayout(fontPtr, glyphLayouts);
 
     // Get bytes per pixel for atlas format
-    uint32_t atlas_bpp = Deki::Texture2D::GetBytesPerPixel(atlas->format);
+    uint32_t atlasBpp = Deki::Texture2D::GetBytesPerPixel(atlas->format);
 
     // Center of our buffer in local pixel coordinates
     float centerX = widthPx * 0.5f;
@@ -469,7 +469,7 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
     // computed once per layout, outside the glyph loop.
     // Render glyph pixels to buffer (RGB565A8 — 3 bytes per pixel)
     // Pre-compute text color as RGB565
-    uint16_t text_rgb565 = ((color.r >> 3) << 11) | ((color.g >> 2) << 5) | (color.b >> 3);
+    uint16_t textRgb565 = ((color.r >> 3) << 11) | ((color.g >> 2) << 5) | (color.b >> 3);
 
     // Decoration palette (v4 palette-indexed fonts). Depends only on the
     // component colours and the font's baked decoration mode, so it is built
@@ -480,22 +480,22 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
     //               Shadow: fillColor with alpha ramp 24..255
     FontDecorationMode decoMode = fontPtr->GetDecorationMode();
     const bool isPalette = (decoMode != FontDecorationMode::None);
-    uint16_t pal_rgb[16] = { 0 };
-    uint8_t pal_a[16] = { 0 };
+    uint16_t palRgb[16] = { 0 };
+    uint8_t palA[16] = { 0 };
     if (isPalette)
     {
         const uint16_t decoRgb =
             ((decorationColor.r >> 3) << 11) | ((decorationColor.g >> 2) << 5) | (decorationColor.b >> 3);
-        pal_rgb[0] = 0;
-        pal_a[0] = 0;
-        pal_rgb[1] = decoRgb;
-        pal_a[1] = 64;
-        pal_rgb[2] = decoRgb;
-        pal_a[2] = 128;
-        pal_rgb[3] = decoRgb;
-        pal_a[3] = 192;
-        pal_rgb[4] = decoRgb;
-        pal_a[4] = 255;
+        palRgb[0] = 0;
+        palA[0] = 0;
+        palRgb[1] = decoRgb;
+        palA[1] = 64;
+        palRgb[2] = decoRgb;
+        palA[2] = 128;
+        palRgb[3] = decoRgb;
+        palA[3] = 192;
+        palRgb[4] = decoRgb;
+        palA[4] = 255;
         if (decoMode == FontDecorationMode::Outline)
         {
             for (int i = 5; i <= 15; ++i)
@@ -504,19 +504,19 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
                 int mixR = (decorationColor.r * (10 - t) + color.r * t) / 10;
                 int mixG = (decorationColor.g * (10 - t) + color.g * t) / 10;
                 int mixB = (decorationColor.b * (10 - t) + color.b * t) / 10;
-                pal_rgb[i] = ((mixR >> 3) << 11) | ((mixG >> 2) << 5) | (mixB >> 3);
-                pal_a[i] = 255;
+                palRgb[i] = ((mixR >> 3) << 11) | ((mixG >> 2) << 5) | (mixB >> 3);
+                palA[i] = 255;
             }
         }
         else  // Shadow
         {
             for (int i = 5; i <= 15; ++i)
             {
-                pal_rgb[i] = text_rgb565;
-                pal_a[i] = static_cast<uint8_t>(24 + (i - 5) * 23);  // 24..277 → clamps to 255 at top
+                palRgb[i] = textRgb565;
+                palA[i] = static_cast<uint8_t>(24 + (i - 5) * 23);  // 24..277 → clamps to 255 at top
                 if (i == 15)
                 {
-                    pal_a[i] = 255;
+                    palA[i] = 255;
                 }
             }
         }
@@ -524,30 +524,29 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
 
     // Pre-compute alpha offset based on format to avoid per-pixel switch
     // -1 = opaque (no alpha channel), -2 = transparency color check
-    int32_t alpha_offset;
+    int32_t alphaOffset;
     switch (atlas->format)
     {
-        case Deki::Texture2D::TextureFormat::RGBA8888: alpha_offset = 3; break;
-        case Deki::Texture2D::TextureFormat::RGB565A8: alpha_offset = 2; break;
-        case Deki::Texture2D::TextureFormat::ALPHA8: alpha_offset = 0; break;
+        case Deki::Texture2D::TextureFormat::RGBA8888: alphaOffset = 3; break;
+        case Deki::Texture2D::TextureFormat::RGB565A8: alphaOffset = 2; break;
+        case Deki::Texture2D::TextureFormat::ALPHA8: alphaOffset = 0; break;
         default:
-            alpha_offset =
-                (atlas->hasTransparency && atlas->format == Deki::Texture2D::TextureFormat::RGB565) ? -2 : -1;
+            alphaOffset = (atlas->hasTransparency && atlas->format == Deki::Texture2D::TextureFormat::RGB565) ? -2 : -1;
             break;
     }
 
-    const uint8_t* atlas_data = atlas->data;
-    const int32_t atlas_width = atlas->width;
+    const uint8_t* atlasData = atlas->data;
+    const int32_t atlasWidth = atlas->width;
 
     // Pre-quantize chroma key once. Atlas is always a Sprite at runtime.
     Sprite* atlasSprite = static_cast<Sprite*>(atlas);
-    uint8_t key_r = 255, key_g = 0, key_b = 255;
+    uint8_t keyR = 255, keyG = 0, keyB = 255;
     if (atlasSprite->hasChromaKey)
     {
-        key_r = atlasSprite->transparentR;
-        key_g = atlasSprite->transparentG;
-        key_b = atlasSprite->transparentB;
-        DekiPixel::QuantizeRGB565(key_r, key_g, key_b);
+        keyR = atlasSprite->transparentR;
+        keyG = atlasSprite->transparentG;
+        keyB = atlasSprite->transparentB;
+        DekiPixel::QuantizeRGB565(keyR, keyG, keyB);
     }
 
     // Rows the glyphs actually touch, so the crop scan below reads only them.
@@ -567,97 +566,97 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
         int32_t ps = (std::max)(int32_t{ 1 }, pixelScale);
 
         // Convert world position to buffer position (center + world offset, scaled)
-        int32_t dest_x = static_cast<int32_t>(std::floor(centerX + layout.worldX)) + glyph->offsetX * ps;
-        int32_t dest_y = static_cast<int32_t>(std::floor(centerY + layout.worldY)) + glyph->offsetY * ps;
+        int32_t destX = static_cast<int32_t>(std::floor(centerX + layout.worldX)) + glyph->offsetX * ps;
+        int32_t destY = static_cast<int32_t>(std::floor(centerY + layout.worldY)) + glyph->offsetY * ps;
 
         // Calculate source rectangle in atlas (native size)
-        int32_t src_x = glyph->x;
-        int32_t src_y = glyph->y;
-        int32_t glyph_w = glyph->width;
-        int32_t glyph_h = glyph->height;
+        int32_t srcX = glyph->x;
+        int32_t srcY = glyph->y;
+        int32_t glyphW = glyph->width;
+        int32_t glyphH = glyph->height;
 
         // Scaled dimensions in buffer
-        int32_t scaled_w = glyph_w * ps;
-        int32_t scaled_h = glyph_h * ps;
+        int32_t scaledW = glyphW * ps;
+        int32_t scaledH = glyphH * ps;
 
         // Clip to buffer bounds (in scaled pixel space)
-        int32_t clip_left = 0;
-        int32_t clip_top = 0;
-        int32_t clip_right = scaled_w;
-        int32_t clip_bottom = scaled_h;
+        int32_t clipLeft = 0;
+        int32_t clipTop = 0;
+        int32_t clipRight = scaledW;
+        int32_t clipBottom = scaledH;
 
-        if (dest_x < 0)
+        if (destX < 0)
         {
-            clip_left = -dest_x;
-            dest_x = 0;
+            clipLeft = -destX;
+            destX = 0;
         }
-        if (dest_y < 0)
+        if (destY < 0)
         {
-            clip_top = -dest_y;
-            dest_y = 0;
+            clipTop = -destY;
+            destY = 0;
         }
-        if (dest_x + (clip_right - clip_left) > widthPx)
+        if (destX + (clipRight - clipLeft) > widthPx)
         {
-            clip_right = widthPx - dest_x + clip_left;
+            clipRight = widthPx - destX + clipLeft;
         }
-        if (dest_y + (clip_bottom - clip_top) > heightPx)
+        if (destY + (clipBottom - clipTop) > heightPx)
         {
-            clip_bottom = heightPx - dest_y + clip_top;
+            clipBottom = heightPx - destY + clipTop;
         }
 
         // Nothing to render for this glyph
-        if (clip_left >= clip_right || clip_top >= clip_bottom)
+        if (clipLeft >= clipRight || clipTop >= clipBottom)
         {
             continue;
         }
 
-        touchedFirstRow = (std::min)(touchedFirstRow, dest_y);
-        touchedLastRow = (std::max)(touchedLastRow, dest_y + (clip_bottom - clip_top) - 1);
+        touchedFirstRow = (std::min)(touchedFirstRow, destY);
+        touchedLastRow = (std::max)(touchedLastRow, destY + (clipBottom - clipTop) - 1);
 
-        for (int32_t py = clip_top; py < clip_bottom; py++)
+        for (int32_t py = clipTop; py < clipBottom; py++)
         {
             // Map scaled pixel back to atlas pixel
-            int32_t atlas_y = src_y + py / ps;
-            int32_t buf_y = dest_y + (py - clip_top);
-            size_t atlas_row = atlas_y * atlas_width;
-            size_t buf_row = buf_y * widthPx;
+            int32_t atlasY = srcY + py / ps;
+            int32_t bufY = destY + (py - clipTop);
+            size_t atlasRow = atlasY * atlasWidth;
+            size_t bufRow = bufY * widthPx;
 
-            for (int32_t px = clip_left; px < clip_right; px++)
+            for (int32_t px = clipLeft; px < clipRight; px++)
             {
-                int32_t atlas_x = src_x + px / ps;
-                int32_t buf_x = dest_x + (px - clip_left);
+                int32_t atlasX = srcX + px / ps;
+                int32_t bufX = destX + (px - clipLeft);
 
                 // Get pixel from atlas
-                size_t atlas_off = (atlas_row + atlas_x) * atlas_bpp;
+                size_t atlasOff = (atlasRow + atlasX) * atlasBpp;
 
                 if (isPalette)
                 {
                     // V4 palette path: atlas byte's low nibble is a 0..15 index.
-                    uint8_t idx = atlas_data[atlas_off + (alpha_offset >= 0 ? alpha_offset : 0)] & 0x0F;
+                    uint8_t idx = atlasData[atlasOff + (alphaOffset >= 0 ? alphaOffset : 0)] & 0x0F;
                     if (idx == 0)
                     {
                         continue;
                     }
-                    size_t buf_offset = (buf_row + buf_x) * 3;
-                    *(uint16_t*)(m_cachedBuffer.Data() + buf_offset) = pal_rgb[idx];
-                    m_cachedBuffer[buf_offset + 2] = pal_a[idx];
+                    size_t bufOffset = (bufRow + bufX) * 3;
+                    *(uint16_t*)(m_CachedBuffer.Data() + bufOffset) = palRgb[idx];
+                    m_CachedBuffer[bufOffset + 2] = palA[idx];
                     continue;
                 }
 
                 uint8_t alpha;
-                if (alpha_offset >= 0)
+                if (alphaOffset >= 0)
                 {
-                    alpha = atlas_data[atlas_off + alpha_offset];
+                    alpha = atlasData[atlasOff + alphaOffset];
                 }
-                else if (alpha_offset == -2)
+                else if (alphaOffset == -2)
                 {
                     // RGB565 atlas with chroma-key transparency. Per-font
                     // chroma color comes from the underlying Sprite.
-                    uint16_t pixel = *((const uint16_t*)(atlas_data + atlas_off));
+                    uint16_t pixel = *((const uint16_t*)(atlasData + atlasOff));
                     uint8_t r = ((pixel >> 11) & 0x1F) << 3;
                     uint8_t g = ((pixel >> 5) & 0x3F) << 2;
                     uint8_t b = (pixel & 0x1F) << 3;
-                    alpha = (r == key_r && g == key_g && b == key_b) ? 0 : 255;
+                    alpha = (r == keyR && g == keyG && b == keyB) ? 0 : 255;
                 }
                 else
                 {
@@ -671,23 +670,23 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
                 }
 
                 // Write to buffer (RGB565A8: 2 bytes RGB565 + 1 byte alpha)
-                size_t buf_offset = (buf_row + buf_x) * 3;
-                *(uint16_t*)(m_cachedBuffer.Data() + buf_offset) = text_rgb565;
-                m_cachedBuffer[buf_offset + 2] = alpha;
+                size_t bufOffset = (bufRow + bufX) * 3;
+                *(uint16_t*)(m_CachedBuffer.Data() + bufOffset) = textRgb565;
+                m_CachedBuffer[bufOffset + 2] = alpha;
             }
         }
     }
 
     // Update cache keys
-    m_cachedText = text;
-    m_cachedWidth = widthPx;
-    m_cachedHeight = heightPx;
-    m_cachedColor = color;
-    m_cachedDecorationColor = decorationColor;
-    m_cachedAlign = align;
-    m_cachedVerticalAlign = verticalAlign;
-    m_cachedFont = fontPtr;
-    m_cachedPixelScale = pixelScale;
+    m_CachedText = text;
+    m_CachedWidth = widthPx;
+    m_CachedHeight = heightPx;
+    m_CachedColor = color;
+    m_CachedDecorationColor = decorationColor;
+    m_CachedAlign = align;
+    m_CachedVerticalAlign = verticalAlign;
+    m_CachedFont = fontPtr;
+    m_CachedPixelScale = pixelScale;
 
     // Compute tight vertical crop bounds (scan for first/last non-empty row).
     // Only the rows some glyph wrote to can be non-empty; this used to scan
@@ -697,7 +696,7 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
     const int32_t scanEnd = (std::min)(heightPx, touchedLastRow + 1);
     for (int32_t row = (std::max)(int32_t{ 0 }, touchedFirstRow); row < scanEnd; row++)
     {
-        const uint8_t* rowPtr = m_cachedBuffer.Data() + row * widthPx * 3;
+        const uint8_t* rowPtr = m_CachedBuffer.Data() + row * widthPx * 3;
         for (int32_t col = 0; col < widthPx; col++)
         {
             if (rowPtr[col * 3 + 2] != 0)  // Check alpha byte
@@ -719,20 +718,20 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
         lastRow = heightPx - 1;
     }
 
-    m_cropFirstRow = firstRow;
-    m_cropHeight = lastRow - firstRow + 1;
+    m_CropFirstRow = firstRow;
+    m_CropHeight = lastRow - firstRow + 1;
 
     // Adjust pivot so the cropped sub-region stays at the correct world position
     // Original pivot 0.5 corresponds to the center of the full height buffer.
     // We need pivotY such that: cropFirstRow + pivotY * cropHeight == 0.5 * heightPx
-    m_cropPivotY = (0.5f * heightPx - static_cast<float>(m_cropFirstRow)) / static_cast<float>(m_cropHeight);
+    m_CropPivotY = (0.5f * heightPx - static_cast<float>(m_CropFirstRow)) / static_cast<float>(m_CropHeight);
 
     // Return source - RGB565A8 format (not owned by caller, we manage lifetime)
-    outSource = QuadBlit::MakeSource(m_cachedBuffer.Data() + m_cropFirstRow * widthPx * 3, widthPx, m_cropHeight,
+    outSource = QuadBlit::MakeSource(m_CachedBuffer.Data() + m_CropFirstRow * widthPx * 3, widthPx, m_CropHeight,
                                      QuadBlit::PixelLayout::RGB565A8(), false);
     outSource.pixelsPerMeter = ppm;
     outPivotX = 0.5f;
-    outPivotY = m_cropPivotY;
+    outPivotY = m_CropPivotY;
     // Text color is baked into buffer - no additional tint
     outTintR = 255;
     outTintG = 255;

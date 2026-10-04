@@ -5,7 +5,7 @@
  * This file exports the standard Deki plugin interface so the editor
  * can load deki-2d.dll and register its components.
  *
- * For linked DLLs (not dynamically loaded), Deki2D_EnsureRegistered()
+ * For linked DLLs (not dynamically loaded), Deki2DEnsureRegistered()
  * must be called from the main executable to trigger the static initializers.
  */
 
@@ -55,9 +55,9 @@
 
 #ifndef DEKI_PLUGIN_EXPORTS
 // Auto-generated registration helpers (standalone DLL only)
-extern void Deki2D_RegisterComponents();
-extern int Deki2D_GetAutoComponentCount();
-extern const Deki::ComponentMeta* Deki2D_GetAutoComponentMeta(int index);
+extern void Deki2DRegisterComponents();
+extern int Deki2DGetAutoComponentCount();
+extern const Deki::ComponentMeta* Deki2DGetAutoComponentMeta(int index);
 
 // Track if already registered to avoid duplicates
 static bool s_Registered = false;
@@ -84,16 +84,16 @@ extern "C"
      *
      * @return Number of components registered by this package
      */
-    DEKI_2D_API int Deki2D_EnsureRegistered(void)
+    DEKI_2D_API int Deki2DEnsureRegistered(void)
     {
         if (s_Registered)
         {
-            return ::Deki2D_GetAutoComponentCount();
+            return ::Deki2DGetAutoComponentCount();
         }
         s_Registered = true;
 
         // Auto-generated: registers all 2D components with ComponentRegistry + ComponentFactory
-        ::Deki2D_RegisterComponents();
+        ::Deki2DRegisterComponents();
 
         // Clipping needs no pass: DekiRendering::Standard2DRenderer pushes a clip rect for every
         // object that provides IClipProvider (Deki2D::ClipComponent) while it draws.
@@ -159,7 +159,7 @@ extern "C"
             // Font destroyer
             [](void* f) { delete static_cast<Deki2D::BitmapFont*>(f); });
 
-        return ::Deki2D_GetAutoComponentCount();
+        return ::Deki2DGetAutoComponentCount();
     }
 
 #endif  // DEKI_PLUGIN_EXPORTS
@@ -173,12 +173,12 @@ extern "C"
 extern "C"
 {
 #ifndef DEKI_PLUGIN_EXPORTS
-    DEKI_PLUGIN_API const char* DekiPlugin_GetName(void)
+    DEKI_PLUGIN_API const char* DekiPluginGetName(void)
     {
         return "Deki 2D Package";
     }
 
-    DEKI_PLUGIN_API const char* DekiPlugin_GetVersion(void)
+    DEKI_PLUGIN_API const char* DekiPluginGetVersion(void)
     {
 #ifdef DEKI_PACKAGE_VERSION
         return DEKI_PACKAGE_VERSION;
@@ -187,31 +187,31 @@ extern "C"
 #endif
     }
 
-    DEKI_PLUGIN_API int DekiPlugin_Init(void)
+    DEKI_PLUGIN_API int DekiPluginInit(void)
     {
-        Deki2D_InitSystem();
+        Deki2DInitSystem();
         return 0;
     }
 
-    DEKI_PLUGIN_API void DekiPlugin_Shutdown(void)
+    DEKI_PLUGIN_API void DekiPluginShutdown(void)
     {
         s_Registered = false;
         Deki2D::ClearPreviewTextureCache();
     }
 
-    DEKI_PLUGIN_API int DekiPlugin_GetComponentCount(void)
+    DEKI_PLUGIN_API int DekiPluginGetComponentCount(void)
     {
-        return ::Deki2D_GetAutoComponentCount();
+        return ::Deki2DGetAutoComponentCount();
     }
 
-    DEKI_PLUGIN_API const Deki::ComponentMeta* DekiPlugin_GetComponentMeta(int index)
+    DEKI_PLUGIN_API const Deki::ComponentMeta* DekiPluginGetComponentMeta(int index)
     {
-        return ::Deki2D_GetAutoComponentMeta(index);
+        return ::Deki2DGetAutoComponentMeta(index);
     }
 
-    DEKI_PLUGIN_API void DekiPlugin_RegisterComponents(void)
+    DEKI_PLUGIN_API void DekiPluginRegisterComponents(void)
     {
-        Deki2D_EnsureRegistered();
+        Deki2DEnsureRegistered();
     }
 
 #endif  // DEKI_PLUGIN_EXPORTS
@@ -220,7 +220,7 @@ extern "C"
     // Package-specific feature API (for linked DLL access without name conflicts)
     // =============================================================================
 
-    DEKI_2D_API const char* Deki2D_GetName(void)
+    DEKI_2D_API const char* Deki2DGetName(void)
     {
         return "2D";
     }
@@ -230,7 +230,7 @@ extern "C"
     // =============================================================================
 
 #ifndef DEKI_PLUGIN_EXPORTS
-    DEKI_PLUGIN_API void DekiPlugin_OnPlayModeStart(void* scenePtr)
+    DEKI_PLUGIN_API void DekiPluginOnPlayModeStart(void* scenePtr)
     {
         if (!scenePtr)
         {
@@ -281,7 +281,7 @@ extern "C"
         }
     }
 
-    DEKI_PLUGIN_API void DekiPlugin_OnPlayModeStop(void)
+    DEKI_PLUGIN_API void DekiPluginOnPlayModeStop(void)
     {
         // Nothing to reset: Deki2D::AnimationComponent drives itself from Update().
     }
@@ -293,8 +293,8 @@ extern "C"
     // Flow: CompileFont → GetCompiledFontAtlas → WriteDfont → FreeCompileResult
     // =============================================================================
 
-    DEKI_PLUGIN_API void* DekiPlugin_CompileFont(const char* ttfPath, int fontSize, int firstChar, int lastChar,
-                                                 int padding, int maxAtlas)
+    DEKI_PLUGIN_API void* DekiPluginCompileFont(const char* ttfPath, int fontSize, int firstChar, int lastChar,
+                                                int padding, int maxAtlas)
     {
         if (!ttfPath)
         {
@@ -318,8 +318,8 @@ extern "C"
         return result;
     }
 
-    DEKI_PLUGIN_API bool DekiPlugin_GetCompiledFontAtlas(const void* handle, const uint8_t** atlasData, int* width,
-                                                         int* height)
+    DEKI_PLUGIN_API bool DekiPluginGetCompiledFontAtlas(const void* handle, const uint8_t** atlasData, int* width,
+                                                        int* height)
     {
         if (!handle || !atlasData || !width || !height)
         {
@@ -333,7 +333,7 @@ extern "C"
         return true;
     }
 
-    DEKI_PLUGIN_API bool DekiPlugin_WriteDfont(const char* path, const void* handle, const char* atlasGuid)
+    DEKI_PLUGIN_API bool DekiPluginWriteDfont(const char* path, const void* handle, const char* atlasGuid)
     {
         if (!path || !handle || !atlasGuid)
         {
@@ -344,7 +344,7 @@ extern "C"
         return Deki2D::FontCompiler::WriteDfontFile(path, *result, atlasGuid);
     }
 
-    DEKI_PLUGIN_API void DekiPlugin_FreeCompileResult(void* handle)
+    DEKI_PLUGIN_API void DekiPluginFreeCompileResult(void* handle)
     {
         delete static_cast<Deki2D::FontCompiler::CompileResult*>(handle);
     }

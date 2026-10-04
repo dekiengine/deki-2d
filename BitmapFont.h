@@ -27,7 +27,7 @@ struct GlyphInfo
  * @brief Binary font format header (v1 - ASCII only, contiguous glyph array)
  *
  * File structure:
- * [FontHeader][GlyphInfo array][atlas_path (null-terminated string)]
+ * [FontHeader][GlyphInfo array][atlasPath (null-terminated string)]
  *
  * The atlas is a separate .tex file referenced by relative path.
  */
@@ -35,11 +35,11 @@ struct FontHeader
 {
     char magic[4];          // "DFNT" (DekiRendering::Deki Font)
     uint32_t version;       // Format version (1)
-    uint8_t m_FirstChar;    // First ASCII character in font (usually 32 = space)
-    uint8_t m_LastChar;     // Last ASCII character in font (usually 126 = ~)
-    uint8_t m_LineHeight;   // Height of a line of text
+    uint8_t firstChar;      // First ASCII character in font (usually 32 = space)
+    uint8_t lastChar;       // Last ASCII character in font (usually 126 = ~)
+    uint8_t lineHeight;     // Height of a line of text
     uint8_t baseline;       // Y offset from top to baseline
-    uint16_t m_GlyphCount;  // Number of glyphs (m_LastChar - m_FirstChar + 1)
+    uint16_t glyphCount;    // Number of glyphs (m_LastChar - m_FirstChar + 1)
     uint16_t atlasPathLen;  // Length of atlas path string (including null terminator)
 };
 
@@ -47,7 +47,7 @@ struct FontHeader
  * @brief Binary font format header (v2 - Unicode, sparse codepoint table)
  *
  * File structure:
- * [FontHeaderV2][uint32_t codepoints[m_GlyphCount]][GlyphInfo array][atlas_path]
+ * [FontHeaderV2][uint32_t codepoints[m_GlyphCount]][GlyphInfo array][atlasPath]
  *
  * Glyphs are stored sparsely: each glyph has a corresponding codepoint entry.
  * Lookup requires searching the codepoint table (binary search, since sorted).
@@ -58,9 +58,9 @@ struct FontHeaderV2
     uint32_t version;         // Format version (2)
     uint32_t firstCodepoint;  // First codepoint (for info/range display)
     uint32_t lastCodepoint;   // Last codepoint (for info/range display)
-    uint8_t m_LineHeight;     // Height of a line of text
+    uint8_t lineHeight;       // Height of a line of text
     uint8_t baseline;         // Y offset from top to baseline
-    uint16_t m_GlyphCount;    // Number of glyphs (sparse - only included codepoints)
+    uint16_t glyphCount;      // Number of glyphs (sparse - only included codepoints)
     uint16_t atlasPathLen;    // Length of atlas path string (including null terminator)
     uint16_t reserved;        // Padding for alignment
 };
@@ -83,10 +83,10 @@ enum class FontDecorationMode : uint8_t
  * @brief Binary font format header (v3 - adds cap-height / x-height metrics)
  *
  * File structure (contiguous ASCII):
- * [FontHeaderV3][GlyphInfo array][atlas_path]
+ * [FontHeaderV3][GlyphInfo array][atlasPath]
  *
  * File structure (sparse, m_IsSparse flag via high bit of version):
- * [FontHeaderV3Sparse][uint32_t codepoints[m_GlyphCount]][GlyphInfo array][atlas_path]
+ * [FontHeaderV3Sparse][uint32_t codepoints[m_GlyphCount]][GlyphInfo array][atlasPath]
  *
  * Cap-height and x-height enable optical centering that is independent of the
  * actual text content (see BitmapFont::GetCapCenterY / GetXCenterY).
@@ -97,11 +97,11 @@ struct FontHeaderV3
     uint32_t version;  // 3 (contiguous ASCII) or 0x80000003 (sparse)
     uint32_t firstCodepoint;
     uint32_t lastCodepoint;
-    uint8_t m_LineHeight;
+    uint8_t lineHeight;
     uint8_t baseline;
-    uint8_t m_CapHeight;  // Height of capital letters from baseline (0 = unknown)
-    uint8_t m_XHeight;    // Height of lowercase 'x' from baseline (0 = unknown)
-    uint16_t m_GlyphCount;
+    uint8_t capHeight;  // Height of capital letters from baseline (0 = unknown)
+    uint8_t xHeight;    // Height of lowercase 'x' from baseline (0 = unknown)
+    uint16_t glyphCount;
     uint16_t atlasPathLen;
 };
 
@@ -120,15 +120,15 @@ struct FontHeaderV4
     uint32_t version;  // 4 or 0x80000004 (sparse)
     uint32_t firstCodepoint;
     uint32_t lastCodepoint;
-    uint8_t m_LineHeight;
+    uint8_t lineHeight;
     uint8_t baseline;
-    uint8_t m_CapHeight;
-    uint8_t m_XHeight;
-    uint8_t m_DecorationMode;  // FontDecorationMode enum value
-    int8_t m_DecorationA;      // outline size (1..3) OR shadow dx (-3..+3)
-    int8_t m_DecorationB;      // unused for outline OR shadow dy (-3..+3)
-    uint8_t reserved;          // padding for uint16 alignment
-    uint16_t m_GlyphCount;
+    uint8_t capHeight;
+    uint8_t xHeight;
+    uint8_t decorationMode;  // FontDecorationMode enum value
+    int8_t decorationA;      // outline size (1..3) OR shadow dx (-3..+3)
+    int8_t decorationB;      // unused for outline OR shadow dy (-3..+3)
+    uint8_t reserved;        // padding for uint16 alignment
+    uint16_t glyphCount;
     uint16_t atlasPathLen;
 };
 
@@ -149,17 +149,17 @@ public:
     static uint32_t DecodeUtf8(const char* str, size_t len, size_t& i);
 
     /// Asset type name for AssetManager::Load<T>() lookup
-    static constexpr const char* AssetTypeName = "BitmapFont";
+    static constexpr const char* kAssetTypeName = "BitmapFont";
 
     BitmapFont();
     ~BitmapFont();
 
     /**
      * @brief Load font from .dfont file
-     * @param file_path Path to the .dfont file
+     * @param filePath Path to the .dfont file
      * @return Loaded font or nullptr on failure
      */
-    static BitmapFont* Load(const char* file_path);
+    static BitmapFont* Load(const char* filePath);
 
     /**
      * @brief Load font from raw file data in memory (for pack file support)
@@ -175,16 +175,16 @@ public:
      * This is a helper for simple fonts where all glyphs are the same size
      * and arranged in a grid pattern (like classic bitmap fonts).
      *
-     * @param atlas_path Path to the atlas texture (.tex)
-     * @param glyph_width Width of each glyph cell
-     * @param glyph_height Height of each glyph cell
+     * @param atlasPath Path to the atlas texture (.tex)
+     * @param glyphWidth Width of each glyph cell
+     * @param glyphHeight Height of each glyph cell
      * @param m_FirstChar First character code in the atlas
-     * @param chars_per_row Number of characters per row in the atlas
-     * @param char_count Total number of characters
+     * @param charsPerRow Number of characters per row in the atlas
+     * @param charCount Total number of characters
      * @return Created font or nullptr on failure
      */
-    static BitmapFont* CreateMonospace(const char* atlas_path, uint8_t glyph_width, uint8_t glyph_height,
-                                       uint8_t m_FirstChar, uint8_t chars_per_row, uint8_t char_count);
+    static BitmapFont* CreateMonospace(const char* atlasPath, uint8_t glyphWidth, uint8_t glyphHeight,
+                                       uint8_t firstChar, uint8_t charsPerRow, uint8_t charCount);
 
     /**
      * @brief Create a font from pre-generated glyph data and atlas
@@ -200,8 +200,8 @@ public:
      * @param baseline Y offset from top to baseline
      * @return Created font or nullptr on failure
      */
-    static BitmapFont* CreateFromMemory(Deki::Texture2D* atlas, Deki::Buffer<GlyphInfo>&& glyphs, uint8_t m_FirstChar,
-                                        uint8_t m_LastChar, uint8_t m_LineHeight, uint8_t baseline);
+    static BitmapFont* CreateFromMemory(Deki::Texture2D* atlas, Deki::Buffer<GlyphInfo>&& glyphs, uint8_t firstChar,
+                                        uint8_t lastChar, uint8_t lineHeight, uint8_t baseline);
 
     /**
      * @brief Get glyph info for a character (ASCII)
@@ -242,7 +242,7 @@ public:
      * @brief Get baseline offset
      * @return Y offset from top to baseline
      */
-    uint8_t GetBaseline() const { return baseline; }
+    uint8_t GetBaseline() const { return m_Baseline; }
 
     /**
      * @brief Height of capital letters from baseline.
@@ -292,7 +292,7 @@ public:
     /**
      * @brief Get the resolved atlas path.
      *
-     * For fonts loaded via `Load(file_path)` this is the absolute path to the
+     * For fonts loaded via `Load(filePath)` this is the absolute path to the
      * atlas .tex file (dfont's parent dir + filename from header). For fonts
      * loaded via `LoadFromFileData` this is the relative asset path used for
      * pack-reader lookups. Callers that need the raw atlas bytes (e.g. the
@@ -313,13 +313,13 @@ public:
 
     /**
      * @brief Get the actual visual bounds of glyphs
-     * @param min_y Output: minimum Y offset (topmost pixel relative to baseline)
-     * @param max_y Output: maximum Y offset + height (bottommost pixel relative to baseline)
+     * @param minY Output: minimum Y offset (topmost pixel relative to baseline)
+     * @param maxY Output: maximum Y offset + height (bottommost pixel relative to baseline)
      *
      * This calculates the geometric bounds by examining all glyph offsets and heights,
      * useful for precise vertical centering.
      */
-    void GetVisualBounds(int32_t& min_y, int32_t& max_y) const;
+    void GetVisualBounds(int32_t& minY, int32_t& maxY) const;
 
     /**
      * @brief Get the visual center Y offset
@@ -330,24 +330,24 @@ public:
     int32_t GetVisualCenterY() const;
 
 private:
-    mutable Deki::Texture2D* atlas;  // Glyph atlas texture (lazy-loaded)
+    mutable Deki::Texture2D* m_Atlas;  // Glyph atlas texture (lazy-loaded)
     // Owning: the destructor used to free these, and did it with delete[]
     // against a Deki::Memory allocation. Every loader can now bail out on
     // any error without an unwind, which is where the mistakes were.
-    Deki::Buffer<GlyphInfo> glyphs;
-    Deki::Buffer<uint32_t> codepoints;  // sorted, sparse fonts only
-    uint32_t m_FirstChar;               // First character code (widened for v2)
-    uint32_t m_LastChar;                // Last character code (widened for v2)
-    uint8_t m_LineHeight;               // Line height in pixels
-    uint8_t baseline;                   // Baseline offset
-    uint8_t m_CapHeight;                // Capital letter height from baseline (0 = unknown, use fallback)
-    uint8_t m_XHeight;                  // Lowercase 'x' height from baseline (0 = unknown, use fallback)
-    uint8_t m_DecorationMode;           // v4+: FontDecorationMode (0 = None; default)
-    int8_t m_DecorationA;               // v4+: outline size or shadow dx
-    int8_t m_DecorationB;               // v4+: shadow dy (unused for outline)
-    uint16_t m_GlyphCount;              // Number of glyphs
-    bool m_IsSparse;                    // true = v2 sparse codepoint table, false = v1 contiguous
-    std::string m_AtlasPath;            // Deferred atlas path for lazy loading
+    Deki::Buffer<GlyphInfo> m_Glyphs;
+    Deki::Buffer<uint32_t> m_Codepoints;  // sorted, sparse fonts only
+    uint32_t m_FirstChar;                 // First character code (widened for v2)
+    uint32_t m_LastChar;                  // Last character code (widened for v2)
+    uint8_t m_LineHeight;                 // Line height in pixels
+    uint8_t m_Baseline;                   // Baseline offset
+    uint8_t m_CapHeight;                  // Capital letter height from baseline (0 = unknown, use fallback)
+    uint8_t m_XHeight;                    // Lowercase 'x' height from baseline (0 = unknown, use fallback)
+    uint8_t m_DecorationMode;             // v4+: FontDecorationMode (0 = None; default)
+    int8_t m_DecorationA;                 // v4+: outline size or shadow dx
+    int8_t m_DecorationB;                 // v4+: shadow dy (unused for outline)
+    uint16_t m_GlyphCount;                // Number of glyphs
+    bool m_IsSparse;                      // true = v2 sparse codepoint table, false = v1 contiguous
+    std::string m_AtlasPath;              // Deferred atlas path for lazy loading
 
     // GetVisualBounds() scans every glyph; the glyph table never changes after
     // load, so the answer is computed once (it used to run per text layout).

@@ -141,34 +141,34 @@ static void SpriteParseBorderRadius(const nlohmann::json& data, int32_t& tl, int
 {
     if (data.contains("border_radius"))
     {
-        const auto& br_val = data["border_radius"];
-        if (br_val.is_number())
+        const auto& brVal = data["border_radius"];
+        if (brVal.is_number())
         {
-            tl = tr = br = bl = br_val.get<int32_t>();
+            tl = tr = br = bl = brVal.get<int32_t>();
         }
-        else if (br_val.is_array())
+        else if (brVal.is_array())
         {
-            if (br_val.size() == 1)
+            if (brVal.size() == 1)
             {
-                tl = tr = br = bl = br_val[0].get<int32_t>();
+                tl = tr = br = bl = brVal[0].get<int32_t>();
             }
-            else if (br_val.size() == 2)
+            else if (brVal.size() == 2)
             {
-                tl = br = br_val[0].get<int32_t>();
-                tr = bl = br_val[1].get<int32_t>();
+                tl = br = brVal[0].get<int32_t>();
+                tr = bl = brVal[1].get<int32_t>();
             }
-            else if (br_val.size() == 3)
+            else if (brVal.size() == 3)
             {
-                tl = br_val[0].get<int32_t>();
-                tr = bl = br_val[1].get<int32_t>();
-                br = br_val[2].get<int32_t>();
+                tl = brVal[0].get<int32_t>();
+                tr = bl = brVal[1].get<int32_t>();
+                br = brVal[2].get<int32_t>();
             }
-            else if (br_val.size() >= 4)
+            else if (brVal.size() >= 4)
             {
-                tl = br_val[0].get<int32_t>();
-                tr = br_val[1].get<int32_t>();
-                br = br_val[2].get<int32_t>();
-                bl = br_val[3].get<int32_t>();
+                tl = brVal[0].get<int32_t>();
+                tr = brVal[1].get<int32_t>();
+                br = brVal[2].get<int32_t>();
+                bl = brVal[3].get<int32_t>();
             }
         }
     }

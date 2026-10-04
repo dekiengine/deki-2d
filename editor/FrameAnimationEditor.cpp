@@ -79,7 +79,7 @@ static FrameAnimCacheRegistrar s_FrameAnimCacheRegistrar;
 class FrameAnimationEditor : public AssetTypeEditor
 {
 public:
-    // typeName "Animation" matches Deki2D::FrameAnimationData::AssetTypeName and the
+    // typeName "Animation" matches Deki2D::FrameAnimationData::kAssetTypeName and the
     // runtime AssetManager loader registered in FrameAnimationMsgPack.cpp, so
     // editor-side and runtime-side asset lookups agree.
     const char* GetTypeName() const override { return "Animation"; }

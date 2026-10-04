@@ -22,10 +22,10 @@ namespace Deki2D
 // Square-kernel morphological dilation: dst = max over (2N+1)×(2N+1) neighborhood.
 // src is (srcW × srcH). dst must be allocated as (srcW + 2*N) × (srcH + 2*N). The
 // source glyph sits centered inside the dst canvas at offset (N, N).
-static void DilateAlphaSquare(const uint8_t* src, int srcW, int srcH, uint8_t* dst, int N)
+static void DilateAlphaSquare(const uint8_t* src, int srcW, int srcH, uint8_t* dst, int n)
 {
-    const int dstW = srcW + 2 * N;
-    const int dstH = srcH + 2 * N;
+    const int dstW = srcW + 2 * n;
+    const int dstH = srcH + 2 * n;
     for (int dy = 0; dy < dstH; ++dy)
     {
         for (int dx = 0; dx < dstW; ++dx)
@@ -33,16 +33,16 @@ static void DilateAlphaSquare(const uint8_t* src, int srcW, int srcH, uint8_t* d
             // Each dst pixel at (dx, dy) corresponds to source position (dx - N, dy - N).
             // Its dilated value is the max over a ±N square neighborhood in source space.
             uint8_t maxA = 0;
-            for (int ky = -N; ky <= N; ++ky)
+            for (int ky = -n; ky <= n; ++ky)
             {
-                int sy = (dy - N) + ky;
+                int sy = (dy - n) + ky;
                 if (sy < 0 || sy >= srcH)
                 {
                     continue;
                 }
-                for (int kx = -N; kx <= N; ++kx)
+                for (int kx = -n; kx <= n; ++kx)
                 {
-                    int sx = (dx - N) + kx;
+                    int sx = (dx - n) + kx;
                     if (sx < 0 || sx >= srcW)
                     {
                         continue;
@@ -120,9 +120,9 @@ static uint8_t ClassifyToPaletteIndex(uint8_t decoA, uint8_t fillA)
 // Box-filter downsample an 8-bit grayscale bitmap by factor N in each axis.
 // Source dimensions need not be divisible by N — fractional edge cells are
 // averaged over the samples that actually exist (dst dimensions = ceil(src/N)).
-static void BoxDownsample(const uint8_t* src, int srcW, int srcH, uint8_t* dst, int dstW, int dstH, int N)
+static void BoxDownsample(const uint8_t* src, int srcW, int srcH, uint8_t* dst, int dstW, int dstH, int n)
 {
-    const int denom = N * N;
+    const int denom = n * n;
     const int half = denom / 2;
     for (int dy = 0; dy < dstH; ++dy)
     {
@@ -130,16 +130,16 @@ static void BoxDownsample(const uint8_t* src, int srcW, int srcH, uint8_t* dst, 
         {
             int sum = 0;
             int covered = 0;
-            int sy0 = dy * N;
-            int sx0 = dx * N;
-            for (int ky = 0; ky < N; ++ky)
+            int sy0 = dy * n;
+            int sx0 = dx * n;
+            for (int ky = 0; ky < n; ++ky)
             {
                 int sy = sy0 + ky;
                 if (sy >= srcH)
                 {
                     break;
                 }
-                for (int kx = 0; kx < N; ++kx)
+                for (int kx = 0; kx < n; ++kx)
                 {
                     int sx = sx0 + kx;
                     if (sx >= srcW)
@@ -1126,15 +1126,15 @@ bool FontCompiler::WriteDfontFile(const std::string& path, const CompileResult& 
     header.version = sparse ? 0x80000004u : 0x00000004u;
     header.firstCodepoint = result.firstChar;
     header.lastCodepoint = result.lastChar;
-    header.m_LineHeight = result.lineHeight;
+    header.lineHeight = result.lineHeight;
     header.baseline = result.baseline;
-    header.m_CapHeight = result.capHeight;
-    header.m_XHeight = result.xHeight;
-    header.m_DecorationMode = static_cast<uint8_t>(result.decoration);
-    header.m_DecorationA = result.decorationA;
-    header.m_DecorationB = result.decorationB;
+    header.capHeight = result.capHeight;
+    header.xHeight = result.xHeight;
+    header.decorationMode = static_cast<uint8_t>(result.decoration);
+    header.decorationA = result.decorationA;
+    header.decorationB = result.decorationB;
     header.reserved = 0;
-    header.m_GlyphCount = static_cast<uint16_t>(result.glyphs.size());
+    header.glyphCount = static_cast<uint16_t>(result.glyphs.size());
     header.atlasPathLen = static_cast<uint16_t>(atlasFilename.length() + 1);
 
     std::ofstream fontFile(path, std::ios::binary);

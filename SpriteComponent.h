@@ -154,9 +154,9 @@ private:
     // Animation frames need no buffer: they point QuadBlit at the sub-rect of
     // the sprite's own pixels via Source::stride.
     // Owning, and it knows its own size.
-    Deki::Buffer<uint8_t> m_cachedRenderBuffer;
-    int32_t m_cachedRenderW = 0;
-    int32_t m_cachedRenderH = 0;
+    Deki::Buffer<uint8_t> m_CachedRenderBuffer;
+    int32_t m_CachedRenderW = 0;
+    int32_t m_CachedRenderH = 0;
     // The frame SetFrame showed, by GUID ("" after SetFrameRect), and the
     // asset epoch its rect was read at; RenderContent re-reads it when the
     // epoch has moved.
@@ -164,9 +164,9 @@ private:
     uint64_t m_FrameEpoch = 0;
     void RefreshFrame(const Sprite* spr);
 
-    const Sprite* m_cachedRenderSrc = nullptr;
-    SpriteRenderMode m_cachedRenderMode = SpriteRenderMode::Normal;
-    Sprite::SliceRegion m_cachedRenderRegion;
+    const Sprite* m_CachedRenderSrc = nullptr;
+    SpriteRenderMode m_CachedRenderMode = SpriteRenderMode::Normal;
+    Sprite::SliceRegion m_CachedRenderRegion;
 
     // What Tiled and NineSlice stretch: the shown frame, or the whole sprite
     // when none is, with that frame's (or the sprite's) 9-slice borders.

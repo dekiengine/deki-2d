@@ -133,8 +133,8 @@ public:
     float radius;  // For radial gradients (0.0 to 1.0)
 
     // Color stops (up to 4 stops for memory efficiency)
-    static constexpr uint8_t MAX_STOPS = 4;
-    GradientStop stops[MAX_STOPS];
+    static constexpr uint8_t kMaxStops = 4;
+    GradientStop stops[kMaxStops];
 
     DEKI_EXPORT
     DEKI_TOOLTIP("How many of the four colour stops are used. The rest are ignored.")
@@ -199,9 +199,9 @@ public:
 
     /**
      * @brief Set linear gradient with angle
-     * @param angle_radians Angle in radians (0 = left to right, π/2 = top to bottom)
+     * @param angleRadians Angle in radians (0 = left to right, π/2 = top to bottom)
      */
-    void SetLinearGradient(float angle_radians = 0.0f);
+    void SetLinearGradient(float angleRadians = 0.0f);
 
     /**
      * @brief Set radial gradient with center and radius
@@ -240,13 +240,12 @@ public:
      * @param end_g End color green
      * @param end_b End color blue
      */
-    void SetSimpleGradient(uint8_t start_r, uint8_t start_g, uint8_t start_b, uint8_t end_r, uint8_t end_g,
-                           uint8_t end_b);
+    void SetSimpleGradient(uint8_t startR, uint8_t startG, uint8_t startB, uint8_t endR, uint8_t endG, uint8_t endB);
 
     /**
      * @brief Set tiling mode
      */
-    void SetTiling(GradientTileMode mode, float tile_w = 0.0f, float tile_h = 0.0f);
+    void SetTiling(GradientTileMode mode, float tileW = 0.0f, float tileH = 0.0f);
 
     /**
      * @brief Set dithering mode for smooth gradients on RGB565
@@ -298,11 +297,11 @@ public:
 private:
     /**
      * @brief Calculate gradient value at normalized position
-     * @param norm_x Normalized X position (0.0 to 1.0)
-     * @param norm_y Normalized Y position (0.0 to 1.0)
+     * @param normX Normalized X position (0.0 to 1.0)
+     * @param normY Normalized Y position (0.0 to 1.0)
      * @return Gradient position (0.0 to 1.0)
      */
-    float CalculateGradientPosition(float norm_x, float norm_y) const;
+    float CalculateGradientPosition(float normX, float normY) const;
 
     /**
      * @brief Interpolate color at gradient position
@@ -335,8 +334,8 @@ private:
     /**
      * @brief Render single pixel with bounds checking
      */
-    void RenderPixel(int32_t x, int32_t y, uint16_t color, uint8_t* render_buffer, int screen_width,
-                     int screen_height) const;
+    void RenderPixel(int32_t x, int32_t y, uint16_t color, uint8_t* renderBuffer, int screenWidth,
+                     int screenHeight) const;
 
     // Baked pixels for the current property set (what RenderContent hands to
     // QuadBlit). Keyed by a hash of every input so the gradient is rasterised

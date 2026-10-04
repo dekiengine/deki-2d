@@ -36,7 +36,7 @@ struct DEKI_SERIALIZABLE FrameAnimSequence
 struct DEKI_SERIALIZABLE FrameAnimationData
 {
     /// Asset type name for AssetManager::Load<T>() lookup
-    static constexpr const char* AssetTypeName = "Animation";
+    static constexpr const char* kAssetTypeName = "Animation";
 
     std::string spritesheetGuid;                // Parent spritesheet texture GUID
     std::vector<FrameAnimSequence> animations;  // List of animation sequences

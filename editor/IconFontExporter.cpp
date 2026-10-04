@@ -30,7 +30,7 @@ namespace DekiEditor
 
 REGISTER_EDITOR_WINDOW(IconFontExporter, "Icon Font Exporter", "Icon Font Exporter")
 
-static const int ATLAS_MAX_WIDTH = 2048;
+static const int kAtlasMaxWidth = 2048;
 
 // ---------------------------------------------------------------------------
 // Construction / Destruction
@@ -430,7 +430,7 @@ void IconFontExporter::BuildIconAtlas()
     int cellSize = m_IconDisplaySize;
     int padding = 2;
     int cellWithPad = cellSize + padding;
-    int cols = ATLAS_MAX_WIDTH / cellWithPad;
+    int cols = kAtlasMaxWidth / cellWithPad;
     if (cols < 1)
     {
         cols = 1;
@@ -438,7 +438,7 @@ void IconFontExporter::BuildIconAtlas()
     int rows = (totalIcons + cols - 1) / cols;
     int atlasH = rows * cellWithPad;
 
-    std::vector<uint8_t> atlasData(ATLAS_MAX_WIDTH * atlasH * 4, 0);
+    std::vector<uint8_t> atlasData(kAtlasMaxWidth * atlasH * 4, 0);
 
     m_AtlasEntries.resize(totalIcons);
 
@@ -466,14 +466,14 @@ void IconFontExporter::BuildIconAtlas()
                 {
                     int destX = baseX + offsetX + x;
                     int destY = baseY + offsetY + y;
-                    if (destX < 0 || destX >= ATLAS_MAX_WIDTH || destY < 0 || destY >= atlasH)
+                    if (destX < 0 || destX >= kAtlasMaxWidth || destY < 0 || destY >= atlasH)
                     {
                         continue;
                     }
 
                     uint8_t alpha = bitmap.buffer[y * bitmap.pitch + x];
 
-                    int idx = (destY * ATLAS_MAX_WIDTH + destX) * 4;
+                    int idx = (destY * kAtlasMaxWidth + destX) * 4;
                     atlasData[idx + 0] = 255;
                     atlasData[idx + 1] = 255;
                     atlasData[idx + 2] = 255;
@@ -483,9 +483,9 @@ void IconFontExporter::BuildIconAtlas()
         }
 
         auto& entry = m_AtlasEntries[i];
-        entry.u0 = (float)baseX / (float)ATLAS_MAX_WIDTH;
+        entry.u0 = (float)baseX / (float)kAtlasMaxWidth;
         entry.v0 = (float)baseY / (float)atlasH;
-        entry.u1 = (float)(baseX + cellSize) / (float)ATLAS_MAX_WIDTH;
+        entry.u1 = (float)(baseX + cellSize) / (float)kAtlasMaxWidth;
         entry.v1 = (float)(baseY + cellSize) / (float)atlasH;
     }
 
@@ -500,11 +500,11 @@ void IconFontExporter::BuildIconAtlas()
     // a row stride behind, which would shear/overread this tightly packed upload.
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ATLAS_MAX_WIDTH, atlasH, 0, GL_RGBA, GL_UNSIGNED_BYTE, atlasData.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, kAtlasMaxWidth, atlasH, 0, GL_RGBA, GL_UNSIGNED_BYTE, atlasData.data());
     glBindTexture(GL_TEXTURE_2D, 0);
 
     m_AtlasTexture = textureId;
-    m_AtlasWidth = ATLAS_MAX_WIDTH;
+    m_AtlasWidth = kAtlasMaxWidth;
     m_AtlasHeight = atlasH;
     m_LastBuiltSize = m_IconDisplaySize;
 }
@@ -933,15 +933,15 @@ void IconFontExporter::ExportSelectedAsAtlas()
     int cellWithPad = cellSize + padding;
     int totalIcons = (int)m_SelectedIcons.size();
 
-    // Size atlas to fit: try square-ish layout, capped at ATLAS_MAX_WIDTH
+    // Size atlas to fit: try square-ish layout, capped at kAtlasMaxWidth
     int cols = (int)std::ceil(std::sqrt((double)totalIcons));
     if (cols < 1)
     {
         cols = 1;
     }
-    if (cols * cellWithPad > ATLAS_MAX_WIDTH)
+    if (cols * cellWithPad > kAtlasMaxWidth)
     {
-        cols = ATLAS_MAX_WIDTH / cellWithPad;
+        cols = kAtlasMaxWidth / cellWithPad;
     }
     if (cols < 1)
     {
@@ -1754,10 +1754,10 @@ void IconFontExporter::DrawIconGrid()
 
     ui.BeginListClipper((int)filtered.size(), rowHeight);
 
-    int _s, _e;
-    while (ui.ListClipperStep(&_s, &_e))
+    int s, e;
+    while (ui.ListClipperStep(&s, &e))
     {
-        for (int row = _s; row < _e; row++)
+        for (int row = s; row < e; row++)
         {
             int iconIdx = filtered[row];
             bool isSelected = m_SelectedIcons.count(iconIdx) > 0;

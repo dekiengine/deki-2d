@@ -44,7 +44,7 @@
 
 namespace Deki2D
 {
-// Installed as Deki2D::TextComponent's font resolve callback by Deki2D_EnsureRegistered.
+// Installed as Deki2D::TextComponent's font resolve callback by Deki2DEnsureRegistered.
 Deki2D::BitmapFont* EditorFontResolve(Deki2D::TextComponent* tc);
 }  // namespace Deki2D
 

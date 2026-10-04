@@ -179,8 +179,8 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
     // Rasterization settings
     if (ui.CollapsingHeader("Rasterization", nullptr, true))
     {
-        static const char* kHintingLabels[] = { "None (unhinted AA)", "Light (smoother AA)",
-                                                "Normal (FreeType default)", "Mono (1-bit, no AA)" };
+        static const char* const kHintingLabels[] = { "None (unhinted AA)", "Light (smoother AA)",
+                                                      "Normal (FreeType default)", "Mono (1-bit, no AA)" };
         static const FontCompiler::HintingMode kHintingValues[] = {
             FontCompiler::HintingMode::None,
             FontCompiler::HintingMode::Light,
@@ -204,7 +204,7 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
         }
 
         // Oversample combo — Mono hinting disables it (1-bit source doesn't benefit)
-        static const char* kOversampleLabels[] = { "1x (off)", "2x", "3x", "4x" };
+        static const char* const kOversampleLabels[] = { "1x (off)", "2x", "3x", "4x" };
         int oversampleIndex = m_Oversample - 1;
         if (oversampleIndex < 0)
         {
@@ -233,7 +233,7 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
         }
 
         // Decoration combo — None / Outline / Shadow. NDS-style baked halo or drop shadow.
-        static const char* kDecorationLabels[] = { "None", "Outline", "Shadow" };
+        static const char* const kDecorationLabels[] = { "None", "Outline", "Shadow" };
         static const FontCompiler::DecorationMode kDecorationValues[] = {
             FontCompiler::DecorationMode::None,
             FontCompiler::DecorationMode::Outline,

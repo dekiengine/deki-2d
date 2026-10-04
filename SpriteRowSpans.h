@@ -25,11 +25,11 @@ namespace Deki2D
 //
 // `pixel_data` is w*h*3 bytes, alpha at byte 2 of each pixel. `spans` receives
 // 2 int16 per row: [start, end).
-inline void BuildOpaqueRowSpans(const uint8_t* pixel_data, int32_t w, int32_t h, int16_t* spans)
+inline void BuildOpaqueRowSpans(const uint8_t* pixelData, int32_t w, int32_t h, int16_t* spans)
 {
     for (int32_t y = 0; y < h; y++)
     {
-        const uint8_t* row = pixel_data + y * w * 3;
+        const uint8_t* row = pixelData + y * w * 3;
         int32_t bestStart = w, bestEnd = w;
         int32_t runStart = -1;
         for (int32_t x = 0; x <= w; x++)

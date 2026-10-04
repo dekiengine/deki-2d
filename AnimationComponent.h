@@ -44,13 +44,13 @@ public:
     // Frame GUID -> SpriteFrame resolved once per (sprite, animation data)
     // pair; each frame change used to string-compare the GUID against every
     // frame of the sheet. Rebuilt lazily when either pointer changes.
-    std::vector<std::vector<const SpriteFrame*>> m_ResolvedFrames;
-    const Sprite* m_ResolvedSprite = nullptr;
-    const FrameAnimationData* m_ResolvedData = nullptr;
+    std::vector<std::vector<const SpriteFrame*>> resolvedFrames;
+    const Sprite* resolvedSprite = nullptr;
+    const FrameAnimationData* resolvedData = nullptr;
     // The asset manager's epoch at resolve time. A reimported sprite can come
     // back at the same address with new frames, which the pointers above
     // cannot tell apart; the epoch moves on every reimport.
-    uint64_t m_ResolvedEpoch = 0;
+    uint64_t resolvedEpoch = 0;
     void ResolveFrames(const Sprite* sprite);
     DEKI_EXPORT
     DEKI_TOOLTIP(
@@ -64,9 +64,9 @@ public:
         "Play the current sequence once even if the asset marks it as looping. Cleared when the sequence changes.")
     bool playOnceOverride;  // Override loop setting to play once
 
-    std::function<void()> completion_callback;  // Callback to execute when animation completes
+    std::function<void()> completionCallback;  // Callback to execute when animation completes
 
-    AnimationComponent(SpriteComponent* sprite_comp = nullptr);
+    AnimationComponent(SpriteComponent* spriteComp = nullptr);
     virtual ~AnimationComponent();
 
     // Deki::Component overrides
@@ -80,17 +80,17 @@ public:
 
     /**
      * @brief Play the current animation
-     * @param restart_if_playing Whether to restart if already playing
+     * @param restartIfPlaying Whether to restart if already playing
      */
-    void Play(bool restart_if_playing = false);
+    void Play(bool restartIfPlaying = false);
 
     /**
      * @brief Play a specific animation by name
      * @param name Animation sequence name (e.g., "idle", "walk")
-     * @param restart_if_playing Whether to restart if same animation is already playing
+     * @param restartIfPlaying Whether to restart if same animation is already playing
      * @return true if animation was found and started
      */
-    bool PlayAnimation(const char* name, bool restart_if_playing = false);
+    bool PlayAnimation(const char* name, bool restartIfPlaying = false);
 
     /**
      * @brief Play the current animation once (ignoring loop setting)
@@ -152,7 +152,7 @@ public:
      * @brief Set callback to execute when animation completes
      * @param callback Function to call when animation finishes
      */
-    void SetCompletionCallback(std::function<void()> callback) { completion_callback = callback; }
+    void SetCompletionCallback(std::function<void()> callback) { completionCallback = callback; }
 
 private:
     /**
@@ -168,9 +168,9 @@ private:
 
     /**
      * @brief Update animation timing and advance frames
-     * @param current_time Current time in milliseconds
+     * @param currentTime Current time in milliseconds
      */
-    void UpdateAnimation(uint32_t current_time);
+    void UpdateAnimation(uint32_t currentTime);
 
     /**
      * @brief Apply current frame to the sprite component

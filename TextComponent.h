@@ -323,25 +323,25 @@ public:
     void InvalidateRenderCache();
 
 private:
-    static FontResolveCallback s_fontResolveCallback;
+    static FontResolveCallback s_FontResolveCallback;
 
     // Cached render buffer
     // Owning, and it knows its own size.
-    Deki::Buffer<uint8_t> m_cachedBuffer;
-    std::string m_cachedText;
-    int32_t m_cachedWidth = 0;
-    int32_t m_cachedHeight = 0;
-    Deki::Color m_cachedColor;
-    Deki::Color m_cachedDecorationColor;
-    TextAlign m_cachedAlign = TextAlign::Left;
-    TextVerticalAlign m_cachedVerticalAlign = TextVerticalAlign::Top;
-    BitmapFont* m_cachedFont = nullptr;
-    int32_t m_cachedPixelScale = 1;
+    Deki::Buffer<uint8_t> m_CachedBuffer;
+    std::string m_CachedText;
+    int32_t m_CachedWidth = 0;
+    int32_t m_CachedHeight = 0;
+    Deki::Color m_CachedColor;
+    Deki::Color m_CachedDecorationColor;
+    TextAlign m_CachedAlign = TextAlign::Left;
+    TextVerticalAlign m_CachedVerticalAlign = TextVerticalAlign::Top;
+    BitmapFont* m_CachedFont = nullptr;
+    int32_t m_CachedPixelScale = 1;
 
     // Cached vertical crop bounds (tight Y range of actual glyph content)
-    int32_t m_cropFirstRow = 0;
-    int32_t m_cropHeight = 0;
-    float m_cropPivotY = 0.5f;
+    int32_t m_CropFirstRow = 0;
+    int32_t m_CropHeight = 0;
+    float m_CropPivotY = 0.5f;
 };
 
 // Generated property metadata (after class definition for offsetof)

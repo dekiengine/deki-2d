@@ -169,18 +169,18 @@ void SpriteComponent::UnloadAssets()
     sprite.loadAttempted = false;
 
     // Free cached Tiled/NineSlice bake buffer
-    m_cachedRenderBuffer.Reset();
-    m_cachedRenderW = 0;
-    m_cachedRenderH = 0;
-    m_cachedRenderSrc = nullptr;
-    m_cachedRenderMode = SpriteRenderMode::Normal;
+    m_CachedRenderBuffer.Reset();
+    m_CachedRenderW = 0;
+    m_CachedRenderH = 0;
+    m_CachedRenderSrc = nullptr;
+    m_CachedRenderMode = SpriteRenderMode::Normal;
 }
 
 SpriteComponent::~SpriteComponent()
 {
     // The bake buffer was only ever freed by UnloadAssets(), which the runtime
     // never calls, so every tiled / nine-slice sprite leaked it on scene unload.
-    m_cachedRenderBuffer.Reset();
+    m_CachedRenderBuffer.Reset();
 }
 
 // ============================================================
@@ -297,15 +297,15 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
         bool hasBorders = false;
         const Sprite::SliceRegion region = SliceSource(spr, hasBorders);
         const float ppm = Deki::EngineSettings::Global().pixelsPerMeter * spr->sourceScale;
-        int32_t target_w = (width > 0.0f) ? static_cast<int32_t>(width * ppm) : region.width;
-        int32_t target_h = (height > 0.0f) ? static_cast<int32_t>(height * ppm) : region.height;
+        int32_t targetW = (width > 0.0f) ? static_cast<int32_t>(width * ppm) : region.width;
+        int32_t targetH = (height > 0.0f) ? static_cast<int32_t>(height * ppm) : region.height;
 
         // Hard guard: bake helpers assume positive dims and at least 1 source
         // pixel per axis. Refuse degenerate input rather than crash.
-        if (target_w <= 0 || target_h <= 0 || region.width <= 0 || region.height <= 0)
+        if (targetW <= 0 || targetH <= 0 || region.width <= 0 || region.height <= 0)
         {
-            DEKI_LOG_ERROR("SpriteComponent: invalid dims (target %dx%d, source %dx%d)", target_w, target_h,
-                           region.width, region.height);
+            DEKI_LOG_ERROR("SpriteComponent: invalid dims (target %dx%d, source %dx%d)", targetW, targetH, region.width,
+                           region.height);
             return false;
         }
 
@@ -323,60 +323,60 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
                 }
                 return false;
             }
-            int32_t min_w = region.left + region.right;
-            int32_t min_h = region.top + region.bottom;
+            int32_t minW = region.left + region.right;
+            int32_t minH = region.top + region.bottom;
             // Borders must also fit inside the SOURCE — otherwise the bake
             // computes a negative center region and corner reads can underflow.
-            if (min_w >= region.width || min_h >= region.height)
+            if (minW >= region.width || minH >= region.height)
             {
-                DEKI_LOG_ERROR("SpriteComponent: 9-slice borders %dx%d exceed source size %dx%d", min_w, min_h,
+                DEKI_LOG_ERROR("SpriteComponent: 9-slice borders %dx%d exceed source size %dx%d", minW, minH,
                                region.width, region.height);
                 return false;
             }
-            if (target_w < min_w || target_h < min_h)
+            if (targetW < minW || targetH < minH)
             {
-                DEKI_LOG_ERROR("SpriteComponent: 9-slice target %dx%d smaller than borders %dx%d", target_w, target_h,
-                               min_w, min_h);
+                DEKI_LOG_ERROR("SpriteComponent: 9-slice target %dx%d smaller than borders %dx%d", targetW, targetH,
+                               minW, minH);
                 return false;
             }
         }
 
         // (Re-)bake when source / size / mode changed
-        const Sprite::SliceRegion& was = m_cachedRenderRegion;
+        const Sprite::SliceRegion& was = m_CachedRenderRegion;
         const bool regionChanged = was.x != region.x || was.y != region.y || was.width != region.width ||
                                    was.height != region.height || was.left != region.left ||
                                    was.right != region.right || was.top != region.top || was.bottom != region.bottom;
-        if (m_cachedRenderSrc != spr || m_cachedRenderW != target_w || m_cachedRenderH != target_h ||
-            m_cachedRenderMode != renderMode || regionChanged)
+        if (m_CachedRenderSrc != spr || m_CachedRenderW != targetW || m_CachedRenderH != targetH ||
+            m_CachedRenderMode != renderMode || regionChanged)
         {
-            size_t need = (size_t)target_w * (size_t)target_h * (size_t)bytesPerPixel;
+            size_t need = (size_t)targetW * (size_t)targetH * (size_t)bytesPerPixel;
             // Allocate() leaves an unchanged size alone, so the reuse path
             // costs nothing. Sized by the object on screen, which a device can
             // refuse; not drawing it beats a reboot.
-            if (!m_cachedRenderBuffer.Allocate(need, Deki::Memory::External))
+            if (!m_CachedRenderBuffer.Allocate(need, Deki::Memory::External))
             {
                 DEKI_LOG_WARNING("SpriteComponent: no room for a %dx%d bake (%u bytes); "
                                  "not drawing it",
-                                 (int)target_w, (int)target_h, (unsigned)need);
+                                 (int)targetW, (int)targetH, (unsigned)need);
                 return false;
             }
             if (renderMode == SpriteRenderMode::NineSlice)
             {
-                Sprite::BakeNineSliceRegion(m_cachedRenderBuffer.Data(), target_w, target_h, spr, region);
+                Sprite::BakeNineSliceRegion(m_CachedRenderBuffer.Data(), targetW, targetH, spr, region);
             }
             else
             {
-                Sprite::BakeTiledRegion(m_cachedRenderBuffer.Data(), target_w, target_h, spr, region);
+                Sprite::BakeTiledRegion(m_CachedRenderBuffer.Data(), targetW, targetH, spr, region);
             }
 
-            m_cachedRenderRegion = region;
-            m_cachedRenderSrc = spr;
-            m_cachedRenderW = target_w;
-            m_cachedRenderH = target_h;
-            m_cachedRenderMode = renderMode;
+            m_CachedRenderRegion = region;
+            m_CachedRenderSrc = spr;
+            m_CachedRenderW = targetW;
+            m_CachedRenderH = targetH;
+            m_CachedRenderMode = renderMode;
         }
 
-        outSource = QuadBlit::MakeSource(m_cachedRenderBuffer.Data(), target_w, target_h,
+        outSource = QuadBlit::MakeSource(m_CachedRenderBuffer.Data(), targetW, targetH,
                                          QuadBlit::PixelLayout::FromTexture(spr->format, spr->hasAlpha),
                                          false  // ownsPixels = false - component owns this buffer
         );

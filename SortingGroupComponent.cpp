@@ -4,23 +4,23 @@
 
 using namespace Deki2D;
 
-// Explicit registration function — called from ::Deki2D_RegisterComponents()
-void Deki2D_RegisterSortingGroupAdapters()
+// Explicit registration function — called from ::Deki2DRegisterComponents()
+void Deki2DRegisterSortingGroupAdapters()
 {
-    static bool s_registered = false;
-    if (s_registered)
+    static bool s_Registered = false;
+    if (s_Registered)
     {
         return;
     }
-    s_registered = true;
+    s_Registered = true;
 
     Deki::ComponentInterfaceAdapters::Register(
-        Deki::ISortableProvider::InterfaceID, ::Deki::TypeId<SortingGroupComponent>(), [](Deki::Component* c) -> void*
+        Deki::ISortableProvider::kInterfaceID, ::Deki::TypeId<SortingGroupComponent>(), [](Deki::Component* c) -> void*
         { return static_cast<Deki::ISortableProvider*>(static_cast<SortingGroupComponent*>(c)); });
 }
 
 // Static init — works for DLL builds
 static struct SortingGroupInterfaceRegistrar
 {
-    SortingGroupInterfaceRegistrar() { Deki2D_RegisterSortingGroupAdapters(); }
-} s_sortingGroupInterfaceRegistrar;
+    SortingGroupInterfaceRegistrar() { Deki2DRegisterSortingGroupAdapters(); }
+} s_SortingGroupInterfaceRegistrar;

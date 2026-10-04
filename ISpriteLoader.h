@@ -20,10 +20,10 @@ public:
 
     /**
      * @brief Load a sprite from a file path
-     * @param file_path Path to the sprite file
+     * @param filePath Path to the sprite file
      * @return A pointer to the created Sprite, or nullptr if loading failed
      */
-    virtual Sprite* LoadFromFile(const char* file_path) = 0;
+    virtual Sprite* LoadFromFile(const char* filePath) = 0;
 
     /**
      * @brief Get the format identifier for this loader

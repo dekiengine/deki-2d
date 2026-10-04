@@ -188,7 +188,7 @@ public:
 
     // === Physics ===
 
-    void Update(float delta_time);
+    void Update(float deltaTime);
 
 private:
     // All sizes/offsets/positions below are world meters.

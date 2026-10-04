@@ -142,7 +142,7 @@ DEKI_2D_API BitmapFont* GetPreviewFont(const std::string& sourceGuid, int fontSi
 
 /**
  * @brief Initialize font preview callbacks for live editing
- * Called during Deki2D_EnsureRegistered to set up EditorAssets callbacks
+ * Called during Deki2DEnsureRegistered to set up EditorAssets callbacks
  */
 DEKI_2D_API void InitializeFontPreviewCallbacks();
 }  // namespace Deki2D

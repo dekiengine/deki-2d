@@ -28,9 +28,9 @@ using json = nlohmann::json;
 // by FrameAnimationData.h). Load and save go through those generated functions,
 // so there is no hand-written per-field parsing here, on desktop or on device.
 
-bool FrameAnimationMsgPackHelper::LoadAnimation(const char* msgpack_path, FrameAnimationData* out_data)
+bool FrameAnimationMsgPackHelper::LoadAnimation(const char* msgpackPath, FrameAnimationData* outData)
 {
-    if (!msgpack_path || !out_data)
+    if (!msgpackPath || !outData)
     {
         DEKI_LOG_ERROR("FrameAnimationMsgPackHelper::LoadAnimation - null parameters");
         return false;
@@ -39,23 +39,23 @@ bool FrameAnimationMsgPackHelper::LoadAnimation(const char* msgpack_path, FrameA
     // Read through the filesystem provider, like Sprite and BitmapFont: a raw
     // ifstream cannot resolve a mounted prefix such as "S:/", so on a device
     // (and in the desktop simulator) every animation failed to open.
-    Deki::IFileSystem* fs = Deki::FileSystem::GetFileSystemForPath(msgpack_path);
+    Deki::IFileSystem* fs = Deki::FileSystem::GetFileSystemForPath(msgpackPath);
     if (!fs)
     {
-        DEKI_LOG_ERROR("FrameAnimationMsgPackHelper::LoadAnimation - no filesystem for: %s", msgpack_path);
+        DEKI_LOG_ERROR("FrameAnimationMsgPackHelper::LoadAnimation - no filesystem for: %s", msgpackPath);
         return false;
     }
-    Deki::IFileSystem::FileHandle file = fs->OpenFile(msgpack_path, Deki::IFileSystem::OpenMode::READ_BINARY);
+    Deki::IFileSystem::FileHandle file = fs->OpenFile(msgpackPath, Deki::IFileSystem::OpenMode::ReadBinary);
     if (!file)
     {
-        DEKI_LOG_ERROR("FrameAnimationMsgPackHelper::LoadAnimation - failed to open: %s", msgpack_path);
+        DEKI_LOG_ERROR("FrameAnimationMsgPackHelper::LoadAnimation - failed to open: %s", msgpackPath);
         return false;
     }
     const long size = fs->GetFileSize(file);
     if (size <= 0)
     {
         fs->CloseFile(file);
-        DEKI_LOG_ERROR("FrameAnimationMsgPackHelper::LoadAnimation - empty file: %s", msgpack_path);
+        DEKI_LOG_ERROR("FrameAnimationMsgPackHelper::LoadAnimation - empty file: %s", msgpackPath);
         return false;
     }
     std::vector<uint8_t> buffer(static_cast<size_t>(size));
@@ -63,23 +63,22 @@ bool FrameAnimationMsgPackHelper::LoadAnimation(const char* msgpack_path, FrameA
     fs->CloseFile(file);
     if (read != static_cast<size_t>(size))
     {
-        DEKI_LOG_ERROR("FrameAnimationMsgPackHelper::LoadAnimation - failed to read file: %s", msgpack_path);
+        DEKI_LOG_ERROR("FrameAnimationMsgPackHelper::LoadAnimation - failed to read file: %s", msgpackPath);
         return false;
     }
-    return LoadAnimationFromMemory(buffer.data(), static_cast<size_t>(size), out_data);
+    return LoadAnimationFromMemory(buffer.data(), static_cast<size_t>(size), outData);
 }
 
-bool FrameAnimationMsgPackHelper::LoadAnimationFromMemory(const uint8_t* data, size_t size,
-                                                          FrameAnimationData* out_data)
+bool FrameAnimationMsgPackHelper::LoadAnimationFromMemory(const uint8_t* data, size_t size, FrameAnimationData* outData)
 {
-    if (!data || size == 0 || !out_data)
+    if (!data || size == 0 || !outData)
     {
         DEKI_LOG_ERROR("FrameAnimationMsgPackHelper::LoadAnimationFromMemory - invalid parameters");
         return false;
     }
 
-    out_data->spritesheetGuid.clear();
-    out_data->animations.clear();
+    outData->spritesheetGuid.clear();
+    outData->animations.clear();
 
     // Generated, reflection-driven MessagePack deserialize (full field-name keys).
     // Identical path on desktop and embedded via SceneMsgPackParser.
@@ -90,28 +89,28 @@ bool FrameAnimationMsgPackHelper::LoadAnimationFromMemory(const uint8_t* data, s
         DEKI_LOG_ERROR("FrameAnimationMsgPackHelper::LoadAnimationFromMemory - root is not a MessagePack map");
         return false;
     }
-    if (!DeserializeMsgPack(*out_data, parser, mapSize))
+    if (!DeserializeMsgPack(*outData, parser, mapSize))
     {
         DEKI_LOG_ERROR("FrameAnimationMsgPackHelper::LoadAnimationFromMemory - deserialize failed");
         return false;
     }
 
     int totalFrames = 0;
-    for (const auto& anim : out_data->animations)
+    for (const auto& anim : outData->animations)
     {
         totalFrames += static_cast<int>(anim.frames.size());
     }
 
     DEKI_LOG_INTERNAL("FrameAnimationMsgPackHelper::LoadAnimation - loaded %d animations with %d total frames",
-                      static_cast<int>(out_data->animations.size()), totalFrames);
+                      static_cast<int>(outData->animations.size()), totalFrames);
 
     return true;
 }
 
 #ifdef DEKI_EDITOR
-bool FrameAnimationMsgPackHelper::SaveAnimation(const char* msgpack_path, const FrameAnimationData* anim_data)
+bool FrameAnimationMsgPackHelper::SaveAnimation(const char* msgpackPath, const FrameAnimationData* animData)
 {
-    if (!msgpack_path || !anim_data)
+    if (!msgpackPath || !animData)
     {
         DEKI_LOG_ERROR("FrameAnimationMsgPackHelper::SaveAnimation - null parameters");
         return false;
@@ -121,27 +120,27 @@ bool FrameAnimationMsgPackHelper::SaveAnimation(const char* msgpack_path, const 
     {
         // Generated reflection serialize (full field-name keys) -> MessagePack.
         // Mirrors the load path; nested sequences/frames are handled recursively.
-        json j = Deki::Serialize<FrameAnimationData>(*anim_data);
-        std::vector<uint8_t> msgpack_data = json::to_msgpack(j);
+        json j = Deki::Serialize<FrameAnimationData>(*animData);
+        std::vector<uint8_t> msgpackData = json::to_msgpack(j);
 
-        std::ofstream file(msgpack_path, std::ios::binary);
+        std::ofstream file(msgpackPath, std::ios::binary);
         if (!file.is_open())
         {
-            DEKI_LOG_ERROR("FrameAnimationMsgPackHelper::SaveAnimation - failed to open for writing: %s", msgpack_path);
+            DEKI_LOG_ERROR("FrameAnimationMsgPackHelper::SaveAnimation - failed to open for writing: %s", msgpackPath);
             return false;
         }
 
-        file.write(reinterpret_cast<const char*>(msgpack_data.data()), msgpack_data.size());
+        file.write(reinterpret_cast<const char*>(msgpackData.data()), msgpackData.size());
 
         int totalFrames = 0;
-        for (const auto& seq : anim_data->animations)
+        for (const auto& seq : animData->animations)
         {
             totalFrames += static_cast<int>(seq.frames.size());
         }
 
         DEKI_LOG_INTERNAL(
             "FrameAnimationMsgPackHelper::SaveAnimation - saved %d animations with %d total frames (%zu bytes)",
-            static_cast<int>(anim_data->animations.size()), totalFrames, msgpack_data.size());
+            static_cast<int>(animData->animations.size()), totalFrames, msgpackData.size());
 
         return file.good();
     }

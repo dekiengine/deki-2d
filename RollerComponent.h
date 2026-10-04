@@ -222,9 +222,9 @@ public:
 
     /**
      * @brief Update roller physics and animation
-     * @param delta_time Time since last frame in seconds
+     * @param deltaTime Time since last frame in seconds
      */
-    void Update(float delta_time);
+    void Update(float deltaTime);
 
     /**
      * @brief Get the total height of the roller visible area (meters)

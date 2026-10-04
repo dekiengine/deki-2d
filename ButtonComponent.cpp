@@ -105,32 +105,32 @@ void ButtonComponent::Start()
         });
 }
 
-void ButtonComponent::SetState(ButtonState new_state)
+void ButtonComponent::SetState(ButtonState newState)
 {
-    if (state == new_state)
+    if (state == newState)
     {
         return;
     }
 
-    ButtonState old_state = state;
-    state = new_state;
+    ButtonState oldState = state;
+    state = newState;
 
     // Trigger hover callbacks
-    if (old_state != ButtonState::Hovered && new_state == ButtonState::Hovered)
+    if (oldState != ButtonState::Hovered && newState == ButtonState::Hovered)
     {
         InvokeCallbacks(onHoverEnter);
     }
-    else if (old_state == ButtonState::Hovered && new_state != ButtonState::Hovered)
+    else if (oldState == ButtonState::Hovered && newState != ButtonState::Hovered)
     {
         InvokeCallbacks(onHoverExit);
     }
 
     // Notify state change listeners
-    for (const auto& cb : on_state_changed)
+    for (const auto& cb : onStateChanged)
     {
         if (cb)
         {
-            cb(new_state);
+            cb(newState);
         }
     }
 }
@@ -176,7 +176,7 @@ void ButtonComponent::AddOnHoverExitCallback(const ButtonCallback& callback)
 
 void ButtonComponent::AddOnStateChangedCallback(const std::function<void(ButtonState)>& callback)
 {
-    on_state_changed.push_back(callback);
+    onStateChanged.push_back(callback);
 }
 
 void ButtonComponent::CancelPress()

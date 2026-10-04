@@ -92,7 +92,7 @@ public:
     std::vector<ButtonCallback> onRelease;
     std::vector<ButtonCallback> onHoverEnter;
     std::vector<ButtonCallback> onHoverExit;
-    std::vector<std::function<void(ButtonState)>> on_state_changed;
+    std::vector<std::function<void(ButtonState)>> onStateChanged;
 
     ButtonComponent();
 
@@ -104,9 +104,9 @@ public:
     // State management
     /**
      * @brief Set the button state
-     * @param new_state New state to set
+     * @param newState New state to set
      */
-    void SetState(ButtonState new_state);
+    void SetState(ButtonState newState);
 
     /**
      * @brief Get current button state

@@ -28,7 +28,7 @@ struct FrameAnimationData;
 /**
  * @brief File extension for frame animation files
  */
-constexpr const char* FRAMEANIM_EXTENSION = ".anim";
+constexpr const char* kFrameanimExtension = ".anim";
 
 /**
  * @brief Helper class for frame animation MessagePack format
@@ -38,34 +38,34 @@ class FrameAnimationMsgPackHelper
 public:
     /**
      * @brief Load frame animation from MessagePack format
-     * @param msgpack_path Path to .frameanim MessagePack file
-     * @param out_data Output animation data structure
+     * @param msgpackPath Path to .frameanim MessagePack file
+     * @param outData Output animation data structure
      * @return true on success
      */
-    static bool LoadAnimation(const char* msgpack_path, FrameAnimationData* out_data);
+    static bool LoadAnimation(const char* msgpackPath, FrameAnimationData* outData);
 
     /**
      * @brief Load frame animation from memory buffer
      * @param data Pointer to MessagePack data
      * @param size Size of data in bytes
-     * @param out_data Output animation data structure
+     * @param outData Output animation data structure
      * @return true on success
      */
-    static bool LoadAnimationFromMemory(const uint8_t* data, size_t size, FrameAnimationData* out_data);
+    static bool LoadAnimationFromMemory(const uint8_t* data, size_t size, FrameAnimationData* outData);
 
 #ifdef DEKI_EDITOR
     /**
      * @brief Save frame animation to MessagePack format (editor only)
-     * @param msgpack_path Output path for .frameanim file
-     * @param anim_data Animation data to save
+     * @param msgpackPath Output path for .frameanim file
+     * @param animData Animation data to save
      * @return true on success
      */
-    static bool SaveAnimation(const char* msgpack_path, const FrameAnimationData* anim_data);
+    static bool SaveAnimation(const char* msgpackPath, const FrameAnimationData* animData);
 #endif
 };
 
 // Registers the "Animation" asset loader. Idempotent. Called from
-// Deki2D_InitSystem (Deki2DInit.h), which is also what gets this file into a
+// Deki2DInitSystem (Deki2DInit.h), which is also what gets this file into a
 // firmware.
 void RegisterAnimationLoader();
 

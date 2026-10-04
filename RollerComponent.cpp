@@ -849,7 +849,7 @@ void RollerComponent::HandlePointerUp(float x, float y)
     // Otherwise let momentum continue, Update() will snap when velocity dies down
 }
 
-void RollerComponent::Update(float delta_time)
+void RollerComponent::Update(float deltaTime)
 {
     if (m_IsDragging)
     {
@@ -869,7 +869,7 @@ void RollerComponent::Update(float delta_time)
         // Velocity is in meters per 60 Hz frame; scale by the real step so a
         // flick travels the same distance at 30 fps as at 60 (the snap phase
         // below already did this; momentum did not).
-        const float stepCoef = delta_time * 60.0f;
+        const float stepCoef = deltaTime * 60.0f;
         m_ScrollOffset = ((m_ScrollOffset) + (m_ScrollVelocity * stepCoef));
 
         // Decelerate (friction), frame-rate independent: deceleration^(dt*60)
@@ -894,7 +894,7 @@ void RollerComponent::Update(float delta_time)
         // Simple ease-out: move a fraction of the remaining distance.
         // snapSpeed controls how fast (higher = faster snap). easeFactor is
         // a pure float coefficient (frame scaling), wrapped to mix safely.
-        float easeFactorF = (snapSpeed) * 0.15f * delta_time * 60.0f;
+        float easeFactorF = (snapSpeed) * 0.15f * deltaTime * 60.0f;
         if (easeFactorF > 0.5f)
         {
             easeFactorF = 0.5f;

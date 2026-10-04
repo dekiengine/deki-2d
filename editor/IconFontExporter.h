@@ -11,8 +11,8 @@
 
 struct FT_LibraryRec_;
 struct FT_FaceRec_;
-typedef struct FT_LibraryRec_* FT_Library;
-typedef struct FT_FaceRec_* FT_Face;
+typedef struct FT_LibraryRec_* FT_Library;  // NOLINT(readability-identifier-naming): FreeType's name
+typedef struct FT_FaceRec_* FT_Face;        // NOLINT(readability-identifier-naming): FreeType's name
 
 namespace DekiEditor
 {

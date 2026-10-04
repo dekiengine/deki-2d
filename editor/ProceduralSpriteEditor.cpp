@@ -25,23 +25,23 @@ namespace DekiEditor
 // SDF Rendering Functions
 // ============================================================================
 
-static float smoothstep(float edge0, float edge1, float x)
+static float Smoothstep(float edge0, float edge1, float x)
 {
     float t = (x - edge0) / (edge1 - edge0);
     t = t < 0.0f ? 0.0f : (t > 1.0f ? 1.0f : t);
     return t * t * (3.0f - 2.0f * t);
 }
 
-static float circleSDF(float px, float py, float radius)
+static float CircleSDF(float px, float py, float radius)
 {
     return sqrtf(px * px + py * py) - radius;
 }
 
-static float ellipseSDF(float px, float py, float radiusX, float radiusY)
+static float EllipseSDF(float px, float py, float radiusX, float radiusY)
 {
     if (fabsf(radiusX - radiusY) < 0.001f)
     {
-        return circleSDF(px, py, radiusX);
+        return CircleSDF(px, py, radiusX);
     }
     float nx = px / radiusX;
     float ny = py / radiusY;
@@ -50,12 +50,12 @@ static float ellipseSDF(float px, float py, float radiusX, float radiusY)
     return (d - 1.0f) * minRadius;
 }
 
-static float roundedRectSDF(float px, float py, float halfW, float halfH, float radius)
+static float RoundedRectSDF(float px, float py, float halfW, float halfH, float radius)
 {
     float maxRadius = (std::min)(halfW, halfH);
     if (radius >= maxRadius)
     {
-        return ellipseSDF(px, py, halfW, halfH);
+        return EllipseSDF(px, py, halfW, halfH);
     }
 
     float r = radius;
@@ -68,7 +68,7 @@ static float roundedRectSDF(float px, float py, float halfW, float halfH, float 
     return outsideDist + insideDist - r;
 }
 
-static float roundedRectSDFPerCorner(float px, float py, float halfW, float halfH, float rTL, float rTR, float rBR,
+static float RoundedRectSDFPerCorner(float px, float py, float halfW, float halfH, float rTL, float rTR, float rBR,
                                      float rBL)
 {
     // Select corner radius based on quadrant
@@ -93,7 +93,7 @@ static float roundedRectSDFPerCorner(float px, float py, float halfW, float half
     float maxRadius = (std::min)(halfW, halfH);
     if (r >= maxRadius)
     {
-        return ellipseSDF(px, py, halfW, halfH);
+        return EllipseSDF(px, py, halfW, halfH);
     }
 
     float qx = fabsf(px) - halfW + r;
@@ -167,8 +167,8 @@ static void RenderProceduralSpriteToRGBA(uint8_t* buffer, int32_t totalW, int32_
             if (antialiased)
             {
                 float outerDist =
-                    roundedRectSDFPerCorner(px, py, halfW, halfH, fRadiusTL, fRadiusTR, fRadiusBR, fRadiusBL);
-                float coverage = 1.0f - smoothstep(-0.5f, 0.5f, outerDist);
+                    RoundedRectSDFPerCorner(px, py, halfW, halfH, fRadiusTL, fRadiusTR, fRadiusBR, fRadiusBL);
+                float coverage = 1.0f - Smoothstep(-0.5f, 0.5f, outerDist);
 
                 if (coverage <= 0.0f)
                 {
@@ -184,7 +184,7 @@ static void RenderProceduralSpriteToRGBA(uint8_t* buffer, int32_t totalW, int32_
                 else
                 {
                     float innerDist =
-                        roundedRectSDFPerCorner(px - innerOffsetX, py - innerOffsetY, innerHalfW, innerHalfH,
+                        RoundedRectSDFPerCorner(px - innerOffsetX, py - innerOffsetY, innerHalfW, innerHalfH,
                                                 innerRadiusTL, innerRadiusTR, innerRadiusBR, innerRadiusBL);
 
                     uint8_t borderR, borderG, borderB, borderA;
@@ -226,7 +226,7 @@ static void RenderProceduralSpriteToRGBA(uint8_t* buffer, int32_t totalW, int32_
                     }
                     else
                     {
-                        borderBlend = smoothstep(-0.5f, 0.5f, innerDist);
+                        borderBlend = Smoothstep(-0.5f, 0.5f, innerDist);
                     }
 
                     BlendColors(r, g, b, a, bgR, bgG, bgB, bgA, borderR, borderG, borderB, borderA, borderBlend);
@@ -236,7 +236,7 @@ static void RenderProceduralSpriteToRGBA(uint8_t* buffer, int32_t totalW, int32_
             else
             {
                 float outerDist =
-                    roundedRectSDFPerCorner(px, py, halfW, halfH, fRadiusTL, fRadiusTR, fRadiusBR, fRadiusBL);
+                    RoundedRectSDFPerCorner(px, py, halfW, halfH, fRadiusTL, fRadiusTR, fRadiusBR, fRadiusBL);
 
                 if (outerDist > 0.0f)
                 {
@@ -252,7 +252,7 @@ static void RenderProceduralSpriteToRGBA(uint8_t* buffer, int32_t totalW, int32_
                 else
                 {
                     float innerDist =
-                        roundedRectSDFPerCorner(px - innerOffsetX, py - innerOffsetY, innerHalfW, innerHalfH,
+                        RoundedRectSDFPerCorner(px - innerOffsetX, py - innerOffsetY, innerHalfW, innerHalfH,
                                                 innerRadiusTL, innerRadiusTR, innerRadiusBR, innerRadiusBL);
 
                     if (innerHalfW <= 0 || innerHalfH <= 0 || innerDist > 0.0f)
@@ -379,34 +379,34 @@ static void ParseBorderRadius(const nlohmann::json& data, int32_t& tl, int32_t& 
 {
     if (data.contains("border_radius"))
     {
-        const auto& br_val = data["border_radius"];
-        if (br_val.is_number())
+        const auto& brVal = data["border_radius"];
+        if (brVal.is_number())
         {
-            tl = tr = br = bl = br_val.get<int32_t>();
+            tl = tr = br = bl = brVal.get<int32_t>();
         }
-        else if (br_val.is_array())
+        else if (brVal.is_array())
         {
-            if (br_val.size() == 1)
+            if (brVal.size() == 1)
             {
-                tl = tr = br = bl = br_val[0].get<int32_t>();
+                tl = tr = br = bl = brVal[0].get<int32_t>();
             }
-            else if (br_val.size() == 2)
+            else if (brVal.size() == 2)
             {
-                tl = br = br_val[0].get<int32_t>();
-                tr = bl = br_val[1].get<int32_t>();
+                tl = br = brVal[0].get<int32_t>();
+                tr = bl = brVal[1].get<int32_t>();
             }
-            else if (br_val.size() == 3)
+            else if (brVal.size() == 3)
             {
-                tl = br_val[0].get<int32_t>();
-                tr = bl = br_val[1].get<int32_t>();
-                br = br_val[2].get<int32_t>();
+                tl = brVal[0].get<int32_t>();
+                tr = bl = brVal[1].get<int32_t>();
+                br = brVal[2].get<int32_t>();
             }
-            else if (br_val.size() >= 4)
+            else if (brVal.size() >= 4)
             {
-                tl = br_val[0].get<int32_t>();
-                tr = br_val[1].get<int32_t>();
-                br = br_val[2].get<int32_t>();
-                bl = br_val[3].get<int32_t>();
+                tl = brVal[0].get<int32_t>();
+                tr = brVal[1].get<int32_t>();
+                br = brVal[2].get<int32_t>();
+                bl = brVal[3].get<int32_t>();
             }
         }
     }

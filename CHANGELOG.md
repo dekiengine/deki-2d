@@ -8,6 +8,13 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
+## Unreleased
+
+### Changed
+- **Names follow the code style** (deki-engine/docs/codestyle): types, functions and enum values are PascalCase, constants kPascalCase, members m_PascalCase, locals and parameters camelCase. The code is formatted with clang-format 22.
+- The functions the editor finds by name are PascalCase: Deki2DRegisterComponents, Deki2DGetAutoComponentCount, Deki2DEnsureRegistered and the rest. Built against engine ABI 21; a build of this package from before does not load and is rebuilt.
+- Renamed: `AssetTypeName` is `kAssetTypeName` (Sprite, BitmapFont, FrameAnimationData), `GradientComponent::MAX_STOPS` is `kMaxStops`, BitmapFont's public fields lost their `m_` (`firstChar`, `lastChar`, `glyphCount`, `lineHeight`, `capHeight`, `xHeight`, `decorationMode`), `ButtonComponent::on_state_changed` is `onStateChanged`, `AnimationComponent::completion_callback` is `completionCallback`.
+
 ## 0.17.0
 
 ### Fixed

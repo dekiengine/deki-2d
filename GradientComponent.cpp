@@ -24,17 +24,17 @@ namespace Deki2D
 // GradientComponent.gen.h (included at end of GradientComponent.h)
 
 // Bayer dithering matrices for ordered dithering
-static const uint8_t BAYER_2x2[4] = { 0, 2, 3, 1 };
+static const uint8_t kBayer2x2[4] = { 0, 2, 3, 1 };
 
-static const uint8_t BAYER_4x4[16] = { 0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5 };
+static const uint8_t kBayer4x4[16] = { 0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5 };
 
-static const uint8_t BAYER_8x8[64] = { 0,  32, 8,  40, 2,  34, 10, 42, 48, 16, 56, 24, 50, 18, 58, 26,
+static const uint8_t kBayer8x8[64] = { 0,  32, 8,  40, 2,  34, 10, 42, 48, 16, 56, 24, 50, 18, 58, 26,
                                        12, 44, 4,  36, 14, 46, 6,  38, 60, 28, 52, 20, 62, 30, 54, 22,
                                        3,  35, 11, 43, 1,  33, 9,  41, 51, 19, 59, 27, 49, 17, 57, 25,
                                        15, 47, 7,  39, 13, 45, 5,  37, 63, 31, 55, 23, 61, 29, 53, 21 };
 
 // 16x16 Bayer matrix (256 values, 0-255 range)
-static const uint8_t BAYER_16x16[256] = {
+static const uint8_t kBayer16x16[256] = {
     0,   192, 48,  240, 12,  204, 60,  252, 3,   195, 51,  243, 15,  207, 63,  255, 128, 64,  176, 112, 140, 76,
     188, 124, 131, 67,  179, 115, 143, 79,  191, 127, 32,  224, 16,  208, 44,  236, 28,  220, 35,  227, 19,  211,
     47,  239, 31,  223, 160, 96,  144, 80,  172, 108, 156, 92,  163, 99,  147, 83,  175, 111, 159, 95,  8,   200,
@@ -143,7 +143,7 @@ uint64_t GradientComponent::ComputeBakeKey(int32_t widthPx, int32_t heightPx) co
     mixf(tileWidth);
     mixf(tileHeight);
     mix(&stopCount, 1);
-    for (int i = 0; i < stopCount && i < MAX_STOPS; ++i)
+    for (int i = 0; i < stopCount && i < kMaxStops; ++i)
     {
         mixf(stops[i].position);
         mix(&stops[i].color, sizeof(stops[i].color));
@@ -156,23 +156,23 @@ void GradientComponent::SetGradientType(GradientType type)
     gradientType = type;
 }
 
-void GradientComponent::SetLinearGradient(float angle_radians)
+void GradientComponent::SetLinearGradient(float angleRadians)
 {
     gradientType = GradientType::Linear;
-    angle = angle_radians;  // Store directly in radians (engine convention)
+    angle = angleRadians;  // Store directly in radians (engine convention)
 }
 
-void GradientComponent::SetRadialGradient(float center_x_pos, float center_y_pos, float radius_val)
+void GradientComponent::SetRadialGradient(float centerXPos, float centerYPos, float radiusVal)
 {
     gradientType = GradientType::Radial;
-    centerX = std::clamp(center_x_pos, 0.0f, 1.0f);
-    centerY = std::clamp(center_y_pos, 0.0f, 1.0f);
-    radius = std::clamp(radius_val, 0.0f, 1.0f);
+    centerX = std::clamp(centerXPos, 0.0f, 1.0f);
+    centerY = std::clamp(centerYPos, 0.0f, 1.0f);
+    radius = std::clamp(radiusVal, 0.0f, 1.0f);
 }
 
 void GradientComponent::AddColorStop(float position, uint8_t r, uint8_t g, uint8_t b)
 {
-    if (stopCount >= MAX_STOPS)
+    if (stopCount >= kMaxStops)
     {
         return;
     }
@@ -226,19 +226,19 @@ void GradientComponent::SyncStopsFromProperties()
     }
 }
 
-void GradientComponent::SetSimpleGradient(uint8_t start_r, uint8_t start_g, uint8_t start_b, uint8_t end_r,
-                                          uint8_t end_g, uint8_t end_b)
+void GradientComponent::SetSimpleGradient(uint8_t startR, uint8_t startG, uint8_t startB, uint8_t endR, uint8_t endG,
+                                          uint8_t endB)
 {
     ClearColorStops();
-    AddColorStop(0.0f, start_r, start_g, start_b);
-    AddColorStop(1.0f, end_r, end_g, end_b);
+    AddColorStop(0.0f, startR, startG, startB);
+    AddColorStop(1.0f, endR, endG, endB);
 }
 
-void GradientComponent::SetTiling(GradientTileMode mode, float tile_w, float tile_h)
+void GradientComponent::SetTiling(GradientTileMode mode, float tileW, float tileH)
 {
     tileMode = mode;
-    tileWidth = tile_w;
-    tileHeight = tile_h;
+    tileWidth = tileW;
+    tileHeight = tileH;
 }
 
 void GradientComponent::SetDithering(GradientDitherMode mode)
@@ -252,7 +252,7 @@ void GradientComponent::SetArea(float w, float h)
     height = h;
 }
 
-DEKI_FAST_ATTR float GradientComponent::CalculateGradientPosition(float norm_x, float norm_y) const
+DEKI_FAST_ATTR float GradientComponent::CalculateGradientPosition(float normX, float normY) const
 {
     switch (gradientType)
     {
@@ -262,7 +262,7 @@ DEKI_FAST_ATTR float GradientComponent::CalculateGradientPosition(float norm_x, 
             // once per bake in RenderToBuffer, not per pixel.
             const float cos_a = m_CosAngle;
             const float sin_a = m_SinAngle;
-            float projection = norm_x * cos_a + norm_y * sin_a;
+            float projection = normX * cos_a + normY * sin_a;
             // For a unit square [0,1]x[0,1], projection ranges from min_proj to max_proj
             // min_proj = min(0, cos_a) + min(0, sin_a)
             // max_proj = max(0, cos_a) + max(0, sin_a)
@@ -274,21 +274,21 @@ DEKI_FAST_ATTR float GradientComponent::CalculateGradientPosition(float norm_x, 
 
         case GradientType::Radial:
         {
-            float dx = norm_x - centerX;
-            float dy = norm_y - centerY;
+            float dx = normX - centerX;
+            float dy = normY - centerY;
             float distance = sqrtf(dx * dx + dy * dy);
             return std::clamp(distance / radius, 0.0f, 1.0f);
         }
 
         case GradientType::Conical:
         {
-            float dx = norm_x - centerX;
-            float dy = norm_y - centerY;
+            float dx = normX - centerX;
+            float dy = normY - centerY;
             float angle_rad = atan2f(dy, dx) + M_PI;  // 0 to 2π
             return angle_rad / (2.0f * M_PI);
         }
 
-        default: return norm_x;
+        default: return normX;
     }
 }
 
@@ -352,10 +352,10 @@ DEKI_FAST_ATTR float GradientComponent::SampleBayerThreshold(int32_t x, int32_t 
     // hard-edged transitions at t=0 and t=1.
     switch (ditherMode)
     {
-        case GradientDitherMode::Ordered2x2: return BAYER_2x2[(y & 1) * 2 + (x & 1)] / 4.0f;
-        case GradientDitherMode::Ordered4x4: return BAYER_4x4[(y & 3) * 4 + (x & 3)] / 16.0f;
-        case GradientDitherMode::Ordered8x8: return BAYER_8x8[(y & 7) * 8 + (x & 7)] / 64.0f;
-        case GradientDitherMode::Ordered16x16: return BAYER_16x16[(y & 15) * 16 + (x & 15)] / 256.0f;
+        case GradientDitherMode::Ordered2x2: return kBayer2x2[(y & 1) * 2 + (x & 1)] / 4.0f;
+        case GradientDitherMode::Ordered4x4: return kBayer4x4[(y & 3) * 4 + (x & 3)] / 16.0f;
+        case GradientDitherMode::Ordered8x8: return kBayer8x8[(y & 7) * 8 + (x & 7)] / 64.0f;
+        case GradientDitherMode::Ordered16x16: return kBayer16x16[(y & 15) * 16 + (x & 15)] / 256.0f;
         default: return 0.0f;
     }
 }
@@ -426,16 +426,16 @@ DEKI_FAST_ATTR uint16_t GradientComponent::ConvertToRGB565(uint8_t r, uint8_t g,
     return ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
 }
 
-void GradientComponent::RenderPixel(int32_t x, int32_t y, uint16_t color, uint8_t* render_buffer, int screen_width,
-                                    int screen_height) const
+void GradientComponent::RenderPixel(int32_t x, int32_t y, uint16_t color, uint8_t* renderBuffer, int screenWidth,
+                                    int screenHeight) const
 {
-    if (x < 0 || x >= screen_width || y < 0 || y >= screen_height)
+    if (x < 0 || x >= screenWidth || y < 0 || y >= screenHeight)
     {
         return;
     }
 
-    uint16_t* buffer16 = (uint16_t*)render_buffer;
-    buffer16[y * screen_width + x] = color;
+    uint16_t* buffer16 = (uint16_t*)renderBuffer;
+    buffer16[y * screenWidth + x] = color;
 }
 
 void GradientComponent::RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t outH, int32_t artW, int32_t artH,
@@ -465,80 +465,78 @@ void GradientComponent::RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t ou
     m_SinAngle = sinf(angle);
 
     uint16_t* buffer16 = reinterpret_cast<uint16_t*>(buffer);
-    int32_t render_width = widthPx;
-    int32_t render_height = heightPx;
+    int32_t renderWidth = widthPx;
+    int32_t renderHeight = heightPx;
 
-    int32_t tile_w_px = static_cast<int32_t>(tileWidth * ppm);
-    int32_t tile_h_px = static_cast<int32_t>(tileHeight * ppm);
-    int32_t actual_tile_width = tile_w_px > 0 ? tile_w_px : render_width;
-    int32_t actual_tile_height = tile_h_px > 0 ? tile_h_px : render_height;
+    int32_t tileWPx = static_cast<int32_t>(tileWidth * ppm);
+    int32_t tileHPx = static_cast<int32_t>(tileHeight * ppm);
+    int32_t actualTileWidth = tileWPx > 0 ? tileWPx : renderWidth;
+    int32_t actualTileHeight = tileHPx > 0 ? tileHPx : renderHeight;
 
     for (int32_t oy = 0; oy < outH; oy++)
     {
         // The art row this output row covers (the same row for every output
         // row of a whole-number upscale).
-        const int32_t y = static_cast<int32_t>((static_cast<int64_t>(oy) * render_height) / outH);
+        const int32_t y = static_cast<int32_t>((static_cast<int64_t>(oy) * renderHeight) / outH);
         const int32_t cellY = oy / ditherCell;
         for (int32_t ox = 0; ox < outW; ox++)
         {
-            const int32_t x = static_cast<int32_t>((static_cast<int64_t>(ox) * render_width) / outW);
-            float norm_x = 0.0f, norm_y = 0.0f;
+            const int32_t x = static_cast<int32_t>((static_cast<int64_t>(ox) * renderWidth) / outW);
+            float normX = 0.0f, normY = 0.0f;
 
             // Handle tiling
             switch (tileMode)
             {
                 case GradientTileMode::None:
-                    norm_x = (float)x / render_width;
-                    norm_y = (float)y / render_height;
+                    normX = (float)x / renderWidth;
+                    normY = (float)y / renderHeight;
                     break;
 
                 case GradientTileMode::Horizontal:
                 {
-                    int32_t tile_x = x % actual_tile_width;
-                    norm_x = (float)tile_x / actual_tile_width;
-                    norm_y = (float)y / render_height;
+                    int32_t tileX = x % actualTileWidth;
+                    normX = (float)tileX / actualTileWidth;
+                    normY = (float)y / renderHeight;
                     break;
                 }
 
                 case GradientTileMode::Vertical:
                 {
-                    int32_t tile_y = y % actual_tile_height;
-                    norm_x = (float)x / render_width;
-                    norm_y = (float)tile_y / actual_tile_height;
+                    int32_t tileY = y % actualTileHeight;
+                    normX = (float)x / renderWidth;
+                    normY = (float)tileY / actualTileHeight;
                     break;
                 }
 
                 case GradientTileMode::Both:
                 {
-                    int32_t tile_x = x % actual_tile_width;
-                    int32_t tile_y = y % actual_tile_height;
-                    norm_x = (float)tile_x / actual_tile_width;
-                    norm_y = (float)tile_y / actual_tile_height;
+                    int32_t tileX = x % actualTileWidth;
+                    int32_t tileY = y % actualTileHeight;
+                    normX = (float)tileX / actualTileWidth;
+                    normY = (float)tileY / actualTileHeight;
                     break;
                 }
 
                 case GradientTileMode::Mirror:
                 {
-                    int32_t tile_x = x % (actual_tile_width * 2);
-                    int32_t tile_y = y % (actual_tile_height * 2);
-                    norm_x = tile_x < actual_tile_width
-                                 ? (float)tile_x / actual_tile_width
-                                 : 1.0f - (float)(tile_x - actual_tile_width) / actual_tile_width;
-                    norm_y = tile_y < actual_tile_height
-                                 ? (float)tile_y / actual_tile_height
-                                 : 1.0f - (float)(tile_y - actual_tile_height) / actual_tile_height;
+                    int32_t tileX = x % (actualTileWidth * 2);
+                    int32_t tileY = y % (actualTileHeight * 2);
+                    normX = tileX < actualTileWidth ? (float)tileX / actualTileWidth
+                                                    : 1.0f - (float)(tileX - actualTileWidth) / actualTileWidth;
+                    normY = tileY < actualTileHeight ? (float)tileY / actualTileHeight
+                                                     : 1.0f - (float)(tileY - actualTileHeight) / actualTileHeight;
                     break;
                 }
             }
 
             // Calculate gradient position
-            float grad_pos = CalculateGradientPosition(norm_x, norm_y);
+            float gradPos = CalculateGradientPosition(normX, normY);
 
             uint8_t r, g, b;
             if (ditherMode == GradientDitherMode::None)
             {
                 // No dither: smooth lerp between stops (legacy behaviour).
-                InterpolateColor(grad_pos, &r, &g, &b);
+                InterpolateColor(gradPos, &r, &g, &b);
             }
             else
             {
@@ -547,7 +545,7 @@ void GradientComponent::RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t ou
                 // out in output pixels, each Bayer cell ditherCell wide, so it
                 // stays regular whatever the scale.
                 float threshold = SampleBayerThreshold(ox / ditherCell, cellY);
-                PickStopByThreshold(grad_pos, threshold, &r, &g, &b);
+                PickStopByThreshold(gradPos, threshold, &r, &g, &b);
             }
 
             // Convert to RGB565 and write directly to buffer at (ox, oy)

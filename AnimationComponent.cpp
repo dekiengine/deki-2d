@@ -11,8 +11,8 @@ namespace Deki2D
 
 // ============================================================================
 
-AnimationComponent::AnimationComponent(SpriteComponent* sprite_comp)
-    : spriteComponent(sprite_comp),
+AnimationComponent::AnimationComponent(SpriteComponent* spriteComp)
+    : spriteComponent(spriteComp),
       animationData(nullptr),
       ownsAnimationData(false),
       currentSequence(0),
@@ -21,7 +21,7 @@ AnimationComponent::AnimationComponent(SpriteComponent* sprite_comp)
       isPlaying(false),
       hasFinished(false),
       playOnceOverride(false),
-      completion_callback(nullptr)
+      completionCallback(nullptr)
 {
 }
 
@@ -74,7 +74,7 @@ void AnimationComponent::Update()
     UpdateAnimation(Deki::Time::GetTime());
 }
 
-void AnimationComponent::Play(bool restart_if_playing)
+void AnimationComponent::Play(bool restartIfPlaying)
 {
     const FrameAnimSequence* seq = GetCurrentSequence();
     if (!seq || seq->frames.empty())
@@ -82,7 +82,7 @@ void AnimationComponent::Play(bool restart_if_playing)
         return;
     }
 
-    if (isPlaying && !restart_if_playing)
+    if (isPlaying && !restartIfPlaying)
     {
         return;
     }
@@ -96,7 +96,7 @@ void AnimationComponent::Play(bool restart_if_playing)
     ApplyCurrentFrame();
 }
 
-bool AnimationComponent::PlayAnimation(const char* name, bool restart_if_playing)
+bool AnimationComponent::PlayAnimation(const char* name, bool restartIfPlaying)
 {
     int index = FindAnimationIndex(name);
     if (index < 0)
@@ -105,7 +105,7 @@ bool AnimationComponent::PlayAnimation(const char* name, bool restart_if_playing
     }
 
     // Check if same animation is already playing
-    if (currentSequence == index && isPlaying && !restart_if_playing)
+    if (currentSequence == index && isPlaying && !restartIfPlaying)
     {
         return true;
     }
@@ -217,7 +217,7 @@ void AnimationComponent::Resume()
     }
 }
 
-void AnimationComponent::UpdateAnimation(uint32_t current_time)
+void AnimationComponent::UpdateAnimation(uint32_t currentTime)
 {
     const FrameAnimSequence* seq = GetCurrentSequence();
     if (!isPlaying || !seq || seq->frames.empty())
@@ -234,11 +234,11 @@ void AnimationComponent::UpdateAnimation(uint32_t current_time)
     // Initialize frame start time on first update
     if (frameStartTime == 0)
     {
-        frameStartTime = current_time;
+        frameStartTime = currentTime;
     }
 
-    uint32_t elapsed = current_time - frameStartTime;
-    const size_t frame_count = seq->frames.size();
+    uint32_t elapsed = currentTime - frameStartTime;
+    const size_t frameCount = seq->frames.size();
     bool advanced = false;
 
     while (elapsed >= static_cast<uint32_t>(seq->frames[currentFrame].duration))
@@ -247,7 +247,7 @@ void AnimationComponent::UpdateAnimation(uint32_t current_time)
         currentFrame++;
         advanced = true;
 
-        if (currentFrame >= static_cast<int32_t>(frame_count))
+        if (currentFrame >= static_cast<int32_t>(frameCount))
         {
             if (seq->loop && !playOnceOverride)
             {
@@ -255,15 +255,15 @@ void AnimationComponent::UpdateAnimation(uint32_t current_time)
             }
             else
             {
-                currentFrame = static_cast<int32_t>(frame_count - 1);
+                currentFrame = static_cast<int32_t>(frameCount - 1);
                 isPlaying = false;
                 hasFinished = true;
                 playOnceOverride = false;
 
-                if (completion_callback)
+                if (completionCallback)
                 {
-                    completion_callback();
-                    completion_callback = nullptr;
+                    completionCallback();
+                    completionCallback = nullptr;
                 }
                 elapsed = 0;
                 break;
@@ -273,7 +273,7 @@ void AnimationComponent::UpdateAnimation(uint32_t current_time)
 
     if (advanced)
     {
-        frameStartTime = current_time - elapsed;
+        frameStartTime = currentTime - elapsed;
         ApplyCurrentFrame();
     }
 }
@@ -334,16 +334,16 @@ void AnimationComponent::ApplyCurrentFrame()
     }
 
     const uint64_t epoch = Deki::AssetManager::Get() ? Deki::AssetManager::Get()->GetEpoch() : 0;
-    if (m_ResolvedSprite != sprite || m_ResolvedData != animationData || m_ResolvedEpoch != epoch)
+    if (resolvedSprite != sprite || resolvedData != animationData || resolvedEpoch != epoch)
     {
         ResolveFrames(sprite);
     }
 
     const SpriteFrame* spriteFrame = nullptr;
-    if (currentSequence >= 0 && currentSequence < static_cast<int32_t>(m_ResolvedFrames.size()) &&
-        currentFrame < static_cast<int32_t>(m_ResolvedFrames[currentSequence].size()))
+    if (currentSequence >= 0 && currentSequence < static_cast<int32_t>(resolvedFrames.size()) &&
+        currentFrame < static_cast<int32_t>(resolvedFrames[currentSequence].size()))
     {
-        spriteFrame = m_ResolvedFrames[currentSequence][currentFrame];
+        spriteFrame = resolvedFrames[currentSequence][currentFrame];
     }
     if (!spriteFrame)
     {
@@ -358,20 +358,20 @@ void AnimationComponent::ApplyCurrentFrame()
 
 void AnimationComponent::ResolveFrames(const Sprite* sprite)
 {
-    m_ResolvedFrames.clear();
-    m_ResolvedSprite = sprite;
-    m_ResolvedData = animationData;
-    m_ResolvedEpoch = Deki::AssetManager::Get() ? Deki::AssetManager::Get()->GetEpoch() : 0;
+    resolvedFrames.clear();
+    resolvedSprite = sprite;
+    resolvedData = animationData;
+    resolvedEpoch = Deki::AssetManager::Get() ? Deki::AssetManager::Get()->GetEpoch() : 0;
     if (!sprite || !animationData)
     {
         return;
     }
 
-    m_ResolvedFrames.resize(animationData->animations.size());
+    resolvedFrames.resize(animationData->animations.size());
     for (size_t s = 0; s < animationData->animations.size(); ++s)
     {
         const FrameAnimSequence& seq = animationData->animations[s];
-        auto& out = m_ResolvedFrames[s];
+        auto& out = resolvedFrames[s];
         out.resize(seq.frames.size(), nullptr);
         for (size_t f = 0; f < seq.frames.size(); ++f)
         {

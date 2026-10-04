@@ -614,7 +614,7 @@ void ScrollComponent::ClampScrollOffset()
     }
 }
 
-void ScrollComponent::Update(float delta_time)
+void ScrollComponent::Update(float deltaTime)
 {
     if (m_IsDragging)
     {
@@ -633,7 +633,7 @@ void ScrollComponent::Update(float delta_time)
     if (m_IsSmoothScrolling)
     {
         float diff = m_ScrollTarget - m_ScrollOffset;
-        float easeFactor = 8.0f * 0.15f * delta_time * 60.0f;
+        float easeFactor = 8.0f * 0.15f * deltaTime * 60.0f;
         if (easeFactor > 0.5f)
         {
             easeFactor = 0.5f;
@@ -663,7 +663,7 @@ void ScrollComponent::Update(float delta_time)
     // Phase 2: Momentum scrolling (after drag release)
     else if (enableInertia && Deki::Math::Abs(m_ScrollVelocity) > kVelocityEpsilon)
     {
-        float stepCoef = static_cast<float>(delta_time * 60.0f);
+        float stepCoef = static_cast<float>(deltaTime * 60.0f);
         m_ScrollOffset = ((m_ScrollOffset) + (((m_ScrollVelocity) * (stepCoef))));
 
         // Frame-rate independent deceleration: deceleration^(dt*60)
@@ -851,10 +851,10 @@ void ScrollComponent::RuntimeUpdate(float deltaTime)
 
 void ScrollComponent::OnPropertyChanged(const char* propertyName)
 {
-    static const char* layoutProps[] = { "itemSpacing",  "paddingTop", "paddingBottom", "paddingLeft",
-                                         "paddingRight", "direction",  "mode" };
+    static const char* s_LayoutProps[] = { "itemSpacing",  "paddingTop", "paddingBottom", "paddingLeft",
+                                           "paddingRight", "direction",  "mode" };
 
-    for (const char* prop : layoutProps)
+    for (const char* prop : s_LayoutProps)
     {
         if (std::strcmp(propertyName, prop) == 0)
         {

@@ -56,7 +56,7 @@ class Sprite : public Deki::Texture2D
 {
 public:
     /// Asset type name for AssetManager::Load<T>() lookup
-    static constexpr const char* AssetTypeName = "Sprite";
+    static constexpr const char* kAssetTypeName = "Sprite";
 
     // Sprite-specific properties
     float pivotX;          // Pivot point X (0.0 to 1.0, default 0.5)
@@ -132,10 +132,10 @@ public:
 
     /**
      * @brief Load sprite from V-Engine texture format (.tex)
-     * @param file_path Path to the .tex file
+     * @param filePath Path to the .tex file
      * @return Pointer to loaded sprite or nullptr on failure
      */
-    static Sprite* Load(const char* file_path);
+    static Sprite* Load(const char* filePath);
 
     /**
      * @brief Load sprite from raw file data in memory (for pack file support)
@@ -179,11 +179,11 @@ public:
     /**
      * @brief Creates a tiled sprite from a source sprite to fill target dimensions
      * @param source The source sprite to tile
-     * @param target_width Target width to fill
-     * @param target_height Target height to fill
+     * @param targetWidth Target width to fill
+     * @param targetHeight Target height to fill
      * @return A pointer to the created tiled Sprite
      */
-    static Sprite* CreateTiled(Sprite* source, int32_t target_width, int32_t target_height);
+    static Sprite* CreateTiled(Sprite* source, int32_t targetWidth, int32_t targetHeight);
 
     /**
      * @brief Creates a scaled sprite using 9-slice/9-patch technique
@@ -203,11 +203,11 @@ public:
      *   +---+-------+---+
      *
      * @param source The source sprite with 9-slice data (hasNineSlice must be true)
-     * @param target_width Target width (must be >= nineSliceLeft + nineSliceRight)
-     * @param target_height Target height (must be >= nineSliceTop + nineSliceBottom)
+     * @param targetWidth Target width (must be >= nineSliceLeft + nineSliceRight)
+     * @param targetHeight Target height (must be >= nineSliceTop + nineSliceBottom)
      * @return A pointer to the scaled sprite, or nullptr on failure
      */
-    static Sprite* CreateNineSlice(Sprite* source, int32_t target_width, int32_t target_height);
+    static Sprite* CreateNineSlice(Sprite* source, int32_t targetWidth, int32_t targetHeight);
 
     /**
      * @brief Tile a source sprite into a caller-owned pixel buffer.
@@ -216,26 +216,26 @@ public:
      * buffer. Used by SpriteComponent's render-mode cache to avoid allocating
      * a new Sprite per resize.
      *
-     * @param dst Destination buffer of size dst_w * dst_h * bytesPerPixel(source->format)
-     * @param dst_w Destination width
-     * @param dst_h Destination height
+     * @param dst Destination buffer of size dstW * dstH * bytesPerPixel(source->format)
+     * @param dstW Destination width
+     * @param dstH Destination height
      * @param source Source sprite to tile (must be valid, dimensions > 0)
      */
-    static void BakeTiledInto(uint8_t* dst, int32_t dst_w, int32_t dst_h, const Sprite* source);
+    static void BakeTiledInto(uint8_t* dst, int32_t dstW, int32_t dstH, const Sprite* source);
 
     /**
      * @brief 9-slice scale a source sprite into a caller-owned pixel buffer.
      *
      * Same 9-region algorithm as CreateNineSlice() but writes into an
      * externally managed buffer. Caller must ensure source->hasNineSlice
-     * is true and dst_w/dst_h >= nine_slice border totals.
+     * is true and dstW/dstH >= nine_slice border totals.
      *
-     * @param dst Destination buffer of size dst_w * dst_h * bytesPerPixel(source->format)
-     * @param dst_w Destination width
-     * @param dst_h Destination height
+     * @param dst Destination buffer of size dstW * dstH * bytesPerPixel(source->format)
+     * @param dstW Destination width
+     * @param dstH Destination height
      * @param source Source sprite with valid 9-slice metadata
      */
-    static void BakeNineSliceInto(uint8_t* dst, int32_t dst_w, int32_t dst_h, const Sprite* source);
+    static void BakeNineSliceInto(uint8_t* dst, int32_t dstW, int32_t dstH, const Sprite* source);
 
     /// A rectangle of a sprite (a frame, or all of it) and the 9-slice
     /// borders inside that rectangle.
@@ -248,9 +248,9 @@ public:
     /// The two bakes above, reading only `region` of the source. The caller
     /// checks that the region lies inside the source and that its borders
     /// leave a center.
-    static void BakeTiledRegion(uint8_t* dst, int32_t dst_w, int32_t dst_h, const Sprite* source,
+    static void BakeTiledRegion(uint8_t* dst, int32_t dstW, int32_t dstH, const Sprite* source,
                                 const SliceRegion& region);
-    static void BakeNineSliceRegion(uint8_t* dst, int32_t dst_w, int32_t dst_h, const Sprite* source,
+    static void BakeNineSliceRegion(uint8_t* dst, int32_t dstW, int32_t dstH, const Sprite* source,
                                     const SliceRegion& region);
 
     /**
