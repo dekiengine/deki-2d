@@ -216,8 +216,8 @@ Sprite::SliceRegion SpriteComponent::SliceSource(const Sprite* spr, bool& hasBor
     // A shown frame, clamped to the texture.
     if (frameWidth <= 0 || frameHeight <= 0)
         return region;
-    const int32_t x0 = std::clamp(frameX, 0, spr->width - 1);
-    const int32_t y0 = std::clamp(frameY, 0, spr->height - 1);
+    const int32_t x0 = std::clamp(frameX, int32_t{0}, spr->width - 1);
+    const int32_t y0 = std::clamp(frameY, int32_t{0}, spr->height - 1);
     region.x = x0;
     region.y = y0;
     region.width = std::min(frameWidth, spr->width - x0);
