@@ -12,7 +12,7 @@
 namespace Deki2D
 {
 
-/// Plays sprite frame animations from a .frameanim asset, which names
+/// Plays sprite frame animations from a .anim asset, which names
 /// spritesheet frames by GUID.
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Plays a frame animation asset on the object's sprite.")
@@ -24,7 +24,7 @@ public:
 
     DEKI_EXPORT
     DEKI_TOOLTIP("A frame animation asset, which lists the frames and how long each is held.")
-    Deki::AssetRef<FrameAnimationData> animation;  // .frameanim asset
+    Deki::AssetRef<FrameAnimationData> animation;  // .anim asset
 
     FrameAnimationData* animationData;  // Loaded frame animation data
     bool ownsAnimationData;             // True if this component deletes animationData

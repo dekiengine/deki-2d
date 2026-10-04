@@ -12,7 +12,7 @@ using namespace Deki2D;
 namespace DekiEditor
 {
 
-/// Window that creates and edits .frameanim files by picking frames from a
+/// Window that creates and edits .anim files by picking frames from a
 /// spritesheet. Frames are referenced by GUID (sub-assets of the spritesheet).
 class FrameAnimationEditorWindow : public EditorWindow
 {
@@ -74,7 +74,7 @@ private:
     std::string m_CachePath;
 
     // Animation file
-    std::string m_AnimationPath;  // full path to the .frameanim file
+    std::string m_AnimationPath;  // full path to the .anim file
     bool m_IsDirty = false;       // has unsaved changes
 
     // Animation data (several sequences per file).

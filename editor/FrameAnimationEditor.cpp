@@ -1,4 +1,4 @@
-// Asset type editor for frame animations: compiles .frameanim JSON files to
+// Asset type editor for frame animations: compiles .anim JSON files to
 // MessagePack. Compiled into the editor only, not the runtime.
 
 #ifdef DEKI_EDITOR
@@ -20,7 +20,7 @@ namespace DekiEditor
 
 namespace
 {
-// Compiles a .frameanim JSON source to its MessagePack cache. When the cache
+// Compiles a .anim JSON source to its MessagePack cache. When the cache
 // already exists, returns Cached without recompiling.
 AssetCacheResult HandleFrameAnimCache(const AssetCacheContext& ctx)
 {

@@ -15,6 +15,16 @@ alongside one that has them.
 - The functions the editor finds by name are PascalCase: Deki2DRegisterComponents, Deki2DGetAutoComponentCount, Deki2DEnsureRegistered and the rest. Built against engine ABI 21; a build of this package from before does not load and is rebuilt.
 - Renamed: `AssetTypeName` is `kAssetTypeName` (Sprite, BitmapFont, FrameAnimationData), `GradientComponent::MAX_STOPS` is `kMaxStops`, BitmapFont's public fields lost their `m_` (`firstChar`, `lastChar`, `glyphCount`, `lineHeight`, `capHeight`, `xHeight`, `decorationMode`), `ButtonComponent::on_state_changed` is `onStateChanged`, `AnimationComponent::completion_callback` is `completionCallback`.
 
+### Fixed
+- **ScrollComponent bounces.** With Bounce on, a list can be dragged past
+  its end (slowed, up to half its viewport) and springs back, at the speed
+  Bounce Stiffness sets; a flick into an end carries past it and comes back.
+  Both settings were in the Inspector but did nothing.
+- Text tooltip: lines wrap between words when a width is set; it said they
+  did not.
+- Gradient: the Dither Scale tooltip describes what it does, the size of the
+  dither pattern in art pixels.
+
 ## 0.17.0
 
 ### Fixed

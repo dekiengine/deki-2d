@@ -1,4 +1,5 @@
 #include "ScrollComponent.h"
+#include "ScrollBounce.h"
 #include "deki-input/InputCollider.h"
 #include "deki-input/InputDispatch.h"
 #include <deki/Object.h>
@@ -429,6 +430,11 @@ float ScrollComponent::GetViewportWidth() const
     return 0.0f;
 }
 
+float ScrollComponent::GetViewportSize() const
+{
+    return (direction == ScrollDirection::Vertical) ? GetViewportHeight() : GetViewportWidth();
+}
+
 float ScrollComponent::GetViewportHeight() const
 {
     if (m_ClipObj)
@@ -656,6 +662,20 @@ void ScrollComponent::Update(float deltaTime)
         float decayFactor = std::pow((deceleration), (stepCoef));
         m_ScrollVelocity = ((m_ScrollVelocity) * (decayFactor));
 
+        // Past an end with bounce on, the list brakes hard and never goes
+        // further than a drag could pull it.
+        if (enableBounce && ScrollBounce::Overscroll(m_ScrollOffset, GetMaxScrollOffset()) != 0.0f)
+        {
+            m_ScrollVelocity *= std::pow(0.5f, stepCoef);
+            const float limit = std::max(0.0f, GetViewportSize()) * ScrollBounce::kMaxOverscrollShare;
+            const float maxScroll = GetMaxScrollOffset();
+            if (m_ScrollOffset < -limit || m_ScrollOffset > maxScroll + limit)
+            {
+                m_ScrollOffset = std::clamp(m_ScrollOffset, -limit, maxScroll + limit);
+                m_ScrollVelocity = 0.0f;
+            }
+        }
+
         if (Deki::Math::Abs(m_ScrollVelocity) < kVelocityEpsilon)
         {
             m_ScrollVelocity = 0.0f;
@@ -663,8 +683,18 @@ void ScrollComponent::Update(float deltaTime)
 
         needsSync = true;
     }
+    // Phase 3: an overscrolled list springs back to its end.
+    else if (enableBounce && ScrollBounce::Overscroll(m_ScrollOffset, GetMaxScrollOffset()) != 0.0f)
+    {
+        m_ScrollVelocity = 0.0f;
+        m_ScrollOffset = ScrollBounce::SpringBack(m_ScrollOffset, GetMaxScrollOffset(), bounceStiffness, deltaTime);
+        needsSync = true;
+    }
 
-    ClampScrollOffset();
+    if (!enableBounce)
+    {
+        ClampScrollOffset();
+    }
 
     if (needsSync && GetOwner())
     {
@@ -724,7 +754,15 @@ void ScrollComponent::HandlePointerMove(float x, float y)
     float delta = ((touchPos) - (m_LastTouchPos));
     float scrollDelta = reverseDrag ? ((0.0f) - (delta)) : delta;
 
-    m_ScrollOffset = ((m_ScrollOffset) + (scrollDelta));
+    if (enableBounce)
+    {
+        m_ScrollOffset = ScrollBounce::Drag(m_ScrollOffset, scrollDelta, GetMaxScrollOffset(), GetViewportSize());
+    }
+    else
+    {
+        m_ScrollOffset = m_ScrollOffset + scrollDelta;
+        ClampScrollOffset();
+    }
 
     m_VelSamples[m_VelSampleIdx % kVelocitySamples] = scrollDelta;
     m_VelSampleIdx++;
@@ -734,9 +772,6 @@ void ScrollComponent::HandlePointerMove(float x, float y)
     }
 
     m_LastTouchPos = touchPos;
-
-    // The scroll never goes past its ends.
-    ClampScrollOffset();
 
     if (GetOwner())
     {
@@ -777,7 +812,8 @@ void ScrollComponent::HandlePointerUp(float x, float y)
         m_ScrollVelocity = static_cast<float>(sum / count);
     }
 
-    // No momentum into an end the scroll already touches.
+    // No momentum into an end the scroll already touches or is past; with
+    // bounce on, the spring brings it back.
     float maxScroll = GetMaxScrollOffset();
     if ((m_ScrollOffset <= 0.0f && m_ScrollVelocity < 0.0f) || (m_ScrollOffset >= maxScroll && m_ScrollVelocity > 0.0f))
     {

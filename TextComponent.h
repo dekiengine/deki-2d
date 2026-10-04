@@ -49,7 +49,8 @@ public:
     // ========================================================================
 
     DEKI_EXPORT
-    DEKI_TOOLTIP("The string to draw. Newlines start a new line; the box below does not wrap it for you.")
+    DEKI_TOOLTIP(
+        "The string to draw. Newlines start a new line, and with a width set, lines wrap between words to fit it.")
     std::string text;
 
     // The AssetRef stores the GUID and loads the font.

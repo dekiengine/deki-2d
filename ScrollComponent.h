@@ -233,6 +233,8 @@ private:
     void CalculateContentSize();
     void AssignSlots();
     float GetMaxScrollOffset() const;
+    // The viewport along the scroll direction, in meters.
+    float GetViewportSize() const;
     void ClampScrollOffset();
 
     Deki::Object* CloneTemplate(Deki::Object* tmpl, const char* name);

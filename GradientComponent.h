@@ -78,8 +78,8 @@ public:
     // pixel; 2, 4, 8 or 16 make chunkier blocks for a retro look. Other values
     // snap down to a power of two (3 becomes 2, 7 becomes 4).
     DEKI_EXPORT
-    DEKI_TOOLTIP(
-        "How strong the speckle is. Raise it until the bands disappear, then stop: past that it is just noise.")
+    DEKI_TOOLTIP("Size of the dither pattern in art pixels. 1 dithers pixel by pixel; 2, 4, 8 or 16 make chunkier "
+                 "blocks for a retro look.")
     uint8_t ditherScale;
 
     DEKI_EXPORT
