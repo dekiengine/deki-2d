@@ -19,7 +19,6 @@
 #include <filesystem>
 #include <fstream>
 
-
 namespace fs = std::filesystem;
 
 namespace DekiEditor
@@ -92,19 +91,27 @@ void NineSliceEditorWindow::OnClose()
 void NineSliceEditorWindow::OpenFile(const char* filePath, const char* cachePath)
 {
     if (!filePath || filePath[0] == '\0')
+    {
         return;
+    }
 
-    m_AssetPath  = filePath;
-    m_CachePath  = (cachePath && cachePath[0] != '\0') ? cachePath : "";
+    m_AssetPath = filePath;
+    m_CachePath = (cachePath && cachePath[0] != '\0') ? cachePath : "";
     m_DisplayName = fs::path(m_AssetPath).filename().string();
 
     fs::path ext = fs::path(m_AssetPath).extension();
     if (ext == ".asset")
+    {
         m_Source = Source::ProceduralAsset;
+    }
     else if (ext == ".png")
+    {
         m_Source = Source::NormalSprite;
+    }
     else
+    {
         m_Source = Source::None;
+    }
 
     // Resolve GUID for texture preview
     if (!m_ProjectPath.empty())
@@ -112,7 +119,12 @@ void NineSliceEditorWindow::OpenFile(const char* filePath, const char* cachePath
         fs::path rel = fs::relative(fs::path(m_AssetPath), m_ProjectPath);
         std::string relStr = rel.string();
         for (char& c : relStr)
-            if (c == '\\') c = '/';
+        {
+            if (c == '\\')
+            {
+                c = '/';
+            }
+        }
         m_AssetGuid = AssetDatabase::AssetPathToGUID(relStr);
     }
 
@@ -125,12 +137,16 @@ void NineSliceEditorWindow::OpenFile(const char* filePath, const char* cachePath
     if (frame >= 0 && m_Source == Source::NormalSprite && !m_AssetGuid.empty())
     {
         if (const auto* subs = AssetDatabase::GetSubAssets(m_AssetGuid))
+        {
             for (const SubAssetInfo& sub : *subs)
+            {
                 if (sub.subAssetIndex == frame)
                 {
                     const SpriteFrameData* rect = TextureImporter::GetFrameData(sub.guid);
                     if (!rect || rect->width <= 0 || rect->height <= 0)
+                    {
                         break;
+                    }
                     m_FrameIndex = frame;
                     m_FrameKey = sub.frameId >= 0 ? sub.frameId : frame;
                     m_FrameGuid = sub.guid;
@@ -139,6 +155,8 @@ void NineSliceEditorWindow::OpenFile(const char* filePath, const char* cachePath
                     m_DisplayName += "  >  " + (sub.name.empty() ? "Frame " + std::to_string(frame) : sub.name);
                     break;
                 }
+            }
+        }
     }
 
     LoadFromDisk();
@@ -147,7 +165,7 @@ void NineSliceEditorWindow::OpenFile(const char* filePath, const char* cachePath
     m_ActiveDrag = DragHandle::None;
     m_PanningLMB = false;
     m_FieldEditActive = false;
-    m_FitViewPending = true;   // fit the sprite once the canvas size is known
+    m_FitViewPending = true;  // fit the sprite once the canvas size is known
     m_TexW = m_TexH = 0;
 }
 
@@ -158,35 +176,49 @@ void NineSliceEditorWindow::OpenFile(const char* filePath, const char* cachePath
 void NineSliceEditorWindow::LoadFromDisk()
 {
     m_Current = {};
-    m_Saved   = {};
+    m_Saved = {};
 
     if (m_Source == Source::None || m_AssetPath.empty())
+    {
         return;
+    }
 
     if (m_Source == Source::ProceduralAsset)
     {
         std::ifstream in(m_AssetPath);
-        if (!in.is_open()) return;
+        if (!in.is_open())
+        {
+            return;
+        }
         try
         {
             nlohmann::json j;
             in >> j;
             if (j.contains("nine_slice") && j["nine_slice"].is_array() && j["nine_slice"].size() >= 4)
             {
-                m_Current.top    = j["nine_slice"][0].get<int32_t>();
-                m_Current.right  = j["nine_slice"][1].get<int32_t>();
+                m_Current.top = j["nine_slice"][0].get<int32_t>();
+                m_Current.right = j["nine_slice"][1].get<int32_t>();
                 m_Current.bottom = j["nine_slice"][2].get<int32_t>();
-                m_Current.left   = j["nine_slice"][3].get<int32_t>();
+                m_Current.left = j["nine_slice"][3].get<int32_t>();
             }
         }
-        catch (...) {}
+        catch (...)
+        {
+        }
     }
-    else // NormalSprite
+    else  // NormalSprite
     {
         std::string sidecar = m_AssetPath + ".data";
-        if (!fs::exists(sidecar)) { m_Saved = m_Current; return; }
+        if (!fs::exists(sidecar))
+        {
+            m_Saved = m_Current;
+            return;
+        }
         std::ifstream in(sidecar);
-        if (!in.is_open()) return;
+        if (!in.is_open())
+        {
+            return;
+        }
         try
         {
             nlohmann::json j;
@@ -197,21 +229,29 @@ void NineSliceEditorWindow::LoadFromDisk()
                 const std::string key = std::to_string(m_FrameKey);
                 if (j.contains("settings") && j["settings"].contains("frame_nine_slice") &&
                     j["settings"]["frame_nine_slice"].contains(key))
+                {
                     node = &j["settings"]["frame_nine_slice"][key];
+                }
             }
             else if (j.contains("settings") && j["settings"].contains("nine_slice"))
+            {
                 node = &j["settings"]["nine_slice"];
+            }
             else if (j.contains("nine_slice"))
+            {
                 node = &j["nine_slice"];
+            }
             if (node && node->is_array() && node->size() >= 4)
             {
-                m_Current.top    = (*node)[0].get<int32_t>();
-                m_Current.right  = (*node)[1].get<int32_t>();
+                m_Current.top = (*node)[0].get<int32_t>();
+                m_Current.right = (*node)[1].get<int32_t>();
                 m_Current.bottom = (*node)[2].get<int32_t>();
-                m_Current.left   = (*node)[3].get<int32_t>();
+                m_Current.left = (*node)[3].get<int32_t>();
             }
         }
-        catch (...) {}
+        catch (...)
+        {
+        }
     }
     m_Saved = m_Current;
 }
@@ -227,7 +267,9 @@ bool ReadJsonToChange(const std::string& path, nlohmann::json& j)
     j = nlohmann::json::object();
     std::error_code ec;
     if (!fs::exists(path, ec))
+    {
         return true;
+    }
     std::string text, err;
     if (!DekiEditor::ReadFileToString(path, text, err))
     {
@@ -238,7 +280,8 @@ bool ReadJsonToChange(const std::string& path, nlohmann::json& j)
     if (j.is_discarded() || !j.is_object())
     {
         DEKI_LOG_ERROR("9-Slice: %s could not be read (a merge conflict?). Fix it, then save again; it was "
-                       "left as it is.", path.c_str());
+                       "left as it is.",
+                       path.c_str());
         return false;
     }
     return true;
@@ -248,7 +291,9 @@ bool WriteJson(const std::string& path, const nlohmann::json& j)
 {
     std::string err;
     if (DekiEditor::AtomicWriteFile(path, j.dump(2), err))
+    {
         return true;
+    }
     DEKI_LOG_ERROR("9-Slice: could not save %s: %s", path.c_str(), err.c_str());
     return false;
 }
@@ -257,40 +302,57 @@ bool WriteJson(const std::string& path, const nlohmann::json& j)
 void NineSliceEditorWindow::SaveToDisk()
 {
     if (m_Source == Source::None || m_AssetPath.empty())
+    {
         return;
+    }
 
-    bool clear = (m_Current.top == 0 && m_Current.right == 0 &&
-                  m_Current.bottom == 0 && m_Current.left == 0);
+    bool clear = (m_Current.top == 0 && m_Current.right == 0 && m_Current.bottom == 0 && m_Current.left == 0);
 
     if (m_Source == Source::ProceduralAsset)
     {
         nlohmann::json j;
         if (!ReadJsonToChange(m_AssetPath, j))
+        {
             return;
+        }
         if (clear)
+        {
             j.erase("nine_slice");
+        }
         else
-            j["nine_slice"] = {m_Current.top, m_Current.right, m_Current.bottom, m_Current.left};
+        {
+            j["nine_slice"] = { m_Current.top, m_Current.right, m_Current.bottom, m_Current.left };
+        }
 
         // Written in one step, and before the re-import that reads it back.
         if (!WriteJson(m_AssetPath, j))
+        {
             return;
+        }
 
         // Force re-bake of the .dtex so the runtime sees the new metadata
         if (!m_ProjectPath.empty())
         {
             fs::path rel = fs::relative(fs::path(m_AssetPath), m_ProjectPath);
             std::string relStr = rel.string();
-            for (char& c : relStr) if (c == '\\') c = '/';
+            for (char& c : relStr)
+            {
+                if (c == '\\')
+                {
+                    c = '/';
+                }
+            }
             AssetDatabase::ImportAsset(relStr);
         }
     }
-    else // NormalSprite
+    else  // NormalSprite
     {
         std::string sidecar = m_AssetPath + ".data";
         nlohmann::json j;
         if (!ReadJsonToChange(sidecar, j))
+        {
             return;
+        }
 
         bool topLevel = j.contains("nine_slice") && !j.contains("settings");
         if (m_FrameIndex >= 0)
@@ -298,39 +360,63 @@ void NineSliceEditorWindow::SaveToDisk()
             const std::string key = std::to_string(m_FrameKey);
             nlohmann::json& frames = j["settings"]["frame_nine_slice"];
             if (!frames.is_object())
+            {
                 frames = nlohmann::json::object();
+            }
             if (clear)
+            {
                 frames.erase(key);
+            }
             else
-                frames[key] = {m_Current.top, m_Current.right, m_Current.bottom, m_Current.left};
+            {
+                frames[key] = { m_Current.top, m_Current.right, m_Current.bottom, m_Current.left };
+            }
             if (frames.empty())
+            {
                 j["settings"].erase("frame_nine_slice");
+            }
         }
         else if (clear)
         {
             if (j.contains("settings") && j["settings"].contains("nine_slice"))
+            {
                 j["settings"].erase("nine_slice");
+            }
             if (j.contains("nine_slice"))
+            {
                 j.erase("nine_slice");
+            }
         }
         else
         {
-            nlohmann::json arr = {m_Current.top, m_Current.right, m_Current.bottom, m_Current.left};
+            nlohmann::json arr = { m_Current.top, m_Current.right, m_Current.bottom, m_Current.left };
             if (topLevel)
+            {
                 j["nine_slice"] = arr;
+            }
             else
+            {
                 j["settings"]["nine_slice"] = arr;
+            }
         }
 
         if (!WriteJson(sidecar, j))
+        {
             return;
+        }
         // Re-import the image now: its cache handler sees the sidecar is newer
         // and re-bakes the .dtex. Waiting for a refresh to notice left the
         // scene drawing the old borders.
         if (!m_ProjectPath.empty())
         {
             std::string relStr = fs::relative(fs::path(m_AssetPath), m_ProjectPath).string();
-            for (char& c : relStr) if (c == '\\') c = '/';
+            for (char& c : relStr)
+            {
+                if (c == '\\')
+                {
+                    c = '/';
+                }
+            }
             AssetDatabase::ImportAsset(relStr);
         }
     }
@@ -347,17 +433,25 @@ void NineSliceEditorWindow::SaveToDisk()
 
 void NineSliceEditorWindow::PushUndoSnapshot(const Borders& previous)
 {
-    if (previous == m_Current) return;
+    if (previous == m_Current)
+    {
+        return;
+    }
     m_UndoStack.push_back(previous);
     m_RedoStack.clear();
     // Cap history to keep memory bounded
     if (m_UndoStack.size() > 128)
+    {
         m_UndoStack.erase(m_UndoStack.begin());
+    }
 }
 
 void NineSliceEditorWindow::Undo()
 {
-    if (m_UndoStack.empty()) return;
+    if (m_UndoStack.empty())
+    {
+        return;
+    }
     m_RedoStack.push_back(m_Current);
     m_Current = m_UndoStack.back();
     m_UndoStack.pop_back();
@@ -365,7 +459,10 @@ void NineSliceEditorWindow::Undo()
 
 void NineSliceEditorWindow::Redo()
 {
-    if (m_RedoStack.empty()) return;
+    if (m_RedoStack.empty())
+    {
+        return;
+    }
     m_UndoStack.push_back(m_Current);
     m_Current = m_RedoStack.back();
     m_RedoStack.pop_back();
@@ -375,18 +472,26 @@ void NineSliceEditorWindow::HandleKeyboardShortcuts()
 {
     auto& ui = EditorUI::Get();
     if (!ui.IsWindowFocused(true))
+    {
         return;
+    }
     bool ctrl = ui.IsKeyCtrl();
     bool shift = ui.IsKeyShift();
     if (ctrl && !shift && ui.IsKeyPressed(EditorUI::Key::Z, false))
+    {
         Undo();
+    }
     else if ((ctrl && shift && ui.IsKeyPressed(EditorUI::Key::Z, false)) ||
              (ctrl && !shift && ui.IsKeyPressed(EditorUI::Key::Y, false)))
+    {
         Redo();
+    }
     else if (ctrl && !shift && ui.IsKeyPressed(EditorUI::Key::S, false))
     {
         if (m_Current != m_Saved)
+        {
             SaveToDisk();
+        }
     }
 }
 
@@ -428,16 +533,21 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
     // Reserve a canvas filling the rest of the window
     float availX, availY;
     ui.GetContentRegionAvail(&availX, &availY);
-    if (availX < 64.0f) availX = 64.0f;
-    if (availY < 64.0f) availY = 64.0f;
+    if (availX < 64.0f)
+    {
+        availX = 64.0f;
+    }
+    if (availY < 64.0f)
+    {
+        availY = 64.0f;
+    }
 
     // Deferred fit-to-view: needs the canvas size, so it runs here
     if (m_FitViewPending)
     {
         m_FitViewPending = false;
         const float margin = 48.0f;
-        float fit = std::min((availX - margin * 2.0f) / (float)texW,
-                             (availY - margin * 2.0f) / (float)texH);
+        float fit = std::min((availX - margin * 2.0f) / (float)texW, (availY - margin * 2.0f) / (float)texH);
         m_Zoom = std::clamp(fit, 0.5f, 32.0f);
         m_PanX = m_PanY = 0.0f;
     }
@@ -447,9 +557,7 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
     ui.InvisibleButton("##nineslice_canvas", availX, availY, /*left*/ true, /*middle*/ true);
     bool canvasHovered = ui.IsItemHovered();
 
-    ui.PushClipRect(canvasOriginX, canvasOriginY,
-                    canvasOriginX + availX, canvasOriginY + availY,
-                    true);
+    ui.PushClipRect(canvasOriginX, canvasOriginY, canvasOriginX + availX, canvasOriginY + availY, true);
 
     // Sprite top-left in canvas-space, computed from pan + zoom and centered
     float displayW = texW * m_Zoom;
@@ -463,14 +571,14 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
         uint32_t c1 = EditorUI::Rgba(60, 60, 60, 255);
         uint32_t c2 = EditorUI::Rgba(80, 80, 80, 255);
         for (float y = canvasOriginY; y < canvasOriginY + availY; y += cell)
+        {
             for (float x = canvasOriginX; x < canvasOriginX + availX; x += cell)
             {
                 bool checker = (int((x - canvasOriginX) / cell) + int((y - canvasOriginY) / cell)) & 1;
-                ui.DrawRectFilled(x, y,
-                                  std::min(x + cell, canvasOriginX + availX),
-                                  std::min(y + cell, canvasOriginY + availY),
-                                  checker ? c2 : c1);
+                ui.DrawRectFilled(x, y, std::min(x + cell, canvasOriginX + availX),
+                                  std::min(y + cell, canvasOriginY + availY), checker ? c2 : c1);
             }
+        }
     }
 
     ui.DrawImage(texId, spriteX, spriteY, spriteX + displayW, spriteY + displayH, u0, v0, u1, v1);
@@ -499,26 +607,48 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
     }
 
     // Clamp borders to the texture
-    auto clampLR = [&](int32_t& a, int32_t& b) {
-        if (a < 0) a = 0;
-        if (b < 0) b = 0;
+    auto clampLR = [&](int32_t& a, int32_t& b)
+    {
+        if (a < 0)
+        {
+            a = 0;
+        }
+        if (b < 0)
+        {
+            b = 0;
+        }
         if (a + b > (int32_t)texW)
         {
             int32_t over = a + b - (int32_t)texW;
             int32_t shrinkA = std::min(a, over / 2);
-            a -= shrinkA; b -= (over - shrinkA);
-            if (b < 0) b = 0;
+            a -= shrinkA;
+            b -= (over - shrinkA);
+            if (b < 0)
+            {
+                b = 0;
+            }
         }
     };
-    auto clampTB = [&](int32_t& a, int32_t& b) {
-        if (a < 0) a = 0;
-        if (b < 0) b = 0;
+    auto clampTB = [&](int32_t& a, int32_t& b)
+    {
+        if (a < 0)
+        {
+            a = 0;
+        }
+        if (b < 0)
+        {
+            b = 0;
+        }
         if (a + b > (int32_t)texH)
         {
             int32_t over = a + b - (int32_t)texH;
             int32_t shrinkA = std::min(a, over / 2);
-            a -= shrinkA; b -= (over - shrinkA);
-            if (b < 0) b = 0;
+            a -= shrinkA;
+            b -= (over - shrinkA);
+            if (b < 0)
+            {
+                b = 0;
+            }
         }
     };
     clampLR(m_Current.left, m_Current.right);
@@ -531,9 +661,9 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
     float sx0 = spriteX, sy0 = spriteY;
     float sx1 = spriteX + displayW, sy1 = spriteY + displayH;
 
-    float lineLeftX   = pxX(m_Current.left);
-    float lineRightX  = pxX((int32_t)texW - m_Current.right);
-    float lineTopY    = pxY(m_Current.top);
+    float lineLeftX = pxX(m_Current.left);
+    float lineRightX = pxX((int32_t)texW - m_Current.right);
+    float lineTopY = pxY(m_Current.top);
     float lineBottomY = pxY((int32_t)texH - m_Current.bottom);
 
     float mpx, mpy;
@@ -541,37 +671,56 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
 
     // ── Hover hit-test: corners first (they drag two borders), then edges
     // bounded to the sprite span so a guide can't be grabbed from far away ──
-    const float kEdgeHit   = 8.0f;
+    const float kEdgeHit = 8.0f;
     const float kCornerHit = 10.0f;
     DragHandle hover = DragHandle::None;
     if (canvasHovered && m_ActiveDrag == DragHandle::None && !m_PanningLMB)
     {
-        struct { DragHandle h; float x, y; } corners[4] = {
-            { DragHandle::TopLeft,     lineLeftX,  lineTopY    },
-            { DragHandle::TopRight,    lineRightX, lineTopY    },
-            { DragHandle::BottomLeft,  lineLeftX,  lineBottomY },
+        struct
+        {
+            DragHandle h;
+            float x, y;
+        } corners[4] = {
+            { DragHandle::TopLeft, lineLeftX, lineTopY },
+            { DragHandle::TopRight, lineRightX, lineTopY },
+            { DragHandle::BottomLeft, lineLeftX, lineBottomY },
             { DragHandle::BottomRight, lineRightX, lineBottomY },
         };
         float bestD = kCornerHit + 0.001f;
         for (const auto& c : corners)
         {
             float d = std::max(std::fabs(mpx - c.x), std::fabs(mpy - c.y));
-            if (d <= kCornerHit && d < bestD) { bestD = d; hover = c.h; }
+            if (d <= kCornerHit && d < bestD)
+            {
+                bestD = d;
+                hover = c.h;
+            }
         }
 
         if (hover == DragHandle::None)
         {
             bool inYSpan = (mpy >= sy0 - kEdgeHit && mpy <= sy1 + kEdgeHit);
             bool inXSpan = (mpx >= sx0 - kEdgeHit && mpx <= sx1 + kEdgeHit);
-            struct { DragHandle h; float dist; bool valid; } edges[4] = {
-                { DragHandle::Left,   std::fabs(mpx - lineLeftX),   inYSpan },
-                { DragHandle::Right,  std::fabs(mpx - lineRightX),  inYSpan },
-                { DragHandle::Top,    std::fabs(mpy - lineTopY),    inXSpan },
+            struct
+            {
+                DragHandle h;
+                float dist;
+                bool valid;
+            } edges[4] = {
+                { DragHandle::Left, std::fabs(mpx - lineLeftX), inYSpan },
+                { DragHandle::Right, std::fabs(mpx - lineRightX), inYSpan },
+                { DragHandle::Top, std::fabs(mpy - lineTopY), inXSpan },
                 { DragHandle::Bottom, std::fabs(mpy - lineBottomY), inXSpan },
             };
             float best = kEdgeHit + 0.001f;
             for (const auto& e : edges)
-                if (e.valid && e.dist <= kEdgeHit && e.dist < best) { best = e.dist; hover = e.h; }
+            {
+                if (e.valid && e.dist <= kEdgeHit && e.dist < best)
+                {
+                    best = e.dist;
+                    hover = e.h;
+                }
+            }
         }
     }
 
@@ -606,18 +755,26 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
             int32_t dx = (int32_t)std::round((mpx - m_DragStartMouseX) / m_Zoom);
             int32_t dy = (int32_t)std::round((mpy - m_DragStartMouseY) / m_Zoom);
             if (AffectsLeft(m_ActiveDrag))
+            {
                 m_Current.left = std::clamp(m_BordersAtDragStart.left + dx, 0, (int32_t)texW - m_Current.right);
+            }
             if (AffectsRight(m_ActiveDrag))
+            {
                 m_Current.right = std::clamp(m_BordersAtDragStart.right - dx, 0, (int32_t)texW - m_Current.left);
+            }
             if (AffectsTop(m_ActiveDrag))
+            {
                 m_Current.top = std::clamp(m_BordersAtDragStart.top + dy, 0, (int32_t)texH - m_Current.bottom);
+            }
             if (AffectsBottom(m_ActiveDrag))
+            {
                 m_Current.bottom = std::clamp(m_BordersAtDragStart.bottom - dy, 0, (int32_t)texH - m_Current.top);
+            }
 
             // Redraw guides at the dragged position this same frame
-            lineLeftX   = pxX(m_Current.left);
-            lineRightX  = pxX((int32_t)texW - m_Current.right);
-            lineTopY    = pxY(m_Current.top);
+            lineLeftX = pxX(m_Current.left);
+            lineRightX = pxX((int32_t)texW - m_Current.right);
+            lineTopY = pxY(m_Current.top);
             lineBottomY = pxY((int32_t)texH - m_Current.bottom);
         }
         else
@@ -647,79 +804,115 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
     // ── Mouse cursor feedback ──
     DragHandle cursorHandle = (m_ActiveDrag != DragHandle::None) ? m_ActiveDrag : hover;
     if (m_PanningLMB)
+    {
         ui.SetMouseCursor(EditorUI::MouseCursor::Hand);
+    }
     else if (cursorHandle == DragHandle::Left || cursorHandle == DragHandle::Right)
+    {
         ui.SetMouseCursor(EditorUI::MouseCursor::ResizeEW);
+    }
     else if (cursorHandle == DragHandle::Top || cursorHandle == DragHandle::Bottom)
+    {
         ui.SetMouseCursor(EditorUI::MouseCursor::ResizeNS);
+    }
     else if (cursorHandle != DragHandle::None)
+    {
         ui.SetMouseCursor(EditorUI::MouseCursor::ResizeAll);
+    }
 
     // ── Drawing ──
     DragHandle hot = (m_ActiveDrag != DragHandle::None) ? m_ActiveDrag : hover;
-    auto edgeHot = [&](DragHandle edge) {
+    auto edgeHot = [&](DragHandle edge)
+    {
         switch (edge)
         {
-            case DragHandle::Left:   return AffectsLeft(hot);
-            case DragHandle::Right:  return AffectsRight(hot);
-            case DragHandle::Top:    return AffectsTop(hot);
+            case DragHandle::Left: return AffectsLeft(hot);
+            case DragHandle::Right: return AffectsRight(hot);
+            case DragHandle::Top: return AffectsTop(hot);
             case DragHandle::Bottom: return AffectsBottom(hot);
-            default:                 return false;
+            default: return false;
         }
     };
 
     // Dim the sliced-off border strips so the stretchable center reads at a glance
     uint32_t dimFill = EditorUI::Rgba(0, 0, 0, 100);
-    if (m_Current.top > 0)    ui.DrawRectFilled(sx0, sy0, sx1, lineTopY, dimFill);
-    if (m_Current.bottom > 0) ui.DrawRectFilled(sx0, lineBottomY, sx1, sy1, dimFill);
-    if (m_Current.left > 0)   ui.DrawRectFilled(sx0, lineTopY, lineLeftX, lineBottomY, dimFill);
-    if (m_Current.right > 0)  ui.DrawRectFilled(lineRightX, lineTopY, sx1, lineBottomY, dimFill);
+    if (m_Current.top > 0)
+    {
+        ui.DrawRectFilled(sx0, sy0, sx1, lineTopY, dimFill);
+    }
+    if (m_Current.bottom > 0)
+    {
+        ui.DrawRectFilled(sx0, lineBottomY, sx1, sy1, dimFill);
+    }
+    if (m_Current.left > 0)
+    {
+        ui.DrawRectFilled(sx0, lineTopY, lineLeftX, lineBottomY, dimFill);
+    }
+    if (m_Current.right > 0)
+    {
+        ui.DrawRectFilled(lineRightX, lineTopY, sx1, lineBottomY, dimFill);
+    }
 
     // Sprite outline
     ui.DrawRect(sx0, sy0, sx1, sy1, EditorUI::Rgba(90, 95, 105, 255));
 
     // Guide lines in the theme accent — brighter + thicker when hot
-    uint32_t accent  = ui.GetStyleColor(EditorUI::Col::CheckMark);
+    uint32_t accent = ui.GetStyleColor(EditorUI::Col::CheckMark);
     uint32_t colIdle = WithAlpha(accent, 150);
-    auto lineStyle = [&](DragHandle edge, uint32_t& col, float& thick) {
+    auto lineStyle = [&](DragHandle edge, uint32_t& col, float& thick)
+    {
         bool isHot = edgeHot(edge);
-        col   = isHot ? accent : colIdle;
+        col = isHot ? accent : colIdle;
         thick = isHot ? 2.0f : 1.0f;
     };
-    uint32_t lc; float lt;
-    lineStyle(DragHandle::Left,   lc, lt); ui.DrawLine(lineLeftX,  sy0, lineLeftX,  sy1, lc, lt);
-    lineStyle(DragHandle::Right,  lc, lt); ui.DrawLine(lineRightX, sy0, lineRightX, sy1, lc, lt);
-    lineStyle(DragHandle::Top,    lc, lt); ui.DrawLine(sx0, lineTopY,    sx1, lineTopY,    lc, lt);
-    lineStyle(DragHandle::Bottom, lc, lt); ui.DrawLine(sx0, lineBottomY, sx1, lineBottomY, lc, lt);
+    uint32_t lc;
+    float lt;
+    lineStyle(DragHandle::Left, lc, lt);
+    ui.DrawLine(lineLeftX, sy0, lineLeftX, sy1, lc, lt);
+    lineStyle(DragHandle::Right, lc, lt);
+    ui.DrawLine(lineRightX, sy0, lineRightX, sy1, lc, lt);
+    lineStyle(DragHandle::Top, lc, lt);
+    ui.DrawLine(sx0, lineTopY, sx1, lineTopY, lc, lt);
+    lineStyle(DragHandle::Bottom, lc, lt);
+    ui.DrawLine(sx0, lineBottomY, sx1, lineBottomY, lc, lt);
 
     // Midpoint grips: a small pill on each guide advertising "this line drags"
     {
-        const float gLen   = ui.GetTextLineHeight() * 0.55f;  // half-length
-        const float gThick = 2.5f;                             // half-thickness
+        const float gLen = ui.GetTextLineHeight() * 0.55f;  // half-length
+        const float gThick = 2.5f;                          // half-thickness
         float cx = (sx0 + sx1) * 0.5f;
         float cy = (sy0 + sy1) * 0.5f;
         auto gripCol = [&](DragHandle edge) { return edgeHot(edge) ? accent : WithAlpha(accent, 200); };
-        ui.DrawRectFilled(lineLeftX  - gThick, cy - gLen, lineLeftX  + gThick, cy + gLen, gripCol(DragHandle::Left),   gThick);
-        ui.DrawRectFilled(lineRightX - gThick, cy - gLen, lineRightX + gThick, cy + gLen, gripCol(DragHandle::Right),  gThick);
-        ui.DrawRectFilled(cx - gLen, lineTopY    - gThick, cx + gLen, lineTopY    + gThick, gripCol(DragHandle::Top),    gThick);
-        ui.DrawRectFilled(cx - gLen, lineBottomY - gThick, cx + gLen, lineBottomY + gThick, gripCol(DragHandle::Bottom), gThick);
+        ui.DrawRectFilled(lineLeftX - gThick, cy - gLen, lineLeftX + gThick, cy + gLen, gripCol(DragHandle::Left),
+                          gThick);
+        ui.DrawRectFilled(lineRightX - gThick, cy - gLen, lineRightX + gThick, cy + gLen, gripCol(DragHandle::Right),
+                          gThick);
+        ui.DrawRectFilled(cx - gLen, lineTopY - gThick, cx + gLen, lineTopY + gThick, gripCol(DragHandle::Top), gThick);
+        ui.DrawRectFilled(cx - gLen, lineBottomY - gThick, cx + gLen, lineBottomY + gThick, gripCol(DragHandle::Bottom),
+                          gThick);
     }
 
     // Corner handles at the guide intersections (drag two borders at once)
     {
         const float ch = ui.GetTextLineHeight() * 0.28f;  // half-size
         uint32_t darkFill = EditorUI::Rgba(10, 11, 13, 230);
-        struct { DragHandle h; float x, y; } corners[4] = {
-            { DragHandle::TopLeft,     lineLeftX,  lineTopY    },
-            { DragHandle::TopRight,    lineRightX, lineTopY    },
-            { DragHandle::BottomLeft,  lineLeftX,  lineBottomY },
+        struct
+        {
+            DragHandle h;
+            float x, y;
+        } corners[4] = {
+            { DragHandle::TopLeft, lineLeftX, lineTopY },
+            { DragHandle::TopRight, lineRightX, lineTopY },
+            { DragHandle::BottomLeft, lineLeftX, lineBottomY },
             { DragHandle::BottomRight, lineRightX, lineBottomY },
         };
         for (const auto& c : corners)
         {
             bool isHot = (hot == c.h);
             if (isHot)
+            {
                 ui.DrawRectFilled(c.x - ch, c.y - ch, c.x + ch, c.y + ch, accent);
+            }
             else
             {
                 ui.DrawRectFilled(c.x - ch, c.y - ch, c.x + ch, c.y + ch, darkFill);
@@ -735,25 +928,33 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
         auto drawLabel = [&](DragHandle edge, int32_t value, float x, float y, bool centerX, bool centerY)
         {
             bool isHot = edgeHot(edge);
-            if (value <= 0 && !isHot) return;
+            if (value <= 0 && !isHot)
+            {
+                return;
+            }
             char txt[32];
             std::snprintf(txt, sizeof(txt), "%d", value);
             float tw, th;
             ui.MeasureText(txt, &tw, &th);
-            if (centerX) x -= tw * 0.5f;
-            if (centerY) y -= th * 0.5f;
+            if (centerX)
+            {
+                x -= tw * 0.5f;
+            }
+            if (centerY)
+            {
+                y -= th * 0.5f;
+            }
             ui.DrawRectFilled(x - 3.0f, y - 1.0f, x + tw + 3.0f, y + th + 1.0f, backdrop, 2.0f);
             ui.DrawTextAt(0.0f, x, y, isHot ? accent : labelDim, txt);
         };
-        drawLabel(DragHandle::Left,   m_Current.left,   lineLeftX,   sy1 + 6.0f, true,  false);
-        drawLabel(DragHandle::Right,  m_Current.right,  lineRightX,  sy1 + 6.0f, true,  false);
-        drawLabel(DragHandle::Top,    m_Current.top,    sx1 + 8.0f,  lineTopY,   false, true);
-        drawLabel(DragHandle::Bottom, m_Current.bottom, sx1 + 8.0f,  lineBottomY, false, true);
+        drawLabel(DragHandle::Left, m_Current.left, lineLeftX, sy1 + 6.0f, true, false);
+        drawLabel(DragHandle::Right, m_Current.right, lineRightX, sy1 + 6.0f, true, false);
+        drawLabel(DragHandle::Top, m_Current.top, sx1 + 8.0f, lineTopY, false, true);
+        drawLabel(DragHandle::Bottom, m_Current.bottom, sx1 + 8.0f, lineBottomY, false, true);
     }
 
     // Usage hint pinned to the canvas bottom-left
-    ui.DrawTextAt(0.0f, canvasOriginX + 8.0f,
-                  canvasOriginY + availY - ui.GetTextLineHeight() - 6.0f,
+    ui.DrawTextAt(0.0f, canvasOriginX + 8.0f, canvasOriginY + availY - ui.GetTextLineHeight() - 6.0f,
                   EditorUI::Rgba(120, 120, 116, 200),
                   "Drag guides or corners   |   Scroll: zoom   |   Drag empty space: pan   |   Double-click: fit");
 
@@ -784,8 +985,7 @@ void NineSliceEditorWindow::DrawSavePromptModalIfNeeded()
     ui.SetNextWindowSize(em * 28.0f, 0.0f);
     ui.PushStyleVar(EditorUI::StyleVar::WindowPadding, em * 1.4f, em * 1.25f);
 
-    if (ui.BeginPopupModal("Save changes?##nineslice_close", nullptr,
-                            EditorUI::WinNoSavedSettings))
+    if (ui.BeginPopupModal("Save changes?##nineslice_close", nullptr, EditorUI::WinNoSavedSettings))
     {
         ui.Text("You have unsaved 9-slice changes.");
         ui.Spacing();
@@ -793,7 +993,7 @@ void NineSliceEditorWindow::DrawSavePromptModalIfNeeded()
 
         float availW;
         ui.GetContentRegionAvail(&availW, nullptr);
-        const float gap  = em * 0.6f;
+        const float gap = em * 0.6f;
         const float btnW = (availW - gap * 2.0f) / 3.0f;
 
         ui.PushButtonTextAlign(0.5f, 0.5f);
@@ -812,9 +1012,9 @@ void NineSliceEditorWindow::DrawSavePromptModalIfNeeded()
         }
         ui.SameLine(0.0f, gap);
         uint32_t accent = ui.GetStyleColor(EditorUI::Col::CheckMark);
-        ui.PushStyleColor(EditorUI::Col::Button,        WithAlpha(accent, 102));
+        ui.PushStyleColor(EditorUI::Col::Button, WithAlpha(accent, 102));
         ui.PushStyleColor(EditorUI::Col::ButtonHovered, accent);
-        ui.PushStyleColor(EditorUI::Col::ButtonActive,  accent);
+        ui.PushStyleColor(EditorUI::Col::ButtonActive, accent);
         if (ui.Button("Save", btnW))
         {
             SaveToDisk();
@@ -822,11 +1022,11 @@ void NineSliceEditorWindow::DrawSavePromptModalIfNeeded()
             ui.CloseCurrentPopup();
         }
         ui.PopStyleColor(3);
-        ui.PopStyleVar(); // ButtonTextAlign
+        ui.PopStyleVar();  // ButtonTextAlign
 
         ui.EndPopup();
     }
-    ui.PopStyleVar(); // WindowPadding
+    ui.PopStyleVar();  // WindowPadding
 }
 
 void NineSliceEditorWindow::OnGUI()
@@ -850,19 +1050,27 @@ void NineSliceEditorWindow::OnGUI()
 
     if (visible)
     {
-        bool dirty     = (m_Current != m_Saved);
+        bool dirty = (m_Current != m_Saved);
         bool hasSprite = !m_DisplayName.empty();
 
         // ── Toolbar (console-style full-bleed strip) ────────────────────────
         ui.BeginToolbar();
         if (ui.ToolbarButton(dirty ? "Save*" : "Save", hasSprite && dirty))
+        {
             SaveToDisk();
+        }
         if (ui.ToolbarButton("Undo", !m_UndoStack.empty()))
+        {
             Undo();
+        }
         if (ui.ToolbarButton("Redo", !m_RedoStack.empty()))
+        {
             Redo();
+        }
         if (ui.ToolbarButton("Fit View", hasSprite))
+        {
             m_FitViewPending = true;
+        }
         ui.EndToolbar();
 
         // Padding around the header rows; the canvas below runs edge to edge.
@@ -887,8 +1095,7 @@ void NineSliceEditorWindow::OnGUI()
             if (m_TexW > 0)
             {
                 char info[64];
-                std::snprintf(info, sizeof(info), "%u x %u px   %.0f%%",
-                              m_TexW, m_TexH, m_Zoom * 100.0f);
+                std::snprintf(info, sizeof(info), "%u x %u px   %.0f%%", m_TexW, m_TexH, m_Zoom * 100.0f);
                 ui.SameLine(0.0f, 12.0f * dpi);
                 ui.TextDisabled(info);
             }
@@ -898,7 +1105,9 @@ void NineSliceEditorWindow::OnGUI()
             // Snapshot the pre-edit values while no field is active; drags span
             // many frames, so the snapshot must be from before the edit began.
             if (!m_FieldEditActive)
+            {
                 m_FieldsSnapshot = m_Current;
+            }
 
             bool anyActive = false, anyCommitted = false;
             // Four equal columns across the window, each a dim label on the
@@ -918,16 +1127,21 @@ void NineSliceEditorWindow::OnGUI()
                 char id[24];
                 std::snprintf(id, sizeof(id), "##ns%s", label);
                 ui.DragInt(id, v, 1.0f, 0, 8192);
-                anyActive    |= ui.IsItemActive();
+                anyActive |= ui.IsItemActive();
                 anyCommitted |= ui.IsItemDeactivatedAfterEdit();
             };
-            borderField("Left",   &m_Current.left);   ui.SameLine(0.0f, colGap);
-            borderField("Top",    &m_Current.top);    ui.SameLine(0.0f, colGap);
-            borderField("Right",  &m_Current.right);  ui.SameLine(0.0f, colGap);
+            borderField("Left", &m_Current.left);
+            ui.SameLine(0.0f, colGap);
+            borderField("Top", &m_Current.top);
+            ui.SameLine(0.0f, colGap);
+            borderField("Right", &m_Current.right);
+            ui.SameLine(0.0f, colGap);
             borderField("Bottom", &m_Current.bottom);
 
             if (anyCommitted)
+            {
                 PushUndoSnapshot(m_FieldsSnapshot);
+            }
             m_FieldEditActive = anyActive;
 
             ui.Unindent(pad);
@@ -945,6 +1159,6 @@ void NineSliceEditorWindow::OnGUI()
 // Package DLLs auto-discover this on load. Macro must be inside the namespace.
 REGISTER_EDITOR_WINDOW(NineSliceEditorWindow, "9-Slice Editor", "2D/9-Slice Editor")
 
-} // namespace DekiEditor
+}  // namespace DekiEditor
 
-#endif // DEKI_EDITOR
+#endif  // DEKI_EDITOR

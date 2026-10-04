@@ -14,9 +14,9 @@ namespace Deki2D
  */
 enum class GradientType : uint8_t
 {
-    Linear = 0,   // Linear gradient with angle parameter
-    Radial = 1,   // From center outward
-    Conical = 2   // Rotating around center
+    Linear = 0,  // Linear gradient with angle parameter
+    Radial = 1,  // From center outward
+    Conical = 2  // Rotating around center
 };
 
 /**
@@ -24,11 +24,11 @@ enum class GradientType : uint8_t
  */
 enum class GradientTileMode : uint8_t
 {
-    None = 0,  // No tiling - render gradient once
+    None = 0,        // No tiling - render gradient once
     Horizontal = 1,  // Tile horizontally
-    Vertical = 2,  // Tile vertically
-    Both = 3,  // Tile both horizontally and vertically
-    Mirror = 4  // Mirror tiling (gradient reverses each tile)
+    Vertical = 2,    // Tile vertically
+    Both = 3,        // Tile both horizontally and vertically
+    Mirror = 4       // Mirror tiling (gradient reverses each tile)
 };
 
 /**
@@ -36,10 +36,10 @@ enum class GradientTileMode : uint8_t
  */
 enum class GradientDitherMode : uint8_t
 {
-    None = 0,  // No dithering
-    Ordered2x2 = 1,  // 2x2 Bayer matrix (fast, low quality)
-    Ordered4x4 = 2,  // 4x4 Bayer matrix (balanced)
-    Ordered8x8 = 3,  // 8x8 Bayer matrix (high quality, slower)
+    None = 0,         // No dithering
+    Ordered2x2 = 1,   // 2x2 Bayer matrix (fast, low quality)
+    Ordered4x4 = 2,   // 4x4 Bayer matrix (balanced)
+    Ordered8x8 = 3,   // 8x8 Bayer matrix (high quality, slower)
     Ordered16x16 = 4  // 16x16 Bayer matrix (highest quality, slowest)
 };
 
@@ -48,17 +48,19 @@ enum class GradientDitherMode : uint8_t
  */
 struct GradientStop
 {
-    float position;  // Position along gradient (0.0 to 1.0)
+    float position;     // Position along gradient (0.0 to 1.0)
     Deki::Color color;  // Color at this position
 
     GradientStop(float pos = 0.0f, const Deki::Color& col = Deki::Color::Black)
-    : position(pos), color(col)
+        : position(pos),
+          color(col)
     {
     }
-    
+
     // Legacy constructor for backward compatibility
     GradientStop(float pos, uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha = 255)
-    : position(pos), color(red, green, blue, alpha)
+        : position(pos),
+          color(red, green, blue, alpha)
     {
     }
 };
@@ -78,8 +80,7 @@ DEKI_DESCRIPTION("Draws a procedural gradient: linear, radial or conical.")
 DEKI_FORMER_NAME("GradientComponent")
 class GradientComponent : public DekiRendering::RendererComponent
 {
-   public:
-
+public:
     // Gradient properties
     DEKI_EXPORT
     DEKI_TOOLTIP("Linear runs the colours along the angle below. Radial runs them out from the centre point.")
@@ -88,7 +89,8 @@ class GradientComponent : public DekiRendering::RendererComponent
     DEKI_TOOLTIP("What happens past the last stop: hold the end colour, repeat the ramp, or mirror it back.")
     GradientTileMode tileMode;
     DEKI_EXPORT
-    DEKI_TOOLTIP("Dithering hides the banding a smooth ramp shows on a 16-bit display, by trading it for a fine speckle.")
+    DEKI_TOOLTIP(
+        "Dithering hides the banding a smooth ramp shows on a 16-bit display, by trading it for a fine speckle.")
     GradientDitherMode ditherMode;
 
     /**
@@ -100,7 +102,8 @@ class GradientComponent : public DekiRendering::RendererComponent
      * Non power-of-2 values snap down to the nearest power of 2 (so 3→2, 7→4).
      */
     DEKI_EXPORT
-    DEKI_TOOLTIP("How strong the speckle is. Raise it until the bands disappear, then stop: past that it is just noise.")
+    DEKI_TOOLTIP(
+        "How strong the speckle is. Raise it until the bands disappear, then stop: past that it is just noise.")
     uint8_t ditherScale;
 
     // Area to fill (meters)
@@ -117,7 +120,8 @@ class GradientComponent : public DekiRendering::RendererComponent
     DEKI_EXPORT
     DEKI_TOOLTIP("Direction a linear gradient runs, in radians. 0 runs left to right.")
     DEKI_UNIT(Angle)
-    float angle;  // Linear gradient angle. Stored in radians (0 = horizontal, π/2 = vertical); inspector displays degrees.
+    float angle;  // Linear gradient angle. Stored in radians (0 = horizontal, π/2 = vertical); inspector displays
+                  // degrees.
     DEKI_EXPORT
     DEKI_TOOLTIP("Centre of a radial gradient across the width, 0 to 1. 0.5 is the middle.")
     float centerX;  // For radial/conical gradients (0.0 to 1.0)
@@ -236,8 +240,8 @@ class GradientComponent : public DekiRendering::RendererComponent
      * @param end_g End color green
      * @param end_b End color blue
      */
-    void SetSimpleGradient(
-        uint8_t start_r, uint8_t start_g, uint8_t start_b, uint8_t end_r, uint8_t end_g, uint8_t end_b);
+    void SetSimpleGradient(uint8_t start_r, uint8_t start_g, uint8_t start_b, uint8_t end_r, uint8_t end_g,
+                           uint8_t end_b);
 
     /**
      * @brief Set tiling mode
@@ -280,22 +284,18 @@ class GradientComponent : public DekiRendering::RendererComponent
     bool GetContentExtents(float& outWidth, float& outHeight) const override
     {
         if (width <= 0.0f || height <= 0.0f)
+        {
             return false;
+        }
         outWidth = width;
         outHeight = height;
         return true;
     }
 
-    bool RenderContent(const Deki::Object* owner,
-                       QuadBlit::Source& outSource,
-                       float& outPivotX,
-                       float& outPivotY,
-                       uint8_t& outTintR,
-                       uint8_t& outTintG,
-                       uint8_t& outTintB,
-                       uint8_t& outTintA) override;
+    bool RenderContent(const Deki::Object* owner, QuadBlit::Source& outSource, float& outPivotX, float& outPivotY,
+                       uint8_t& outTintR, uint8_t& outTintG, uint8_t& outTintB, uint8_t& outTintA) override;
 
-   private:
+private:
     /**
      * @brief Calculate gradient value at normalized position
      * @param norm_x Normalized X position (0.0 to 1.0)
@@ -325,8 +325,7 @@ class GradientComponent : public DekiRendering::RendererComponent
      *        No interpolation between stops — every output pixel is exactly
      *        one of the authored colors.
      */
-    void PickStopByThreshold(float position, float threshold,
-                             uint8_t* r, uint8_t* g, uint8_t* b) const;
+    void PickStopByThreshold(float position, float threshold, uint8_t* r, uint8_t* g, uint8_t* b) const;
 
     /**
      * @brief Convert RGB to RGB565 format
@@ -336,8 +335,8 @@ class GradientComponent : public DekiRendering::RendererComponent
     /**
      * @brief Render single pixel with bounds checking
      */
-    void RenderPixel(
-        int32_t x, int32_t y, uint16_t color, uint8_t* render_buffer, int screen_width, int screen_height) const;
+    void RenderPixel(int32_t x, int32_t y, uint16_t color, uint8_t* render_buffer, int screen_width,
+                     int screen_height) const;
 
     // Baked pixels for the current property set (what RenderContent hands to
     // QuadBlit). Keyed by a hash of every input so the gradient is rasterised
@@ -365,4 +364,3 @@ class GradientComponent : public DekiRendering::RendererComponent
 };
 
 }  // namespace Deki2D
-

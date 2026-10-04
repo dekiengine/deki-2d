@@ -22,8 +22,8 @@ enum class ButtonState : uint8_t;
  */
 enum class ButtonStyleMode : uint8_t
 {
-    ColorTint = 0,   // Tint the existing sprite per state
-    SpriteSwap = 1   // Swap entire sprite assets per state
+    ColorTint = 0,  // Tint the existing sprite per state
+    SpriteSwap = 1  // Swap entire sprite assets per state
 };
 
 /**
@@ -56,9 +56,7 @@ DEKI_DESCRIPTION("Gives a button its look per state, by tinting or by swapping s
 DEKI_FORMER_NAME("ButtonStyleComponent")
 class ButtonStyleComponent : public Deki::Component
 {
-
 public:
-
     // Button to observe (required)
     DEKI_EXPORT
     DEKI_TOOLTIP("The button whose state drives this styling. Usually the button on the same object.")
@@ -71,7 +69,8 @@ public:
 
     // Transition mode
     DEKI_EXPORT
-    DEKI_TOOLTIP("Whether pressing swaps the tint colour or swaps the sprite outright. Colour is cheaper; separate sprites let the shape change.")
+    DEKI_TOOLTIP("Whether pressing swaps the tint colour or swaps the sprite outright. Colour is cheaper; separate "
+                 "sprites let the shape change.")
     ButtonStyleMode transition;
 
     // --- ColorTint mode colors ---

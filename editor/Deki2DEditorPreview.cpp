@@ -46,25 +46,30 @@ namespace Deki2D
 {
 // Installed as Deki2D::TextComponent's font resolve callback by Deki2D_EnsureRegistered.
 Deki2D::BitmapFont* EditorFontResolve(Deki2D::TextComponent* tc);
-}
+}  // namespace Deki2D
 
 // =============================================================================
 // Preview Font Management (moved from Deki2D::TextComponent.cpp for clean separation)
 // =============================================================================
 
-namespace {
-    static Deki2D::BitmapFont* s_PreviewFont = nullptr;
-    static std::string s_PreviewFontGuid;
-    static int s_PreviewFontSize = 0;
-} // anonymous namespace
+namespace
+{
+static Deki2D::BitmapFont* s_PreviewFont = nullptr;
+static std::string s_PreviewFontGuid;
+static int s_PreviewFontSize = 0;
+}  // anonymous namespace
 
 static Deki2D::BitmapFont* GetEditorFontVariant(const std::string& fontGuid, int fontSize)
 {
     if (fontGuid.empty() || fontSize <= 0)
+    {
         return nullptr;
+    }
 
     if (s_PreviewFont && s_PreviewFontGuid == fontGuid && s_PreviewFontSize == fontSize)
+    {
         return s_PreviewFont;
+    }
 
     if (s_PreviewFont)
     {
@@ -75,12 +80,20 @@ static Deki2D::BitmapFont* GetEditorFontVariant(const std::string& fontGuid, int
     }
 
     auto* pipeline = DekiEditor::AssetPipeline::Instance();
-    if (!pipeline) return nullptr;
+    if (!pipeline)
+    {
+        return nullptr;
+    }
     const DekiEditor::AssetInfo* info = pipeline->GetAssetInfoByGuid(fontGuid);
-    if (!info) return nullptr;
+    if (!info)
+    {
+        return nullptr;
+    }
     std::string ttfPath = (std::filesystem::path(pipeline->GetProjectPath()) / info->path).string();
     if (ttfPath.empty() || !std::filesystem::exists(ttfPath))
+    {
         return nullptr;
+    }
 
     Deki2D::FontCompiler::CompileOptions options;
     options.fontSize = fontSize;
@@ -90,7 +103,9 @@ static Deki2D::BitmapFont* GetEditorFontVariant(const std::string& fontGuid, int
 
     Deki2D::FontCompiler::CompileResult result;
     if (!Deki2D::FontCompiler::CompileTrueTypeFont(ttfPath, options, result))
+    {
         return nullptr;
+    }
 
     Deki::Texture2D* atlas = new Deki::Texture2D();
     atlas->width = result.atlasWidth;
@@ -110,17 +125,23 @@ static Deki2D::BitmapFont* GetEditorFontVariant(const std::string& fontGuid, int
         atlas->data = static_cast<uint8_t*>(std::malloc(atlasSize));
     }
 
-    if (!atlas->data) { delete atlas; return nullptr; }
+    if (!atlas->data)
+    {
+        delete atlas;
+        return nullptr;
+    }
     memcpy(atlas->data, result.atlasRGBA.data(), atlasSize);
 
     Deki::Buffer<Deki2D::GlyphInfo> glyphsCopy(result.glyphs.size(), Deki::Memory::Internal);
-    if (!glyphsCopy) { delete atlas; return nullptr; }
+    if (!glyphsCopy)
+    {
+        delete atlas;
+        return nullptr;
+    }
     memcpy(glyphsCopy.Data(), result.glyphs.data(), glyphsCopy.Bytes());
 
     Deki2D::BitmapFont* font = Deki2D::BitmapFont::CreateFromMemory(
-        atlas, std::move(glyphsCopy),
-        result.firstChar, result.lastChar,
-        result.lineHeight, result.baseline);
+        atlas, std::move(glyphsCopy), result.firstChar, result.lastChar, result.lineHeight, result.baseline);
 
     if (font)
     {
@@ -135,17 +156,21 @@ static bool IsBdfFont(const std::string& sourceGuid)
 {
     auto* pl = DekiEditor::AssetPipeline::Instance();
     const auto* fi = pl ? pl->GetAssetInfoByGuid(sourceGuid) : nullptr;
-    if (!fi) return false;
+    if (!fi)
+    {
+        return false;
+    }
     std::string ext = std::filesystem::path(fi->path).extension().string();
-    for (char& c : ext) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    for (char& c : ext)
+    {
+        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    }
     return (ext == ".bdf");
 }
 
 static std::string ComputeBakedFontGuid(const std::string& sourceGuid, int fontSize)
 {
-    std::string seed = IsBdfFont(sourceGuid)
-        ? (sourceGuid + ":bdf")
-        : (sourceGuid + ":" + std::to_string(fontSize));
+    std::string seed = IsBdfFont(sourceGuid) ? (sourceGuid + ":bdf") : (sourceGuid + ":" + std::to_string(fontSize));
     return Deki::GenerateDeterministicGuid(seed);
 }
 
@@ -184,7 +209,9 @@ Deki2D::BitmapFont* Deki2D::EditorFontResolve(Deki2D::TextComponent* tc)
 
     // Edit mode: preview takes priority
     if (tc->previewEnabled && tc->previewSize > 0)
+    {
         return GetEditorFontVariant(tc->font.source, tc->previewSize);
+    }
 
     // Edit mode: GUID sync with font baking
     if (!tc->font.source.empty() && tc->fontSize > 0)
@@ -199,12 +226,12 @@ Deki2D::BitmapFont* Deki2D::EditorFontResolve(Deki2D::TextComponent* tc)
         }
     }
 
-    tc->fontSizeUnavailable = (tc->font.Get() == nullptr
-                                && !tc->font.source.empty() && tc->fontSize > 0);
+    tc->fontSizeUnavailable = (tc->font.Get() == nullptr && !tc->font.source.empty() && tc->fontSize > 0);
     return nullptr;
 }
 
-namespace Deki2D {
+namespace Deki2D
+{
 
 // Forward declaration — defined in Font Preview Callbacks section below
 void ClearPreviewTextureCache();
@@ -221,24 +248,19 @@ void ClearPreviewFont()
     ClearPreviewTextureCache();
 }
 
-bool SetPreviewFontFromData(
-    const std::string& sourceGuid,
-    int fontSize,
-    const uint8_t* atlasRGBA,
-    uint32_t atlasWidth,
-    uint32_t atlasHeight,
-    const GlyphInfo* glyphs,
-    size_t glyphCount,
-    uint8_t firstChar,
-    uint8_t lastChar,
-    uint8_t lineHeight,
-    uint8_t baseline)
+bool SetPreviewFontFromData(const std::string& sourceGuid, int fontSize, const uint8_t* atlasRGBA, uint32_t atlasWidth,
+                            uint32_t atlasHeight, const GlyphInfo* glyphs, size_t glyphCount, uint8_t firstChar,
+                            uint8_t lastChar, uint8_t lineHeight, uint8_t baseline)
 {
     if (!atlasRGBA || !glyphs || glyphCount == 0 || atlasWidth == 0 || atlasHeight == 0)
+    {
         return false;
+    }
 
     if (s_PreviewFontGuid != sourceGuid || s_PreviewFontSize != fontSize)
+    {
         ClearPreviewFont();
+    }
 
     Deki::Texture2D* atlas = new Deki::Texture2D();
     atlas->width = atlasWidth;
@@ -258,19 +280,28 @@ bool SetPreviewFontFromData(
         atlas->data = static_cast<uint8_t*>(std::malloc(atlasSize));
     }
 
-    if (!atlas->data) { delete atlas; return false; }
+    if (!atlas->data)
+    {
+        delete atlas;
+        return false;
+    }
     memcpy(atlas->data, atlasRGBA, atlasSize);
 
     Deki::Buffer<Deki2D::GlyphInfo> glyphsCopy(glyphCount, Deki::Memory::Internal);
-    if (!glyphsCopy) { delete atlas; return false; }
+    if (!glyphsCopy)
+    {
+        delete atlas;
+        return false;
+    }
     memcpy(glyphsCopy.Data(), glyphs, glyphsCopy.Bytes());
 
-    Deki2D::BitmapFont* font = Deki2D::BitmapFont::CreateFromMemory(
-        atlas, std::move(glyphsCopy),
-        firstChar, lastChar,
-        lineHeight, baseline);
+    Deki2D::BitmapFont* font =
+        Deki2D::BitmapFont::CreateFromMemory(atlas, std::move(glyphsCopy), firstChar, lastChar, lineHeight, baseline);
 
-    if (!font) return false;
+    if (!font)
+    {
+        return false;
+    }
 
     s_PreviewFont = font;
     s_PreviewFontGuid = sourceGuid;
@@ -286,121 +317,142 @@ bool HasPreviewFont(const std::string& sourceGuid, int fontSize)
 Deki2D::BitmapFont* GetPreviewFont(const std::string& sourceGuid, int fontSize)
 {
     if (s_PreviewFont && s_PreviewFontGuid == sourceGuid && s_PreviewFontSize == fontSize)
+    {
         return s_PreviewFont;
+    }
     return nullptr;
 }
 
-} // namespace Deki2D
+}  // namespace Deki2D
 
 // =============================================================================
 // Font Preview Callbacks
 // =============================================================================
 
-namespace {
-    // Cache for preview font GPU textures (keyed by "preview:sourceGuid:fontSize")
-    struct PreviewFontTexture
+namespace
+{
+// Cache for preview font GPU textures (keyed by "preview:sourceGuid:fontSize")
+struct PreviewFontTexture
+{
+    uint32_t textureId = 0;
+    uint32_t width = 0;
+    uint32_t height = 0;
+};
+static std::unordered_map<std::string, PreviewFontTexture> s_PreviewTextureCache;
+
+/**
+ * @brief Read the variant GUID from the font's .data sidecar file
+ * @param sourceGuid The source font GUID (TTF/OTF file)
+ * @param fontSize The font size to look up
+ * @return The variant GUID if found, empty string otherwise
+ */
+static std::string GetVariantGuidFromData(const std::string& sourceGuid, int fontSize)
+{
+    auto* pipeline = DekiEditor::AssetPipeline::Instance();
+    if (!pipeline)
     {
-        uint32_t textureId = 0;
-        uint32_t width = 0;
-        uint32_t height = 0;
-    };
-    static std::unordered_map<std::string, PreviewFontTexture> s_PreviewTextureCache;
-
-    /**
-     * @brief Read the variant GUID from the font's .data sidecar file
-     * @param sourceGuid The source font GUID (TTF/OTF file)
-     * @param fontSize The font size to look up
-     * @return The variant GUID if found, empty string otherwise
-     */
-    static std::string GetVariantGuidFromData(const std::string& sourceGuid, int fontSize)
-    {
-        auto* pipeline = DekiEditor::AssetPipeline::Instance();
-        if (!pipeline)
-            return "";
-
-        const DekiEditor::AssetInfo* fontInfo = pipeline->GetAssetInfoByGuid(sourceGuid);
-        if (!fontInfo)
-            return "";
-
-        namespace fs = std::filesystem;
-        std::string fontPath = (fs::path(pipeline->GetProjectPath()) / fontInfo->path).string();
-        std::string dataPath = fontPath + ".data";
-
-        if (!fs::exists(dataPath))
-            return "";
-
-        std::ifstream file(dataPath);
-        if (!file.is_open())
-            return "";
-
-        try
-        {
-            nlohmann::json j = nlohmann::json::parse(file);
-            std::string sizeKey = std::to_string(fontSize);
-
-            if (j.contains("variants") &&
-                j["variants"].contains(sizeKey) &&
-                j["variants"][sizeKey].contains("guid"))
-            {
-                return j["variants"][sizeKey]["guid"].get<std::string>();
-            }
-        }
-        catch (...)
-        {
-            // Parse error
-        }
-
         return "";
     }
 
-    static std::string ResolveTTFPath(const std::string& sourceGuid)
+    const DekiEditor::AssetInfo* fontInfo = pipeline->GetAssetInfoByGuid(sourceGuid);
+    if (!fontInfo)
     {
-        auto* pipeline = DekiEditor::AssetPipeline::Instance();
-        if (!pipeline)
-            return "";
-
-        const DekiEditor::AssetInfo* info = pipeline->GetAssetInfoByGuid(sourceGuid);
-        if (!info)
-            return "";
-
-        namespace fs = std::filesystem;
-        return (fs::path(pipeline->GetProjectPath()) / info->path).string();
+        return "";
     }
 
-    static uint32_t UploadTextureToGPU(const uint8_t* rgba, uint32_t width, uint32_t height)
+    namespace fs = std::filesystem;
+    std::string fontPath = (fs::path(pipeline->GetProjectPath()) / fontInfo->path).string();
+    std::string dataPath = fontPath + ".data";
+
+    if (!fs::exists(dataPath))
     {
-        if (!rgba || width == 0 || height == 0)
-            return 0;
-
-        GLuint texId = 0;
-        glGenTextures(1, &texId);
-        if (texId == 0)
-            return 0;
-
-        glBindTexture(GL_TEXTURE_2D, texId);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        // Unpack state is global; other GL users (e.g. ImGui glyph uploads) can leave
-        // a row stride behind, which would shear/overread this tightly packed upload.
-        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
-
-        return static_cast<uint32_t>(texId);
+        return "";
     }
-} // anonymous namespace
 
-namespace Deki2D {
+    std::ifstream file(dataPath);
+    if (!file.is_open())
+    {
+        return "";
+    }
+
+    try
+    {
+        nlohmann::json j = nlohmann::json::parse(file);
+        std::string sizeKey = std::to_string(fontSize);
+
+        if (j.contains("variants") && j["variants"].contains(sizeKey) && j["variants"][sizeKey].contains("guid"))
+        {
+            return j["variants"][sizeKey]["guid"].get<std::string>();
+        }
+    }
+    catch (...)
+    {
+        // Parse error
+    }
+
+    return "";
+}
+
+static std::string ResolveTTFPath(const std::string& sourceGuid)
+{
+    auto* pipeline = DekiEditor::AssetPipeline::Instance();
+    if (!pipeline)
+    {
+        return "";
+    }
+
+    const DekiEditor::AssetInfo* info = pipeline->GetAssetInfoByGuid(sourceGuid);
+    if (!info)
+    {
+        return "";
+    }
+
+    namespace fs = std::filesystem;
+    return (fs::path(pipeline->GetProjectPath()) / info->path).string();
+}
+
+static uint32_t UploadTextureToGPU(const uint8_t* rgba, uint32_t width, uint32_t height)
+{
+    if (!rgba || width == 0 || height == 0)
+    {
+        return 0;
+    }
+
+    GLuint texId = 0;
+    glGenTextures(1, &texId);
+    if (texId == 0)
+    {
+        return 0;
+    }
+
+    glBindTexture(GL_TEXTURE_2D, texId);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    // Unpack state is global; other GL users (e.g. ImGui glyph uploads) can leave
+    // a row stride behind, which would shear/overread this tightly packed upload.
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
+
+    return static_cast<uint32_t>(texId);
+}
+}  // anonymous namespace
+
+namespace Deki2D
+{
 
 void InitializeFontPreviewCallbacks()
 {
     DekiEditor::EditorAssets::Get()->SetFontBakingCallbacks(
         // Font callback - returns Deki2D::BitmapFont for text metrics
-        [](const std::string& sourceGuid, int fontSize) -> Deki2D::BitmapFont* {
+        [](const std::string& sourceGuid, int fontSize) -> Deki2D::BitmapFont*
+        {
             if (sourceGuid.empty() || fontSize <= 0)
+            {
                 return nullptr;
+            }
 
             // 1. Check if already baked to disk - use actual variant GUID from .data file
             std::string variantGuid = GetVariantGuidFromData(sourceGuid, fontSize);
@@ -408,7 +460,9 @@ void InitializeFontPreviewCallbacks()
             {
                 Deki2D::BitmapFont* baked = DekiEditor::EditorAssets::Get()->GetBitmapFont(variantGuid);
                 if (baked)
+                {
                     return baked;
+                }
             }
 
             // 2. Check if preview font already exists AND has GPU texture
@@ -420,9 +474,12 @@ void InitializeFontPreviewCallbacks()
                 // Make sure GPU texture exists too
                 auto texIt = s_PreviewTextureCache.find(cacheKey);
                 if (texIt != s_PreviewTextureCache.end() && texIt->second.textureId != 0)
+                {
                     return preview;
+                }
                 // Font exists but no texture - need to recompile to get texture
-                DEKI_LOG_DEBUG("FontPreview: Preview font exists but no GPU texture, recompiling %s @ %d px", sourceGuid.c_str(), fontSize);
+                DEKI_LOG_DEBUG("FontPreview: Preview font exists but no GPU texture, recompiling %s @ %d px",
+                               sourceGuid.c_str(), fontSize);
             }
 
             // 3. Compile font on-demand
@@ -447,12 +504,9 @@ void InitializeFontPreviewCallbacks()
             }
 
             // 4. Create preview font in engine cache
-            if (!Deki2D::SetPreviewFontFromData(
-                    sourceGuid, fontSize,
-                    result.atlasRGBA.data(), result.atlasWidth, result.atlasHeight,
-                    result.glyphs.data(), result.glyphs.size(),
-                    result.firstChar, result.lastChar,
-                    result.lineHeight, result.baseline))
+            if (!Deki2D::SetPreviewFontFromData(sourceGuid, fontSize, result.atlasRGBA.data(), result.atlasWidth,
+                                                result.atlasHeight, result.glyphs.data(), result.glyphs.size(),
+                                                result.firstChar, result.lastChar, result.lineHeight, result.baseline))
             {
                 DEKI_LOG_ERROR("FontPreview: Failed to set preview font data");
                 return nullptr;
@@ -479,19 +533,26 @@ void InitializeFontPreviewCallbacks()
                 s_PreviewTextureCache[cacheKey] = cached;
             }
 
-            DEKI_LOG_EDITOR("FontPreview: compiled %s @ %d px (atlas %ux%u)",
-                            sourceGuid.c_str(), fontSize, result.atlasWidth, result.atlasHeight);
+            DEKI_LOG_EDITOR("FontPreview: compiled %s @ %d px (atlas %ux%u)", sourceGuid.c_str(), fontSize,
+                            result.atlasWidth, result.atlasHeight);
 
             // Return the font we just created
             return Deki2D::GetPreviewFont(sourceGuid, fontSize);
         },
 
         // Atlas callback - returns GPU texture for rendering
-        [](const std::string& sourceGuid, int fontSize, uint32_t* outW, uint32_t* outH) -> uint32_t {
+        [](const std::string& sourceGuid, int fontSize, uint32_t* outW, uint32_t* outH) -> uint32_t
+        {
             if (sourceGuid.empty() || fontSize <= 0)
             {
-                if (outW) *outW = 0;
-                if (outH) *outH = 0;
+                if (outW)
+                {
+                    *outW = 0;
+                }
+                if (outH)
+                {
+                    *outH = 0;
+                }
                 return 0;
             }
 
@@ -501,7 +562,9 @@ void InitializeFontPreviewCallbacks()
             {
                 uint32_t bakedAtlas = DekiEditor::EditorAssets::Get()->LoadFontAtlas(variantGuid, outW, outH);
                 if (bakedAtlas != 0)
+                {
                     return bakedAtlas;
+                }
             }
 
             // 2. Check preview texture cache
@@ -510,8 +573,14 @@ void InitializeFontPreviewCallbacks()
             auto it = s_PreviewTextureCache.find(cacheKey);
             if (it != s_PreviewTextureCache.end() && it->second.textureId != 0)
             {
-                if (outW) *outW = it->second.width;
-                if (outH) *outH = it->second.height;
+                if (outW)
+                {
+                    *outW = it->second.width;
+                }
+                if (outH)
+                {
+                    *outH = it->second.height;
+                }
                 return it->second.textureId;
             }
 
@@ -520,8 +589,14 @@ void InitializeFontPreviewCallbacks()
             if (ttfPath.empty() || !std::filesystem::exists(ttfPath))
             {
                 DEKI_LOG_WARNING("FontPreview: TTF not found for %s (path: %s)", sourceGuid.c_str(), ttfPath.c_str());
-                if (outW) *outW = 0;
-                if (outH) *outH = 0;
+                if (outW)
+                {
+                    *outW = 0;
+                }
+                if (outH)
+                {
+                    *outH = 0;
+                }
                 return 0;
             }
 
@@ -535,22 +610,31 @@ void InitializeFontPreviewCallbacks()
             if (!Deki2D::FontCompiler::CompileTrueTypeFont(ttfPath, options, result))
             {
                 DEKI_LOG_ERROR("FontPreview: Failed to compile %s", ttfPath.c_str());
-                if (outW) *outW = 0;
-                if (outH) *outH = 0;
+                if (outW)
+                {
+                    *outW = 0;
+                }
+                if (outH)
+                {
+                    *outH = 0;
+                }
                 return 0;
             }
 
             // Create preview font in engine cache
-            if (!Deki2D::SetPreviewFontFromData(
-                    sourceGuid, fontSize,
-                    result.atlasRGBA.data(), result.atlasWidth, result.atlasHeight,
-                    result.glyphs.data(), result.glyphs.size(),
-                    result.firstChar, result.lastChar,
-                    result.lineHeight, result.baseline))
+            if (!Deki2D::SetPreviewFontFromData(sourceGuid, fontSize, result.atlasRGBA.data(), result.atlasWidth,
+                                                result.atlasHeight, result.glyphs.data(), result.glyphs.size(),
+                                                result.firstChar, result.lastChar, result.lineHeight, result.baseline))
             {
                 DEKI_LOG_ERROR("FontPreview: Failed to set preview font data");
-                if (outW) *outW = 0;
-                if (outH) *outH = 0;
+                if (outW)
+                {
+                    *outW = 0;
+                }
+                if (outH)
+                {
+                    *outH = 0;
+                }
                 return 0;
             }
 
@@ -564,19 +648,30 @@ void InitializeFontPreviewCallbacks()
                 cached.height = result.atlasHeight;
                 s_PreviewTextureCache[cacheKey] = cached;
 
-                if (outW) *outW = result.atlasWidth;
-                if (outH) *outH = result.atlasHeight;
+                if (outW)
+                {
+                    *outW = result.atlasWidth;
+                }
+                if (outH)
+                {
+                    *outH = result.atlasHeight;
+                }
 
-                DEKI_LOG_EDITOR("FontPreview: compiled atlas %s @ %d px (%ux%u)",
-                                sourceGuid.c_str(), fontSize, result.atlasWidth, result.atlasHeight);
+                DEKI_LOG_EDITOR("FontPreview: compiled atlas %s @ %d px (%ux%u)", sourceGuid.c_str(), fontSize,
+                                result.atlasWidth, result.atlasHeight);
                 return texId;
             }
 
-            if (outW) *outW = 0;
-            if (outH) *outH = 0;
+            if (outW)
+            {
+                *outW = 0;
+            }
+            if (outH)
+            {
+                *outH = 0;
+            }
             return 0;
-        }
-    );
+        });
 }
 
 void ClearPreviewTextureCache()
@@ -593,6 +688,6 @@ void ClearPreviewTextureCache()
     DEKI_LOG_DEBUG("Deki2D: Preview texture cache cleared");
 }
 
-} // namespace Deki2D
+}  // namespace Deki2D
 
-#endif // DEKI_EDITOR
+#endif  // DEKI_EDITOR

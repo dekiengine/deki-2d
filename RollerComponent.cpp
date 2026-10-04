@@ -33,7 +33,6 @@ namespace Deki2D
 // NOTE: s_Properties[] and s_ComponentMeta are now auto-generated in
 // RollerComponent.gen.h (included at end of RollerComponent.h)
 
-
 RollerComponent::RollerComponent()
     : Deki::Component(),
       width(static_cast<float>(6.25f)),
@@ -77,13 +76,18 @@ RollerComponent::~RollerComponent()
 
 Deki::Object* RollerComponent::FindOrCreateChild(Deki::Object* owner, const char* name, const char* componentType)
 {
-    if (!owner) return nullptr;
+    if (!owner)
+    {
+        return nullptr;
+    }
 
     // Search existing children by name
     for (auto* child : owner->GetChildren())
     {
         if (child->GetName() == name)
+        {
             return child;
+        }
     }
 
 #ifdef DEKI_EDITOR
@@ -100,7 +104,10 @@ Deki::Object* RollerComponent::FindOrCreateChild(Deki::Object* owner, const char
 
 void RollerComponent::UpdateTextRowCount(Deki::Object* owner)
 {
-    if (!owner) return;
+    if (!owner)
+    {
+        return;
+    }
 
     // Find existing text rows
     m_TextRowObjs.clear();
@@ -121,9 +128,7 @@ void RollerComponent::UpdateTextRowCount(Deki::Object* owner)
         return std::strtol(n.c_str() + 7, nullptr, 10);  // after "TextRow"
     };
     std::sort(m_TextRowObjs.begin(), m_TextRowObjs.end(),
-        [&rowNumber](Deki::Object* a, Deki::Object* b) {
-            return rowNumber(a) < rowNumber(b);
-        });
+              [&rowNumber](Deki::Object* a, Deki::Object* b) { return rowNumber(a) < rowNumber(b); });
 
     // Create missing rows (visibleRows + 2 for smooth scrolling: 1 extra top + 1 extra bottom)
     int32_t totalRows = visibleRows + 2;
@@ -185,7 +190,10 @@ void RollerComponent::UpdateTextRowCount(Deki::Object* owner)
 
 void RollerComponent::EnsureChildObjects(Deki::Object* owner)
 {
-    if (!owner) return;
+    if (!owner)
+    {
+        return;
+    }
 
     // Find or create Clip child on owner
     m_ClipObj = FindOrCreateChild(owner, "Clip", "ClipComponent");
@@ -206,11 +214,26 @@ void RollerComponent::EnsureChildObjects(Deki::Object* owner)
 
 bool RollerComponent::NeedsChildDiscovery(const Deki::Object* owner) const
 {
-    if (!owner) return true;
-    if (!m_ClipObj) return true;
-    if (owner->GetChildren().size() != m_DiscoveredOwnerChildren) return true;
-    if (m_ClipObj->GetChildren().size() != m_DiscoveredClipChildren) return true;
-    if (m_TextRowObjs.size() != static_cast<size_t>(visibleRows + 2)) return true;
+    if (!owner)
+    {
+        return true;
+    }
+    if (!m_ClipObj)
+    {
+        return true;
+    }
+    if (owner->GetChildren().size() != m_DiscoveredOwnerChildren)
+    {
+        return true;
+    }
+    if (m_ClipObj->GetChildren().size() != m_DiscoveredClipChildren)
+    {
+        return true;
+    }
+    if (m_TextRowObjs.size() != static_cast<size_t>(visibleRows + 2))
+    {
+        return true;
+    }
     return false;
 }
 
@@ -228,8 +251,8 @@ void RollerComponent::SyncChildObjects(Deki::Object* owner)
     // Sync scroll offset when selectedIndex or height properties change externally (e.g., from inspector)
     // Only do this when not actively scrolling
     bool indexChanged = (selectedIndex != m_LastSyncedSelectedIndex);
-    bool heightsChanged = (selectedItemHeight != m_LastSyncedSelectedItemHeight ||
-                           itemHeight != m_LastSyncedItemHeight);
+    bool heightsChanged =
+        (selectedItemHeight != m_LastSyncedSelectedItemHeight || itemHeight != m_LastSyncedItemHeight);
 
     if (!m_IsDragging && !m_IsSnapping && (indexChanged || heightsChanged))
     {
@@ -275,7 +298,10 @@ void RollerComponent::SyncChildObjects(Deki::Object* owner)
     for (int32_t row = 0; row < static_cast<int32_t>(m_TextRowObjs.size()) && row < totalRows; row++)
     {
         Deki::Object* textObj = m_TextRowObjs[row];
-        if (!textObj) continue;
+        if (!textObj)
+        {
+            continue;
+        }
 
         // Virtual row: row 0 maps to position -1 (above top), row 1 to position 0 (top visible), etc.
         int32_t virtualRow = row - 1;
@@ -289,7 +315,9 @@ void RollerComponent::SyncChildObjects(Deki::Object* owner)
         {
             int32_t optSize = static_cast<int32_t>(options.size());
             if (optSize > 0)
+            {
                 itemIndex = ((itemIndex % optSize) + optSize) % optSize;
+            }
         }
         else
         {
@@ -359,14 +387,18 @@ void RollerComponent::SyncChildObjects(Deki::Object* owner)
 SpriteComponent* RollerComponent::GetBackgroundSprite()
 {
     if (m_BackgroundObj)
+    {
         return m_BackgroundObj->GetComponent<SpriteComponent>();
+    }
     return nullptr;
 }
 
 SpriteComponent* RollerComponent::GetSelectionSprite()
 {
     if (m_SelectionObj)
+    {
         return m_SelectionObj->GetComponent<SpriteComponent>();
+    }
     return nullptr;
 }
 
@@ -375,7 +407,9 @@ TextComponent* RollerComponent::GetTextComponent(int32_t row)
     if (row >= 0 && row < static_cast<int32_t>(m_TextRowObjs.size()))
     {
         if (m_TextRowObjs[row])
+        {
             return m_TextRowObjs[row]->GetComponent<TextComponent>();
+        }
     }
     return nullptr;
 }
@@ -396,7 +430,9 @@ void RollerComponent::SetOptions(const std::vector<std::string>& newOptions)
     m_IsSnapping = false;
     m_NeedsSync = true;
     if (GetOwner())
+    {
         SyncChildObjects(GetOwner());
+    }
 }
 
 std::string RollerComponent::GetSelectedValue() const
@@ -411,12 +447,15 @@ std::string RollerComponent::GetSelectedValue() const
 void RollerComponent::SetSelectedIndex(int32_t index, bool animated)
 {
     if (options.empty())
+    {
         return;
+    }
 
     // Clamp index
     if (infiniteScroll)
     {
-        index = ((index % static_cast<int32_t>(options.size())) + static_cast<int32_t>(options.size())) % static_cast<int32_t>(options.size());
+        index = ((index % static_cast<int32_t>(options.size())) + static_cast<int32_t>(options.size())) %
+                static_cast<int32_t>(options.size());
     }
     else
     {
@@ -482,7 +521,10 @@ float RollerComponent::GetItemOffset(int32_t index) const
     int32_t centerRow = visibleRows / 2;
     int32_t dist = index - centerRow;
 
-    if (dist == 0) return 0.0f;
+    if (dist == 0)
+    {
+        return 0.0f;
+    }
 
     // First step from center uses the transition distance (half of each height).
     // Subsequent steps use uniform itemHeight.
@@ -502,7 +544,9 @@ float RollerComponent::GetItemOffset(int32_t index) const
 int32_t RollerComponent::GetIndexAtOffset(float offset) const
 {
     if (options.empty())
+    {
         return 0;
+    }
 
     // Calculate which item is closest to the center selection area.
     // An item should be selected when more than 50% of it is in the center row;
@@ -551,7 +595,8 @@ int32_t RollerComponent::GetIndexAtOffset(float offset) const
 
     if (infiniteScroll)
     {
-        index = ((index % static_cast<int32_t>(options.size())) + static_cast<int32_t>(options.size())) % static_cast<int32_t>(options.size());
+        index = ((index % static_cast<int32_t>(options.size())) + static_cast<int32_t>(options.size())) %
+                static_cast<int32_t>(options.size());
     }
     else
     {
@@ -564,7 +609,9 @@ int32_t RollerComponent::GetIndexAtOffset(float offset) const
 int32_t RollerComponent::GetRawIndexAtOffset(float offset) const
 {
     if (options.empty())
+    {
         return 0;
+    }
 
     int32_t centerRow = visibleRows / 2;
     float transitionDist = ((((selectedItemHeight) + (itemHeight))) * (0.5f));
@@ -613,7 +660,9 @@ int32_t RollerComponent::GetRawIndexAtOffset(float offset) const
 void RollerComponent::ClampScrollOffset()
 {
     if (options.empty() || infiniteScroll)
+    {
         return;
+    }
 
     float minOffset = GetItemOffset(0);
     float maxOffset = GetItemOffset(static_cast<int32_t>(options.size()) - 1);
@@ -633,7 +682,9 @@ void RollerComponent::ClampScrollOffset()
 void RollerComponent::SnapToNearestItem()
 {
     if (options.empty())
+    {
         return;
+    }
 
     int32_t rawIndex = GetRawIndexAtOffset(m_ScrollOffset);
 
@@ -645,7 +696,9 @@ void RollerComponent::SnapToNearestItem()
 void RollerComponent::UpdateSelection()
 {
     if (options.empty())
+    {
         return;
+    }
 
     int32_t rawIndex = GetRawIndexAtOffset(m_ScrollOffset);
 
@@ -690,7 +743,10 @@ void RollerComponent::HandlePointerDown(float x, float y)
 void RollerComponent::HandlePointerMove(float x, float y)
 {
     (void)x;
-    if (!m_IsDragging) return;
+    if (!m_IsDragging)
+    {
+        return;
+    }
 
     float touchY = static_cast<float>(y);
     float delta = ((touchY) - (m_LastTouchY));
@@ -711,13 +767,18 @@ void RollerComponent::HandlePointerMove(float x, float y)
 
     // Update visual positions of text rows
     if (GetOwner())
+    {
         SyncChildObjects(GetOwner());
+    }
 }
 
 void RollerComponent::HandlePointerUp(float x, float y)
 {
     (void)x;
-    if (!m_IsDragging) return;
+    if (!m_IsDragging)
+    {
+        return;
+    }
 
     m_IsDragging = false;
 
@@ -757,7 +818,8 @@ void RollerComponent::HandlePointerUp(float x, float y)
                     }
                     else
                     {
-                        targetIndex = std::max(static_cast<int32_t>(0), std::min(targetIndex, static_cast<int32_t>(options.size()) - 1));
+                        targetIndex = std::max(static_cast<int32_t>(0),
+                                               std::min(targetIndex, static_cast<int32_t>(options.size()) - 1));
                     }
 
                     // Animate to the tapped item
@@ -790,14 +852,16 @@ void RollerComponent::HandlePointerUp(float x, float y)
 void RollerComponent::Update(float delta_time)
 {
     if (m_IsDragging)
+    {
         return;
+    }
 
     bool needsSync = false;
 
     // Velocity thresholds in meters/frame (preserve prior px-based feel at ppm=16):
     static const float kVelocityActive = static_cast<float>(0.0625f);  // > 1 px/frame
     static const float kVelocityCutoff = static_cast<float>(0.125f);   // < 2 px/frame triggers snap
-    static const float kSnapArrived    = static_cast<float>(0.004f);   // < ~0.06 px from target
+    static const float kSnapArrived = static_cast<float>(0.004f);      // < ~0.06 px from target
 
     // Phase 1: Momentum scrolling (after release, before snap)
     if (!m_IsSnapping && Deki::Math::Abs(m_ScrollVelocity) > kVelocityActive)
@@ -809,7 +873,7 @@ void RollerComponent::Update(float delta_time)
         m_ScrollOffset = ((m_ScrollOffset) + (m_ScrollVelocity * stepCoef));
 
         // Decelerate (friction), frame-rate independent: deceleration^(dt*60)
-        m_ScrollVelocity = ((m_ScrollVelocity) * std::pow(deceleration, stepCoef));
+        m_ScrollVelocity = ((m_ScrollVelocity)*std::pow(deceleration, stepCoef));
 
         ClampScrollOffset();
 
@@ -831,7 +895,10 @@ void RollerComponent::Update(float delta_time)
         // snapSpeed controls how fast (higher = faster snap). easeFactor is
         // a pure float coefficient (frame scaling), wrapped to mix safely.
         float easeFactorF = (snapSpeed) * 0.15f * delta_time * 60.0f;
-        if (easeFactorF > 0.5f) easeFactorF = 0.5f;
+        if (easeFactorF > 0.5f)
+        {
+            easeFactorF = 0.5f;
+        }
         float easeFactor = static_cast<float>(easeFactorF);
 
         m_ScrollOffset = ((m_ScrollOffset) + (((diff) * (easeFactor))));
@@ -856,7 +923,9 @@ void RollerComponent::Update(float delta_time)
 
     // Update visual positions of text rows when animating
     if (needsSync && GetOwner())
+    {
         SyncChildObjects(GetOwner());
+    }
 }
 
 // ============================================================================
@@ -868,7 +937,9 @@ void RollerComponent::Start()
     // Initialize child object references when play mode starts
     // This is critical for duplicated rollers whose runtime pointers are null
     if (GetOwner())
+    {
         SyncChildObjects(GetOwner());
+    }
 
     DekiInput::InputCollider* collider = inputCollider.Get();
     if (!collider)
@@ -878,17 +949,11 @@ void RollerComponent::Start()
         return;
     }
 
-    collider->onPointerDown.push_back([this](float x, float y) {
-        HandlePointerDown(x, y);
-    });
+    collider->onPointerDown.push_back([this](float x, float y) { HandlePointerDown(x, y); });
 
-    collider->onPointerMove.push_back([this](float x, float y) {
-        HandlePointerMove(x, y);
-    });
+    collider->onPointerMove.push_back([this](float x, float y) { HandlePointerMove(x, y); });
 
-    collider->onPointerUp.push_back([this](float x, float y) {
-        HandlePointerUp(x, y);
-    });
+    collider->onPointerUp.push_back([this](float x, float y) { HandlePointerUp(x, y); });
 }
 
 bool RollerComponent::NeedsRuntimeUpdate() const

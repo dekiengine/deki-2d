@@ -8,20 +8,19 @@ using namespace Deki2D;
 void Deki2D_RegisterSortingGroupAdapters()
 {
     static bool s_registered = false;
-    if (s_registered) return;
+    if (s_registered)
+    {
+        return;
+    }
     s_registered = true;
 
     Deki::ComponentInterfaceAdapters::Register(
-        Deki::ISortableProvider::InterfaceID,
-        ::Deki::TypeId<SortingGroupComponent>(),
-        [](Deki::Component* c) -> void* {
-            return static_cast<Deki::ISortableProvider*>(static_cast<SortingGroupComponent*>(c));
-        });
+        Deki::ISortableProvider::InterfaceID, ::Deki::TypeId<SortingGroupComponent>(), [](Deki::Component* c) -> void*
+        { return static_cast<Deki::ISortableProvider*>(static_cast<SortingGroupComponent*>(c)); });
 }
 
 // Static init — works for DLL builds
-static struct SortingGroupInterfaceRegistrar {
+static struct SortingGroupInterfaceRegistrar
+{
     SortingGroupInterfaceRegistrar() { Deki2D_RegisterSortingGroupAdapters(); }
 } s_sortingGroupInterfaceRegistrar;
-
-

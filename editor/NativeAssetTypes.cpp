@@ -16,7 +16,6 @@
 #include <deki-editor/EditorRegistry.h>
 #include <deki-editor/AssetTypeRegistry.h>
 
-
 namespace DekiEditor
 {
 
@@ -36,10 +35,7 @@ class BitmapFontAssetType : public AssetTypeEditor
 public:
     const char* GetTypeName() const override { return "BitmapFont"; }
     const char* GetDisplayName() const override { return "Bitmap Font"; }
-    std::vector<std::string> GetExtensions() const override
-    {
-        return { ".ttf", ".otf", ".dfont", ".bdf" };
-    }
+    std::vector<std::string> GetExtensions() const override { return { ".ttf", ".otf", ".dfont", ".bdf" }; }
 };
 
 REGISTER_EDITOR(SpriteAssetType)
@@ -47,21 +43,26 @@ REGISTER_EDITOR(BitmapFontAssetType)
 
 // Category registration via static initializer keeps AssetTypeEditor's
 // vtable stable across package rebuilds (see EditorExtension.h note).
-namespace {
+namespace
+{
 struct NativeAssetCategoryRegistrar
 {
     NativeAssetCategoryRegistrar()
     {
         auto& reg = AssetTypeRegistry::Instance();
-        for (const char* ext : {".png", ".jpg", ".jpeg", ".bmp", ".tga", ".gif", ".dtex"})
+        for (const char* ext : { ".png", ".jpg", ".jpeg", ".bmp", ".tga", ".gif", ".dtex" })
+        {
             reg.RegisterCategory(ext, AssetCategory::Texture);
-        for (const char* ext : {".ttf", ".otf", ".dfont", ".bdf"})
+        }
+        for (const char* ext : { ".ttf", ".otf", ".dfont", ".bdf" })
+        {
             reg.RegisterCategory(ext, AssetCategory::Font);
+        }
     }
 };
 static NativeAssetCategoryRegistrar s_NativeAssetCategoryRegistrar;
-}
+}  // namespace
 
-} // namespace DekiEditor
+}  // namespace DekiEditor
 
-#endif // DEKI_EDITOR
+#endif  // DEKI_EDITOR

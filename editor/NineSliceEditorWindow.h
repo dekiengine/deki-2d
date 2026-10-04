@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 
-
 namespace DekiEditor
 {
 
@@ -25,7 +24,7 @@ namespace DekiEditor
 class NineSliceEditorWindow : public EditorWindow
 {
 public:
-    const char* GetTitle()    override { return "9-Slice Editor"; }
+    const char* GetTitle() override { return "9-Slice Editor"; }
     const char* GetMenuPath() override { return "2D/9-Slice Editor"; }
 
     bool CanOpenFile(const char* extension) override;
@@ -42,7 +41,12 @@ public:
     static void SetNextFrame(int frameIndex);
 
 private:
-    enum class Source { None, ProceduralAsset, NormalSprite };
+    enum class Source
+    {
+        None,
+        ProceduralAsset,
+        NormalSprite
+    };
 
     struct Borders
     {
@@ -58,8 +62,14 @@ private:
     enum class DragHandle
     {
         None = 0,
-        Left, Right, Top, Bottom,
-        TopLeft, TopRight, BottomLeft, BottomRight
+        Left,
+        Right,
+        Top,
+        Bottom,
+        TopLeft,
+        TopRight,
+        BottomLeft,
+        BottomRight
     };
 
     void LoadFromDisk();
@@ -67,58 +77,70 @@ private:
     void PushUndoSnapshot(const Borders& previous);
     void Undo();
     void Redo();
-    bool DrawCanvasAndHandles();      // returns true if handles are being dragged
+    bool DrawCanvasAndHandles();  // returns true if handles are being dragged
     void HandleKeyboardShortcuts();
     void DrawSavePromptModalIfNeeded();
 
-    static bool AffectsLeft(DragHandle h)   { return h == DragHandle::Left   || h == DragHandle::TopLeft    || h == DragHandle::BottomLeft; }
-    static bool AffectsRight(DragHandle h)  { return h == DragHandle::Right  || h == DragHandle::TopRight   || h == DragHandle::BottomRight; }
-    static bool AffectsTop(DragHandle h)    { return h == DragHandle::Top    || h == DragHandle::TopLeft    || h == DragHandle::TopRight; }
-    static bool AffectsBottom(DragHandle h) { return h == DragHandle::Bottom || h == DragHandle::BottomLeft || h == DragHandle::BottomRight; }
+    static bool AffectsLeft(DragHandle h)
+    {
+        return h == DragHandle::Left || h == DragHandle::TopLeft || h == DragHandle::BottomLeft;
+    }
+    static bool AffectsRight(DragHandle h)
+    {
+        return h == DragHandle::Right || h == DragHandle::TopRight || h == DragHandle::BottomRight;
+    }
+    static bool AffectsTop(DragHandle h)
+    {
+        return h == DragHandle::Top || h == DragHandle::TopLeft || h == DragHandle::TopRight;
+    }
+    static bool AffectsBottom(DragHandle h)
+    {
+        return h == DragHandle::Bottom || h == DragHandle::BottomLeft || h == DragHandle::BottomRight;
+    }
 
-    Source       m_Source = Source::None;
-    std::string  m_ProjectPath;
-    std::string  m_AssetPath;          // .asset (procedural) or .png (normal)
-    std::string  m_CachePath;          // baked .dtex (optional)
-    std::string  m_AssetGuid;
-    std::string  m_DisplayName;        // basename for title bar
+    Source m_Source = Source::None;
+    std::string m_ProjectPath;
+    std::string m_AssetPath;  // .asset (procedural) or .png (normal)
+    std::string m_CachePath;  // baked .dtex (optional)
+    std::string m_AssetGuid;
+    std::string m_DisplayName;  // basename for title bar
     // The frame being edited (-1: the whole image), its GUID and its rect in
     // the image's pixels. Its borders live in the sidecar's
     // settings.frame_nine_slice under its index.
-    int          m_FrameIndex = -1;
-    int          m_FrameKey = -1;    // its id: what frame_nine_slice is keyed by
-    std::string  m_FrameGuid;
-    int          m_FrameW = 0, m_FrameH = 0;
+    int m_FrameIndex = -1;
+    int m_FrameKey = -1;  // its id: what frame_nine_slice is keyed by
+    std::string m_FrameGuid;
+    int m_FrameW = 0, m_FrameH = 0;
 
-    Borders      m_Current;            // values being edited
-    Borders      m_Saved;              // last value persisted to disk
+    Borders m_Current;  // values being edited
+    Borders m_Saved;    // last value persisted to disk
 
     std::vector<Borders> m_UndoStack;
     std::vector<Borders> m_RedoStack;
 
     // Live drag state
-    DragHandle   m_ActiveDrag = DragHandle::None;
-    float        m_DragStartMouseX = 0.0f;
-    float        m_DragStartMouseY = 0.0f;
-    Borders      m_BordersAtDragStart;
-    bool         m_PanningLMB = false;  // left-drag on empty canvas pans
+    DragHandle m_ActiveDrag = DragHandle::None;
+    float m_DragStartMouseX = 0.0f;
+    float m_DragStartMouseY = 0.0f;
+    Borders m_BordersAtDragStart;
+    bool m_PanningLMB = false;  // left-drag on empty canvas pans
 
     // Numeric-field undo bookkeeping: snapshot of the values before the
     // current field edit session began (drags span many frames)
-    Borders      m_FieldsSnapshot;
-    bool         m_FieldEditActive = false;
+    Borders m_FieldsSnapshot;
+    bool m_FieldEditActive = false;
 
     // View
-    float        m_Zoom = 4.0f;
-    float        m_PanX = 0.0f;
-    float        m_PanY = 0.0f;
-    bool         m_FitViewPending = false;  // auto-fit zoom on next canvas draw
-    uint32_t     m_TexW = 0, m_TexH = 0;    // last-loaded texture dims (for info row)
+    float m_Zoom = 4.0f;
+    float m_PanX = 0.0f;
+    float m_PanY = 0.0f;
+    bool m_FitViewPending = false;    // auto-fit zoom on next canvas draw
+    uint32_t m_TexW = 0, m_TexH = 0;  // last-loaded texture dims (for info row)
 
     // Modal state
-    bool         m_OpenSavePromptNextFrame = false;
+    bool m_OpenSavePromptNextFrame = false;
 };
 
-} // namespace DekiEditor
+}  // namespace DekiEditor
 
-#endif // DEKI_EDITOR
+#endif  // DEKI_EDITOR

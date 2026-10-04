@@ -93,7 +93,10 @@ void FrameAnimationEditorWindow::OnClose()
 
 bool FrameAnimationEditorWindow::CanOpenFile(const char* extension)
 {
-    if (!extension) return false;
+    if (!extension)
+    {
+        return false;
+    }
     return strcmp(extension, ".anim") == 0;
 }
 
@@ -278,7 +281,10 @@ bool FrameAnimationEditorWindow::SaveAnimationAs(const std::string& path)
         std::string relativePathStr = relativePath.string();
         for (char& c : relativePathStr)
         {
-            if (c == '\\') c = '/';
+            if (c == '\\')
+            {
+                c = '/';
+            }
         }
         AssetDatabase::ImportAsset(relativePathStr);
 
@@ -299,7 +305,9 @@ void FrameAnimationEditorWindow::LoadSpritesheetFrames()
     m_AvailableFrames.clear();
 
     if (m_SpritesheetGuid.empty())
+    {
         return;
+    }
 
     // Get sub-assets (frames) for this spritesheet
     const auto* subAssets = AssetDatabase::GetSubAssets(m_SpritesheetGuid);
@@ -313,9 +321,8 @@ void FrameAnimationEditorWindow::LoadSpritesheetFrames()
 
     // Load texture for preview
     auto* assets = EditorAssets::Get();
-    m_SpritesheetTextureId = assets->LoadTexture(m_SpritesheetGuid,
-        reinterpret_cast<uint32_t*>(&m_SpritesheetWidth),
-        reinterpret_cast<uint32_t*>(&m_SpritesheetHeight));
+    m_SpritesheetTextureId = assets->LoadTexture(m_SpritesheetGuid, reinterpret_cast<uint32_t*>(&m_SpritesheetWidth),
+                                                 reinterpret_cast<uint32_t*>(&m_SpritesheetHeight));
 
     // Get frame info for each sub-asset
     for (const auto& subAsset : *subAssets)
@@ -333,9 +340,7 @@ void FrameAnimationEditorWindow::LoadSpritesheetFrames()
 
     // Sort by index
     std::sort(m_AvailableFrames.begin(), m_AvailableFrames.end(),
-        [](const AvailableFrame& a, const AvailableFrame& b) {
-            return a.index < b.index;
-        });
+              [](const AvailableFrame& a, const AvailableFrame& b) { return a.index < b.index; });
 }
 
 namespace
@@ -356,7 +361,9 @@ void FrameAnimationEditorWindow::OnGUI()
     // Build window title with dirty indicator, but use ### to keep stable ID
     std::string windowTitle = GetTitle();
     if (m_IsDirty)
+    {
         windowTitle += " *";
+    }
     windowTitle += "###AnimationEditor";  // Stable ID regardless of title changes
 
     const float dpi = ui.GetDpiScale();
@@ -368,9 +375,13 @@ void FrameAnimationEditorWindow::OnGUI()
         // ── Toolbar ─────────────────────────────────────────────────────────
         ui.BeginToolbar();
         if (ui.ToolbarButton(m_IsDirty ? "Save*" : "Save", m_IsDirty && !m_AnimationPath.empty()))
+        {
             SaveAnimation();
+        }
         if (ui.ToolbarButton("Reload Frames", !m_SpritesheetGuid.empty()))
+        {
             LoadSpritesheetFrames();
+        }
         ui.EndToolbar();
 
         // ── Spritesheet row (and an error, when there is one) ───────────────
@@ -407,15 +418,21 @@ void FrameAnimationEditorWindow::OnGUI()
         (void)pad;
 
         if (ui.BeginChild("AnimationList", listW, availHeight, false))
+        {
             DrawAnimationList();
+        }
         ui.EndChild();
         seam();
         if (ui.BeginChild("FramePalette", framesW, availHeight, false))
+        {
             DrawFramePalette();
+        }
         ui.EndChild();
         seam();
         if (ui.BeginChild("Timeline", timelineW, availHeight, false))
+        {
             DrawTimeline();
+        }
         ui.EndChild();
         seam();
         if (ui.BeginChild("PropertiesPreview", 0, availHeight, false))
@@ -477,11 +494,14 @@ void FrameAnimationEditorWindow::DrawSpritesheetPicker()
 
         const float dpi = ui.GetDpiScale();
         ui.SetNextItemWidth(300.0f * dpi);
-        ui.InputTextWithHint("##search", "Search spritesheets", m_SpritesheetSearchBuffer, sizeof(m_SpritesheetSearchBuffer));
+        ui.InputTextWithHint("##search", "Search spritesheets", m_SpritesheetSearchBuffer,
+                             sizeof(m_SpritesheetSearchBuffer));
 
         std::string searchLower = m_SpritesheetSearchBuffer;
         for (char& c : searchLower)
+        {
             c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        }
 
         ui.BeginChild("SpritesheetList", 300.0f * dpi, 300.0f * dpi, false);
 
@@ -491,7 +511,9 @@ void FrameAnimationEditorWindow::DrawSpritesheetPicker()
             m_AvailableFrames.clear();
             // Clear all animation frames when spritesheet is cleared
             for (auto& anim : m_Animations)
+            {
                 anim.frames.clear();
+            }
             m_IsDirty = true;
             ui.CloseCurrentPopup();
         }
@@ -502,9 +524,13 @@ void FrameAnimationEditorWindow::DrawSpritesheetPicker()
             {
                 std::string pathLower = path;
                 for (char& c : pathLower)
+                {
                     c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+                }
                 if (pathLower.find(searchLower) == std::string::npos)
+                {
                     continue;
+                }
             }
 
             size_t lastSlash = path.find_last_of("/\\");
@@ -522,11 +548,15 @@ void FrameAnimationEditorWindow::DrawSpritesheetPicker()
                 ui.CloseCurrentPopup();
             }
             if (ui.IsItemHovered())
+            {
                 ui.SetTooltip(path.c_str());
+            }
         }
 
         if (m_SpritesheetAssets.empty())
+        {
             ui.TextDisabled("No spritesheets yet. Slice an image in the Sprite Slicer first.");
+        }
 
         ui.EndChild();
         ui.EndPopup();
@@ -568,21 +598,27 @@ void FrameAnimationEditorWindow::DrawAnimationList()
             {
                 m_Animations.erase(m_Animations.begin() + i);
                 if (m_CurrentAnimationIndex >= static_cast<int>(m_Animations.size()))
+                {
                     m_CurrentAnimationIndex = static_cast<int>(m_Animations.size()) - 1;
+                }
                 m_IsDirty = true;
             }
             if (i > 0 && ui.MenuItem("Move Up"))
             {
                 std::swap(m_Animations[i], m_Animations[i - 1]);
                 if (m_CurrentAnimationIndex == static_cast<int>(i))
+                {
                     m_CurrentAnimationIndex = static_cast<int>(i) - 1;
+                }
                 m_IsDirty = true;
             }
             if (i + 1 < m_Animations.size() && ui.MenuItem("Move Down"))
             {
                 std::swap(m_Animations[i], m_Animations[i + 1]);
                 if (m_CurrentAnimationIndex == static_cast<int>(i))
+                {
                     m_CurrentAnimationIndex = static_cast<int>(i) + 1;
+                }
                 m_IsDirty = true;
             }
             ui.EndPopup();
@@ -658,13 +694,17 @@ void FrameAnimationEditorWindow::DrawFramePalette()
         {
             float aspect = frameWidth / frameHeight;
             if (aspect > 1.0f)
+            {
                 thumbHeight = maxThumbSize / aspect;
+            }
             else
+            {
                 thumbWidth = maxThumbSize * aspect;
+            }
         }
 
-        if (ui.ImageButton("##frame", m_SpritesheetTextureId, thumbWidth, thumbHeight,
-                           frame.u0, frame.v0, frame.u1, frame.v1))
+        if (ui.ImageButton("##frame", m_SpritesheetTextureId, thumbWidth, thumbHeight, frame.u0, frame.v0, frame.u1,
+                           frame.v1))
         {
             // Add frame to current animation's timeline
             if (m_CurrentAnimationIndex >= 0 && m_CurrentAnimationIndex < static_cast<int>(m_Animations.size()))
@@ -692,7 +732,8 @@ void FrameAnimationEditorWindow::DrawTimeline()
     auto& ui = EditorUI::Get();
     const float dpi = ui.GetDpiScale();
 
-    const bool hasAnim = m_CurrentAnimationIndex >= 0 && m_CurrentAnimationIndex < static_cast<int>(m_Animations.size());
+    const bool hasAnim =
+        m_CurrentAnimationIndex >= 0 && m_CurrentAnimationIndex < static_cast<int>(m_Animations.size());
     char header[64];
     std::snprintf(header, sizeof(header), "Timeline (%zu)###timeline",
                   hasAnim ? m_Animations[m_CurrentAnimationIndex].frames.size() : size_t(0));
@@ -736,8 +777,10 @@ void FrameAnimationEditorWindow::DrawTimeline()
         {
             if (af.guid == tlFrame.frameGuid)
             {
-                u0 = af.u0; v0 = af.v0;
-                u1 = af.u1; v1 = af.v1;
+                u0 = af.u0;
+                v0 = af.v0;
+                u1 = af.u1;
+                v1 = af.v1;
                 frameIndex = af.index;
                 break;
             }
@@ -751,20 +794,28 @@ void FrameAnimationEditorWindow::DrawTimeline()
         {
             float aspect = frameWidth / frameHeight;
             if (aspect > 1.0f)
+            {
                 thumbHeight = maxThumbSize / aspect;
+            }
             else
+            {
                 thumbWidth = maxThumbSize * aspect;
+            }
         }
 
         // The selected frame takes the accent, as a selection does elsewhere.
         const bool isSelected = (static_cast<int>(i) == m_SelectedTimelineIndex);
         if (isSelected)
+        {
             ui.PushStyleColor(EditorUI::Col::Button, (accent & 0x00FFFFFFu) | (90u << 24));
+        }
 
         if (m_SpritesheetTextureId != 0)
         {
             if (ui.ImageButton("##tlframe", m_SpritesheetTextureId, thumbWidth, thumbHeight, u0, v0, u1, v1))
+            {
                 m_SelectedTimelineIndex = static_cast<int>(i);
+            }
         }
         else if (ui.Button("?", maxThumbSize, maxThumbSize))
         {
@@ -772,16 +823,22 @@ void FrameAnimationEditorWindow::DrawTimeline()
         }
 
         if (isSelected)
+        {
             ui.PopStyleColor();
+        }
 
         ui.SameLine();
         char frameInfoBuf[64];
         std::snprintf(frameInfoBuf, sizeof(frameInfoBuf), "Frame %d\n%d ms",
                       frameIndex >= 0 ? frameIndex : static_cast<int>(i), tlFrame.duration);
         if (isSelected)
+        {
             ui.Text(frameInfoBuf);
+        }
         else
+        {
             ui.TextDisabled(frameInfoBuf);
+        }
 
         // Context menu for frame operations
         if (ui.BeginPopupContextItem("frame_ctx"))
@@ -790,7 +847,9 @@ void FrameAnimationEditorWindow::DrawTimeline()
             {
                 timelineFrames.erase(timelineFrames.begin() + i);
                 if (m_SelectedTimelineIndex >= static_cast<int>(timelineFrames.size()))
+                {
                     m_SelectedTimelineIndex = static_cast<int>(timelineFrames.size()) - 1;
+                }
                 m_IsDirty = true;
             }
             else if (i > 0 && ui.MenuItem("Move Up"))
@@ -848,13 +907,18 @@ void FrameAnimationEditorWindow::DrawProperties()
 
     ui.PropertyRow("Loop");
     if (ui.Checkbox("##loop", &currentAnim.loop))
+    {
         m_IsDirty = true;
+    }
 
     // Duration given to frames added from now on
     ui.PropertyRow("New Frame (ms)");
     ui.SetNextItemWidth(-FLT_MIN);
     ui.DragInt("##defdur", &m_DefaultDuration, 1.0f, 1, 10000);
-    if (m_DefaultDuration < 1) m_DefaultDuration = 1;
+    if (m_DefaultDuration < 1)
+    {
+        m_DefaultDuration = 1;
+    }
 
     if (m_SelectedTimelineIndex >= 0 && m_SelectedTimelineIndex < static_cast<int>(currentAnim.frames.size()))
     {
@@ -867,7 +931,10 @@ void FrameAnimationEditorWindow::DrawProperties()
         ui.SetNextItemWidth(-FLT_MIN);
         if (ui.DragInt("##dur", &frame.duration, 1.0f, 1, 10000))
         {
-            if (frame.duration < 1) frame.duration = 1;
+            if (frame.duration < 1)
+            {
+                frame.duration = 1;
+            }
             m_IsDirty = true;
         }
 
@@ -875,7 +942,9 @@ void FrameAnimationEditorWindow::DrawProperties()
         if (ui.Button("Use for All Frames", -FLT_MIN))
         {
             for (auto& f : currentAnim.frames)
+            {
                 f.duration = frame.duration;
+            }
             m_IsDirty = true;
         }
     }
@@ -912,9 +981,14 @@ void FrameAnimationEditorWindow::DrawPreview()
         m_PreviewTimer = 0.0f;
     }
     if (ui.ToolbarButton("Previous", hasFrames && m_PreviewFrame > 0))
+    {
         m_PreviewFrame = std::max(0, m_PreviewFrame - 1);
-    if (ui.ToolbarButton("Next", hasFrames && m_PreviewFrame + 1 < static_cast<int>(hasFrames ? timelineFrames->size() : 0)))
+    }
+    if (ui.ToolbarButton("Next",
+                         hasFrames && m_PreviewFrame + 1 < static_cast<int>(hasFrames ? timelineFrames->size() : 0)))
+    {
         m_PreviewFrame = std::min(static_cast<int>(timelineFrames->size()) - 1, m_PreviewFrame + 1);
+    }
     ui.EndToolbar();
 
     // Advance the preview while playing
@@ -926,7 +1000,9 @@ void FrameAnimationEditorWindow::DrawPreview()
         m_PreviewTimer += deltaTime;
 
         if (m_PreviewFrame >= static_cast<int>(timelineFrames->size()))
+        {
             m_PreviewFrame = 0;
+        }
 
         const auto& currentFrame = (*timelineFrames)[m_PreviewFrame];
         if (m_PreviewTimer >= currentFrame.duration)
@@ -936,7 +1012,9 @@ void FrameAnimationEditorWindow::DrawPreview()
             if (m_PreviewFrame >= static_cast<int>(timelineFrames->size()))
             {
                 if (animLoop)
+                {
                     m_PreviewFrame = 0;
+                }
                 else
                 {
                     m_PreviewFrame = static_cast<int>(timelineFrames->size()) - 1;
@@ -958,33 +1036,43 @@ void FrameAnimationEditorWindow::DrawPreview()
     x0 += (availW - side) * 0.5f;
     const float cell = 8.0f * dpi;
     for (float y = y0; y < y0 + side; y += cell)
+    {
         for (float x = x0; x < x0 + side; x += cell)
         {
             const bool odd = (int((x - x0) / cell) + int((y - y0) / cell)) & 1;
             ui.DrawRectFilled(x, y, std::min(x + cell, x0 + side), std::min(y + cell, y0 + side),
                               odd ? EditorUI::Rgba(80, 80, 80, 255) : EditorUI::Rgba(60, 60, 60, 255));
         }
+    }
     if (hasFrames && m_SpritesheetTextureId != 0 && m_PreviewFrame >= 0 &&
         m_PreviewFrame < static_cast<int>(timelineFrames->size()))
     {
         const auto& tlFrame = (*timelineFrames)[m_PreviewFrame];
         float u0 = 0, v0 = 0, u1 = 1, v1 = 1;
         for (const auto& af : m_AvailableFrames)
+        {
             if (af.guid == tlFrame.frameGuid)
             {
-                u0 = af.u0; v0 = af.v0;
-                u1 = af.u1; v1 = af.v1;
+                u0 = af.u0;
+                v0 = af.v0;
+                u1 = af.u1;
+                v1 = af.v1;
                 break;
             }
+        }
         // Keep the frame's own aspect inside the square.
         const float fw = (u1 - u0) * m_SpritesheetWidth, fh = (v1 - v0) * m_SpritesheetHeight;
         float w = side, h = side;
         if (fw > 0 && fh > 0)
         {
             if (fw > fh)
+            {
                 h = side * fh / fw;
+            }
             else
+            {
                 w = side * fw / fh;
+            }
         }
         const float ix = x0 + (side - w) * 0.5f, iy = y0 + (side - h) * 0.5f;
         ui.DrawImage(m_SpritesheetTextureId, ix, iy, ix + w, iy + h, u0, v0, u1, v1);
@@ -994,14 +1082,23 @@ void FrameAnimationEditorWindow::DrawPreview()
     // Frame counter and timing
     int totalDuration = 0;
     if (timelineFrames)
+    {
         for (const auto& f : *timelineFrames)
+        {
             totalDuration += f.duration;
+        }
+    }
     char info[128];
     if (hasFrames)
-        std::snprintf(info, sizeof(info), "Frame %d of %zu   %d ms   %.1f fps", m_PreviewFrame + 1, timelineFrames->size(),
-                      totalDuration, 1000.0f / (totalDuration / static_cast<float>(timelineFrames->size())));
+    {
+        std::snprintf(info, sizeof(info), "Frame %d of %zu   %d ms   %.1f fps", m_PreviewFrame + 1,
+                      timelineFrames->size(), totalDuration,
+                      1000.0f / (totalDuration / static_cast<float>(timelineFrames->size())));
+    }
     else
+    {
         std::snprintf(info, sizeof(info), "No frames to play.");
+    }
     float infoW = 0.0f;
     ui.MeasureText(info, &infoW, nullptr);
     ui.Dummy(0.0f, 4.0f * dpi);
@@ -1011,7 +1108,7 @@ void FrameAnimationEditorWindow::DrawPreview()
     ui.Dummy(0.0f, lineH);
 }
 
-} // namespace DekiEditor
+}  // namespace DekiEditor
 
 using DekiEditor::FrameAnimationEditorWindow;
 

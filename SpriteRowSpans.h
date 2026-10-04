@@ -36,7 +36,9 @@ inline void BuildOpaqueRowSpans(const uint8_t* pixel_data, int32_t w, int32_t h,
         {
             const bool opaque = (x < w) && row[x * 3 + 2] == 255;
             if (opaque && runStart < 0)
+            {
                 runStart = x;
+            }
             if (!opaque && runStart >= 0)
             {
                 if (x - runStart > bestEnd - bestStart || bestStart >= w)

@@ -12,7 +12,6 @@
 #include <cstring>
 #include <fstream>
 
-
 #ifdef DEKI_EDITOR
 uint8_t* Deki::Texture2D::ConvertToRGBA(const uint8_t* src_data, int32_t width, int32_t height, TextureFormat format)
 {
@@ -83,9 +82,7 @@ uint8_t* Deki::Texture2D::ConvertToRGBA(const uint8_t* src_data, int32_t width, 
                 a = src_data[src_idx++];
                 break;
 
-            default:
-                r = g = b = a = 255;
-                break;
+            default: r = g = b = a = 255; break;
         }
 
         rgba[dst_idx++] = r;
@@ -97,7 +94,8 @@ uint8_t* Deki::Texture2D::ConvertToRGBA(const uint8_t* src_data, int32_t width, 
     return rgba;
 }
 
-uint8_t* Deki::Texture2D::LoadAsRGBA(const char* file_path, int32_t& out_width, int32_t& out_height, bool& out_has_alpha)
+uint8_t* Deki::Texture2D::LoadAsRGBA(const char* file_path, int32_t& out_width, int32_t& out_height,
+                                     bool& out_has_alpha)
 {
     out_width = 0;
     out_height = 0;
@@ -165,11 +163,8 @@ uint8_t* Deki::Texture2D::LoadAsRGBA(const char* file_path, int32_t& out_width, 
     out_height = header.height;
     out_has_alpha = (header.flags & DTEX_FLAG_HAS_ALPHA) != 0;
 
-    DEKI_LOG_INTERNAL("Loaded texture as RGBA: %s (%dx%d, %s)",
-              file_path,
-              out_width,
-              out_height,
-              GetFormatName(header.format));
+    DEKI_LOG_INTERNAL("Loaded texture as RGBA: %s (%dx%d, %s)", file_path, out_width, out_height,
+                      GetFormatName(header.format));
 
     return rgba_data;
 }

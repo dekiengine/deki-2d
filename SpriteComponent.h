@@ -23,8 +23,8 @@ namespace Deki2D
  */
 enum class SpriteRenderMode : uint8_t
 {
-    Normal    = 0,
-    Tiled     = 1,
+    Normal = 0,
+    Tiled = 1,
     NineSlice = 2,
 };
 
@@ -37,7 +37,6 @@ DEKI_FORMER_NAME("SpriteComponent")
 class SpriteComponent : public DekiRendering::RendererComponent
 {
 public:
-
     // Sprite asset - uses AssetRef for automatic GUID storage and loading
     DEKI_EXPORT
     DEKI_TOOLTIP("The image to draw. Sprites come from a texture asset, either whole or cut out of a spritesheet.")
@@ -52,17 +51,20 @@ public:
 
     // Tint color (white = no tint)
     DEKI_EXPORT
-    DEKI_TOOLTIP("Multiplied into every pixel. White leaves the image alone; darker tints shade it, and the alpha fades it out.")
+    DEKI_TOOLTIP(
+        "Multiplied into every pixel. White leaves the image alone; darker tints shade it, and the alpha fades it out.")
     Deki::Color tintColor;
 
     // Render mode: single quad / tiled / 9-slice
     DEKI_EXPORT
-    DEKI_TOOLTIP("Normal draws the sprite once. Tiled repeats it to fill the size below. Nine-slice stretches the middle and leaves the corners intact, which is what you want for panels and buttons.")
+    DEKI_TOOLTIP("Normal draws the sprite once. Tiled repeats it to fill the size below. Nine-slice stretches the "
+                 "middle and leaves the corners intact, which is what you want for panels and buttons.")
     SpriteRenderMode renderMode = SpriteRenderMode::Normal;
 
     /** @brief Mirror left to right. */
     DEKI_EXPORT
-    DEKI_TOOLTIP("Mirror left to right. Cheaper than a second sprite and the usual way to face a character the other way.")
+    DEKI_TOOLTIP(
+        "Mirror left to right. Cheaper than a second sprite and the usual way to face a character the other way.")
     bool flipHorizontal = false;
 
     /** @brief Mirror top to bottom. */
@@ -76,13 +78,15 @@ public:
     // scale stays the same.
     DEKI_VISIBLE_WHEN(renderMode, Tiled, NineSlice)
     DEKI_EXPORT
-    DEKI_TOOLTIP("Drawn size in meters. Left at 0 the sprite's own pixel size is used, converted through the project's pixels-per-meter.")
+    DEKI_TOOLTIP("Drawn size in meters. Left at 0 the sprite's own pixel size is used, converted through the project's "
+                 "pixels-per-meter.")
     DEKI_UNIT(Distance)
     float width;
 
     DEKI_VISIBLE_WHEN(renderMode, Tiled, NineSlice)
     DEKI_EXPORT
-    DEKI_TOOLTIP("Drawn size in meters. Left at 0 the sprite's own pixel size is used, converted through the project's pixels-per-meter.")
+    DEKI_TOOLTIP("Drawn size in meters. Left at 0 the sprite's own pixel size is used, converted through the project's "
+                 "pixels-per-meter.")
     DEKI_UNIT(Distance)
     float height;
 
@@ -128,14 +132,8 @@ public:
     void SetFrame(const SpriteFrame& frame);
 
     // Unified rendering - returns sprite data for QuadBlit
-    bool RenderContent(const Deki::Object* owner,
-                       QuadBlit::Source& outSource,
-                       float& outPivotX,
-                       float& outPivotY,
-                       uint8_t& outTintR,
-                       uint8_t& outTintG,
-                       uint8_t& outTintB,
-                       uint8_t& outTintA) override;
+    bool RenderContent(const Deki::Object* owner, QuadBlit::Source& outSource, float& outPivotX, float& outPivotY,
+                       uint8_t& outTintR, uint8_t& outTintG, uint8_t& outTintB, uint8_t& outTintA) override;
 
     // Called after sprite AssetRef is resolved - handles SubAsset frame lookup
     void OnAssetRefResolved(const char* propertyName, void* asset, const char* guid) override;
@@ -157,8 +155,8 @@ private:
     // the sprite's own pixels via Source::stride.
     // Owning, and it knows its own size.
     Deki::Buffer<uint8_t> m_cachedRenderBuffer;
-    int32_t          m_cachedRenderW      = 0;
-    int32_t          m_cachedRenderH      = 0;
+    int32_t m_cachedRenderW = 0;
+    int32_t m_cachedRenderH = 0;
     // The frame SetFrame showed, by GUID ("" after SetFrameRect), and the
     // asset epoch its rect was read at; RenderContent re-reads it when the
     // epoch has moved.
@@ -166,8 +164,8 @@ private:
     uint64_t m_FrameEpoch = 0;
     void RefreshFrame(const Sprite* spr);
 
-    const Sprite*    m_cachedRenderSrc    = nullptr;
-    SpriteRenderMode m_cachedRenderMode   = SpriteRenderMode::Normal;
+    const Sprite* m_cachedRenderSrc = nullptr;
+    SpriteRenderMode m_cachedRenderMode = SpriteRenderMode::Normal;
     Sprite::SliceRegion m_cachedRenderRegion;
 
     // What Tiled and NineSlice stretch: the shown frame, or the whole sprite
@@ -175,7 +173,7 @@ private:
     // `hasBorders` is false when it has none.
     Sprite::SliceRegion SliceSource(const Sprite* spr, bool& hasBorders) const;
     // The "9-slice mode without borders" warning was logged for this sprite.
-    mutable bool     m_WarnedNoNineSlice  = false;
+    mutable bool m_WarnedNoNineSlice = false;
 };
 
 // Generated property metadata (after class definition for offsetof)

@@ -18,7 +18,6 @@
 #include <cmath>
 #include <cstdio>
 
-
 namespace DekiEditor
 {
 
@@ -69,15 +68,27 @@ static float roundedRectSDF(float px, float py, float halfW, float halfH, float 
     return outsideDist + insideDist - r;
 }
 
-static float roundedRectSDFPerCorner(float px, float py, float halfW, float halfH,
-                                      float rTL, float rTR, float rBR, float rBL)
+static float roundedRectSDFPerCorner(float px, float py, float halfW, float halfH, float rTL, float rTR, float rBR,
+                                     float rBL)
 {
     // Select corner radius based on quadrant
     float r;
-    if (px < 0.0f && py < 0.0f)       r = rTL;
-    else if (px >= 0.0f && py < 0.0f)  r = rTR;
-    else if (px >= 0.0f && py >= 0.0f) r = rBR;
-    else                                r = rBL;
+    if (px < 0.0f && py < 0.0f)
+    {
+        r = rTL;
+    }
+    else if (px >= 0.0f && py < 0.0f)
+    {
+        r = rTR;
+    }
+    else if (px >= 0.0f && py >= 0.0f)
+    {
+        r = rBR;
+    }
+    else
+    {
+        r = rBL;
+    }
 
     float maxRadius = (std::min)(halfW, halfH);
     if (r >= maxRadius)
@@ -94,10 +105,8 @@ static float roundedRectSDFPerCorner(float px, float py, float halfW, float half
     return outsideDist + insideDist - r;
 }
 
-static void BlendColors(uint8_t& outR, uint8_t& outG, uint8_t& outB, uint8_t& outA,
-                        uint8_t r1, uint8_t g1, uint8_t b1, uint8_t a1,
-                        uint8_t r2, uint8_t g2, uint8_t b2, uint8_t a2,
-                        float blend)
+static void BlendColors(uint8_t& outR, uint8_t& outG, uint8_t& outB, uint8_t& outA, uint8_t r1, uint8_t g1, uint8_t b1,
+                        uint8_t a1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t a2, float blend)
 {
     float inv = 1.0f - blend;
     outR = static_cast<uint8_t>(r1 * inv + r2 * blend);
@@ -106,15 +115,13 @@ static void BlendColors(uint8_t& outR, uint8_t& outG, uint8_t& outB, uint8_t& ou
     outA = static_cast<uint8_t>(a1 * inv + a2 * blend);
 }
 
-static void RenderProceduralSpriteToRGBA(uint8_t* buffer, int32_t totalW, int32_t totalH,
-                                          uint8_t bgR, uint8_t bgG, uint8_t bgB, uint8_t bgA,
-                                          int32_t borderTop, int32_t borderRight, int32_t borderBottom, int32_t borderLeft,
-                                          uint8_t btR, uint8_t btG, uint8_t btB, uint8_t btA,
-                                          uint8_t brR, uint8_t brG, uint8_t brB, uint8_t brA,
-                                          uint8_t bbR, uint8_t bbG, uint8_t bbB, uint8_t bbA,
-                                          uint8_t blR, uint8_t blG, uint8_t blB, uint8_t blA,
-                                          int32_t radiusTL, int32_t radiusTR, int32_t radiusBR, int32_t radiusBL,
-                                          bool antialiased)
+static void RenderProceduralSpriteToRGBA(uint8_t* buffer, int32_t totalW, int32_t totalH, uint8_t bgR, uint8_t bgG,
+                                         uint8_t bgB, uint8_t bgA, int32_t borderTop, int32_t borderRight,
+                                         int32_t borderBottom, int32_t borderLeft, uint8_t btR, uint8_t btG,
+                                         uint8_t btB, uint8_t btA, uint8_t brR, uint8_t brG, uint8_t brB, uint8_t brA,
+                                         uint8_t bbR, uint8_t bbG, uint8_t bbB, uint8_t bbA, uint8_t blR, uint8_t blG,
+                                         uint8_t blB, uint8_t blA, int32_t radiusTL, int32_t radiusTR, int32_t radiusBR,
+                                         int32_t radiusBL, bool antialiased)
 {
     float fRadiusTL = static_cast<float>(radiusTL);
     float fRadiusTR = static_cast<float>(radiusTR);
@@ -159,7 +166,8 @@ static void RenderProceduralSpriteToRGBA(uint8_t* buffer, int32_t totalW, int32_
 
             if (antialiased)
             {
-                float outerDist = roundedRectSDFPerCorner(px, py, halfW, halfH, fRadiusTL, fRadiusTR, fRadiusBR, fRadiusBL);
+                float outerDist =
+                    roundedRectSDFPerCorner(px, py, halfW, halfH, fRadiusTL, fRadiusTR, fRadiusBR, fRadiusBL);
                 float coverage = 1.0f - smoothstep(-0.5f, 0.5f, outerDist);
 
                 if (coverage <= 0.0f)
@@ -168,24 +176,47 @@ static void RenderProceduralSpriteToRGBA(uint8_t* buffer, int32_t totalW, int32_
                 }
                 else if (!hasBorder)
                 {
-                    r = bgR; g = bgG; b = bgB;
+                    r = bgR;
+                    g = bgG;
+                    b = bgB;
                     a = static_cast<uint8_t>(static_cast<float>(bgA) * coverage);
                 }
                 else
                 {
-                    float innerDist = roundedRectSDFPerCorner(px - innerOffsetX, py - innerOffsetY, innerHalfW, innerHalfH, innerRadiusTL, innerRadiusTR, innerRadiusBR, innerRadiusBL);
+                    float innerDist =
+                        roundedRectSDFPerCorner(px - innerOffsetX, py - innerOffsetY, innerHalfW, innerHalfH,
+                                                innerRadiusTL, innerRadiusTR, innerRadiusBR, innerRadiusBL);
 
                     uint8_t borderR, borderG, borderB, borderA;
                     float absX = fabsf(px);
 
-                    if (py < -absX) {
-                        borderR = btR; borderG = btG; borderB = btB; borderA = btA;
-                    } else if (py > absX) {
-                        borderR = bbR; borderG = bbG; borderB = bbB; borderA = bbA;
-                    } else if (px > 0) {
-                        borderR = brR; borderG = brG; borderB = brB; borderA = brA;
-                    } else {
-                        borderR = blR; borderG = blG; borderB = blB; borderA = blA;
+                    if (py < -absX)
+                    {
+                        borderR = btR;
+                        borderG = btG;
+                        borderB = btB;
+                        borderA = btA;
+                    }
+                    else if (py > absX)
+                    {
+                        borderR = bbR;
+                        borderG = bbG;
+                        borderB = bbB;
+                        borderA = bbA;
+                    }
+                    else if (px > 0)
+                    {
+                        borderR = brR;
+                        borderG = brG;
+                        borderB = brB;
+                        borderA = brA;
+                    }
+                    else
+                    {
+                        borderR = blR;
+                        borderG = blG;
+                        borderB = blB;
+                        borderA = blA;
                     }
 
                     float borderBlend;
@@ -204,7 +235,8 @@ static void RenderProceduralSpriteToRGBA(uint8_t* buffer, int32_t totalW, int32_
             }
             else
             {
-                float outerDist = roundedRectSDFPerCorner(px, py, halfW, halfH, fRadiusTL, fRadiusTR, fRadiusBR, fRadiusBL);
+                float outerDist =
+                    roundedRectSDFPerCorner(px, py, halfW, halfH, fRadiusTL, fRadiusTR, fRadiusBR, fRadiusBL);
 
                 if (outerDist > 0.0f)
                 {
@@ -212,29 +244,56 @@ static void RenderProceduralSpriteToRGBA(uint8_t* buffer, int32_t totalW, int32_
                 }
                 else if (!hasBorder)
                 {
-                    r = bgR; g = bgG; b = bgB; a = bgA;
+                    r = bgR;
+                    g = bgG;
+                    b = bgB;
+                    a = bgA;
                 }
                 else
                 {
-                    float innerDist = roundedRectSDFPerCorner(px - innerOffsetX, py - innerOffsetY, innerHalfW, innerHalfH, innerRadiusTL, innerRadiusTR, innerRadiusBR, innerRadiusBL);
+                    float innerDist =
+                        roundedRectSDFPerCorner(px - innerOffsetX, py - innerOffsetY, innerHalfW, innerHalfH,
+                                                innerRadiusTL, innerRadiusTR, innerRadiusBR, innerRadiusBL);
 
                     if (innerHalfW <= 0 || innerHalfH <= 0 || innerDist > 0.0f)
                     {
                         float absX = fabsf(px);
 
-                        if (py < -absX) {
-                            r = btR; g = btG; b = btB; a = btA;
-                        } else if (py > absX) {
-                            r = bbR; g = bbG; b = bbB; a = bbA;
-                        } else if (px > 0) {
-                            r = brR; g = brG; b = brB; a = brA;
-                        } else {
-                            r = blR; g = blG; b = blB; a = blA;
+                        if (py < -absX)
+                        {
+                            r = btR;
+                            g = btG;
+                            b = btB;
+                            a = btA;
+                        }
+                        else if (py > absX)
+                        {
+                            r = bbR;
+                            g = bbG;
+                            b = bbB;
+                            a = bbA;
+                        }
+                        else if (px > 0)
+                        {
+                            r = brR;
+                            g = brG;
+                            b = brB;
+                            a = brA;
+                        }
+                        else
+                        {
+                            r = blR;
+                            g = blG;
+                            b = blB;
+                            a = blA;
                         }
                     }
                     else
                     {
-                        r = bgR; g = bgG; b = bgB; a = bgA;
+                        r = bgR;
+                        g = bgG;
+                        b = bgB;
+                        a = bgA;
                     }
                 }
             }
@@ -356,13 +415,19 @@ static void ParseBorderRadius(const nlohmann::json& data, int32_t& tl, int32_t& 
 static void ParseNineSlice(const nlohmann::json& data, int32_t& top, int32_t& right, int32_t& bottom, int32_t& left)
 {
     top = right = bottom = left = 0;
-    if (!data.contains("nine_slice")) return;
+    if (!data.contains("nine_slice"))
+    {
+        return;
+    }
     const auto& ns = data["nine_slice"];
-    if (!ns.is_array() || ns.size() < 4) return;
-    top    = ns[0].get<int32_t>();
-    right  = ns[1].get<int32_t>();
+    if (!ns.is_array() || ns.size() < 4)
+    {
+        return;
+    }
+    top = ns[0].get<int32_t>();
+    right = ns[1].get<int32_t>();
     bottom = ns[2].get<int32_t>();
-    left   = ns[3].get<int32_t>();
+    left = ns[3].get<int32_t>();
 }
 
 static void ParseColor(const nlohmann::json& data, const char* key, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t& a)
@@ -402,9 +467,7 @@ public:
 
     int GetCompileTarget() const override { return 0; }  // Texture
 
-    bool Compile(const std::string& jsonData,
-                 std::vector<uint8_t>& rgba,
-                 int& width, int& height) override
+    bool Compile(const std::string& jsonData, std::vector<uint8_t>& rgba, int& width, int& height) override
     {
         try
         {
@@ -430,9 +493,18 @@ public:
             if (data.contains("border_color"))
             {
                 ParseColor(data, "border_color", btR, btG, btB, btA);
-                brR = btR; brG = btG; brB = btB; brA = btA;
-                bbR = btR; bbG = btG; bbB = btB; bbA = btA;
-                blR = btR; blG = btG; blB = btB; blA = btA;
+                brR = btR;
+                brG = btG;
+                brB = btB;
+                brA = btA;
+                bbR = btR;
+                bbG = btG;
+                bbB = btB;
+                bbA = btA;
+                blR = btR;
+                blG = btG;
+                blB = btB;
+                blA = btA;
             }
 
             ParseColor(data, "border_top_color", btR, btG, btB, btA);
@@ -447,15 +519,10 @@ public:
 
             rgba.resize(totalW * totalH * 4);
 
-            RenderProceduralSpriteToRGBA(rgba.data(), totalW, totalH,
-                                          bgR, bgG, bgB, bgA,
-                                          borderTop, borderRight, borderBottom, borderLeft,
-                                          btR, btG, btB, btA,
-                                          brR, brG, brB, brA,
-                                          bbR, bbG, bbB, bbA,
-                                          blR, blG, blB, blA,
-                                          radiusTL, radiusTR, radiusBR, radiusBL,
-                                          antialiased);
+            RenderProceduralSpriteToRGBA(rgba.data(), totalW, totalH, bgR, bgG, bgB, bgA, borderTop, borderRight,
+                                         borderBottom, borderLeft, btR, btG, btB, btA, brR, brG, brB, brA, bbR, bbG,
+                                         bbB, bbA, blR, blG, blB, blA, radiusTL, radiusTR, radiusBR, radiusBL,
+                                         antialiased);
 
             width = totalW;
             height = totalH;
@@ -468,9 +535,7 @@ public:
         }
     }
 
-    bool OnInspectorGUI(std::string& jsonData,
-                        const std::string& assetPath,
-                        const std::string& assetGuid) override
+    bool OnInspectorGUI(std::string& jsonData, const std::string& assetPath, const std::string& assetGuid) override
     {
         try
         {
@@ -491,13 +556,19 @@ public:
                 SectionHeader("Dimensions");
                 int width = data.value("width", 64);
                 int height = data.value("height", 64);
-                ui.AlignTextToFramePadding(); ui.Text("Width"); ui.SameLine(lw); ui.SetNextItemWidth(-1);
+                ui.AlignTextToFramePadding();
+                ui.Text("Width");
+                ui.SameLine(lw);
+                ui.SetNextItemWidth(-1);
                 if (ui.DragInt("##Width", &width, 1.0f, 1, 1024))
                 {
                     data["width"] = width;
                     modified = true;
                 }
-                ui.AlignTextToFramePadding(); ui.Text("Height"); ui.SameLine(lw); ui.SetNextItemWidth(-1);
+                ui.AlignTextToFramePadding();
+                ui.Text("Height");
+                ui.SameLine(lw);
+                ui.SetNextItemWidth(-1);
                 if (ui.DragInt("##Height", &height, 1.0f, 1, 1024))
                 {
                     data["height"] = height;
@@ -506,23 +577,24 @@ public:
 
                 // ── Background ───────────────────────────────────────────
                 SectionHeader("Background");
-                float bgColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-                if (data.contains("background_color") && data["background_color"].is_array() && data["background_color"].size() >= 4)
+                float bgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+                if (data.contains("background_color") && data["background_color"].is_array() &&
+                    data["background_color"].size() >= 4)
                 {
                     bgColor[0] = data["background_color"][0].get<int>() / 255.0f;
                     bgColor[1] = data["background_color"][1].get<int>() / 255.0f;
                     bgColor[2] = data["background_color"][2].get<int>() / 255.0f;
                     bgColor[3] = data["background_color"][3].get<int>() / 255.0f;
                 }
-                ui.AlignTextToFramePadding(); ui.Text("Color"); ui.SameLine(lw); ui.SetNextItemWidth(-1);
+                ui.AlignTextToFramePadding();
+                ui.Text("Color");
+                ui.SameLine(lw);
+                ui.SetNextItemWidth(-1);
                 if (ui.ColorEdit4("##bgColor", bgColor))
                 {
-                    data["background_color"] = {
-                        static_cast<int>(bgColor[0] * 255),
-                        static_cast<int>(bgColor[1] * 255),
-                        static_cast<int>(bgColor[2] * 255),
-                        static_cast<int>(bgColor[3] * 255)
-                    };
+                    data["background_color"] = { static_cast<int>(bgColor[0] * 255), static_cast<int>(bgColor[1] * 255),
+                                                 static_cast<int>(bgColor[2] * 255),
+                                                 static_cast<int>(bgColor[3] * 255) };
                     modified = true;
                 }
 
@@ -532,40 +604,66 @@ public:
                 ParseBorderWidth(data, bwTop, bwRight, bwBottom, bwLeft);
 
                 bool bwChanged = false;
-                ui.AlignTextToFramePadding(); ui.Text("Top"); ui.SameLine(lw); ui.SetNextItemWidth(-1);
-                if (ui.DragInt("##bwTop", &bwTop, 1.0f, 0, 100)) bwChanged = true;
-                ui.AlignTextToFramePadding(); ui.Text("Right"); ui.SameLine(lw); ui.SetNextItemWidth(-1);
-                if (ui.DragInt("##bwRight", &bwRight, 1.0f, 0, 100)) bwChanged = true;
-                ui.AlignTextToFramePadding(); ui.Text("Bottom"); ui.SameLine(lw); ui.SetNextItemWidth(-1);
-                if (ui.DragInt("##bwBottom", &bwBottom, 1.0f, 0, 100)) bwChanged = true;
-                ui.AlignTextToFramePadding(); ui.Text("Left"); ui.SameLine(lw); ui.SetNextItemWidth(-1);
-                if (ui.DragInt("##bwLeft", &bwLeft, 1.0f, 0, 100)) bwChanged = true;
+                ui.AlignTextToFramePadding();
+                ui.Text("Top");
+                ui.SameLine(lw);
+                ui.SetNextItemWidth(-1);
+                if (ui.DragInt("##bwTop", &bwTop, 1.0f, 0, 100))
+                {
+                    bwChanged = true;
+                }
+                ui.AlignTextToFramePadding();
+                ui.Text("Right");
+                ui.SameLine(lw);
+                ui.SetNextItemWidth(-1);
+                if (ui.DragInt("##bwRight", &bwRight, 1.0f, 0, 100))
+                {
+                    bwChanged = true;
+                }
+                ui.AlignTextToFramePadding();
+                ui.Text("Bottom");
+                ui.SameLine(lw);
+                ui.SetNextItemWidth(-1);
+                if (ui.DragInt("##bwBottom", &bwBottom, 1.0f, 0, 100))
+                {
+                    bwChanged = true;
+                }
+                ui.AlignTextToFramePadding();
+                ui.Text("Left");
+                ui.SameLine(lw);
+                ui.SetNextItemWidth(-1);
+                if (ui.DragInt("##bwLeft", &bwLeft, 1.0f, 0, 100))
+                {
+                    bwChanged = true;
+                }
 
                 if (bwChanged)
                 {
-                    data["border_width"] = {bwTop, bwRight, bwBottom, bwLeft};
+                    data["border_width"] = { bwTop, bwRight, bwBottom, bwLeft };
                     modified = true;
                 }
 
                 // ── Border Color ─────────────────────────────────────────
                 SectionHeader("Border Color");
-                float borderColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-                if (data.contains("border_color") && data["border_color"].is_array() && data["border_color"].size() >= 4)
+                float borderColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+                if (data.contains("border_color") && data["border_color"].is_array() &&
+                    data["border_color"].size() >= 4)
                 {
                     borderColor[0] = data["border_color"][0].get<int>() / 255.0f;
                     borderColor[1] = data["border_color"][1].get<int>() / 255.0f;
                     borderColor[2] = data["border_color"][2].get<int>() / 255.0f;
                     borderColor[3] = data["border_color"][3].get<int>() / 255.0f;
                 }
-                ui.AlignTextToFramePadding(); ui.Text("Color"); ui.SameLine(lw); ui.SetNextItemWidth(-1);
+                ui.AlignTextToFramePadding();
+                ui.Text("Color");
+                ui.SameLine(lw);
+                ui.SetNextItemWidth(-1);
                 if (ui.ColorEdit4("##borderColor", borderColor))
                 {
-                    data["border_color"] = {
-                        static_cast<int>(borderColor[0] * 255),
-                        static_cast<int>(borderColor[1] * 255),
-                        static_cast<int>(borderColor[2] * 255),
-                        static_cast<int>(borderColor[3] * 255)
-                    };
+                    data["border_color"] = { static_cast<int>(borderColor[0] * 255),
+                                             static_cast<int>(borderColor[1] * 255),
+                                             static_cast<int>(borderColor[2] * 255),
+                                             static_cast<int>(borderColor[3] * 255) };
                     data.erase("border_top_color");
                     data.erase("border_right_color");
                     data.erase("border_bottom_color");
@@ -579,18 +677,42 @@ public:
                 ParseBorderRadius(data, brTL, brTR, brBR, brBL);
 
                 bool brChanged = false;
-                ui.AlignTextToFramePadding(); ui.Text("Top Left"); ui.SameLine(lw); ui.SetNextItemWidth(-1);
-                if (ui.DragInt("##brTL", &brTL, 1.0f, 0, 200)) brChanged = true;
-                ui.AlignTextToFramePadding(); ui.Text("Top Right"); ui.SameLine(lw); ui.SetNextItemWidth(-1);
-                if (ui.DragInt("##brTR", &brTR, 1.0f, 0, 200)) brChanged = true;
-                ui.AlignTextToFramePadding(); ui.Text("Bottom Right"); ui.SameLine(lw); ui.SetNextItemWidth(-1);
-                if (ui.DragInt("##brBR", &brBR, 1.0f, 0, 200)) brChanged = true;
-                ui.AlignTextToFramePadding(); ui.Text("Bottom Left"); ui.SameLine(lw); ui.SetNextItemWidth(-1);
-                if (ui.DragInt("##brBL", &brBL, 1.0f, 0, 200)) brChanged = true;
+                ui.AlignTextToFramePadding();
+                ui.Text("Top Left");
+                ui.SameLine(lw);
+                ui.SetNextItemWidth(-1);
+                if (ui.DragInt("##brTL", &brTL, 1.0f, 0, 200))
+                {
+                    brChanged = true;
+                }
+                ui.AlignTextToFramePadding();
+                ui.Text("Top Right");
+                ui.SameLine(lw);
+                ui.SetNextItemWidth(-1);
+                if (ui.DragInt("##brTR", &brTR, 1.0f, 0, 200))
+                {
+                    brChanged = true;
+                }
+                ui.AlignTextToFramePadding();
+                ui.Text("Bottom Right");
+                ui.SameLine(lw);
+                ui.SetNextItemWidth(-1);
+                if (ui.DragInt("##brBR", &brBR, 1.0f, 0, 200))
+                {
+                    brChanged = true;
+                }
+                ui.AlignTextToFramePadding();
+                ui.Text("Bottom Left");
+                ui.SameLine(lw);
+                ui.SetNextItemWidth(-1);
+                if (ui.DragInt("##brBL", &brBL, 1.0f, 0, 200))
+                {
+                    brChanged = true;
+                }
 
                 if (brChanged)
                 {
-                    data["border_radius"] = {brTL, brTR, brBR, brBL};
+                    data["border_radius"] = { brTL, brTR, brBR, brBL };
                     modified = true;
                 }
 
@@ -612,13 +734,14 @@ public:
                 // ── Misc ─────────────────────────────────────────────────
                 SectionHeader("Misc");
                 bool antialiased = data.value("antialiased", false);
-                ui.AlignTextToFramePadding(); ui.Text("Antialiased"); ui.SameLine(lw);
+                ui.AlignTextToFramePadding();
+                ui.Text("Antialiased");
+                ui.SameLine(lw);
                 if (ui.Checkbox("##antialiased", &antialiased))
                 {
                     data["antialiased"] = antialiased;
                     modified = true;
                 }
-
             }
 
             if (modified)
@@ -638,6 +761,6 @@ public:
 // Auto-register
 REGISTER_EDITOR(ProceduralSpriteEditor)
 
-} // namespace DekiEditor
+}  // namespace DekiEditor
 
-#endif // DEKI_EDITOR
+#endif  // DEKI_EDITOR

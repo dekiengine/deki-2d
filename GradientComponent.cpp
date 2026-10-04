@@ -23,17 +23,15 @@ namespace Deki2D
 // NOTE: s_Properties[] and s_ComponentMeta are now auto-generated in
 // GradientComponent.gen.h (included at end of GradientComponent.h)
 
-
 // Bayer dithering matrices for ordered dithering
-static const uint8_t BAYER_2x2[4] = {0, 2, 3, 1};
+static const uint8_t BAYER_2x2[4] = { 0, 2, 3, 1 };
 
-static const uint8_t BAYER_4x4[16] = {0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5};
+static const uint8_t BAYER_4x4[16] = { 0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5 };
 
-static const uint8_t BAYER_8x8[64] = {0,  32, 8,  40, 2,  34, 10, 42, 48, 16, 56, 24, 50, 18, 58, 26,
-                                      12, 44, 4,  36, 14, 46, 6,  38, 60, 28, 52, 20, 62, 30, 54, 22,
-                                      3,  35, 11, 43, 1,  33, 9,  41, 51, 19, 59, 27, 49, 17, 57, 25,
-                                      15, 47, 7,  39, 13, 45, 5,  37, 63, 31, 55, 23, 61, 29, 53, 21};
-
+static const uint8_t BAYER_8x8[64] = { 0,  32, 8,  40, 2,  34, 10, 42, 48, 16, 56, 24, 50, 18, 58, 26,
+                                       12, 44, 4,  36, 14, 46, 6,  38, 60, 28, 52, 20, 62, 30, 54, 22,
+                                       3,  35, 11, 43, 1,  33, 9,  41, 51, 19, 59, 27, 49, 17, 57, 25,
+                                       15, 47, 7,  39, 13, 45, 5,  37, 63, 31, 55, 23, 61, 29, 53, 21 };
 
 // 16x16 Bayer matrix (256 values, 0-255 range)
 static const uint8_t BAYER_16x16[256] = {
@@ -48,32 +46,32 @@ static const uint8_t BAYER_16x16[256] = {
     162, 98,  146, 82,  174, 110, 158, 94,  161, 97,  145, 81,  173, 109, 157, 93,  10,  202, 58,  250, 6,   198,
     54,  246, 9,   201, 57,  249, 5,   197, 53,  245, 138, 74,  186, 122, 134, 70,  182, 118, 137, 73,  185, 121,
     133, 69,  181, 117, 42,  234, 26,  218, 38,  230, 22,  214, 41,  233, 25,  217, 37,  229, 21,  213, 170, 106,
-    154, 90,  166, 102, 150, 86,  169, 105, 153, 89,  165, 101, 149, 85};
-
+    154, 90,  166, 102, 150, 86,  169, 105, 153, 89,  165, 101, 149, 85
+};
 
 GradientComponent::GradientComponent(float w, float h)
-: DekiRendering::RendererComponent()
-, gradientType(GradientType::Linear)
-, tileMode(GradientTileMode::None)
-, ditherMode(GradientDitherMode::Ordered4x4)
-, ditherScale(1)
-, width(w)
-, height(h)
-, angle(0.0f)
-, centerX(0.5f)
-, centerY(0.5f)
-, radius(0.5f)
-, stopCount(2)
-, stop1Position(0.0f)
-, stop1Color(Deki::Color::White)
-, stop2Position(1.0f)
-, stop2Color(Deki::Color::Black)
-, stop3Position(0.0f)
-, stop3Color(Deki::Color::Black)
-, stop4Position(0.0f)
-, stop4Color(Deki::Color::Black)
-, tileWidth(0.0f)
-, tileHeight(0.0f)
+    : DekiRendering::RendererComponent(),
+      gradientType(GradientType::Linear),
+      tileMode(GradientTileMode::None),
+      ditherMode(GradientDitherMode::Ordered4x4),
+      ditherScale(1),
+      width(w),
+      height(h),
+      angle(0.0f),
+      centerX(0.5f),
+      centerY(0.5f),
+      radius(0.5f),
+      stopCount(2),
+      stop1Position(0.0f),
+      stop1Color(Deki::Color::White),
+      stop2Position(1.0f),
+      stop2Color(Deki::Color::Black),
+      stop3Position(0.0f),
+      stop3Color(Deki::Color::Black),
+      stop4Position(0.0f),
+      stop4Color(Deki::Color::Black),
+      tileWidth(0.0f),
+      tileHeight(0.0f)
 {
     // Initialize stops array with default white-to-black gradient
     stops[0] = GradientStop(0.0f, Deki::Color::White);
@@ -89,10 +87,26 @@ GradientComponent::~GradientComponent()
 
 void GradientComponent::WriteStopsToProperties()
 {
-    if (stopCount >= 1) { stop1Position = stops[0].position; stop1Color = stops[0].color; }
-    if (stopCount >= 2) { stop2Position = stops[1].position; stop2Color = stops[1].color; }
-    if (stopCount >= 3) { stop3Position = stops[2].position; stop3Color = stops[2].color; }
-    if (stopCount >= 4) { stop4Position = stops[3].position; stop4Color = stops[3].color; }
+    if (stopCount >= 1)
+    {
+        stop1Position = stops[0].position;
+        stop1Color = stops[0].color;
+    }
+    if (stopCount >= 2)
+    {
+        stop2Position = stops[1].position;
+        stop2Color = stops[1].color;
+    }
+    if (stopCount >= 3)
+    {
+        stop3Position = stops[2].position;
+        stop3Color = stops[2].color;
+    }
+    if (stopCount >= 4)
+    {
+        stop4Position = stops[3].position;
+        stop4Color = stops[3].color;
+    }
 }
 
 uint64_t GradientComponent::ComputeBakeKey(int32_t widthPx, int32_t heightPx) const
@@ -103,16 +117,31 @@ uint64_t GradientComponent::ComputeBakeKey(int32_t widthPx, int32_t heightPx) co
     {
         const uint8_t* p = static_cast<const uint8_t*>(data);
         for (size_t i = 0; i < size; ++i)
+        {
             h = (h ^ p[i]) * 1099511628211ull;
+        }
     };
-    auto mixf = [&mix](float f) { uint32_t bits; std::memcpy(&bits, &f, sizeof(bits)); mix(&bits, sizeof(bits)); };
+    auto mixf = [&mix](float f)
+    {
+        uint32_t bits;
+        std::memcpy(&bits, &f, sizeof(bits));
+        mix(&bits, sizeof(bits));
+    };
     const uint8_t type = static_cast<uint8_t>(gradientType);
     const uint8_t tile = static_cast<uint8_t>(tileMode);
     const uint8_t dither = static_cast<uint8_t>(ditherMode);
-    mix(&type, 1); mix(&tile, 1); mix(&dither, 1); mix(&ditherScale, 1);
-    mix(&widthPx, sizeof(widthPx)); mix(&heightPx, sizeof(heightPx));
-    mixf(angle); mixf(centerX); mixf(centerY); mixf(radius);
-    mixf(tileWidth); mixf(tileHeight);
+    mix(&type, 1);
+    mix(&tile, 1);
+    mix(&dither, 1);
+    mix(&ditherScale, 1);
+    mix(&widthPx, sizeof(widthPx));
+    mix(&heightPx, sizeof(heightPx));
+    mixf(angle);
+    mixf(centerX);
+    mixf(centerY);
+    mixf(radius);
+    mixf(tileWidth);
+    mixf(tileHeight);
     mix(&stopCount, 1);
     for (int i = 0; i < stopCount && i < MAX_STOPS; ++i)
     {
@@ -143,7 +172,10 @@ void GradientComponent::SetRadialGradient(float center_x_pos, float center_y_pos
 
 void GradientComponent::AddColorStop(float position, uint8_t r, uint8_t g, uint8_t b)
 {
-    if (stopCount >= MAX_STOPS) return;
+    if (stopCount >= MAX_STOPS)
+    {
+        return;
+    }
 
     stops[stopCount] = GradientStop(std::clamp(position, 0.0f, 1.0f), r, g, b);
     stopCount++;
@@ -194,8 +226,8 @@ void GradientComponent::SyncStopsFromProperties()
     }
 }
 
-void GradientComponent::SetSimpleGradient(
-    uint8_t start_r, uint8_t start_g, uint8_t start_b, uint8_t end_r, uint8_t end_g, uint8_t end_b)
+void GradientComponent::SetSimpleGradient(uint8_t start_r, uint8_t start_g, uint8_t start_b, uint8_t end_r,
+                                          uint8_t end_g, uint8_t end_b)
 {
     ClearColorStops();
     AddColorStop(0.0f, start_r, start_g, start_b);
@@ -256,8 +288,7 @@ DEKI_FAST_ATTR float GradientComponent::CalculateGradientPosition(float norm_x, 
             return angle_rad / (2.0f * M_PI);
         }
 
-        default:
-            return norm_x;
+        default: return norm_x;
     }
 }
 
@@ -321,21 +352,16 @@ DEKI_FAST_ATTR float GradientComponent::SampleBayerThreshold(int32_t x, int32_t 
     // hard-edged transitions at t=0 and t=1.
     switch (ditherMode)
     {
-        case GradientDitherMode::Ordered2x2:
-            return BAYER_2x2[(y & 1) * 2 + (x & 1)] / 4.0f;
-        case GradientDitherMode::Ordered4x4:
-            return BAYER_4x4[(y & 3) * 4 + (x & 3)] / 16.0f;
-        case GradientDitherMode::Ordered8x8:
-            return BAYER_8x8[(y & 7) * 8 + (x & 7)] / 64.0f;
-        case GradientDitherMode::Ordered16x16:
-            return BAYER_16x16[(y & 15) * 16 + (x & 15)] / 256.0f;
-        default:
-            return 0.0f;
+        case GradientDitherMode::Ordered2x2: return BAYER_2x2[(y & 1) * 2 + (x & 1)] / 4.0f;
+        case GradientDitherMode::Ordered4x4: return BAYER_4x4[(y & 3) * 4 + (x & 3)] / 16.0f;
+        case GradientDitherMode::Ordered8x8: return BAYER_8x8[(y & 7) * 8 + (x & 7)] / 64.0f;
+        case GradientDitherMode::Ordered16x16: return BAYER_16x16[(y & 15) * 16 + (x & 15)] / 256.0f;
+        default: return 0.0f;
     }
 }
 
-DEKI_FAST_ATTR void GradientComponent::PickStopByThreshold(float position, float threshold,
-                                                            uint8_t* r, uint8_t* g, uint8_t* b) const
+DEKI_FAST_ATTR void GradientComponent::PickStopByThreshold(float position, float threshold, uint8_t* r, uint8_t* g,
+                                                           uint8_t* b) const
 {
     // Pixelorama-style gradient dithering: instead of blending between stops,
     // pick ONE of the two bracket stops based on whether the local-t exceeds
@@ -348,7 +374,11 @@ DEKI_FAST_ATTR void GradientComponent::PickStopByThreshold(float position, float
     //   - position >= stops[N-1].position → last stop (solid)
     //   - inside a bracket: ramp_val = (local_t < threshold) ? 0 : 1
     //     (i.e. local_t >= threshold picks the upper stop)
-    if (stopCount == 0) { *r = *g = *b = 0; return; }
+    if (stopCount == 0)
+    {
+        *r = *g = *b = 0;
+        return;
+    }
     if (stopCount == 1)
     {
         *r = stops[0].color.r;
@@ -396,10 +426,13 @@ DEKI_FAST_ATTR uint16_t GradientComponent::ConvertToRGB565(uint8_t r, uint8_t g,
     return ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
 }
 
-void GradientComponent::RenderPixel(
-    int32_t x, int32_t y, uint16_t color, uint8_t* render_buffer, int screen_width, int screen_height) const
+void GradientComponent::RenderPixel(int32_t x, int32_t y, uint16_t color, uint8_t* render_buffer, int screen_width,
+                                    int screen_height) const
 {
-    if (x < 0 || x >= screen_width || y < 0 || y >= screen_height) return;
+    if (x < 0 || x >= screen_width || y < 0 || y >= screen_height)
+    {
+        return;
+    }
 
     uint16_t* buffer16 = (uint16_t*)render_buffer;
     buffer16[y * screen_width + x] = color;
@@ -408,14 +441,23 @@ void GradientComponent::RenderPixel(
 void GradientComponent::RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t outH, int32_t artW, int32_t artH,
                                        int32_t ditherCell)
 {
-    if (!buffer || stopCount == 0) return;
+    if (!buffer || stopCount == 0)
+    {
+        return;
+    }
 
     // width/height are world meters; the layout runs on the art grid.
     const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
     const int32_t widthPx = artW;
     const int32_t heightPx = artH;
-    if (widthPx <= 0 || heightPx <= 0 || outW <= 0 || outH <= 0) return;
-    if (ditherCell < 1) ditherCell = 1;
+    if (widthPx <= 0 || heightPx <= 0 || outW <= 0 || outH <= 0)
+    {
+        return;
+    }
+    if (ditherCell < 1)
+    {
+        ditherCell = 1;
+    }
 
     // Sync color stops from property members (for editor serialization)
     SyncStopsFromProperties();
@@ -514,16 +556,14 @@ void GradientComponent::RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t ou
     }
 }
 
-bool GradientComponent::RenderContent(const Deki::Object* owner,
-                                       QuadBlit::Source& outSource,
-                                       float& outPivotX,
-                                       float& outPivotY,
-                                       uint8_t& outTintR,
-                                       uint8_t& outTintG,
-                                       uint8_t& outTintB,
-                                       uint8_t& outTintA)
+bool GradientComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& outSource, float& outPivotX,
+                                      float& outPivotY, uint8_t& outTintR, uint8_t& outTintG, uint8_t& outTintB,
+                                      uint8_t& outTintA)
 {
-    if (!owner || stopCount == 0) return false;
+    if (!owner || stopCount == 0)
+    {
+        return false;
+    }
 
     // width/height are world meters. The layout is on the art grid (the
     // project's pixels per meter); the bake is at the density the view draws
@@ -531,7 +571,10 @@ bool GradientComponent::RenderContent(const Deki::Object* owner,
     const float artPPM = Deki::EngineSettings::Global().pixelsPerMeter;
     const int32_t artW = static_cast<int32_t>(width * artPPM);
     const int32_t artH = static_cast<int32_t>(height * artPPM);
-    if (artW <= 0 || artH <= 0) return false;
+    if (artW <= 0 || artH <= 0)
+    {
+        return false;
+    }
 
     float bakePPM = artPPM;
     const DekiRendering::DrawView& view = DekiRendering::CurrentDrawView();
@@ -544,7 +587,9 @@ bool GradientComponent::RenderContent(const Deki::Object* owner,
         const double viewArea = static_cast<double>(view.width) * view.height;
         const double bakeArea = static_cast<double>(width) * bakePPM * height * bakePPM;
         if (viewArea > 0.0 && bakeArea > viewArea * 2.0)
+        {
             bakePPM *= static_cast<float>(std::sqrt(viewArea * 2.0 / bakeArea));
+        }
     }
     const int32_t widthPx = std::max<int32_t>(1, static_cast<int32_t>(std::lround(width * bakePPM)));
     const int32_t heightPx = std::max<int32_t>(1, static_cast<int32_t>(std::lround(height * bakePPM)));
@@ -552,12 +597,23 @@ bool GradientComponent::RenderContent(const Deki::Object* owner,
     // A Bayer cell covers ditherScale art pixels (a power of two, 1..16),
     // rounded to whole output pixels so every cell is the same size.
     int32_t ditherArt = 1;
-    if (ditherScale >= 16) ditherArt = 16;
-    else if (ditherScale >= 8) ditherArt = 8;
-    else if (ditherScale >= 4) ditherArt = 4;
-    else if (ditherScale >= 2) ditherArt = 2;
-    const int32_t ditherCell =
-        std::max<int32_t>(1, static_cast<int32_t>(std::lround(ditherArt * bakePPM / artPPM)));
+    if (ditherScale >= 16)
+    {
+        ditherArt = 16;
+    }
+    else if (ditherScale >= 8)
+    {
+        ditherArt = 8;
+    }
+    else if (ditherScale >= 4)
+    {
+        ditherArt = 4;
+    }
+    else if (ditherScale >= 2)
+    {
+        ditherArt = 2;
+    }
+    const int32_t ditherCell = std::max<int32_t>(1, static_cast<int32_t>(std::lround(ditherArt * bakePPM / artPPM)));
 
     // Sync color stops from property members (for editor serialization)
     SyncStopsFromProperties();
@@ -571,7 +627,9 @@ bool GradientComponent::RenderContent(const Deki::Object* owner,
     const size_t need = static_cast<size_t>(widthPx) * static_cast<size_t>(heightPx) * 2;  // RGB565
     // A size already refused is not attempted again.
     if (m_BakeFailedSize == need)
+    {
         return false;
+    }
 
     if (!m_Baked || m_Baked.Bytes() != need || m_BakeKey != key)
     {
@@ -594,11 +652,8 @@ bool GradientComponent::RenderContent(const Deki::Object* owner,
     }
 
     // Create source descriptor
-    outSource = QuadBlit::MakeSource(
-        m_Baked.Data(),
-        widthPx,
-        heightPx, QuadBlit::PixelLayout::RGB565(),   // isRGB565
-        false   // ownsPixels - the component owns its bake
+    outSource = QuadBlit::MakeSource(m_Baked.Data(), widthPx, heightPx, QuadBlit::PixelLayout::RGB565(),  // isRGB565
+                                     false  // ownsPixels - the component owns its bake
     );
     // The bake's own density: the renderer then scales it by the object's
     // scale alone, 1:1 for an unscaled object.

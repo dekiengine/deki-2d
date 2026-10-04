@@ -14,8 +14,8 @@ namespace Deki2D
  */
 struct DEKI_SERIALIZABLE FrameAnimFrame
 {
-    std::string frameGuid;   // GUID of the sprite frame sub-asset
-    int32_t duration;         // Duration in milliseconds
+    std::string frameGuid;  // GUID of the sprite frame sub-asset
+    int32_t duration;       // Duration in milliseconds
 };
 
 /**
@@ -24,9 +24,9 @@ struct DEKI_SERIALIZABLE FrameAnimFrame
  */
 struct DEKI_SERIALIZABLE FrameAnimSequence
 {
-    std::string name;                       // Animation name (e.g., "idle", "walk")
-    std::vector<FrameAnimFrame> frames;     // Ordered frame sequence
-    bool loop;                              // Whether animation loops
+    std::string name;                    // Animation name (e.g., "idle", "walk")
+    std::vector<FrameAnimFrame> frames;  // Ordered frame sequence
+    bool loop;                           // Whether animation loops
 };
 
 /**
@@ -38,7 +38,7 @@ struct DEKI_SERIALIZABLE FrameAnimationData
     /// Asset type name for AssetManager::Load<T>() lookup
     static constexpr const char* AssetTypeName = "Animation";
 
-    std::string spritesheetGuid;               // Parent spritesheet texture GUID
+    std::string spritesheetGuid;                // Parent spritesheet texture GUID
     std::vector<FrameAnimSequence> animations;  // List of animation sequences
 };
 

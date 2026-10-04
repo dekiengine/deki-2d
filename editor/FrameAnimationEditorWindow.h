@@ -78,8 +78,8 @@ private:
     std::string m_CachePath;
 
     // Animation file
-    std::string m_AnimationPath;     // Full path to .frameanim file
-    bool m_IsDirty = false;          // Has unsaved changes
+    std::string m_AnimationPath;  // Full path to .frameanim file
+    bool m_IsDirty = false;       // Has unsaved changes
 
     // Animation data (multiple sequences per file)
     std::string m_SpritesheetGuid;
@@ -122,4 +122,4 @@ private:
     bool m_SpritesheetPickerNeedsRefresh = true;
 };
 
-} // namespace DekiEditor
+}  // namespace DekiEditor

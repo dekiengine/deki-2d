@@ -52,15 +52,15 @@ private:
     // UI Drawing
     void DrawTexturePreview();
     void DrawSlicingControls();
-    void SaveAndReimport();      // write .png.data, re-import so the frames exist
-    void OnSettingsLoaded();     // after a load: the saved baseline, the mode
-    bool IsDirty() const;        // the frames differ from what is saved
+    void SaveAndReimport();   // write .png.data, re-import so the frames exist
+    void OnSettingsLoaded();  // after a load: the saved baseline, the mode
+    bool IsDirty() const;     // the frames differ from what is saved
 
     // File I/O
-    void LoadTextureData();      // Load pixel data from cache
-    void UploadTextureToGPU();   // Create OpenGL texture (called from OnGUI)
-    bool LoadSliceSettings();    // Load from .png.data
-    bool SaveSliceSettings();    // Save to .png.data
+    void LoadTextureData();     // Load pixel data from cache
+    void UploadTextureToGPU();  // Create OpenGL texture (called from OnGUI)
+    bool LoadSliceSettings();   // Load from .png.data
+    bool SaveSliceSettings();   // Save to .png.data
 
     // Frame generation
     void GenerateGrid();         // Generate uniform grid frames
@@ -73,9 +73,9 @@ private:
     std::string m_CachePath;
 
     // Source texture
-    std::string m_TexturePath;      // Full path to texture PNG
-    std::string m_TextureCachePath; // Full path to cached DTEX
-    std::string m_TextureGuid;      // Texture GUID
+    std::string m_TexturePath;       // Full path to texture PNG
+    std::string m_TextureCachePath;  // Full path to cached DTEX
+    std::string m_TextureGuid;       // Texture GUID
     uint32_t m_TextureId = 0;
     int m_TextureWidth = 0;
     int m_TextureHeight = 0;
@@ -97,16 +97,16 @@ private:
     bool m_IsPanning = false;
     float m_LastMousePosX = 0.0f;
     float m_LastMousePosY = 0.0f;
-    bool m_FitPending = true;    // fit the image to the canvas on its next draw
+    bool m_FitPending = true;  // fit the image to the canvas on its next draw
 
     std::vector<DekiEditor::AtlasFrame> m_SavedFrames;  // as last loaded or saved
     int32_t m_NextFrameId = 0;  // never reused: a reference to a deleted frame must not find a new one
-    int m_SelectedFrame = -1;    // picked in the list or on the canvas
-    int m_HoveredFrame = -1;     // under the mouse, in either
+    int m_SelectedFrame = -1;   // picked in the list or on the canvas
+    int m_HoveredFrame = -1;    // under the mouse, in either
 
     // Status
     std::string m_StatusMessage;
     bool m_StatusIsError = false;
 };
 
-} // namespace DekiEditor
+}  // namespace DekiEditor

@@ -12,7 +12,7 @@ namespace Deki2D
  */
 class ISpriteLoader
 {
-   public:
+public:
     /**
      * @brief Virtual destructor for proper cleanup
      */

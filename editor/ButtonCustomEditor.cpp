@@ -23,25 +23,26 @@ namespace DekiEditor
 class ButtonCustomEditor : public CustomEditor
 {
 public:
-    const char* GetComponentName() const override
-    {
-        return "ButtonComponent";
-    }
+    const char* GetComponentName() const override { return "ButtonComponent"; }
 
     // collider width/height are world meters; gizmo consumers want pixels.
     bool GetDisplaySize(Deki::Component* comp, float& outWidth, float& outHeight) override
     {
         auto* button = static_cast<ButtonComponent*>(comp);
         if (!button)
+        {
             return false;
+        }
 
         DekiInput::InputCollider* collider = button->inputCollider.Get();
         if (!collider)
+        {
             return false;
+        }
 
         const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
         const float effective = ppm > 0.0f ? ppm : 1.0f;
-        outWidth  = collider->width  * effective;
+        outWidth = collider->width * effective;
         outHeight = collider->height * effective;
         return outWidth > 0 && outHeight > 0;
     }
@@ -50,11 +51,15 @@ public:
     {
         auto* button = static_cast<ButtonComponent*>(comp);
         if (!button)
+        {
             return false;
+        }
 
         DekiInput::InputCollider* collider = button->inputCollider.Get();
         if (!collider)
+        {
             return false;
+        }
 
         float halfW = width * 0.5f;
         float halfH = height * 0.5f;
@@ -77,6 +82,6 @@ public:
 REGISTER_EDITOR(ButtonCustomEditor)
 REGISTER_CREATE_MENU_ITEM(ButtonComponent, "UI", "Button", "Button", "ButtonComponent")
 
-} // namespace DekiEditor
+}  // namespace DekiEditor
 
-#endif // DEKI_EDITOR
+#endif  // DEKI_EDITOR

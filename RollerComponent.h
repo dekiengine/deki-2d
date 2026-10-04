@@ -12,9 +12,15 @@
 #include <deki/reflection/Property.h>
 
 // Forward declarations
-namespace Deki { class Object; }
+namespace Deki
+{
+class Object;
+}
 
-namespace DekiInput { class InputCollider; }
+namespace DekiInput
+{
+class InputCollider;
+}
 
 namespace Deki2D
 {
@@ -59,7 +65,6 @@ DEKI_FORMER_NAME("RollerComponent")
 class RollerComponent : public Deki::Component
 {
 public:
-
     // Expose base class Update() method (RollerComponent::Update(float) has different signature)
     using Deki::Component::Update;
 

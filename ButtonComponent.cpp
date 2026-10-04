@@ -28,63 +28,89 @@ void ButtonComponent::Start()
     }
 
     // Register pointer callbacks on DekiInput::InputCollider
-    collider->onPointerDown.push_back([this](float x, float y) {
-        (void)x; (void)y;
-        if (!isEnabled) return;
-        m_WasPressedInside = true;
-        SetState(ButtonState::Pressed);
-        InvokeCallbacks(onPress);
-    });
-
-    collider->onPointerUp.push_back([this](float x, float y) {
-        (void)x; (void)y;
-        if (!isEnabled) return;
-        if (m_WasPressedInside)
+    collider->onPointerDown.push_back(
+        [this](float x, float y)
         {
-            InvokeCallbacks(onRelease);
+            (void)x;
+            (void)y;
+            if (!isEnabled)
+            {
+                return;
+            }
+            m_WasPressedInside = true;
+            SetState(ButtonState::Pressed);
+            InvokeCallbacks(onPress);
+        });
 
-            // Click = was pressed inside and released inside collider
-            DekiInput::InputCollider* col = inputCollider.Get();
-            if (col && col->IsPointerInside())
+    collider->onPointerUp.push_back(
+        [this](float x, float y)
+        {
+            (void)x;
+            (void)y;
+            if (!isEnabled)
+            {
+                return;
+            }
+            if (m_WasPressedInside)
+            {
+                InvokeCallbacks(onRelease);
+
+                // Click = was pressed inside and released inside collider
+                DekiInput::InputCollider* col = inputCollider.Get();
+                if (col && col->IsPointerInside())
+                {
+                    SetState(ButtonState::Normal);
+                    InvokeCallbacks(onClick);
+                }
+                else
+                {
+                    SetState(ButtonState::Normal);
+                }
+                m_WasPressedInside = false;
+            }
+        });
+
+    collider->onPointerEnter.push_back(
+        [this](float x, float y)
+        {
+            (void)x;
+            (void)y;
+            if (!isEnabled)
+            {
+                return;
+            }
+            if (!m_WasPressedInside)
+            {
+                SetState(ButtonState::Hovered);
+            }
+        });
+
+    collider->onPointerExit.push_back(
+        [this](float x, float y)
+        {
+            (void)x;
+            (void)y;
+            if (!isEnabled)
+            {
+                return;
+            }
+            if (m_WasPressedInside)
             {
                 SetState(ButtonState::Normal);
-                InvokeCallbacks(onClick);
             }
-            else
+            else if (state == ButtonState::Hovered)
             {
                 SetState(ButtonState::Normal);
             }
-            m_WasPressedInside = false;
-        }
-    });
-
-    collider->onPointerEnter.push_back([this](float x, float y) {
-        (void)x; (void)y;
-        if (!isEnabled) return;
-        if (!m_WasPressedInside)
-        {
-            SetState(ButtonState::Hovered);
-        }
-    });
-
-    collider->onPointerExit.push_back([this](float x, float y) {
-        (void)x; (void)y;
-        if (!isEnabled) return;
-        if (m_WasPressedInside)
-        {
-            SetState(ButtonState::Normal);
-        }
-        else if (state == ButtonState::Hovered)
-        {
-            SetState(ButtonState::Normal);
-        }
-    });
+        });
 }
 
 void ButtonComponent::SetState(ButtonState new_state)
 {
     if (state == new_state)
+    {
         return;
+    }
 
     ButtonState old_state = state;
     state = new_state;
@@ -102,7 +128,10 @@ void ButtonComponent::SetState(ButtonState new_state)
     // Notify state change listeners
     for (const auto& cb : on_state_changed)
     {
-        if (cb) cb(new_state);
+        if (cb)
+        {
+            cb(new_state);
+        }
     }
 }
 
@@ -119,7 +148,6 @@ void ButtonComponent::SetEnabled(bool enabled)
         SetState(ButtonState::Normal);
     }
 }
-
 
 void ButtonComponent::AddOnClickCallback(const ButtonCallback& callback)
 {
@@ -165,7 +193,10 @@ void ButtonComponent::InvokeCallbacks(const std::vector<ButtonCallback>& callbac
 {
     for (const auto& cb : callbacks)
     {
-        if (cb) cb();
+        if (cb)
+        {
+            cb();
+        }
     }
 }
 

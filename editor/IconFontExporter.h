@@ -9,7 +9,6 @@
 #include <atomic>
 #include <cstdint>
 
-
 struct FT_LibraryRec_;
 struct FT_FaceRec_;
 typedef struct FT_LibraryRec_* FT_Library;
@@ -82,8 +81,7 @@ private:
 
     void BuildIconAtlas();
     void CleanupAtlas();
-    bool RasterizeGlyph(uint32_t codepoint, int size,
-                        std::vector<uint8_t>& outRGBA, int& outW, int& outH);
+    bool RasterizeGlyph(uint32_t codepoint, int size, std::vector<uint8_t>& outRGBA, int& outW, int& outH);
 
     // Search & selection
     char m_SearchFilter[256] = "";
@@ -100,19 +98,26 @@ private:
     void LoadExportManifest(const std::string& manifestPath);
 
     // Download
-    enum class DownloadState { Idle, Downloading, Parsing, Done, Error };
-    std::atomic<int> m_DownloadState{(int)DownloadState::Idle};
+    enum class DownloadState
+    {
+        Idle,
+        Downloading,
+        Parsing,
+        Done,
+        Error
+    };
+    std::atomic<int> m_DownloadState{ (int)DownloadState::Idle };
     std::mutex m_DownloadMutex;
     std::string m_DownloadStatus;
     std::string m_DownloadError;
     IconFont m_DownloadResult;
     std::thread m_DownloadThread;
-    std::atomic<bool> m_CancelDownload{false};
+    std::atomic<bool> m_CancelDownload{ false };
 
     std::string m_PendingManifestPath;
 
     bool m_ShowAddFont = false;
-    int m_AddFontTab = 0; // 0 = npm, 1 = direct URL
+    int m_AddFontTab = 0;  // 0 = npm, 1 = direct URL
     char m_NpmPackageInput[256] = "";
     char m_TtfUrlInput[512] = "";
     char m_CssUrlInput[512] = "";
@@ -138,4 +143,4 @@ private:
     void DrawIconGrid();
 };
 
-} // namespace DekiEditor
+}  // namespace DekiEditor

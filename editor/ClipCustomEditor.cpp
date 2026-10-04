@@ -56,11 +56,13 @@ public:
     {
         auto* clipComp = static_cast<ClipComponent*>(comp);
         if (!clipComp)
+        {
             return false;
+        }
 
         const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
         const float effective = ppm > 0.0f ? ppm : 1.0f;
-        outWidth  = clipComp->width  * effective;
+        outWidth = clipComp->width * effective;
         outHeight = clipComp->height * effective;
         return true;
     }
@@ -75,6 +77,6 @@ public:
 
 REGISTER_EDITOR(ClipCustomEditor)
 
-} // namespace DekiEditor
+}  // namespace DekiEditor
 
-#endif // DEKI_EDITOR
+#endif  // DEKI_EDITOR

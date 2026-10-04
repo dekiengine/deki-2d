@@ -11,26 +11,22 @@ using namespace Deki2D;
 void Deki2D_RegisterClipAdapters()
 {
     static bool s_registered = false;
-    if (s_registered) return;
+    if (s_registered)
+    {
+        return;
+    }
     s_registered = true;
 
     Deki::ComponentInterfaceAdapters::Register(
-        Deki::IClipProvider::InterfaceID,
-        ::Deki::TypeId<ClipComponent>(),
-        [](Deki::Component* c) -> void* {
-            return static_cast<Deki::IClipProvider*>(static_cast<ClipComponent*>(c));
-        });
+        Deki::IClipProvider::InterfaceID, ::Deki::TypeId<ClipComponent>(),
+        [](Deki::Component* c) -> void* { return static_cast<Deki::IClipProvider*>(static_cast<ClipComponent*>(c)); });
     Deki::ComponentInterfaceAdapters::Register(
-        Deki::ISortableProvider::InterfaceID,
-        ::Deki::TypeId<ClipComponent>(),
-        [](Deki::Component* c) -> void* {
-            return static_cast<Deki::ISortableProvider*>(static_cast<ClipComponent*>(c));
-        });
+        Deki::ISortableProvider::InterfaceID, ::Deki::TypeId<ClipComponent>(), [](Deki::Component* c) -> void*
+        { return static_cast<Deki::ISortableProvider*>(static_cast<ClipComponent*>(c)); });
 }
 
 // Static init — works for DLL builds where all objects are loaded
-static struct ClipInterfaceRegistrar {
+static struct ClipInterfaceRegistrar
+{
     ClipInterfaceRegistrar() { Deki2D_RegisterClipAdapters(); }
 } s_clipInterfaceRegistrar;
-
-

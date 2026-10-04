@@ -28,11 +28,13 @@ public:
     {
         auto* element = static_cast<ScrollElement*>(comp);
         if (!element)
+        {
             return false;
+        }
 
         const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
         const float effective = ppm > 0.0f ? ppm : 1.0f;
-        outWidth  = element->width  * effective;
+        outWidth = element->width * effective;
         outHeight = element->height * effective;
         return true;
     }
@@ -53,6 +55,6 @@ public:
 REGISTER_EDITOR(ScrollElementCustomEditor)
 REGISTER_CREATE_MENU_ITEM(ScrollComponent, "UI", "Scroll View", "ScrollView", "ScrollComponent")
 
-} // namespace DekiEditor
+}  // namespace DekiEditor
 
-#endif // DEKI_EDITOR
+#endif  // DEKI_EDITOR

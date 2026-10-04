@@ -41,7 +41,9 @@ ScrollComponent::~ScrollComponent()
 {
     // Release gesture if we own it (prevents stuck input after destruction mid-drag)
     if (DekiInput::InputDispatch::IsGestureClaimedBy(this))
+    {
         DekiInput::InputDispatch::ReleaseGesture();
+    }
 
     m_ClipObj = nullptr;
     m_TemplateObj = nullptr;
@@ -58,21 +60,32 @@ ScrollComponent::~ScrollComponent()
 
 static Deki::Object* FindChildByName(Deki::Object* parent, const char* name)
 {
-    if (!parent) return nullptr;
+    if (!parent)
+    {
+        return nullptr;
+    }
     for (auto* child : parent->GetChildren())
     {
         if (child->GetName() == name)
+        {
             return child;
+        }
     }
     return nullptr;
 }
 
 Deki::Object* ScrollComponent::CloneTemplate(Deki::Object* tmpl, const char* name)
 {
-    if (!tmpl || !itemScene.Get()) return nullptr;
+    if (!tmpl || !itemScene.Get())
+    {
+        return nullptr;
+    }
 
     Deki::Scene* ownerScene = tmpl->GetOwnerScene();
-    if (!ownerScene) return nullptr;
+    if (!ownerScene)
+    {
+        return nullptr;
+    }
 
     Deki::Object* instance = itemScene.Get()->Instantiate(ownerScene);
     if (instance)
@@ -84,17 +97,26 @@ Deki::Object* ScrollComponent::CloneTemplate(Deki::Object* tmpl, const char* nam
 
 float ScrollComponent::MeasureChildSize(Deki::Object* child) const
 {
-    if (!child) return 0.0f;
+    if (!child)
+    {
+        return 0.0f;
+    }
 
     auto* element = child->GetComponent<ScrollElement>();
-    if (!element) return 0.0f;
+    if (!element)
+    {
+        return 0.0f;
+    }
 
     return (direction == ScrollDirection::Vertical) ? element->height : element->width;
 }
 
 int32_t ScrollComponent::GetTotalSlotCount() const
 {
-    if (m_ItemSize <= 0.0f) return 3;
+    if (m_ItemSize <= 0.0f)
+    {
+        return 3;
+    }
 
     float vpSize = (direction == ScrollDirection::Vertical) ? GetViewportHeight() : GetViewportWidth();
     int32_t visible = static_cast<int32_t>(((vpSize) / (m_ItemSize))) + 3;  // +1 top, +1 bottom, +1 rounding
@@ -119,8 +141,7 @@ void ScrollComponent::EnsureChildObjects(Deki::Object* owner)
     m_ClipObj = FindChildByName(owner, "Clip");
     if (!m_ClipObj)
     {
-        DEKI_LOG_WARNING("ScrollComponent: missing 'Clip' child on '%s'",
-                         owner->GetName().c_str());
+        DEKI_LOG_WARNING("ScrollComponent: missing 'Clip' child on '%s'", owner->GetName().c_str());
         m_TemplateObj = nullptr;
         m_SlotObjs.clear();
         m_SlotItemIndices.clear();
@@ -136,8 +157,7 @@ void ScrollComponent::EnsureChildObjects(Deki::Object* owner)
         m_TemplateObj = FindChildByName(m_ClipObj, "Template");
         if (!m_TemplateObj)
         {
-            DEKI_LOG_WARNING("ScrollComponent: missing 'Template' child on '%s'",
-                             owner->GetName().c_str());
+            DEKI_LOG_WARNING("ScrollComponent: missing 'Template' child on '%s'", owner->GetName().c_str());
             m_SlotObjs.clear();
             m_SlotItemIndices.clear();
             return;
@@ -161,9 +181,7 @@ void ScrollComponent::EnsureChildObjects(Deki::Object* owner)
 
         // Sort by name for correct order
         std::sort(m_SlotObjs.begin(), m_SlotObjs.end(),
-            [](Deki::Object* a, Deki::Object* b) {
-                return a->GetName() < b->GetName();
-            });
+                  [](Deki::Object* a, Deki::Object* b) { return a->GetName() < b->GetName(); });
 
         int32_t totalSlots = GetTotalSlotCount();
 
@@ -197,7 +215,7 @@ void ScrollComponent::EnsureChildObjects(Deki::Object* owner)
         // Initialize slot item indices
         m_SlotItemIndices.resize(m_SlotObjs.size(), -1);
     }
-    else // NonTemplate mode
+    else  // NonTemplate mode
     {
         m_TemplateObj = nullptr;
         m_SlotObjs.clear();
@@ -230,10 +248,22 @@ void ScrollComponent::EnsureChildObjects(Deki::Object* owner)
 
 bool ScrollComponent::NeedsChildDiscovery(const Deki::Object* owner) const
 {
-    if (!owner) return true;
-    if (!m_ClipObj) return true;
-    if (owner->GetChildren().size() != m_DiscoveredOwnerChildren) return true;
-    if (m_ClipObj->GetChildren().size() != m_DiscoveredClipChildren) return true;
+    if (!owner)
+    {
+        return true;
+    }
+    if (!m_ClipObj)
+    {
+        return true;
+    }
+    if (owner->GetChildren().size() != m_DiscoveredOwnerChildren)
+    {
+        return true;
+    }
+    if (m_ClipObj->GetChildren().size() != m_DiscoveredClipChildren)
+    {
+        return true;
+    }
     return false;
 }
 
@@ -256,30 +286,41 @@ void ScrollComponent::SyncChildObjects(Deki::Object* owner)
 
 void ScrollComponent::AssignSlots()
 {
-    if (!m_ClipObj) return;
+    if (!m_ClipObj)
+    {
+        return;
+    }
 
     float scrollPos = m_ScrollOffset;
     float vpSize = (direction == ScrollDirection::Vertical) ? GetViewportHeight() : GetViewportWidth();
     float stride = ((m_ItemSize) + (itemSpacing));
-    if (stride <= 0.0f) return;
+    if (stride <= 0.0f)
+    {
+        return;
+    }
 
     float halfVp = ((vpSize) * (0.5f));
     float startPad = (direction == ScrollDirection::Vertical) ? paddingTop : paddingLeft;
-    float crossPad = (direction == ScrollDirection::Vertical)
-        ? ((((paddingLeft) - (paddingRight))) * (0.5f))
-        : ((((paddingTop) - (paddingBottom))) * (0.5f));
+    float crossPad = (direction == ScrollDirection::Vertical) ? ((((paddingLeft) - (paddingRight))) * (0.5f))
+                                                              : ((((paddingTop) - (paddingBottom))) * (0.5f));
 
     m_FirstVisibleIndex = m_ItemCount;
     m_LastVisibleIndex = -1;
 
     if (mode == ScrollMode::Template)
     {
-        if (m_SlotObjs.empty() || m_ItemCount <= 0) return;
+        if (m_SlotObjs.empty() || m_ItemCount <= 0)
+        {
+            return;
+        }
 
         // First item index to show (with 1 buffer before viewport).
         float adjustedScroll = ((scrollPos) - (startPad));
         int32_t firstIndex = static_cast<int32_t>(std::floor(((adjustedScroll) / (stride)))) - 1;
-        if (firstIndex < 0) firstIndex = 0;
+        if (firstIndex < 0)
+        {
+            firstIndex = 0;
+        }
 
         int32_t totalSlots = static_cast<int32_t>(m_SlotObjs.size());
 
@@ -301,15 +342,25 @@ void ScrollComponent::AssignSlots()
             float slotCenter = ((((pos) + (((m_ItemSize) * (0.5f))))) - (halfVp));
 
             if (direction == ScrollDirection::Vertical)
+            {
                 m_SlotObjs[s]->SetLocalPosition(crossPad, ((0.0f) - (slotCenter)));
+            }
             else
+            {
                 m_SlotObjs[s]->SetLocalPosition(slotCenter, crossPad);
+            }
 
             // Track visible range
             if (((pos) + (m_ItemSize)) > 0.0f && pos < vpSize)
             {
-                if (itemIndex < m_FirstVisibleIndex) m_FirstVisibleIndex = itemIndex;
-                if (itemIndex > m_LastVisibleIndex) m_LastVisibleIndex = itemIndex;
+                if (itemIndex < m_FirstVisibleIndex)
+                {
+                    m_FirstVisibleIndex = itemIndex;
+                }
+                if (itemIndex > m_LastVisibleIndex)
+                {
+                    m_LastVisibleIndex = itemIndex;
+                }
             }
 
             // REUSE OPTIMIZATION: only fire callback if item index changed
@@ -323,19 +374,22 @@ void ScrollComponent::AssignSlots()
             }
         }
     }
-    else // NonTemplate mode
+    else  // NonTemplate mode
     {
         for (int32_t i = 0; i < static_cast<int32_t>(m_NonTemplateChildren.size()); i++)
         {
             Deki::Object* child = m_NonTemplateChildren[i];
-            if (!child) continue;
+            if (!child)
+            {
+                continue;
+            }
 
             float itemSize = m_NonTemplateSizes[i];
             float pos = ((((startPad) + (m_NonTemplateOffsets[i]))) - (scrollPos));
 
             // Visibility culling with per-item size buffer
             float negItemSize = ((0.0f) - (itemSize));
-            float vpPlusItem  = ((vpSize) + (itemSize));
+            float vpPlusItem = ((vpSize) + (itemSize));
             bool visible = (((pos) + (itemSize)) > negItemSize && pos < vpPlusItem);
             child->SetActive(visible);
 
@@ -344,16 +398,26 @@ void ScrollComponent::AssignSlots()
                 float center = ((((pos) + (((itemSize) * (0.5f))))) - (halfVp));
 
                 if (direction == ScrollDirection::Vertical)
+                {
                     child->SetLocalPosition(crossPad, ((0.0f) - (center)));
+                }
                 else
+                {
                     child->SetLocalPosition(center, crossPad);
+                }
             }
 
             // Track visible range (within actual viewport, not buffer)
             if (((pos) + (itemSize)) > 0.0f && pos < vpSize)
             {
-                if (i < m_FirstVisibleIndex) m_FirstVisibleIndex = i;
-                if (i > m_LastVisibleIndex) m_LastVisibleIndex = i;
+                if (i < m_FirstVisibleIndex)
+                {
+                    m_FirstVisibleIndex = i;
+                }
+                if (i > m_LastVisibleIndex)
+                {
+                    m_LastVisibleIndex = i;
+                }
             }
         }
     }
@@ -368,7 +432,9 @@ float ScrollComponent::GetViewportWidth() const
     if (m_ClipObj)
     {
         if (auto* clip = m_ClipObj->GetComponent<ClipComponent>())
+        {
             return clip->width;
+        }
     }
     return 0.0f;
 }
@@ -378,7 +444,9 @@ float ScrollComponent::GetViewportHeight() const
     if (m_ClipObj)
     {
         if (auto* clip = m_ClipObj->GetComponent<ClipComponent>())
+        {
             return clip->height;
+        }
     }
     return 0.0f;
 }
@@ -387,7 +455,10 @@ void ScrollComponent::SetItemSpacing(float spacing)
 {
     itemSpacing = spacing;
     CalculateContentSize();
-    if (GetOwner()) SyncChildObjects(GetOwner());
+    if (GetOwner())
+    {
+        SyncChildObjects(GetOwner());
+    }
 }
 
 void ScrollComponent::SetItemCount(int32_t count)
@@ -396,7 +467,10 @@ void ScrollComponent::SetItemCount(int32_t count)
     CalculateContentSize();
     // Invalidate all slot assignments so they rebind
     std::fill(m_SlotItemIndices.begin(), m_SlotItemIndices.end(), -1);
-    if (GetOwner()) SyncChildObjects(GetOwner());
+    if (GetOwner())
+    {
+        SyncChildObjects(GetOwner());
+    }
 }
 
 void ScrollComponent::SetDirection(ScrollDirection dir)
@@ -415,8 +489,14 @@ void ScrollComponent::ScrollTo(float position, bool smooth)
 {
     // Clamp target within valid range
     float maxPos = GetMaxScrollOffset();
-    if (position < 0.0f) position = 0.0f;
-    if (position > maxPos) position = maxPos;
+    if (position < 0.0f)
+    {
+        position = 0.0f;
+    }
+    if (position > maxPos)
+    {
+        position = maxPos;
+    }
 
     if (smooth)
     {
@@ -429,19 +509,29 @@ void ScrollComponent::ScrollTo(float position, bool smooth)
         m_ScrollOffset = position;
         m_ScrollVelocity = 0.0f;
         m_IsSmoothScrolling = false;
-        if (GetOwner()) SyncChildObjects(GetOwner());
+        if (GetOwner())
+        {
+            SyncChildObjects(GetOwner());
+        }
     }
 }
 
 void ScrollComponent::ScrollToItem(int32_t index, bool smooth)
 {
-    if (index < 0 || index >= m_ItemCount) return;
+    if (index < 0 || index >= m_ItemCount)
+    {
+        return;
+    }
 
     float position;
     if (mode == ScrollMode::NonTemplate && !m_NonTemplateOffsets.empty())
+    {
         position = m_NonTemplateOffsets[index];
+    }
     else
+    {
         position = ((static_cast<float>(index)) * (((m_ItemSize) + (itemSpacing))));
+    }
 
     ScrollTo(position, smooth);
 }
@@ -459,14 +549,18 @@ int32_t ScrollComponent::GetSlotCount() const
 Deki::Object* ScrollComponent::GetSlotObject(int32_t slotIndex) const
 {
     if (slotIndex >= 0 && slotIndex < static_cast<int32_t>(m_SlotObjs.size()))
+    {
         return m_SlotObjs[slotIndex];
+    }
     return nullptr;
 }
 
 int32_t ScrollComponent::GetSlotItemIndex(int32_t slotIndex) const
 {
     if (slotIndex >= 0 && slotIndex < static_cast<int32_t>(m_SlotItemIndices.size()))
+    {
         return m_SlotItemIndices[slotIndex];
+    }
     return -1;
 }
 
@@ -482,7 +576,7 @@ void ScrollComponent::CalculateContentSize()
         return;
     }
     float startPad = (direction == ScrollDirection::Vertical) ? paddingTop : paddingLeft;
-    float endPad   = (direction == ScrollDirection::Vertical) ? paddingBottom : paddingRight;
+    float endPad = (direction == ScrollDirection::Vertical) ? paddingBottom : paddingRight;
 
     if (mode == ScrollMode::NonTemplate && !m_NonTemplateOffsets.empty())
     {
@@ -491,8 +585,8 @@ void ScrollComponent::CalculateContentSize()
     else
     {
         // startPad + N*itemSize + (N-1)*spacing + endPad, all float.
-        float items  = ((static_cast<float>(m_ItemCount)) * (m_ItemSize));
-        float gaps   = ((static_cast<float>(m_ItemCount - 1)) * (itemSpacing));
+        float items = ((static_cast<float>(m_ItemCount)) * (m_ItemSize));
+        float gaps = ((static_cast<float>(m_ItemCount - 1)) * (itemSpacing));
         m_ContentSize = ((((((startPad) + (items))) + (gaps))) + (endPad));
     }
 }
@@ -520,17 +614,19 @@ void ScrollComponent::ClampScrollOffset()
     }
 }
 
-
 void ScrollComponent::Update(float delta_time)
 {
-    if (m_IsDragging) return;
+    if (m_IsDragging)
+    {
+        return;
+    }
 
     bool needsSync = false;
 
     // Thresholds in meters/frame, sized to preserve the prior pixel feel at
     // ppm=16. Computed once at first call so the macro arguments evaluate in
     // their proper mode.
-    static const float kVelocityEpsilon    = static_cast<float>(0.0625f);  // ~1 px/frame
+    static const float kVelocityEpsilon = static_cast<float>(0.0625f);     // ~1 px/frame
     static const float kSmoothArriveEpsilon = static_cast<float>(0.004f);  // ~0.06 px
 
     // Phase 1: Smooth scroll animation (from ScrollTo with smooth=true)
@@ -538,7 +634,10 @@ void ScrollComponent::Update(float delta_time)
     {
         float diff = m_ScrollTarget - m_ScrollOffset;
         float easeFactor = 8.0f * 0.15f * delta_time * 60.0f;
-        if (easeFactor > 0.5f) easeFactor = 0.5f;
+        if (easeFactor > 0.5f)
+        {
+            easeFactor = 0.5f;
+        }
 
         m_ScrollOffset = m_ScrollOffset + diff * easeFactor;
 
@@ -550,8 +649,14 @@ void ScrollComponent::Update(float delta_time)
 
         // Clamp smooth scroll target within bounds
         float maxScroll = GetMaxScrollOffset();
-        if (m_ScrollOffset < 0.0f) m_ScrollOffset = 0.0f;
-        if (m_ScrollOffset > maxScroll) m_ScrollOffset = maxScroll;
+        if (m_ScrollOffset < 0.0f)
+        {
+            m_ScrollOffset = 0.0f;
+        }
+        if (m_ScrollOffset > maxScroll)
+        {
+            m_ScrollOffset = maxScroll;
+        }
 
         needsSync = true;
     }
@@ -566,7 +671,9 @@ void ScrollComponent::Update(float delta_time)
         m_ScrollVelocity = ((m_ScrollVelocity) * (decayFactor));
 
         if (Deki::Math::Abs(m_ScrollVelocity) < kVelocityEpsilon)
+        {
             m_ScrollVelocity = 0.0f;
+        }
 
         needsSync = true;
     }
@@ -575,7 +682,9 @@ void ScrollComponent::Update(float delta_time)
     ClampScrollOffset();
 
     if (needsSync && GetOwner())
+    {
         SyncChildObjects(GetOwner());
+    }
 }
 
 void ScrollComponent::HandlePointerDown(float x, float y)
@@ -597,7 +706,10 @@ void ScrollComponent::HandlePointerDown(float x, float y)
 
 void ScrollComponent::HandlePointerMove(float x, float y)
 {
-    if (!m_IsDragging) return;
+    if (!m_IsDragging)
+    {
+        return;
+    }
 
     // If another component claimed the gesture, stop tracking
     if (DekiInput::InputDispatch::IsGestureClaimed() && !DekiInput::InputDispatch::IsGestureClaimedBy(this))
@@ -613,12 +725,16 @@ void ScrollComponent::HandlePointerMove(float x, float y)
     {
         float dist = Deki::Math::Abs(((touchPos) - (m_TouchStartPos)));
         if (dist < m_DragThreshold)
+        {
             return;
+        }
 
         m_DragConfirmed = true;
         DekiInput::InputDispatch::ClaimGesture(this);
         if (m_ClipObj)
+        {
             CancelChildInput(m_ClipObj);
+        }
     }
 
     float delta = ((touchPos) - (m_LastTouchPos));
@@ -629,7 +745,10 @@ void ScrollComponent::HandlePointerMove(float x, float y)
     // Store velocity sample in ring buffer
     m_VelSamples[m_VelSampleIdx % kVelocitySamples] = scrollDelta;
     m_VelSampleIdx++;
-    if (m_VelSampleCount < kVelocitySamples) m_VelSampleCount++;
+    if (m_VelSampleCount < kVelocitySamples)
+    {
+        m_VelSampleCount++;
+    }
 
     m_LastTouchPos = touchPos;
 
@@ -637,13 +756,19 @@ void ScrollComponent::HandlePointerMove(float x, float y)
     ClampScrollOffset();
 
     if (GetOwner())
+    {
         SyncChildObjects(GetOwner());
+    }
 }
 
 void ScrollComponent::HandlePointerUp(float x, float y)
 {
-    (void)x; (void)y;
-    if (!m_IsDragging) return;
+    (void)x;
+    (void)y;
+    if (!m_IsDragging)
+    {
+        return;
+    }
 
     m_IsDragging = false;
     m_IsSmoothScrolling = false;
@@ -663,14 +788,15 @@ void ScrollComponent::HandlePointerUp(float x, float y)
         double sum = 0.0;
         int32_t count = std::min(m_VelSampleCount, static_cast<int32_t>(kVelocitySamples));
         for (int32_t i = 0; i < count; i++)
+        {
             sum += (m_VelSamples[i]);
+        }
         m_ScrollVelocity = static_cast<float>(sum / count);
     }
 
     // Kill velocity if already at a bound and velocity would push further
     float maxScroll = GetMaxScrollOffset();
-    if ((m_ScrollOffset <= 0.0f && m_ScrollVelocity < 0.0f) ||
-        (m_ScrollOffset >= maxScroll && m_ScrollVelocity > 0.0f))
+    if ((m_ScrollOffset <= 0.0f && m_ScrollVelocity < 0.0f) || (m_ScrollOffset >= maxScroll && m_ScrollVelocity > 0.0f))
     {
         m_ScrollVelocity = 0.0f;
     }
@@ -690,7 +816,9 @@ void ScrollComponent::HandlePointerUp(float x, float y)
 void ScrollComponent::Start()
 {
     if (GetOwner())
+    {
         SyncChildObjects(GetOwner());
+    }
 
     DekiInput::InputCollider* collider = inputCollider.Get();
     if (!collider)
@@ -704,17 +832,11 @@ void ScrollComponent::Start()
     // Scroll will claim the gesture via DekiInput::InputDispatch when drag threshold is exceeded.
     collider->consumeInput = false;
 
-    collider->onPointerDown.push_back([this](float x, float y) {
-        HandlePointerDown(x, y);
-    });
+    collider->onPointerDown.push_back([this](float x, float y) { HandlePointerDown(x, y); });
 
-    collider->onPointerMove.push_back([this](float x, float y) {
-        HandlePointerMove(x, y);
-    });
+    collider->onPointerMove.push_back([this](float x, float y) { HandlePointerMove(x, y); });
 
-    collider->onPointerUp.push_back([this](float x, float y) {
-        HandlePointerUp(x, y);
-    });
+    collider->onPointerUp.push_back([this](float x, float y) { HandlePointerUp(x, y); });
 }
 
 bool ScrollComponent::NeedsRuntimeUpdate() const
@@ -729,10 +851,8 @@ void ScrollComponent::RuntimeUpdate(float deltaTime)
 
 void ScrollComponent::OnPropertyChanged(const char* propertyName)
 {
-    static const char* layoutProps[] = {
-        "itemSpacing", "paddingTop", "paddingBottom",
-        "paddingLeft", "paddingRight", "direction", "mode"
-    };
+    static const char* layoutProps[] = { "itemSpacing",  "paddingTop", "paddingBottom", "paddingLeft",
+                                         "paddingRight", "direction",  "mode" };
 
     for (const char* prop : layoutProps)
     {

@@ -32,13 +32,13 @@ enum class TextAlign : uint8_t
  */
 enum class TextVerticalAlign : uint8_t
 {
-    Top        = 0,
-    Middle     = 1,  // Legacy: centers on visual bounds of the whole font (ascent+descent)
-    Bottom     = 2,
-    CapCenter  = 3,  // Centers on cap-height — best for uppercase / mixed UI labels
-    XCenter    = 4,  // Centers on x-height — best for lowercase-heavy body text
+    Top = 0,
+    Middle = 1,  // Legacy: centers on visual bounds of the whole font (ascent+descent)
+    Bottom = 2,
+    CapCenter = 3,   // Centers on cap-height — best for uppercase / mixed UI labels
+    XCenter = 4,     // Centers on x-height — best for lowercase-heavy body text
     TypoCenter = 5,  // Centers on typographic midline; same as Middle for single-line
-    Baseline   = 6   // Baseline sits on the container center line
+    Baseline = 6     // Baseline sits on the container center line
 };
 
 /**
@@ -53,7 +53,6 @@ DEKI_FORMER_NAME("TextComponent")
 class TextComponent : public DekiRendering::RendererComponent
 {
 public:
-
     TextComponent();
     virtual ~TextComponent();
 
@@ -68,13 +67,15 @@ public:
 
     /** @brief Font asset reference (GUID stored in editor, auto-loaded) */
     DEKI_EXPORT
-    DEKI_TOOLTIP("A bitmap font asset. Fonts are baked to a fixed size, so pick one close to the size you want rather than scaling far from it.")
+    DEKI_TOOLTIP("A bitmap font asset. Fonts are baked to a fixed size, so pick one close to the size you want rather "
+                 "than scaling far from it.")
     Deki::AssetRef<BitmapFont> font;
 
 #ifdef DEKI_EDITOR
     /** @brief Font size in pixels (maps to baked variant) */
     DEKI_EXPORT
-    DEKI_TOOLTIP("Size used for the editor preview only. What the device draws is the size the font asset was baked at.")
+    DEKI_TOOLTIP(
+        "Size used for the editor preview only. What the device draws is the size the font asset was baked at.")
     DEKI_EDITOR_ONLY
     int32_t fontSize = 16;
 
@@ -124,7 +125,7 @@ public:
      * (GUID sync, preview, baking). Return non-null to use that font directly,
      * or nullptr to fall through to the runtime path (font.Get()).
      */
-    using FontResolveCallback = BitmapFont*(*)(TextComponent*);
+    using FontResolveCallback = BitmapFont* (*)(TextComponent*);
     static void SetFontResolveCallback(FontResolveCallback cb);
 
     /**
@@ -228,20 +229,16 @@ public:
     bool GetContentExtents(float& outWidth, float& outHeight) const override
     {
         if (width <= 0.0f || height <= 0.0f)
+        {
             return false;
+        }
         outWidth = width;
         outHeight = height;
         return true;
     }
 
-    bool RenderContent(const Deki::Object* owner,
-                       QuadBlit::Source& outSource,
-                       float& outPivotX,
-                       float& outPivotY,
-                       uint8_t& outTintR,
-                       uint8_t& outTintG,
-                       uint8_t& outTintB,
-                       uint8_t& outTintA) override;
+    bool RenderContent(const Deki::Object* owner, QuadBlit::Source& outSource, float& outPivotX, float& outPivotY,
+                       uint8_t& outTintR, uint8_t& outTintG, uint8_t& outTintB, uint8_t& outTintA) override;
 
     // ========================================================================
     // Layout methods (shared between runtime and editor)
@@ -280,7 +277,8 @@ public:
 
     /** @brief Text box width in meters */
     DEKI_EXPORT
-    DEKI_TOOLTIP("Width of the text box in meters. Alignment is measured against this, so it matters even when the text is shorter.")
+    DEKI_TOOLTIP("Width of the text box in meters. Alignment is measured against this, so it matters even when the "
+                 "text is shorter.")
     DEKI_UNIT(Distance)
     float width = 6.25f;
 
@@ -306,7 +304,8 @@ public:
 
     /** @brief Pixel scale for bitmap fonts (1x, 2x, 3x nearest-neighbor) */
     DEKI_EXPORT
-    DEKI_TOOLTIP("Whole-number magnification. 2 draws every glyph pixel as a 2x2 block, which keeps a pixel font crisp instead of blurring it.")
+    DEKI_TOOLTIP("Whole-number magnification. 2 draws every glyph pixel as a 2x2 block, which keeps a pixel font crisp "
+                 "instead of blurring it.")
     int32_t pixelScale = 1;
 
     /** @brief Horizontal text alignment */
@@ -316,7 +315,8 @@ public:
 
     /** @brief Vertical text alignment (new components default to cap-center for optical centering) */
     DEKI_EXPORT
-    DEKI_TOOLTIP("Vertical placement inside the height above. Cap-centre lines up the capital letters, which usually looks centred to the eye; true centre includes descenders.")
+    DEKI_TOOLTIP("Vertical placement inside the height above. Cap-centre lines up the capital letters, which usually "
+                 "looks centred to the eye; true centre includes descenders.")
     TextVerticalAlign verticalAlign = TextVerticalAlign::CapCenter;
 
     // Invalidate the render cache (call when text/font/color/size changes)
@@ -342,7 +342,6 @@ private:
     int32_t m_cropFirstRow = 0;
     int32_t m_cropHeight = 0;
     float m_cropPivotY = 0.5f;
-
 };
 
 // Generated property metadata (after class definition for offsetof)

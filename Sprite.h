@@ -15,11 +15,11 @@ namespace Deki2D
  */
 struct SpriteFrame
 {
-    char guid[37];  // 36 chars + null terminator (UUID format)
-    int32_t x;      // X position in parent texture
-    int32_t y;      // Y position in parent texture
-    int32_t width;  // Frame width
-    int32_t height; // Frame height
+    char guid[37];   // 36 chars + null terminator (UUID format)
+    int32_t x;       // X position in parent texture
+    int32_t y;       // Y position in parent texture
+    int32_t width;   // Frame width
+    int32_t height;  // Frame height
 
     // The frame's own 9-slice borders, measured inside the frame.
     bool hasNineSlice = false;
@@ -34,17 +34,17 @@ struct SpriteFrame
  */
 struct SpriteMetadata
 {
-    float pivotX;  // Pivot point X (0.0 to 1.0)
-    float pivotY;  // Pivot point Y (0.0 to 1.0)
-    float pixelsPerMeter;  // Pixels per world unit (for scaling)
-    uint8_t transparentR;  // Transparent color R (if hasTransparency)
-    uint8_t transparentG;  // Transparent color G (if hasTransparency)
-    uint8_t transparentB;  // Transparent color B (if hasTransparency)
-    uint8_t hasNineSlice;  // 1 if sprite has 9-slice data, 0 otherwise
-    uint16_t nineSliceLeft;    // 9-slice: pixels from left edge
-    uint16_t nineSliceRight;   // 9-slice: pixels from right edge
-    uint16_t nineSliceTop;     // 9-slice: pixels from top edge
-    uint16_t nineSliceBottom;  // 9-slice: pixels from bottom edge
+    float pivotX;                 // Pivot point X (0.0 to 1.0)
+    float pivotY;                 // Pivot point Y (0.0 to 1.0)
+    float pixelsPerMeter;         // Pixels per world unit (for scaling)
+    uint8_t transparentR;         // Transparent color R (if hasTransparency)
+    uint8_t transparentG;         // Transparent color G (if hasTransparency)
+    uint8_t transparentB;         // Transparent color B (if hasTransparency)
+    uint8_t hasNineSlice;         // 1 if sprite has 9-slice data, 0 otherwise
+    uint16_t nineSliceLeft;       // 9-slice: pixels from left edge
+    uint16_t nineSliceRight;      // 9-slice: pixels from right edge
+    uint16_t nineSliceTop;        // 9-slice: pixels from top edge
+    uint16_t nineSliceBottom;     // 9-slice: pixels from bottom edge
     uint16_t defaultFrameWidth;   // Spritesheet frame width (0 = use full width)
     uint16_t defaultFrameHeight;  // Spritesheet frame height (0 = use full height)
 };
@@ -54,13 +54,13 @@ struct SpriteMetadata
  */
 class Sprite : public Deki::Texture2D
 {
-   public:
+public:
     /// Asset type name for AssetManager::Load<T>() lookup
     static constexpr const char* AssetTypeName = "Sprite";
 
     // Sprite-specific properties
-    float pivotX;  // Pivot point X (0.0 to 1.0, default 0.5)
-    float pivotY;  // Pivot point Y (0.0 to 1.0, default 0.5)
+    float pivotX;          // Pivot point X (0.0 to 1.0, default 0.5)
+    float pivotY;          // Pivot point Y (0.0 to 1.0, default 0.5)
     float pixelsPerMeter;  // Pixels per world unit (default 16 = matches project PPM; ignored in camera Pixels mode)
     uint8_t transparentR;  // Transparent color R
     uint8_t transparentG;  // Transparent color G
@@ -78,7 +78,7 @@ class Sprite : public Deki::Texture2D
     Deki::Buffer<int16_t> chromaRowSpans;  // owning; see Deki::Texture2D::alphaRowSpans
 
     // 9-slice properties (for scalable UI elements)
-    bool hasNineSlice;     // Whether this sprite has 9-slice data
+    bool hasNineSlice;         // Whether this sprite has 9-slice data
     uint16_t nineSliceLeft;    // Pixels from left edge to start of center region
     uint16_t nineSliceRight;   // Pixels from right edge to start of center region
     uint16_t nineSliceTop;     // Pixels from top edge to start of center region
@@ -113,7 +113,9 @@ class Sprite : public Deki::Texture2D
     static int32_t SourceToStored(int32_t v, int32_t sourceSize, int32_t storedSize)
     {
         if (sourceSize <= 0 || sourceSize == storedSize)
+        {
             return v;
+        }
         return static_cast<int32_t>((static_cast<int64_t>(v) * storedSize * 2 + sourceSize) /
                                     (2 * static_cast<int64_t>(sourceSize)));
     }
@@ -265,7 +267,7 @@ class Sprite : public Deki::Texture2D
      */
     bool SetNineSliceBorders(uint16_t left, uint16_t right, uint16_t top, uint16_t bottom);
 
-   protected:
+protected:
     /**
      * @brief Load sprite data from memory buffer (includes sprite metadata)
      * @param header Parsed texture header
@@ -274,7 +276,7 @@ class Sprite : public Deki::Texture2D
      */
     bool LoadFromMemory(const Deki::Texture2D::Header& header, const uint8_t* data) override;
 
-   private:
+private:
     /**
      * @brief Set default sprite properties
      */

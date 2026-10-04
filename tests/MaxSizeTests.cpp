@@ -33,9 +33,16 @@ std::vector<uint8_t> Solid(int w, int h, uint8_t r, uint8_t g, uint8_t b, uint8_
 TEST(MaxSize, EdgeRuleMatchesTheRuntime)
 {
     for (int src : { 7, 72, 100, 3000 })
+    {
         for (int stored : { 1, 5, 32, 64, 2048 })
+        {
             for (int v = 0; v <= src; v += (src / 7) + 1)
-                EXPECT_EQ(MapEdge(v, src, stored), Sprite::SourceToStored(v, src, stored)) << v << " " << src << " " << stored;
+            {
+                EXPECT_EQ(MapEdge(v, src, stored), Sprite::SourceToStored(v, src, stored))
+                    << v << " " << src << " " << stored;
+            }
+        }
+    }
 }
 
 // Two frames side by side, red and blue: shrunk to an odd size, no stored
@@ -45,25 +52,33 @@ TEST(MaxSize, FramesDoNotBleed)
     const int w = 48, h = 24;
     std::vector<uint8_t> src = Solid(w, h, 255, 0, 0);
     for (int y = 0; y < h; ++y)
+    {
         for (int x = 24; x < 48; ++x)
         {
             uint8_t* p = &src[(static_cast<size_t>(y) * w + x) * 4];
             p[0] = 0;
             p[2] = 255;
         }
+    }
     const int dw = 21, dh = 11;  // not a clean fraction
     const std::vector<uint8_t> dst =
         ShrinkImage(src.data(), w, h, dw, dh, { { 0, 0, 24, 24 }, { 24, 0, 48, 24 } }, false);
     const int edge = MapEdge(24, w, dw);
     for (int y = 0; y < dh; ++y)
+    {
         for (int x = 0; x < dw; ++x)
         {
             const uint8_t* p = &dst[(static_cast<size_t>(y) * dw + x) * 4];
             if (x < edge)
+            {
                 EXPECT_TRUE(p[0] == 255 && p[2] == 0) << x << "," << y;
+            }
             else
+            {
                 EXPECT_TRUE(p[0] == 0 && p[2] == 255) << x << "," << y;
+            }
         }
+    }
 }
 
 // Averaging weights colour by alpha: a transparent black pixel beside a white
@@ -84,7 +99,9 @@ TEST(MaxSize, NearestKeepsExactColours)
     src[0] = 10;  // a pixel that is not the key
     std::vector<uint8_t> dst = ShrinkImage(src.data(), 4, 4, 2, 2, {}, true);
     for (size_t i = 0; i < dst.size(); i += 4)
+    {
         EXPECT_TRUE((dst[i] == 255 || dst[i] == 10) && dst[i + 1] == 0 && dst[i + 2] == 255);
+    }
 }
 
 // The loader brings frames, the default frame, nine-slice borders and

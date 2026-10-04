@@ -36,8 +36,7 @@ public:
 
     const char** GetExtensions() const override;
     int GetExtensionCount() const override;
-    void OnInspectorGUI(const std::string& assetPath,
-                        const std::string& assetGuid) override;
+    void OnInspectorGUI(const std::string& assetPath, const std::string& assetGuid) override;
 
     bool OverridesCacheStatus() const override { return true; }
     bool IsCached(const std::string& assetGuid) const override;
@@ -73,7 +72,10 @@ private:
     int m_GlyphAtlasW = 0;
     int m_GlyphAtlasH = 0;
     int m_GlyphDisplaySize = 0;
-    struct GlyphUV { float u0, v0, u1, v1; };
+    struct GlyphUV
+    {
+        float u0, v0, u1, v1;
+    };
     std::vector<GlyphUV> m_GlyphUVs;
 
     void LoadBdf(const std::string& assetPath);
@@ -86,6 +88,6 @@ private:
 
 DEKI_2D_API void RegisterBdfFileInspector();
 
-} // namespace Deki2D
+}  // namespace Deki2D
 
-#endif // DEKI_EDITOR
+#endif  // DEKI_EDITOR

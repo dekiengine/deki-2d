@@ -16,11 +16,12 @@
 namespace Deki2D
 {
 
-
 // Font resolve callback — set by editor to handle GUID sync, preview, baking
 TextComponent::FontResolveCallback TextComponent::s_fontResolveCallback = nullptr;
-void TextComponent::SetFontResolveCallback(FontResolveCallback cb) { s_fontResolveCallback = cb; }
-
+void TextComponent::SetFontResolveCallback(FontResolveCallback cb)
+{
+    s_fontResolveCallback = cb;
+}
 
 // ============================================================================
 // Component Registration
@@ -98,7 +99,9 @@ void TextComponent::SetColor(uint8_t r, uint8_t g, uint8_t b)
 int32_t TextComponent::GetTextWidth() const
 {
     if (!font || text.empty())
+    {
         return 0;
+    }
 
     return font->MeasureWidth(text.c_str());
 }
@@ -106,7 +109,9 @@ int32_t TextComponent::GetTextWidth() const
 int32_t TextComponent::GetTextHeight() const
 {
     if (!font || text.empty())
+    {
         return 0;
+    }
 
     // TODO: Handle word wrapping for multi-line text
     return font->GetLineHeight();
@@ -123,7 +128,9 @@ std::vector<std::string> TextComponent::WrapTextWithFont(const BitmapFont* fontP
     if (!fontPtr || text.empty() || widthPx <= 0)
     {
         if (!text.empty())
+        {
             result.push_back(text);
+        }
         return result;
     }
 
@@ -131,7 +138,7 @@ std::vector<std::string> TextComponent::WrapTextWithFont(const BitmapFont* fontP
     // widths plus the spaces between them. Measure each word once and add,
     // instead of re-measuring the whole growing line for every word appended
     // (quadratic in line length, with a string concatenation per step).
-    const int32_t ps = (std::max)(int32_t{1}, pixelScale);
+    const int32_t ps = (std::max)(int32_t{ 1 }, pixelScale);
     const int32_t spaceWidth = fontPtr->MeasureWidth(" ") * ps;
 
     std::string currentLine;
@@ -140,11 +147,16 @@ std::vector<std::string> TextComponent::WrapTextWithFont(const BitmapFont* fontP
     {
         // One paragraph per explicit newline.
         size_t paraEnd = text.find('\n', paraStart);
-        if (paraEnd == std::string::npos) paraEnd = text.size();
+        if (paraEnd == std::string::npos)
+        {
+            paraEnd = text.size();
+        }
         const std::string para = text.substr(paraStart, paraEnd - paraStart);
         paraStart = paraEnd + 1;
         if (paraEnd == text.size() && para.empty() && !result.empty())
+        {
             break;  // trailing newline: no extra empty line
+        }
 
         if (para.empty())
         {
@@ -166,19 +178,30 @@ std::vector<std::string> TextComponent::WrapTextWithFont(const BitmapFont* fontP
         while (wordStart < para.size())
         {
             // Skip runs of spaces; find the next word's extent.
-            while (wordStart < para.size() && para[wordStart] == ' ') ++wordStart;
-            if (wordStart >= para.size()) break;
+            while (wordStart < para.size() && para[wordStart] == ' ')
+            {
+                ++wordStart;
+            }
+            if (wordStart >= para.size())
+            {
+                break;
+            }
             size_t wordEnd = para.find(' ', wordStart);
-            if (wordEnd == std::string::npos) wordEnd = para.size();
+            if (wordEnd == std::string::npos)
+            {
+                wordEnd = para.size();
+            }
             const std::string word = para.substr(wordStart, wordEnd - wordStart);
             wordStart = wordEnd;
 
             const int32_t wordWidth = fontPtr->MeasureWidth(word.c_str()) * ps;
-            const int32_t joinedWidth = currentLine.empty() ? wordWidth
-                                                            : currentLineWidth + spaceWidth + wordWidth;
+            const int32_t joinedWidth = currentLine.empty() ? wordWidth : currentLineWidth + spaceWidth + wordWidth;
             if (joinedWidth <= widthPx)
             {
-                if (!currentLine.empty()) currentLine += ' ';
+                if (!currentLine.empty())
+                {
+                    currentLine += ' ';
+                }
                 currentLine += word;
                 currentLineWidth = joinedWidth;
             }
@@ -186,7 +209,9 @@ std::vector<std::string> TextComponent::WrapTextWithFont(const BitmapFont* fontP
             {
                 // Current line is full, start a new one.
                 if (!currentLine.empty())
+                {
                     result.push_back(currentLine);
+                }
                 if (wordWidth > widthPx)
                 {
                     // A single word wider than the box goes on its own line.
@@ -202,7 +227,9 @@ std::vector<std::string> TextComponent::WrapTextWithFont(const BitmapFont* fontP
             }
         }
         if (!currentLine.empty())
+        {
             result.push_back(currentLine);
+        }
     }
 
     return result;
@@ -213,7 +240,9 @@ void TextComponent::CalculateGlyphLayout(const BitmapFont* fontPtr, std::vector<
     outGlyphs.clear();
 
     if (!fontPtr || text.empty())
+    {
         return;
+    }
 
     // width/height are world meters; layout math runs in pixel space.
     const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
@@ -224,7 +253,7 @@ void TextComponent::CalculateGlyphLayout(const BitmapFont* fontPtr, std::vector<
     std::vector<std::string> lines = WrapTextWithFont(fontPtr);
 
     // Pixel scale factor
-    float ps = static_cast<float>((std::max)(int32_t{1}, pixelScale));
+    float ps = static_cast<float>((std::max)(int32_t{ 1 }, pixelScale));
 
     // Calculate total text height
     float lineHeightF = static_cast<float>(fontPtr->GetLineHeight()) * ps;
@@ -242,8 +271,7 @@ void TextComponent::CalculateGlyphLayout(const BitmapFont* fontPtr, std::vector<
 
     switch (verticalAlign)
     {
-        case TextVerticalAlign::Top:
-            break;
+        case TextVerticalAlign::Top: break;
         case TextVerticalAlign::Middle:
             // Use visual bounds for single line, lineHeight for multi-line
             if (lines.size() == 1)
@@ -269,11 +297,17 @@ void TextComponent::CalculateGlyphLayout(const BitmapFont* fontPtr, std::vector<
             // in font-space pixels. Positive values mean below baseline.
             float anchorOffset = 0.0f;
             if (verticalAlign == TextVerticalAlign::CapCenter)
+            {
                 anchorOffset = -static_cast<float>(fontPtr->GetCapHeight()) * 0.5f;
+            }
             else if (verticalAlign == TextVerticalAlign::XCenter)
+            {
                 anchorOffset = -static_cast<float>(fontPtr->GetXHeight()) * 0.5f;
+            }
             else if (verticalAlign == TextVerticalAlign::TypoCenter)
+            {
                 anchorOffset = static_cast<float>(minY + maxY) * 0.5f;
+            }
             // Baseline: anchorOffset stays 0
 
             // Baseline world-Y so the group of baselines is centered with anchor at 0.
@@ -300,15 +334,10 @@ void TextComponent::CalculateGlyphLayout(const BitmapFont* fontPtr, std::vector<
         float worldLineX = -containerW * 0.5f;
         switch (align)
         {
-            case TextAlign::Center:
-                worldLineX += (containerW - lineWidth) * 0.5f;
-                break;
-            case TextAlign::Right:
-                worldLineX += containerW - lineWidth;
-                break;
+            case TextAlign::Center: worldLineX += (containerW - lineWidth) * 0.5f; break;
+            case TextAlign::Right: worldLineX += containerW - lineWidth; break;
             case TextAlign::Left:
-            default:
-                break;
+            default: break;
         }
 
         // Process each character (UTF-8 aware)
@@ -321,7 +350,9 @@ void TextComponent::CalculateGlyphLayout(const BitmapFont* fontPtr, std::vector<
             uint32_t cp = BitmapFont::DecodeUtf8(lineData, lineLen, ci);
             const GlyphInfo* glyph = fontPtr->GetGlyphByCodepoint(cp);
             if (!glyph)
+            {
                 continue;
+            }
 
             // Store glyph layout
             GlyphLayout layout;
@@ -337,18 +368,15 @@ void TextComponent::CalculateGlyphLayout(const BitmapFont* fontPtr, std::vector<
     }
 }
 
-bool TextComponent::RenderContent(const Deki::Object* owner,
-                                   QuadBlit::Source& outSource,
-                                   float& outPivotX,
-                                   float& outPivotY,
-                                   uint8_t& outTintR,
-                                   uint8_t& outTintG,
-                                   uint8_t& outTintB,
-                                   uint8_t& outTintA)
+bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& outSource, float& outPivotX,
+                                  float& outPivotY, uint8_t& outTintR, uint8_t& outTintG, uint8_t& outTintB,
+                                  uint8_t& outTintA)
 {
     DEKI_PROFILE_SCOPE_N("TextComponent::RenderContent");
     if (!owner || text.empty())
+    {
         return false;
+    }
 
     // width/height are world meters; rasterization runs in pixel space.
     const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
@@ -356,45 +384,50 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
     const int32_t heightPx = static_cast<int32_t>(height * ppm);
 
     if (widthPx <= 0 || heightPx <= 0)
+    {
         return false;
+    }
 
     BitmapFont* fontPtr = nullptr;
 
     // Editor hook: let external code handle font resolution (GUID sync, preview, baking)
     if (s_fontResolveCallback)
+    {
         fontPtr = s_fontResolveCallback(this);
+    }
 
     // Runtime path: direct load from AssetRef
     if (!fontPtr)
     {
-        if (!font) return false;
+        if (!font)
+        {
+            return false;
+        }
         fontPtr = font.Get();
     }
 
     if (!fontPtr || !fontPtr->GetAtlas())
+    {
         return false;
+    }
 
     Deki::Texture2D* atlas = fontPtr->GetAtlas();
     if (!atlas->data)
+    {
         return false;
+    }
 
     // Check if we can reuse the cached buffer
-    bool cacheValid = static_cast<bool>(m_cachedBuffer)
-        && m_cachedText == text
-        && m_cachedWidth == widthPx
-        && m_cachedHeight == heightPx
-        && m_cachedColor == color
-        && m_cachedDecorationColor == decorationColor
-        && m_cachedAlign == align
-        && m_cachedVerticalAlign == verticalAlign
-        && m_cachedFont == fontPtr
-        && m_cachedPixelScale == pixelScale;
+    bool cacheValid = static_cast<bool>(m_cachedBuffer) && m_cachedText == text && m_cachedWidth == widthPx &&
+                      m_cachedHeight == heightPx && m_cachedColor == color &&
+                      m_cachedDecorationColor == decorationColor && m_cachedAlign == align &&
+                      m_cachedVerticalAlign == verticalAlign && m_cachedFont == fontPtr &&
+                      m_cachedPixelScale == pixelScale;
 
     if (cacheValid)
     {
-        outSource = QuadBlit::MakeSource(
-            m_cachedBuffer.Data() + m_cropFirstRow * widthPx * 3,
-            widthPx, m_cropHeight, QuadBlit::PixelLayout::RGB565A8(), false);
+        outSource = QuadBlit::MakeSource(m_cachedBuffer.Data() + m_cropFirstRow * widthPx * 3, widthPx, m_cropHeight,
+                                         QuadBlit::PixelLayout::RGB565A8(), false);
         outSource.pixelsPerMeter = ppm;
         outPivotX = 0.5f;
         outPivotY = m_cropPivotY;
@@ -447,23 +480,27 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
     //               Shadow: fillColor with alpha ramp 24..255
     FontDecorationMode decoMode = fontPtr->GetDecorationMode();
     const bool isPalette = (decoMode != FontDecorationMode::None);
-    uint16_t pal_rgb[16] = {0};
-    uint8_t  pal_a[16]   = {0};
+    uint16_t pal_rgb[16] = { 0 };
+    uint8_t pal_a[16] = { 0 };
     if (isPalette)
     {
-        const uint16_t decoRgb = ((decorationColor.r >> 3) << 11) |
-                                 ((decorationColor.g >> 2) <<  5) |
-                                 (decorationColor.b >> 3);
-        pal_rgb[0] = 0;           pal_a[0] = 0;
-        pal_rgb[1] = decoRgb;     pal_a[1] =  64;
-        pal_rgb[2] = decoRgb;     pal_a[2] = 128;
-        pal_rgb[3] = decoRgb;     pal_a[3] = 192;
-        pal_rgb[4] = decoRgb;     pal_a[4] = 255;
+        const uint16_t decoRgb =
+            ((decorationColor.r >> 3) << 11) | ((decorationColor.g >> 2) << 5) | (decorationColor.b >> 3);
+        pal_rgb[0] = 0;
+        pal_a[0] = 0;
+        pal_rgb[1] = decoRgb;
+        pal_a[1] = 64;
+        pal_rgb[2] = decoRgb;
+        pal_a[2] = 128;
+        pal_rgb[3] = decoRgb;
+        pal_a[3] = 192;
+        pal_rgb[4] = decoRgb;
+        pal_a[4] = 255;
         if (decoMode == FontDecorationMode::Outline)
         {
             for (int i = 5; i <= 15; ++i)
             {
-                int t = i - 5;                          // 0..10
+                int t = i - 5;  // 0..10
                 int mixR = (decorationColor.r * (10 - t) + color.r * t) / 10;
                 int mixG = (decorationColor.g * (10 - t) + color.g * t) / 10;
                 int mixB = (decorationColor.b * (10 - t) + color.b * t) / 10;
@@ -471,13 +508,16 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
                 pal_a[i] = 255;
             }
         }
-        else // Shadow
+        else  // Shadow
         {
             for (int i = 5; i <= 15; ++i)
             {
                 pal_rgb[i] = text_rgb565;
                 pal_a[i] = static_cast<uint8_t>(24 + (i - 5) * 23);  // 24..277 → clamps to 255 at top
-                if (i == 15) pal_a[i] = 255;
+                if (i == 15)
+                {
+                    pal_a[i] = 255;
+                }
             }
         }
     }
@@ -487,11 +527,12 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
     int32_t alpha_offset;
     switch (atlas->format)
     {
-        case Deki::Texture2D::TextureFormat::RGBA8888:  alpha_offset = 3; break;
-        case Deki::Texture2D::TextureFormat::RGB565A8:  alpha_offset = 2; break;
-        case Deki::Texture2D::TextureFormat::ALPHA8:    alpha_offset = 0; break;
+        case Deki::Texture2D::TextureFormat::RGBA8888: alpha_offset = 3; break;
+        case Deki::Texture2D::TextureFormat::RGB565A8: alpha_offset = 2; break;
+        case Deki::Texture2D::TextureFormat::ALPHA8: alpha_offset = 0; break;
         default:
-            alpha_offset = (atlas->hasTransparency && atlas->format == Deki::Texture2D::TextureFormat::RGB565) ? -2 : -1;
+            alpha_offset =
+                (atlas->hasTransparency && atlas->format == Deki::Texture2D::TextureFormat::RGB565) ? -2 : -1;
             break;
     }
 
@@ -509,7 +550,6 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
         DekiPixel::QuantizeRGB565(key_r, key_g, key_b);
     }
 
-
     // Rows the glyphs actually touch, so the crop scan below reads only them.
     int32_t touchedFirstRow = heightPx;
     int32_t touchedLastRow = -1;
@@ -518,11 +558,13 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
     for (const auto& layout : glyphLayouts)
     {
         if (!layout.glyph)
+        {
             continue;
+        }
 
         const GlyphInfo* glyph = layout.glyph;
 
-        int32_t ps = (std::max)(int32_t{1}, pixelScale);
+        int32_t ps = (std::max)(int32_t{ 1 }, pixelScale);
 
         // Convert world position to buffer position (center + world offset, scaled)
         int32_t dest_x = static_cast<int32_t>(std::floor(centerX + layout.worldX)) + glyph->offsetX * ps;
@@ -565,7 +607,9 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
 
         // Nothing to render for this glyph
         if (clip_left >= clip_right || clip_top >= clip_bottom)
+        {
             continue;
+        }
 
         touchedFirstRow = (std::min)(touchedFirstRow, dest_y);
         touchedLastRow = (std::max)(touchedLastRow, dest_y + (clip_bottom - clip_top) - 1);
@@ -591,7 +635,9 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
                     // V4 palette path: atlas byte's low nibble is a 0..15 index.
                     uint8_t idx = atlas_data[atlas_off + (alpha_offset >= 0 ? alpha_offset : 0)] & 0x0F;
                     if (idx == 0)
+                    {
                         continue;
+                    }
                     size_t buf_offset = (buf_row + buf_x) * 3;
                     *(uint16_t*)(m_cachedBuffer.Data() + buf_offset) = pal_rgb[idx];
                     m_cachedBuffer[buf_offset + 2] = pal_a[idx];
@@ -620,7 +666,9 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
 
                 // Skip fully transparent pixels
                 if (alpha == 0)
+                {
                     continue;
+                }
 
                 // Write to buffer (RGB565A8: 2 bytes RGB565 + 1 byte alpha)
                 size_t buf_offset = (buf_row + buf_x) * 3;
@@ -647,14 +695,17 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
     int32_t firstRow = heightPx;
     int32_t lastRow = -1;
     const int32_t scanEnd = (std::min)(heightPx, touchedLastRow + 1);
-    for (int32_t row = (std::max)(int32_t{0}, touchedFirstRow); row < scanEnd; row++)
+    for (int32_t row = (std::max)(int32_t{ 0 }, touchedFirstRow); row < scanEnd; row++)
     {
         const uint8_t* rowPtr = m_cachedBuffer.Data() + row * widthPx * 3;
         for (int32_t col = 0; col < widthPx; col++)
         {
             if (rowPtr[col * 3 + 2] != 0)  // Check alpha byte
             {
-                if (row < firstRow) firstRow = row;
+                if (row < firstRow)
+                {
+                    firstRow = row;
+                }
                 lastRow = row;
                 break;
             }
@@ -674,13 +725,11 @@ bool TextComponent::RenderContent(const Deki::Object* owner,
     // Adjust pivot so the cropped sub-region stays at the correct world position
     // Original pivot 0.5 corresponds to the center of the full height buffer.
     // We need pivotY such that: cropFirstRow + pivotY * cropHeight == 0.5 * heightPx
-    m_cropPivotY = (0.5f * heightPx - static_cast<float>(m_cropFirstRow))
-                 / static_cast<float>(m_cropHeight);
+    m_cropPivotY = (0.5f * heightPx - static_cast<float>(m_cropFirstRow)) / static_cast<float>(m_cropHeight);
 
     // Return source - RGB565A8 format (not owned by caller, we manage lifetime)
-    outSource = QuadBlit::MakeSource(
-        m_cachedBuffer.Data() + m_cropFirstRow * widthPx * 3,
-        widthPx, m_cropHeight, QuadBlit::PixelLayout::RGB565A8(), false);
+    outSource = QuadBlit::MakeSource(m_cachedBuffer.Data() + m_cropFirstRow * widthPx * 3, widthPx, m_cropHeight,
+                                     QuadBlit::PixelLayout::RGB565A8(), false);
     outSource.pixelsPerMeter = ppm;
     outPivotX = 0.5f;
     outPivotY = m_cropPivotY;

@@ -34,16 +34,22 @@ namespace DekiEditor
 static bool IsProceduralSpriteAsset(const std::string& assetPath)
 {
     if (assetPath.empty())
+    {
         return false;
+    }
 
     // Check if it's a .asset file
     if (assetPath.length() < 6 || assetPath.substr(assetPath.length() - 6) != ".asset")
+    {
         return false;
+    }
 
     // Read the JSON to check the type
     std::ifstream file(assetPath);
     if (!file.is_open())
+    {
         return false;
+    }
 
     try
     {
@@ -93,7 +99,8 @@ static void SpriteGroupHeader(const char* title)
 }
 
 // Helper functions for parsing ProceduralSprite JSON
-static void SpriteParseBorderWidth(const nlohmann::json& data, int32_t& top, int32_t& right, int32_t& bottom, int32_t& left)
+static void SpriteParseBorderWidth(const nlohmann::json& data, int32_t& top, int32_t& right, int32_t& bottom,
+                                   int32_t& left)
 {
     if (data.contains("border_width"))
     {
@@ -170,16 +177,15 @@ static void SpriteParseBorderRadius(const nlohmann::json& data, int32_t& tl, int
 class SpriteCustomEditor : public CustomEditor
 {
 public:
-    const char* GetComponentName() const override
-    {
-        return "SpriteComponent";
-    }
+    const char* GetComponentName() const override { return "SpriteComponent"; }
 
     std::string GetTextureAssetGuid(Deki::Component* comp) override
     {
         auto* spriteComp = static_cast<SpriteComponent*>(comp);
         if (!spriteComp)
+        {
             return "";
+        }
         return spriteComp->sprite.guid;
     }
 
@@ -199,8 +205,8 @@ public:
         }
 
         // For sub-assets, source holds the frame GUID needed for UV/size lookups
-        const std::string& frameGuid = spriteComp->sprite.source.empty()
-            ? spriteComp->sprite.guid : spriteComp->sprite.source;
+        const std::string& frameGuid =
+            spriteComp->sprite.source.empty() ? spriteComp->sprite.guid : spriteComp->sprite.source;
 
         uint32_t texWidth = 0, texHeight = 0;
         // Use LoadFrameTexture to handle SubAsset GUIDs (loads parent texture)
@@ -240,12 +246,17 @@ public:
         // match the rendered quad, not the source texture. width/height are
         // world meters; multiply by ppm to keep displayWidth in pixels like
         // the texture/frame fallback paths above.
-        if (spriteComp->renderMode == SpriteRenderMode::Tiled ||
-            spriteComp->renderMode == SpriteRenderMode::NineSlice)
+        if (spriteComp->renderMode == SpriteRenderMode::Tiled || spriteComp->renderMode == SpriteRenderMode::NineSlice)
         {
             const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
-            if (spriteComp->width  > 0.0f) displayWidth  = spriteComp->width  * ppm;
-            if (spriteComp->height > 0.0f) displayHeight = spriteComp->height * ppm;
+            if (spriteComp->width > 0.0f)
+            {
+                displayWidth = spriteComp->width * ppm;
+            }
+            if (spriteComp->height > 0.0f)
+            {
+                displayHeight = spriteComp->height * ppm;
+            }
         }
 
         outWidth = displayWidth;
@@ -265,7 +276,9 @@ public:
     {
         auto* spriteComp = static_cast<SpriteComponent*>(comp);
         if (!spriteComp)
+        {
             return;
+        }
 
         const std::string& spriteGuid = spriteComp->sprite.guid;
 
@@ -349,8 +362,9 @@ public:
 
         // ── Background ───────────────────────────────────────────────────
         SpriteSectionHeader("Background");
-        float bgColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-        if (jsonData.contains("background_color") && jsonData["background_color"].is_array() && jsonData["background_color"].size() >= 4)
+        float bgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        if (jsonData.contains("background_color") && jsonData["background_color"].is_array() &&
+            jsonData["background_color"].size() >= 4)
         {
             bgColor[0] = jsonData["background_color"][0].get<int>() / 255.0f;
             bgColor[1] = jsonData["background_color"][1].get<int>() / 255.0f;
@@ -360,12 +374,8 @@ public:
         ui.PropertyRow("Color");
         if (ui.ColorEdit4("##bgColor", bgColor))
         {
-            jsonData["background_color"] = {
-                static_cast<int>(bgColor[0] * 255),
-                static_cast<int>(bgColor[1] * 255),
-                static_cast<int>(bgColor[2] * 255),
-                static_cast<int>(bgColor[3] * 255)
-            };
+            jsonData["background_color"] = { static_cast<int>(bgColor[0] * 255), static_cast<int>(bgColor[1] * 255),
+                                             static_cast<int>(bgColor[2] * 255), static_cast<int>(bgColor[3] * 255) };
             modified = true;
         }
 
@@ -376,24 +386,37 @@ public:
 
         bool bwChanged = false;
         ui.PropertyRow("Top");
-        if (ui.DragInt("##bwTop", &bwTop, 1.0f, 0, 100)) bwChanged = true;
+        if (ui.DragInt("##bwTop", &bwTop, 1.0f, 0, 100))
+        {
+            bwChanged = true;
+        }
         ui.PropertyRow("Right");
-        if (ui.DragInt("##bwRight", &bwRight, 1.0f, 0, 100)) bwChanged = true;
+        if (ui.DragInt("##bwRight", &bwRight, 1.0f, 0, 100))
+        {
+            bwChanged = true;
+        }
         ui.PropertyRow("Bottom");
-        if (ui.DragInt("##bwBottom", &bwBottom, 1.0f, 0, 100)) bwChanged = true;
+        if (ui.DragInt("##bwBottom", &bwBottom, 1.0f, 0, 100))
+        {
+            bwChanged = true;
+        }
         ui.PropertyRow("Left");
-        if (ui.DragInt("##bwLeft", &bwLeft, 1.0f, 0, 100)) bwChanged = true;
+        if (ui.DragInt("##bwLeft", &bwLeft, 1.0f, 0, 100))
+        {
+            bwChanged = true;
+        }
 
         if (bwChanged)
         {
-            jsonData["border_width"] = {bwTop, bwRight, bwBottom, bwLeft};
+            jsonData["border_width"] = { bwTop, bwRight, bwBottom, bwLeft };
             modified = true;
         }
 
         // ── Border Color ─────────────────────────────────────────────────
         SpriteSectionHeader("Border Color");
-        float borderColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-        if (jsonData.contains("border_color") && jsonData["border_color"].is_array() && jsonData["border_color"].size() >= 4)
+        float borderColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        if (jsonData.contains("border_color") && jsonData["border_color"].is_array() &&
+            jsonData["border_color"].size() >= 4)
         {
             borderColor[0] = jsonData["border_color"][0].get<int>() / 255.0f;
             borderColor[1] = jsonData["border_color"][1].get<int>() / 255.0f;
@@ -403,12 +426,9 @@ public:
         ui.PropertyRow("Color");
         if (ui.ColorEdit4("##borderColor", borderColor))
         {
-            jsonData["border_color"] = {
-                static_cast<int>(borderColor[0] * 255),
-                static_cast<int>(borderColor[1] * 255),
-                static_cast<int>(borderColor[2] * 255),
-                static_cast<int>(borderColor[3] * 255)
-            };
+            jsonData["border_color"] = { static_cast<int>(borderColor[0] * 255), static_cast<int>(borderColor[1] * 255),
+                                         static_cast<int>(borderColor[2] * 255),
+                                         static_cast<int>(borderColor[3] * 255) };
             jsonData.erase("border_top_color");
             jsonData.erase("border_right_color");
             jsonData.erase("border_bottom_color");
@@ -423,17 +443,29 @@ public:
 
         bool brChanged = false;
         ui.PropertyRow("Top Left");
-        if (ui.DragInt("##brTL", &brTL, 1.0f, 0, 200)) brChanged = true;
+        if (ui.DragInt("##brTL", &brTL, 1.0f, 0, 200))
+        {
+            brChanged = true;
+        }
         ui.PropertyRow("Top Right");
-        if (ui.DragInt("##brTR", &brTR, 1.0f, 0, 200)) brChanged = true;
+        if (ui.DragInt("##brTR", &brTR, 1.0f, 0, 200))
+        {
+            brChanged = true;
+        }
         ui.PropertyRow("Bottom Right");
-        if (ui.DragInt("##brBR", &brBR, 1.0f, 0, 200)) brChanged = true;
+        if (ui.DragInt("##brBR", &brBR, 1.0f, 0, 200))
+        {
+            brChanged = true;
+        }
         ui.PropertyRow("Bottom Left");
-        if (ui.DragInt("##brBL", &brBL, 1.0f, 0, 200)) brChanged = true;
+        if (ui.DragInt("##brBL", &brBL, 1.0f, 0, 200))
+        {
+            brChanged = true;
+        }
 
         if (brChanged)
         {
-            jsonData["border_radius"] = {brTL, brTR, brBR, brBL};
+            jsonData["border_radius"] = { brTL, brTR, brBR, brBL };
             modified = true;
         }
 
@@ -441,12 +473,13 @@ public:
         SpriteSectionHeader("9-Slice");
         {
             int32_t nsTop = 0, nsRight = 0, nsBottom = 0, nsLeft = 0;
-            if (jsonData.contains("nine_slice") && jsonData["nine_slice"].is_array() && jsonData["nine_slice"].size() >= 4)
+            if (jsonData.contains("nine_slice") && jsonData["nine_slice"].is_array() &&
+                jsonData["nine_slice"].size() >= 4)
             {
-                nsTop    = jsonData["nine_slice"][0].get<int32_t>();
-                nsRight  = jsonData["nine_slice"][1].get<int32_t>();
+                nsTop = jsonData["nine_slice"][0].get<int32_t>();
+                nsRight = jsonData["nine_slice"][1].get<int32_t>();
                 nsBottom = jsonData["nine_slice"][2].get<int32_t>();
-                nsLeft   = jsonData["nine_slice"][3].get<int32_t>();
+                nsLeft = jsonData["nine_slice"][3].get<int32_t>();
             }
             char nsBuf[128];
             std::snprintf(nsBuf, sizeof(nsBuf), "L:%d  R:%d  T:%d  B:%d", nsLeft, nsRight, nsTop, nsBottom);
@@ -470,12 +503,7 @@ public:
         // Apply changes through command system if modified
         if (modified)
         {
-            EditorUI::Get().ModifyAsset(
-                assetPath,
-                spriteGuid,
-                originalData.dump(2),
-                jsonData.dump(2)
-            );
+            EditorUI::Get().ModifyAsset(assetPath, spriteGuid, originalData.dump(2), jsonData.dump(2));
         }
     }
 
@@ -486,7 +514,9 @@ private:
     void DrawNormalSpriteNineSliceUI(const std::string& assetPath, int frameIndex)
     {
         if (assetPath.empty())
+        {
             return;
+        }
 
         auto& ui = EditorUI::Get();
         ui.Separator();
@@ -508,21 +538,29 @@ private:
                     {
                         if (dataJson.contains("settings") && dataJson["settings"].contains("frame_nine_slice") &&
                             dataJson["settings"]["frame_nine_slice"].contains(key))
+                        {
                             node = &dataJson["settings"]["frame_nine_slice"][key];
+                        }
                     }
                     else if (dataJson.contains("settings") && dataJson["settings"].contains("nine_slice"))
+                    {
                         node = &dataJson["settings"]["nine_slice"];
+                    }
                     else if (dataJson.contains("nine_slice"))
+                    {
                         node = &dataJson["nine_slice"];
+                    }
                     if (node && node->is_array() && node->size() >= 4)
                     {
-                        nsTop    = (*node)[0].get<int32_t>();
-                        nsRight  = (*node)[1].get<int32_t>();
+                        nsTop = (*node)[0].get<int32_t>();
+                        nsRight = (*node)[1].get<int32_t>();
                         nsBottom = (*node)[2].get<int32_t>();
-                        nsLeft   = (*node)[3].get<int32_t>();
+                        nsLeft = (*node)[3].get<int32_t>();
                     }
                 }
-                catch (...) {}
+                catch (...)
+                {
+                }
             }
         }
 
@@ -541,6 +579,6 @@ private:
 REGISTER_EDITOR(SpriteCustomEditor)
 REGISTER_CREATE_MENU_ITEM(SpriteComponent, "2D", "Sprite", "Sprite", "SpriteComponent")
 
-} // namespace DekiEditor
+}  // namespace DekiEditor
 
-#endif // DEKI_EDITOR
+#endif  // DEKI_EDITOR

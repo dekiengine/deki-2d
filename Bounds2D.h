@@ -26,7 +26,10 @@ struct Bounds2D
     Bounds2D() = default;
 
     Bounds2D(float w, float h)
-        : width(w), height(h) {}
+        : width(w),
+          height(h)
+    {
+    }
 
     /**
      * @brief Get total width including padding
@@ -41,10 +44,7 @@ struct Bounds2D
     /**
      * @brief Set uniform padding on all sides
      */
-    void SetPadding(float padding)
-    {
-        paddingLeft = paddingRight = paddingTop = paddingBottom = padding;
-    }
+    void SetPadding(float padding) { paddingLeft = paddingRight = paddingTop = paddingBottom = padding; }
 
     /**
      * @brief Set padding per side
@@ -65,10 +65,7 @@ struct Bounds2D
      */
     bool Contains(float x, float y) const
     {
-        return x >= -paddingLeft &&
-               x <= width + paddingRight &&
-               y >= -paddingTop &&
-               y <= height + paddingBottom;
+        return x >= -paddingLeft && x <= width + paddingRight && y >= -paddingTop && y <= height + paddingBottom;
     }
 };
 

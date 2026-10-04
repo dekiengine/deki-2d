@@ -35,10 +35,10 @@ public:
      */
     enum class HintingMode
     {
-        None,   // FT_LOAD_NO_HINTING  — unhinted, full grayscale AA
-        Light,  // FT_LOAD_TARGET_LIGHT — no horizontal hinting, smoothest on low-DPI
-        Normal, // FT_LOAD_TARGET_NORMAL — FreeType default hinting
-        Mono    // FT_LOAD_TARGET_MONO  — 1-bit, no AA, pixel-crisp
+        None,    // FT_LOAD_NO_HINTING  — unhinted, full grayscale AA
+        Light,   // FT_LOAD_TARGET_LIGHT — no horizontal hinting, smoothest on low-DPI
+        Normal,  // FT_LOAD_TARGET_NORMAL — FreeType default hinting
+        Mono     // FT_LOAD_TARGET_MONO  — 1-bit, no AA, pixel-crisp
     };
 
     /**
@@ -49,9 +49,9 @@ public:
      */
     enum class DecorationMode : uint8_t
     {
-        None    = 0,
-        Outline = 1,   // Glyph dilated by `outlineSize` px on all sides
-        Shadow  = 2    // Secondary shape = glyph translated by (shadowDx, shadowDy)
+        None = 0,
+        Outline = 1,  // Glyph dilated by `outlineSize` px on all sides
+        Shadow = 2    // Secondary shape = glyph translated by (shadowDx, shadowDy)
     };
 
     /**
@@ -60,12 +60,12 @@ public:
     struct CompileOptions
     {
         int fontSize = 16;
-        int firstChar = 32;   // ASCII space
-        int lastChar = 126;   // ASCII tilde
-        int padding = 2;      // Padding around each glyph
+        int firstChar = 32;  // ASCII space
+        int lastChar = 126;  // ASCII tilde
+        int padding = 2;     // Padding around each glyph
         int maxAtlasSize = 2048;
         HintingMode hinting = HintingMode::Light;
-        int oversample = 2;   // 1=off, 2/3/4=supersample at N×size then box-filter down. Forced to 1 for Mono.
+        int oversample = 2;  // 1=off, 2/3/4=supersample at N×size then box-filter down. Forced to 1 for Mono.
         DecorationMode decoration = DecorationMode::None;
         int outlineSize = 1;  // Used when decoration == Outline. Valid 1..3.
         int shadowDx = 1;     // Used when decoration == Shadow. Valid -3..+3.
@@ -77,21 +77,21 @@ public:
      */
     struct CompileResult
     {
-        std::vector<uint8_t> atlasRGBA;      // RGBA pixel data
-        std::vector<GlyphInfo> glyphs;       // Glyph metrics
-        std::vector<uint32_t> codepoints;    // Codepoint for each glyph (v2 sparse format)
+        std::vector<uint8_t> atlasRGBA;    // RGBA pixel data
+        std::vector<GlyphInfo> glyphs;     // Glyph metrics
+        std::vector<uint32_t> codepoints;  // Codepoint for each glyph (v2 sparse format)
         uint32_t atlasWidth = 0;
         uint32_t atlasHeight = 0;
         uint32_t firstChar = 32;
         uint32_t lastChar = 126;
         uint8_t lineHeight = 0;
         uint8_t baseline = 0;
-        uint8_t capHeight = 0;               // height of 'H' from baseline (0 = unknown)
-        uint8_t xHeight = 0;                 // height of 'x' from baseline (0 = unknown)
+        uint8_t capHeight = 0;  // height of 'H' from baseline (0 = unknown)
+        uint8_t xHeight = 0;    // height of 'x' from baseline (0 = unknown)
         DecorationMode decoration = DecorationMode::None;
-        int8_t decorationA = 0;              // outline size, or shadow dx
-        int8_t decorationB = 0;              // shadow dy (unused for outline)
-        bool isSparse = false;               // true = v2 sparse codepoint table
+        int8_t decorationA = 0;  // outline size, or shadow dx
+        int8_t decorationB = 0;  // shadow dy (unused for outline)
+        bool isSparse = false;   // true = v2 sparse codepoint table
     };
 
     /**
@@ -101,11 +101,8 @@ public:
      * @param outResult Output containing atlas and glyph data
      * @return true on success, false on failure
      */
-    static bool CompileTrueTypeFont(
-        const std::string& ttfPath,
-        const CompileOptions& options,
-        CompileResult& outResult
-    );
+    static bool CompileTrueTypeFont(const std::string& ttfPath, const CompileOptions& options,
+                                    CompileResult& outResult);
 
     /**
      * @brief Generate glyph info for a monospace/grid-based font
@@ -117,11 +114,8 @@ public:
      * @param outGlyphs Output glyph info array
      * @return true on success
      */
-    static bool GenerateMonospaceGlyphs(
-        int glyphWidth, int glyphHeight,
-        int firstChar, int charCount, int charsPerRow,
-        std::vector<GlyphInfo>& outGlyphs
-    );
+    static bool GenerateMonospaceGlyphs(int glyphWidth, int glyphHeight, int firstChar, int charCount, int charsPerRow,
+                                        std::vector<GlyphInfo>& outGlyphs);
 
     /**
      * @brief BDF compilation options
@@ -132,9 +126,9 @@ public:
         int padding = 2;
         int maxAtlasSize = 2048;
         DecorationMode decoration = DecorationMode::None;
-        int outlineSize = 1;   // 1..3 px when decoration == Outline
-        int shadowDx = 1;      // -3..+3 px when decoration == Shadow
-        int shadowDy = 1;      // -3..+3 px when decoration == Shadow
+        int outlineSize = 1;  // 1..3 px when decoration == Outline
+        int shadowDx = 1;     // -3..+3 px when decoration == Shadow
+        int shadowDy = 1;     // -3..+3 px when decoration == Shadow
     };
 
     /**
@@ -144,11 +138,7 @@ public:
      * @param outResult Output containing atlas and glyph data
      * @return true on success, false on failure
      */
-    static bool CompileBdfFont(
-        const std::string& bdfPath,
-        const BdfCompileOptions& options,
-        CompileResult& outResult
-    );
+    static bool CompileBdfFont(const std::string& bdfPath, const BdfCompileOptions& options, CompileResult& outResult);
 
     /**
      * @brief Get all codepoints available in a BDF file
@@ -164,13 +154,9 @@ public:
      * @param atlasFilename Filename of the atlas (stored in header)
      * @return true on success
      */
-    static bool WriteDfontFile(
-        const std::string& path,
-        const CompileResult& result,
-        const std::string& atlasFilename
-    );
+    static bool WriteDfontFile(const std::string& path, const CompileResult& result, const std::string& atlasFilename);
 };
 
-} // namespace Deki2D
+}  // namespace Deki2D
 
-#endif // DEKI_EDITOR
+#endif  // DEKI_EDITOR

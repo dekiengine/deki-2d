@@ -69,7 +69,8 @@ bool FrameAnimationMsgPackHelper::LoadAnimation(const char* msgpack_path, FrameA
     return LoadAnimationFromMemory(buffer.data(), static_cast<size_t>(size), out_data);
 }
 
-bool FrameAnimationMsgPackHelper::LoadAnimationFromMemory(const uint8_t* data, size_t size, FrameAnimationData* out_data)
+bool FrameAnimationMsgPackHelper::LoadAnimationFromMemory(const uint8_t* data, size_t size,
+                                                          FrameAnimationData* out_data)
 {
     if (!data || size == 0 || !out_data)
     {
@@ -97,10 +98,12 @@ bool FrameAnimationMsgPackHelper::LoadAnimationFromMemory(const uint8_t* data, s
 
     int totalFrames = 0;
     for (const auto& anim : out_data->animations)
+    {
         totalFrames += static_cast<int>(anim.frames.size());
+    }
 
     DEKI_LOG_INTERNAL("FrameAnimationMsgPackHelper::LoadAnimation - loaded %d animations with %d total frames",
-                  static_cast<int>(out_data->animations.size()), totalFrames);
+                      static_cast<int>(out_data->animations.size()), totalFrames);
 
     return true;
 }
@@ -132,10 +135,13 @@ bool FrameAnimationMsgPackHelper::SaveAnimation(const char* msgpack_path, const 
 
         int totalFrames = 0;
         for (const auto& seq : anim_data->animations)
+        {
             totalFrames += static_cast<int>(seq.frames.size());
+        }
 
-        DEKI_LOG_INTERNAL("FrameAnimationMsgPackHelper::SaveAnimation - saved %d animations with %d total frames (%zu bytes)",
-                      static_cast<int>(anim_data->animations.size()), totalFrames, msgpack_data.size());
+        DEKI_LOG_INTERNAL(
+            "FrameAnimationMsgPackHelper::SaveAnimation - saved %d animations with %d total frames (%zu bytes)",
+            static_cast<int>(anim_data->animations.size()), totalFrames, msgpack_data.size());
 
         return file.good();
     }
@@ -154,28 +160,37 @@ bool FrameAnimationMsgPackHelper::SaveAnimation(const char* msgpack_path, const 
 // Called, not a static registrar: a firmware links the game from an archive,
 // and the linker drops an object nothing references, registrar and all. That
 // is how animations went unloadable on the device.
-namespace {
-    bool s_AnimLoaderRegistered = false;
+namespace
+{
+bool s_AnimLoaderRegistered = false;
 }
 
 void RegisterAnimationLoader()
 {
     if (s_AnimLoaderRegistered)
+    {
         return;
+    }
     s_AnimLoaderRegistered = true;
 
-    auto loader = [](const char* p) -> void* {
+    auto loader = [](const char* p) -> void*
+    {
         auto* data = new FrameAnimationData();
         if (FrameAnimationMsgPackHelper::LoadAnimation(p, data))
+        {
             return data;
+        }
         delete data;
         return nullptr;
     };
     auto unloader = [](void* a) { delete static_cast<FrameAnimationData*>(a); };
-    auto memLoader = [](const uint8_t* d, size_t n) -> void* {
+    auto memLoader = [](const uint8_t* d, size_t n) -> void*
+    {
         auto* data = new FrameAnimationData();
         if (FrameAnimationMsgPackHelper::LoadAnimationFromMemory(d, n, data))
+        {
             return data;
+        }
         delete data;
         return nullptr;
     };

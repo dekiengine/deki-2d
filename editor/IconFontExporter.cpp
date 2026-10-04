@@ -25,7 +25,6 @@
 #include <fstream>
 #include <cmath>
 
-
 namespace DekiEditor
 {
 
@@ -45,7 +44,9 @@ IconFontExporter::~IconFontExporter()
 {
     m_CancelDownload = true;
     if (m_DownloadThread.joinable())
+    {
         m_DownloadThread.join();
+    }
     CleanupAtlas();
     CleanupFreeType();
 }
@@ -63,14 +64,18 @@ void IconFontExporter::OnOpen()
     LoadCachedFonts();
 
     if (!m_Fonts.empty() && m_CurrentFontIndex < 0)
+    {
         SwitchFont(0);
+    }
 }
 
 void IconFontExporter::OnClose()
 {
     m_CancelDownload = true;
     if (m_DownloadThread.joinable())
+    {
         m_DownloadThread.join();
+    }
     CleanupAtlas();
     CleanupFreeType();
     m_Fonts.clear();
@@ -91,7 +96,9 @@ void IconFontExporter::OnUpdate(float /*deltaTime*/)
         }
 
         if (m_DownloadThread.joinable())
+        {
             m_DownloadThread.join();
+        }
 
         SaveFontMetadata(font);
         m_Fonts.push_back(font);
@@ -111,7 +118,9 @@ void IconFontExporter::OnUpdate(float /*deltaTime*/)
     else if (state == (int)DownloadState::Error)
     {
         if (m_DownloadThread.joinable())
+        {
             m_DownloadThread.join();
+        }
         m_DownloadState = (int)DownloadState::Idle;
     }
 }
@@ -124,7 +133,9 @@ bool IconFontExporter::CanOpenAssetType(const char* assetType)
 void IconFontExporter::OpenFile(const char* filePath, const char* /*cachePath*/)
 {
     if (!filePath)
+    {
         return;
+    }
 
     // Derive output folder from the .asset file path
     std::filesystem::path assetPath(filePath);
@@ -146,7 +157,9 @@ void IconFontExporter::OpenFile(const char* filePath, const char* /*cachePath*/)
 void IconFontExporter::InitFreeType()
 {
     if (m_FtLibrary)
+    {
         return;
+    }
 
     if (FT_Init_FreeType(&m_FtLibrary))
     {
@@ -179,12 +192,16 @@ void IconFontExporter::LoadCachedFonts()
     m_Fonts.clear();
 
     if (!std::filesystem::exists(m_IconFontsDir))
+    {
         return;
+    }
 
     for (auto& entry : std::filesystem::directory_iterator(m_IconFontsDir))
     {
         if (entry.path().extension() != ".json")
+        {
             continue;
+        }
 
         try
         {
@@ -202,7 +219,9 @@ void IconFontExporter::LoadCachedFonts()
             font.ttfPath = (std::filesystem::path(m_IconFontsDir) / ttfName).string();
 
             if (!std::filesystem::exists(font.ttfPath))
+            {
                 continue;
+            }
 
             for (auto& icon : j["icons"])
             {
@@ -224,11 +243,13 @@ void IconFontExporter::LoadCachedFonts()
 void IconFontExporter::SwitchFont(int index)
 {
     if (index < 0 || index >= (int)m_Fonts.size())
+    {
         return;
+    }
 
     m_CurrentFontIndex = index;
     m_SelectedIcons.clear();
-    m_LastBuiltSize = 0; // Force atlas rebuild
+    m_LastBuiltSize = 0;  // Force atlas rebuild
 
     // Load the TTF face
     if (m_FtFace)
@@ -247,7 +268,9 @@ void IconFontExporter::SwitchFont(int index)
 void IconFontExporter::RemoveCurrentFont()
 {
     if (m_CurrentFontIndex < 0 || m_CurrentFontIndex >= (int)m_Fonts.size())
+    {
         return;
+    }
 
     auto& font = m_Fonts[m_CurrentFontIndex];
 
@@ -269,7 +292,9 @@ void IconFontExporter::RemoveCurrentFont()
     m_SelectedIcons.clear();
 
     if (!m_Fonts.empty())
+    {
         SwitchFont(0);
+    }
 }
 
 void IconFontExporter::SaveFontMetadata(const IconFont& font)
@@ -312,15 +337,18 @@ void IconFontExporter::CleanupAtlas()
     m_AtlasEntries.clear();
 }
 
-bool IconFontExporter::RasterizeGlyph(uint32_t codepoint, int size,
-                                      std::vector<uint8_t>& outRGBA, int& outW, int& outH)
+bool IconFontExporter::RasterizeGlyph(uint32_t codepoint, int size, std::vector<uint8_t>& outRGBA, int& outW, int& outH)
 {
     if (!m_FtValid)
+    {
         return false;
+    }
 
     FT_UInt glyphIndex = FT_Get_Char_Index(m_FtFace, codepoint);
     if (glyphIndex == 0)
+    {
         return false;
+    }
 
     // Render at 4x resolution and downsample for clean, symmetric results
     const int scale = 4;
@@ -329,7 +357,9 @@ bool IconFontExporter::RasterizeGlyph(uint32_t codepoint, int size,
     FT_Set_Pixel_Sizes(m_FtFace, 0, hiSize);
 
     if (FT_Load_Glyph(m_FtFace, glyphIndex, FT_LOAD_RENDER | FT_LOAD_NO_HINTING))
+    {
         return false;
+    }
 
     FT_Bitmap& bitmap = m_FtFace->glyph->bitmap;
 
@@ -345,7 +375,9 @@ bool IconFontExporter::RasterizeGlyph(uint32_t codepoint, int size,
             int destX = offsetX + x;
             int destY = offsetY + y;
             if (destX < 0 || destX >= hiSize || destY < 0 || destY >= hiSize)
+            {
                 continue;
+            }
             hiBuf[destY * hiSize + destX] = bitmap.buffer[y * bitmap.pitch + x];
         }
     }
@@ -361,8 +393,12 @@ bool IconFontExporter::RasterizeGlyph(uint32_t codepoint, int size,
         {
             int sum = 0;
             for (int sy = 0; sy < scale; sy++)
+            {
                 for (int sx = 0; sx < scale; sx++)
+                {
                     sum += hiBuf[(dy * scale + sy) * hiSize + (dx * scale + sx)];
+                }
+            }
 
             uint8_t alpha = (uint8_t)(sum / (scale * scale));
             int idx = (dy * size + dx) * 4;
@@ -380,18 +416,25 @@ void IconFontExporter::BuildIconAtlas()
     CleanupAtlas();
 
     if (!m_FtValid || m_CurrentFontIndex < 0)
+    {
         return;
+    }
 
     auto& icons = m_Fonts[m_CurrentFontIndex].icons;
     int totalIcons = (int)icons.size();
     if (totalIcons == 0)
+    {
         return;
+    }
 
     int cellSize = m_IconDisplaySize;
     int padding = 2;
     int cellWithPad = cellSize + padding;
     int cols = ATLAS_MAX_WIDTH / cellWithPad;
-    if (cols < 1) cols = 1;
+    if (cols < 1)
+    {
+        cols = 1;
+    }
     int rows = (totalIcons + cols - 1) / cols;
     int atlasH = rows * cellWithPad;
 
@@ -424,7 +467,9 @@ void IconFontExporter::BuildIconAtlas()
                     int destX = baseX + offsetX + x;
                     int destY = baseY + offsetY + y;
                     if (destX < 0 || destX >= ATLAS_MAX_WIDTH || destY < 0 || destY >= atlasH)
+                    {
                         continue;
+                    }
 
                     uint8_t alpha = bitmap.buffer[y * bitmap.pitch + x];
 
@@ -455,9 +500,7 @@ void IconFontExporter::BuildIconAtlas()
     // a row stride behind, which would shear/overread this tightly packed upload.
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-                 ATLAS_MAX_WIDTH, atlasH,
-                 0, GL_RGBA, GL_UNSIGNED_BYTE, atlasData.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ATLAS_MAX_WIDTH, atlasH, 0, GL_RGBA, GL_UNSIGNED_BYTE, atlasData.data());
     glBindTexture(GL_TEXTURE_2D, 0);
 
     m_AtlasTexture = textureId;
@@ -485,7 +528,9 @@ std::vector<IconInfo> IconFontExporter::ParseCssForIcons(const std::string& cssC
         std::string first = (*begin)[1].str();
         auto dash = first.find('-');
         if (dash != std::string::npos && dash <= 3)
+        {
             commonPrefix = first.substr(0, dash + 1);
+        }
     }
 
     for (auto it = begin; it != end; ++it)
@@ -494,14 +539,15 @@ std::vector<IconInfo> IconFontExporter::ParseCssForIcons(const std::string& cssC
         info.name = (*it)[1].str();
         // Strip common prefix (e.g., "ti-arrow-left" -> "arrow-left")
         if (!commonPrefix.empty() && info.name.substr(0, commonPrefix.size()) == commonPrefix)
+        {
             info.name = info.name.substr(commonPrefix.size());
+        }
 
         info.codepoint = std::stoul((*it)[2].str(), nullptr, 16);
         icons.push_back(info);
     }
 
-    std::sort(icons.begin(), icons.end(),
-              [](const IconInfo& a, const IconInfo& b) { return a.name < b.name; });
+    std::sort(icons.begin(), icons.end(), [](const IconInfo& a, const IconInfo& b) { return a.name < b.name; });
 
     return icons;
 }
@@ -509,7 +555,9 @@ std::vector<IconInfo> IconFontExporter::ParseCssForIcons(const std::string& cssC
 void IconFontExporter::StartNpmDownload(const std::string& packageName)
 {
     if (m_DownloadThread.joinable())
+    {
         m_DownloadThread.join();
+    }
 
     m_CancelDownload = false;
     m_DownloadState = (int)DownloadState::Downloading;
@@ -519,216 +567,243 @@ void IconFontExporter::StartNpmDownload(const std::string& packageName)
         m_DownloadError.clear();
     }
 
-    m_DownloadThread = std::thread([this, packageName]()
-    {
-        try
+    m_DownloadThread = std::thread(
+        [this, packageName]()
         {
-            // 1. Resolve latest version from jsDelivr
-            std::string pkgInfoUrl = "https://data.jsdelivr.com/v1/packages/npm/" + packageName;
-            std::string pkgInfoJson = EditorHttpUtils::FetchUrl(pkgInfoUrl);
-
-            if (m_CancelDownload) return;
-            if (pkgInfoJson.empty())
+            try
             {
-                std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                m_DownloadError = "Failed to fetch package info from jsDelivr";
-                m_DownloadState = (int)DownloadState::Error;
-                return;
-            }
+                // 1. Resolve latest version from jsDelivr
+                std::string pkgInfoUrl = "https://data.jsdelivr.com/v1/packages/npm/" + packageName;
+                std::string pkgInfoJson = EditorHttpUtils::FetchUrl(pkgInfoUrl);
 
-            auto pkgInfo = nlohmann::json::parse(pkgInfoJson);
-            std::string version = pkgInfo.value("tags", nlohmann::json::object()).value("latest", "");
-            if (version.empty())
-            {
-                // Fall back to first version in list
-                auto& versions = pkgInfo["versions"];
-                if (versions.is_array() && !versions.empty())
-                    version = versions[0].value("version", "");
-            }
-            if (version.empty())
-            {
-                std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                m_DownloadError = "Could not resolve latest version for " + packageName;
-                m_DownloadState = (int)DownloadState::Error;
-                return;
-            }
-
-            {
-                std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                m_DownloadStatus = "Found version " + version + ", scanning files...";
-            }
-
-            // 2. Fetch file listing for that specific version
-            std::string listUrl = "https://data.jsdelivr.com/v1/packages/npm/" + packageName + "@" + version;
-            std::string listJson = EditorHttpUtils::FetchUrl(listUrl);
-
-            if (m_CancelDownload) return;
-            if (listJson.empty())
-            {
-                std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                m_DownloadError = "Failed to fetch file listing for " + packageName + "@" + version;
-                m_DownloadState = (int)DownloadState::Error;
-                return;
-            }
-
-            auto listing = nlohmann::json::parse(listJson);
-
-            std::vector<std::string> ttfFiles, cssFiles;
-
-            // Recursive search through the file tree
-            std::function<void(const nlohmann::json&, const std::string&)> findFiles;
-            findFiles = [&](const nlohmann::json& files, const std::string& prefix)
-            {
-                for (auto& file : files)
+                if (m_CancelDownload)
                 {
-                    std::string name = file.value("name", "");
-                    std::string type = file.value("type", "");
-                    std::string path = prefix.empty() ? name : prefix + "/" + name;
+                    return;
+                }
+                if (pkgInfoJson.empty())
+                {
+                    std::lock_guard<std::mutex> lock(m_DownloadMutex);
+                    m_DownloadError = "Failed to fetch package info from jsDelivr";
+                    m_DownloadState = (int)DownloadState::Error;
+                    return;
+                }
 
-                    if (type == "directory" && file.contains("files"))
+                auto pkgInfo = nlohmann::json::parse(pkgInfoJson);
+                std::string version = pkgInfo.value("tags", nlohmann::json::object()).value("latest", "");
+                if (version.empty())
+                {
+                    // Fall back to first version in list
+                    auto& versions = pkgInfo["versions"];
+                    if (versions.is_array() && !versions.empty())
                     {
-                        findFiles(file["files"], path);
-                    }
-                    else if (type == "file")
-                    {
-                        std::string lower = name;
-                        std::transform(lower.begin(), lower.end(), lower.begin(),
-                                       [](unsigned char c) { return std::tolower(c); });
-
-                        if (lower.size() > 4 && lower.substr(lower.size() - 4) == ".ttf")
-                            ttfFiles.push_back(path);
-                        if (lower.size() > 4 && lower.substr(lower.size() - 4) == ".css"
-                            && lower.find(".min.") == std::string::npos)
-                            cssFiles.push_back(path);
+                        version = versions[0].value("version", "");
                     }
                 }
-            };
+                if (version.empty())
+                {
+                    std::lock_guard<std::mutex> lock(m_DownloadMutex);
+                    m_DownloadError = "Could not resolve latest version for " + packageName;
+                    m_DownloadState = (int)DownloadState::Error;
+                    return;
+                }
 
-            if (listing.contains("files"))
-                findFiles(listing["files"], "");
+                {
+                    std::lock_guard<std::mutex> lock(m_DownloadMutex);
+                    m_DownloadStatus = "Found version " + version + ", scanning files...";
+                }
 
-            // Prefer shortest name (e.g., "tabler-icons.ttf" over "tabler-icons-filled.ttf")
-            auto pickShortest = [](std::vector<std::string>& files) -> std::string {
-                if (files.empty()) return "";
-                std::sort(files.begin(), files.end(),
-                          [](const std::string& a, const std::string& b) {
-                              return a.size() < b.size();
-                          });
-                return files[0];
-            };
+                // 2. Fetch file listing for that specific version
+                std::string listUrl = "https://data.jsdelivr.com/v1/packages/npm/" + packageName + "@" + version;
+                std::string listJson = EditorHttpUtils::FetchUrl(listUrl);
 
-            std::string ttfFile = pickShortest(ttfFiles);
-            std::string cssFile = pickShortest(cssFiles);
+                if (m_CancelDownload)
+                {
+                    return;
+                }
+                if (listJson.empty())
+                {
+                    std::lock_guard<std::mutex> lock(m_DownloadMutex);
+                    m_DownloadError = "Failed to fetch file listing for " + packageName + "@" + version;
+                    m_DownloadState = (int)DownloadState::Error;
+                    return;
+                }
 
-            if (ttfFile.empty())
+                auto listing = nlohmann::json::parse(listJson);
+
+                std::vector<std::string> ttfFiles, cssFiles;
+
+                // Recursive search through the file tree
+                std::function<void(const nlohmann::json&, const std::string&)> findFiles;
+                findFiles = [&](const nlohmann::json& files, const std::string& prefix)
+                {
+                    for (auto& file : files)
+                    {
+                        std::string name = file.value("name", "");
+                        std::string type = file.value("type", "");
+                        std::string path = prefix.empty() ? name : prefix + "/" + name;
+
+                        if (type == "directory" && file.contains("files"))
+                        {
+                            findFiles(file["files"], path);
+                        }
+                        else if (type == "file")
+                        {
+                            std::string lower = name;
+                            std::transform(lower.begin(), lower.end(), lower.begin(),
+                                           [](unsigned char c) { return std::tolower(c); });
+
+                            if (lower.size() > 4 && lower.substr(lower.size() - 4) == ".ttf")
+                            {
+                                ttfFiles.push_back(path);
+                            }
+                            if (lower.size() > 4 && lower.substr(lower.size() - 4) == ".css" &&
+                                lower.find(".min.") == std::string::npos)
+                            {
+                                cssFiles.push_back(path);
+                            }
+                        }
+                    }
+                };
+
+                if (listing.contains("files"))
+                {
+                    findFiles(listing["files"], "");
+                }
+
+                // Prefer shortest name (e.g., "tabler-icons.ttf" over "tabler-icons-filled.ttf")
+                auto pickShortest = [](std::vector<std::string>& files) -> std::string
+                {
+                    if (files.empty())
+                    {
+                        return "";
+                    }
+                    std::sort(files.begin(), files.end(),
+                              [](const std::string& a, const std::string& b) { return a.size() < b.size(); });
+                    return files[0];
+                };
+
+                std::string ttfFile = pickShortest(ttfFiles);
+                std::string cssFile = pickShortest(cssFiles);
+
+                if (ttfFile.empty())
+                {
+                    std::lock_guard<std::mutex> lock(m_DownloadMutex);
+                    m_DownloadError = "No TTF file found in package";
+                    m_DownloadState = (int)DownloadState::Error;
+                    return;
+                }
+                if (cssFile.empty())
+                {
+                    std::lock_guard<std::mutex> lock(m_DownloadMutex);
+                    m_DownloadError = "No CSS file found in package";
+                    m_DownloadState = (int)DownloadState::Error;
+                    return;
+                }
+
+                // 3. Derive font name from package
+                std::string fontName = packageName;
+                // Strip scope (e.g., "@tabler/icons-webfont" -> "icons-webfont")
+                auto slashPos = fontName.find('/');
+                if (slashPos != std::string::npos)
+                {
+                    fontName = fontName.substr(slashPos + 1);
+                }
+
+                if (m_CancelDownload)
+                {
+                    return;
+                }
+
+                // 4. Download TTF
+                {
+                    std::lock_guard<std::mutex> lock(m_DownloadMutex);
+                    m_DownloadStatus = "Downloading TTF...";
+                }
+
+                std::string cdnBase = "https://cdn.jsdelivr.net/npm/" + packageName + "@" + version + "/";
+                std::string ttfUrl = cdnBase + ttfFile;
+                std::string ttfDest = (std::filesystem::path(m_IconFontsDir) / (fontName + ".ttf")).string();
+
+                std::filesystem::create_directories(m_IconFontsDir);
+
+                if (!EditorHttpUtils::DownloadFile(ttfUrl, ttfDest, &m_CancelDownload))
+                {
+                    std::lock_guard<std::mutex> lock(m_DownloadMutex);
+                    m_DownloadError = "Failed to download TTF";
+                    m_DownloadState = (int)DownloadState::Error;
+                    return;
+                }
+
+                if (m_CancelDownload)
+                {
+                    return;
+                }
+
+                // 5. Fetch CSS
+                {
+                    std::lock_guard<std::mutex> lock(m_DownloadMutex);
+                    m_DownloadStatus = "Fetching CSS...";
+                }
+
+                std::string cssUrl = cdnBase + cssFile;
+                std::string cssContent = EditorHttpUtils::FetchUrl(cssUrl);
+
+                if (cssContent.empty())
+                {
+                    std::lock_guard<std::mutex> lock(m_DownloadMutex);
+                    m_DownloadError = "Failed to fetch CSS";
+                    m_DownloadState = (int)DownloadState::Error;
+                    return;
+                }
+
+                // 6. Parse icons
+                {
+                    std::lock_guard<std::mutex> lock(m_DownloadMutex);
+                    m_DownloadStatus = "Parsing icons...";
+                }
+                m_DownloadState = (int)DownloadState::Parsing;
+
+                auto icons = ParseCssForIcons(cssContent);
+                if (icons.empty())
+                {
+                    std::lock_guard<std::mutex> lock(m_DownloadMutex);
+                    m_DownloadError = "No icons found in CSS";
+                    m_DownloadState = (int)DownloadState::Error;
+                    return;
+                }
+
+                // 7. Build result
+                IconFont result;
+                result.name = fontName;
+                result.version = version;
+                result.source = cdnBase;
+                result.npmPackage = packageName;
+                result.ttfPath = ttfDest;
+                result.icons = std::move(icons);
+
+                {
+                    std::lock_guard<std::mutex> lock(m_DownloadMutex);
+                    m_DownloadResult = std::move(result);
+                    m_DownloadStatus = "Done!";
+                }
+                m_DownloadState = (int)DownloadState::Done;
+            }
+            catch (const std::exception& e)
             {
                 std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                m_DownloadError = "No TTF file found in package";
+                m_DownloadError = std::string("Error: ") + e.what();
                 m_DownloadState = (int)DownloadState::Error;
-                return;
             }
-            if (cssFile.empty())
-            {
-                std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                m_DownloadError = "No CSS file found in package";
-                m_DownloadState = (int)DownloadState::Error;
-                return;
-            }
-
-            // 3. Derive font name from package
-            std::string fontName = packageName;
-            // Strip scope (e.g., "@tabler/icons-webfont" -> "icons-webfont")
-            auto slashPos = fontName.find('/');
-            if (slashPos != std::string::npos)
-                fontName = fontName.substr(slashPos + 1);
-
-            if (m_CancelDownload) return;
-
-            // 4. Download TTF
-            {
-                std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                m_DownloadStatus = "Downloading TTF...";
-            }
-
-            std::string cdnBase = "https://cdn.jsdelivr.net/npm/" + packageName + "@" + version + "/";
-            std::string ttfUrl = cdnBase + ttfFile;
-            std::string ttfDest = (std::filesystem::path(m_IconFontsDir) / (fontName + ".ttf")).string();
-
-            std::filesystem::create_directories(m_IconFontsDir);
-
-            if (!EditorHttpUtils::DownloadFile(ttfUrl, ttfDest, &m_CancelDownload))
-            {
-                std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                m_DownloadError = "Failed to download TTF";
-                m_DownloadState = (int)DownloadState::Error;
-                return;
-            }
-
-            if (m_CancelDownload) return;
-
-            // 5. Fetch CSS
-            {
-                std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                m_DownloadStatus = "Fetching CSS...";
-            }
-
-            std::string cssUrl = cdnBase + cssFile;
-            std::string cssContent = EditorHttpUtils::FetchUrl(cssUrl);
-
-            if (cssContent.empty())
-            {
-                std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                m_DownloadError = "Failed to fetch CSS";
-                m_DownloadState = (int)DownloadState::Error;
-                return;
-            }
-
-            // 6. Parse icons
-            {
-                std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                m_DownloadStatus = "Parsing icons...";
-            }
-            m_DownloadState = (int)DownloadState::Parsing;
-
-            auto icons = ParseCssForIcons(cssContent);
-            if (icons.empty())
-            {
-                std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                m_DownloadError = "No icons found in CSS";
-                m_DownloadState = (int)DownloadState::Error;
-                return;
-            }
-
-            // 7. Build result
-            IconFont result;
-            result.name = fontName;
-            result.version = version;
-            result.source = cdnBase;
-            result.npmPackage = packageName;
-            result.ttfPath = ttfDest;
-            result.icons = std::move(icons);
-
-            {
-                std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                m_DownloadResult = std::move(result);
-                m_DownloadStatus = "Done!";
-            }
-            m_DownloadState = (int)DownloadState::Done;
-        }
-        catch (const std::exception& e)
-        {
-            std::lock_guard<std::mutex> lock(m_DownloadMutex);
-            m_DownloadError = std::string("Error: ") + e.what();
-            m_DownloadState = (int)DownloadState::Error;
-        }
-    });
+        });
 }
 
 void IconFontExporter::StartDirectDownload(const std::string& ttfUrl, const std::string& cssUrl,
                                            const std::string& fontName)
 {
     if (m_DownloadThread.joinable())
+    {
         m_DownloadThread.join();
+    }
 
     m_CancelDownload = false;
     m_DownloadState = (int)DownloadState::Downloading;
@@ -738,59 +813,63 @@ void IconFontExporter::StartDirectDownload(const std::string& ttfUrl, const std:
         m_DownloadError.clear();
     }
 
-    m_DownloadThread = std::thread([this, ttfUrl, cssUrl, fontName]()
-    {
-        try
+    m_DownloadThread = std::thread(
+        [this, ttfUrl, cssUrl, fontName]()
         {
-            std::string ttfDest = (std::filesystem::path(m_IconFontsDir) / (fontName + ".ttf")).string();
-            std::filesystem::create_directories(m_IconFontsDir);
+            try
+            {
+                std::string ttfDest = (std::filesystem::path(m_IconFontsDir) / (fontName + ".ttf")).string();
+                std::filesystem::create_directories(m_IconFontsDir);
 
-            if (!EditorHttpUtils::DownloadFile(ttfUrl, ttfDest, &m_CancelDownload))
+                if (!EditorHttpUtils::DownloadFile(ttfUrl, ttfDest, &m_CancelDownload))
+                {
+                    std::lock_guard<std::mutex> lock(m_DownloadMutex);
+                    m_DownloadError = "Failed to download TTF";
+                    m_DownloadState = (int)DownloadState::Error;
+                    return;
+                }
+
+                if (m_CancelDownload)
+                {
+                    return;
+                }
+
+                {
+                    std::lock_guard<std::mutex> lock(m_DownloadMutex);
+                    m_DownloadStatus = "Fetching CSS...";
+                }
+
+                std::string cssContent = EditorHttpUtils::FetchUrl(cssUrl);
+                if (cssContent.empty())
+                {
+                    std::lock_guard<std::mutex> lock(m_DownloadMutex);
+                    m_DownloadError = "Failed to fetch CSS";
+                    m_DownloadState = (int)DownloadState::Error;
+                    return;
+                }
+
+                m_DownloadState = (int)DownloadState::Parsing;
+                auto icons = ParseCssForIcons(cssContent);
+
+                IconFont result;
+                result.name = fontName;
+                result.source = ttfUrl;
+                result.ttfPath = ttfDest;
+                result.icons = std::move(icons);
+
+                {
+                    std::lock_guard<std::mutex> lock(m_DownloadMutex);
+                    m_DownloadResult = std::move(result);
+                }
+                m_DownloadState = (int)DownloadState::Done;
+            }
+            catch (const std::exception& e)
             {
                 std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                m_DownloadError = "Failed to download TTF";
+                m_DownloadError = std::string("Error: ") + e.what();
                 m_DownloadState = (int)DownloadState::Error;
-                return;
             }
-
-            if (m_CancelDownload) return;
-
-            {
-                std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                m_DownloadStatus = "Fetching CSS...";
-            }
-
-            std::string cssContent = EditorHttpUtils::FetchUrl(cssUrl);
-            if (cssContent.empty())
-            {
-                std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                m_DownloadError = "Failed to fetch CSS";
-                m_DownloadState = (int)DownloadState::Error;
-                return;
-            }
-
-            m_DownloadState = (int)DownloadState::Parsing;
-            auto icons = ParseCssForIcons(cssContent);
-
-            IconFont result;
-            result.name = fontName;
-            result.source = ttfUrl;
-            result.ttfPath = ttfDest;
-            result.icons = std::move(icons);
-
-            {
-                std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                m_DownloadResult = std::move(result);
-            }
-            m_DownloadState = (int)DownloadState::Done;
-        }
-        catch (const std::exception& e)
-        {
-            std::lock_guard<std::mutex> lock(m_DownloadMutex);
-            m_DownloadError = std::string("Error: ") + e.what();
-            m_DownloadState = (int)DownloadState::Error;
-        }
-    });
+        });
 }
 
 // ---------------------------------------------------------------------------
@@ -800,10 +879,14 @@ void IconFontExporter::StartDirectDownload(const std::string& ttfUrl, const std:
 void IconFontExporter::ExportSelectedAsPNGs()
 {
     if (!m_FtValid || m_SelectedIcons.empty() || m_CurrentFontIndex < 0)
+    {
         return;
+    }
 
     if (m_OutputPath.empty())
+    {
         return;
+    }
 
     auto& icons = m_Fonts[m_CurrentFontIndex].icons;
     std::filesystem::create_directories(m_OutputPath);
@@ -811,12 +894,16 @@ void IconFontExporter::ExportSelectedAsPNGs()
     for (int idx : m_SelectedIcons)
     {
         if (idx >= (int)icons.size())
+        {
             continue;
+        }
 
         std::vector<uint8_t> rgba;
         int w, h;
         if (!RasterizeGlyph(icons[idx].codepoint, m_ExportSize, rgba, w, h))
+        {
             continue;
+        }
 
         std::string filename = icons[idx].name + ".png";
         std::string filepath = (std::filesystem::path(m_OutputPath) / filename).string();
@@ -830,10 +917,14 @@ void IconFontExporter::ExportSelectedAsPNGs()
 void IconFontExporter::ExportSelectedAsAtlas()
 {
     if (!m_FtValid || m_SelectedIcons.empty() || m_CurrentFontIndex < 0)
+    {
         return;
+    }
 
     if (m_OutputPath.empty())
+    {
         return;
+    }
 
     auto& icons = m_Fonts[m_CurrentFontIndex].icons;
 
@@ -844,17 +935,28 @@ void IconFontExporter::ExportSelectedAsAtlas()
 
     // Size atlas to fit: try square-ish layout, capped at ATLAS_MAX_WIDTH
     int cols = (int)std::ceil(std::sqrt((double)totalIcons));
-    if (cols < 1) cols = 1;
+    if (cols < 1)
+    {
+        cols = 1;
+    }
     if (cols * cellWithPad > ATLAS_MAX_WIDTH)
+    {
         cols = ATLAS_MAX_WIDTH / cellWithPad;
-    if (cols < 1) cols = 1;
+    }
+    if (cols < 1)
+    {
+        cols = 1;
+    }
     int rows = (totalIcons + cols - 1) / cols;
     int atlasW = cols * cellWithPad;
     int atlasH = rows * cellWithPad;
 
     std::vector<uint8_t> atlasData(atlasW * atlasH * 4, 0);
 
-    struct GlyphBounds { int x, y, w, h; };
+    struct GlyphBounds
+    {
+        int x, y, w, h;
+    };
     std::vector<GlyphBounds> glyphBounds;
     glyphBounds.reserve(totalIcons);
 
@@ -862,7 +964,9 @@ void IconFontExporter::ExportSelectedAsAtlas()
     for (int idx : m_SelectedIcons)
     {
         if (idx >= (int)icons.size())
+        {
             continue;
+        }
 
         int col = i % cols;
         int row = i / cols;
@@ -880,7 +984,9 @@ void IconFontExporter::ExportSelectedAsAtlas()
                     int destX = baseX + x;
                     int destY = baseY + y;
                     if (destX < 0 || destX >= atlasW || destY < 0 || destY >= atlasH)
+                    {
                         continue;
+                    }
 
                     uint8_t alpha = glyphRGBA[(y * gw + x) * 4 + 3];
                     int px = (destY * atlasW + destX) * 4;
@@ -900,10 +1006,22 @@ void IconFontExporter::ExportSelectedAsAtlas()
             {
                 if (glyphRGBA[(y * gw + x) * 4 + 3] > 0)
                 {
-                    if (x < minX) minX = x;
-                    if (y < minY) minY = y;
-                    if (x > maxX) maxX = x;
-                    if (y > maxY) maxY = y;
+                    if (x < minX)
+                    {
+                        minX = x;
+                    }
+                    if (y < minY)
+                    {
+                        minY = y;
+                    }
+                    if (x > maxX)
+                    {
+                        maxX = x;
+                    }
+                    if (y > maxY)
+                    {
+                        maxY = y;
+                    }
                 }
             }
         }
@@ -940,14 +1058,18 @@ void IconFontExporter::ExportSelectedAsAtlas()
         std::string dataPath = filepath + ".data";
         AssetData assetData;
         if (!LoadAssetData(dataPath, assetData))
+        {
             assetData.guid = GenerateGuid();
+        }
 
         nlohmann::json framesJson = nlohmann::json::array();
         int fi = 0;
         for (int idx : m_SelectedIcons)
         {
             if (idx >= (int)icons.size())
+            {
                 continue;
+            }
 
             const auto& bounds = glyphBounds[fi];
             nlohmann::json f;
@@ -976,7 +1098,9 @@ void IconFontExporter::ExportSelectedAsAtlas()
 void IconFontExporter::SaveExportManifest()
 {
     if (m_OutputPath.empty() || m_CurrentFontIndex < 0)
+    {
         return;
+    }
 
     auto& icons = m_Fonts[m_CurrentFontIndex].icons;
 
@@ -991,7 +1115,9 @@ void IconFontExporter::SaveExportManifest()
     for (int idx : m_SelectedIcons)
     {
         if (idx < (int)icons.size())
+        {
             iconNames.push_back(icons[idx].name);
+        }
     }
     j["icons"] = iconNames;
 
@@ -1092,7 +1218,9 @@ void IconFontExporter::OnGUI()
     if (m_CurrentFontIndex >= 0 && m_FtValid)
     {
         if (m_LastBuiltSize != m_IconDisplaySize || m_AtlasTexture == 0)
+        {
             BuildIconAtlas();
+        }
 
         DrawToolbar();
         DrawExportSettings();
@@ -1111,8 +1239,7 @@ void IconFontExporter::DrawFontSelector()
 {
     // Font dropdown
     auto& ui = EditorUI::Get();
-    const char* currentName = (m_CurrentFontIndex >= 0) ?
-        m_Fonts[m_CurrentFontIndex].name.c_str() : "No font loaded";
+    const char* currentName = (m_CurrentFontIndex >= 0) ? m_Fonts[m_CurrentFontIndex].name.c_str() : "No font loaded";
 
     ui.SetNextItemWidth(250);
     if (ui.BeginCombo("##font", currentName))
@@ -1121,31 +1248,41 @@ void IconFontExporter::DrawFontSelector()
         {
             std::string label = m_Fonts[i].name;
             if (!m_Fonts[i].version.empty())
+            {
                 label += " v" + m_Fonts[i].version;
+            }
 
             bool selected = (i == m_CurrentFontIndex);
             if (ui.Selectable(label.c_str(), selected))
+            {
                 SwitchFont(i);
+            }
         }
         ui.EndCombo();
     }
 
     ui.SameLine();
     if (ui.Button("+ Add Font"))
+    {
         m_ShowAddFont = !m_ShowAddFont;
+    }
 
     if (m_CurrentFontIndex >= 0)
     {
         ui.SameLine();
         if (ui.Button("Remove"))
+        {
             RemoveCurrentFont();
+        }
     }
 }
 
 void IconFontExporter::DrawDownloadSection()
 {
     if (!m_ShowAddFont)
+    {
         return;
+    }
 
     auto& ui = EditorUI::Get();
     ui.Separator();
@@ -1163,14 +1300,20 @@ void IconFontExporter::DrawDownloadSection()
 
             ui.SameLine();
             if (downloading)
+            {
                 ui.BeginDisabled();
+            }
             if (ui.Button("Download##npm"))
             {
                 if (m_NpmPackageInput[0] != '\0')
+                {
                     StartNpmDownload(m_NpmPackageInput);
+                }
             }
             if (downloading)
+            {
                 ui.EndDisabled();
+            }
 
             ui.EndTabItem();
         }
@@ -1188,14 +1331,20 @@ void IconFontExporter::DrawDownloadSection()
             bool downloading = m_DownloadState.load() != (int)DownloadState::Idle;
 
             if (downloading)
+            {
                 ui.BeginDisabled();
+            }
             if (ui.Button("Download##direct"))
             {
                 if (m_TtfUrlInput[0] != '\0' && m_CssUrlInput[0] != '\0' && m_FontNameInput[0] != '\0')
+                {
                     StartDirectDownload(m_TtfUrlInput, m_CssUrlInput, m_FontNameInput);
+                }
             }
             if (downloading)
+            {
                 ui.EndDisabled();
+            }
 
             ui.EndTabItem();
         }
@@ -1216,7 +1365,9 @@ void IconFontExporter::DrawDownloadSection()
 
         ui.SameLine();
         if (ui.Button("Cancel"))
+        {
             m_CancelDownload = true;
+        }
     }
     else if (state == (int)DownloadState::Error)
     {
@@ -1243,21 +1394,27 @@ void IconFontExporter::DrawToolbar()
 
     ui.SameLine();
     if (ui.Button("Clear"))
+    {
         m_SelectedIcons.clear();
+    }
 }
 
 void IconFontExporter::DrawExportSettings()
 {
     auto& ui = EditorUI::Get();
     if (!ui.CollapsingHeader("Export Settings"))
+    {
         return;
+    }
 
     ui.SetNextItemWidth(120);
     ui.SliderInt("Export Size (px)", &m_ExportSize, 8, 256);
 
     // Output folder with picker popup
     if (m_OutputPath.empty())
+    {
         ui.TextDisabled("No output folder selected");
+    }
     else
     {
         // Show path relative to assets for brevity
@@ -1266,7 +1423,9 @@ void IconFontExporter::DrawExportSettings()
         {
             std::string rel = m_OutputPath.substr(assetsPath.size());
             if (!rel.empty() && (rel[0] == '/' || rel[0] == '\\'))
+            {
                 rel = rel.substr(1);
+            }
             char buf[1024];
             std::snprintf(buf, sizeof(buf), "Output: assets/%s", rel.c_str());
             ui.Text(buf);
@@ -1281,7 +1440,9 @@ void IconFontExporter::DrawExportSettings()
 
     bool hasProject = EditorApplication::Get().HasProject();
     if (!hasProject)
+    {
         ui.BeginDisabled();
+    }
 
     if (ui.Button("Select Folder..."))
     {
@@ -1292,31 +1453,45 @@ void IconFontExporter::DrawExportSettings()
     }
 
     if (!hasProject)
+    {
         ui.EndDisabled();
+    }
 
     DrawFolderPickerPopup();
 
     int exportMode = m_ExportAsAtlas ? 1 : 0;
     if (ui.RadioButton("Individual PNGs", exportMode == 0))
+    {
         m_ExportAsAtlas = false;
+    }
     ui.SameLine();
     if (ui.RadioButton("Atlas Spritesheet", exportMode == 1))
+    {
         m_ExportAsAtlas = true;
+    }
 
     bool hasOutput = !m_OutputPath.empty();
     bool hasSelection = !m_SelectedIcons.empty();
 
     if (!hasOutput)
+    {
         ui.BeginDisabled();
+    }
     if (!hasSelection)
+    {
         ui.BeginDisabled();
+    }
 
     if (ui.Button("Export"))
     {
         if (m_ExportAsAtlas)
+        {
             ExportSelectedAsAtlas();
+        }
         else
+        {
             ExportSelectedAsPNGs();
+        }
     }
 
     if (!hasSelection)
@@ -1345,7 +1520,9 @@ void IconFontExporter::DrawFolderPickerPopup()
     ui.SetNextWindowSize(400, 500);
 
     if (!ui.BeginPopupModal("Select Export Folder", &m_ShowFolderPicker, EditorUI::WinNoScrollbar))
+    {
         return;
+    }
 
     auto& assetsPath = EditorApplication::Get().GetAssetsPath();
 
@@ -1358,11 +1535,15 @@ void IconFontExporter::DrawFolderPickerPopup()
     bool rootSelected = (m_FolderPickerSelected == assetsPath);
     int rootFlags = EditorUI::TreeOpenOnArrow | EditorUI::TreeDefaultOpen;
     if (rootSelected)
+    {
         rootFlags |= EditorUI::TreeSelected;
+    }
 
     bool rootOpen = ui.TreeNodeEx("assets", rootFlags);
     if (ui.IsItemClicked())
+    {
         m_FolderPickerSelected = assetsPath;
+    }
 
     if (rootOpen)
     {
@@ -1378,7 +1559,9 @@ void IconFontExporter::DrawFolderPickerPopup()
     ui.SameLine();
     bool canCreate = m_NewFolderName[0] != '\0' && !m_FolderPickerSelected.empty();
     if (!canCreate)
+    {
         ui.BeginDisabled();
+    }
     if (ui.Button("Create Folder"))
     {
         std::string newPath = (std::filesystem::path(m_FolderPickerSelected) / m_NewFolderName).string();
@@ -1387,12 +1570,16 @@ void IconFontExporter::DrawFolderPickerPopup()
         m_NewFolderName[0] = '\0';
     }
     if (!canCreate)
+    {
         ui.EndDisabled();
+    }
 
     // Select / Cancel
     bool canSelect = !m_FolderPickerSelected.empty();
     if (!canSelect)
+    {
         ui.BeginDisabled();
+    }
     if (ui.Button("Select"))
     {
         m_OutputPath = m_FolderPickerSelected;
@@ -1413,7 +1600,9 @@ void IconFontExporter::DrawFolderPickerPopup()
                         break;
                     }
                 }
-                catch (...) {}
+                catch (...)
+                {
+                }
             }
         }
 
@@ -1421,7 +1610,9 @@ void IconFontExporter::DrawFolderPickerPopup()
         ui.CloseCurrentPopup();
     }
     if (!canSelect)
+    {
         ui.EndDisabled();
+    }
 
     ui.SameLine();
     if (ui.Button("Cancel"))
@@ -1441,10 +1632,15 @@ void IconFontExporter::DrawFolderTree(const std::string& dirPath)
         for (auto& entry : std::filesystem::directory_iterator(dirPath))
         {
             if (entry.is_directory())
+            {
                 subdirs.push_back(entry);
+            }
         }
     }
-    catch (...) { return; }
+    catch (...)
+    {
+        return;
+    }
 
     std::sort(subdirs.begin(), subdirs.end(),
               [](const auto& a, const auto& b) { return a.path().filename() < b.path().filename(); });
@@ -1458,7 +1654,9 @@ void IconFontExporter::DrawFolderTree(const std::string& dirPath)
         bool isSelected = (m_FolderPickerSelected == path);
         int flags = EditorUI::TreeOpenOnArrow;
         if (isSelected)
+        {
             flags |= EditorUI::TreeSelected;
+        }
 
         // Check if has subdirectories
         bool hasChildren = false;
@@ -1466,22 +1664,34 @@ void IconFontExporter::DrawFolderTree(const std::string& dirPath)
         {
             for (auto& child : std::filesystem::directory_iterator(path))
             {
-                if (child.is_directory()) { hasChildren = true; break; }
+                if (child.is_directory())
+                {
+                    hasChildren = true;
+                    break;
+                }
             }
         }
-        catch (...) {}
+        catch (...)
+        {
+        }
 
         if (!hasChildren)
+        {
             flags |= EditorUI::TreeLeaf;
+        }
 
         bool open = ui.TreeNodeEx(name.c_str(), flags);
         if (ui.IsItemClicked())
+        {
             m_FolderPickerSelected = path;
+        }
 
         if (open)
         {
             if (hasChildren)
+            {
                 DrawFolderTree(path);
+            }
             ui.TreePop();
         }
     }
@@ -1490,7 +1700,9 @@ void IconFontExporter::DrawFolderTree(const std::string& dirPath)
 void IconFontExporter::DrawIconGrid()
 {
     if (m_CurrentFontIndex < 0 || m_AtlasTexture == 0)
+    {
         return;
+    }
 
     auto& icons = m_Fonts[m_CurrentFontIndex].icons;
 
@@ -1509,7 +1721,9 @@ void IconFontExporter::DrawIconGrid()
     for (int i = 0; i < (int)icons.size(); i++)
     {
         if (filterLower.empty() || icons[i].name.find(filterLower) != std::string::npos)
+        {
             filtered.push_back(i);
+        }
     }
 
     auto& ui = EditorUI::Get();
@@ -1519,7 +1733,9 @@ void IconFontExporter::DrawIconGrid()
     if (ui.Button("Select All"))
     {
         for (int idx : filtered)
+        {
             m_SelectedIcons.insert(idx);
+        }
     }
 
     char shownBuf[128];
@@ -1527,7 +1743,9 @@ void IconFontExporter::DrawIconGrid()
     ui.Text(shownBuf);
 
     if (filtered.empty())
+    {
         return;
+    }
 
     float iconSize = (float)m_IconDisplaySize;
     float rowHeight = iconSize + 4.0f;
@@ -1562,26 +1780,27 @@ void IconFontExporter::DrawIconGrid()
             if (ui.InvisibleButton("##row", availW, rowHeight))
             {
                 if (isSelected)
+                {
                     m_SelectedIcons.erase(iconIdx);
+                }
                 else
+                {
                     m_SelectedIcons.insert(iconIdx);
+                }
             }
 
             // Draw icon image over the button
             if (iconIdx < (int)m_AtlasEntries.size())
             {
                 auto& entry = m_AtlasEntries[iconIdx];
-                ui.DrawImage(m_AtlasTexture,
-                             rowStartX + 2.0f, rowStartY + 2.0f,
-                             rowStartX + 2.0f + iconSize, rowStartY + 2.0f + iconSize,
-                             entry.u0, entry.v0, entry.u1, entry.v1);
+                ui.DrawImage(m_AtlasTexture, rowStartX + 2.0f, rowStartY + 2.0f, rowStartX + 2.0f + iconSize,
+                             rowStartY + 2.0f + iconSize, entry.u0, entry.v0, entry.u1, entry.v1);
             }
 
             // Draw name next to icon
             float textX = rowStartX + iconSize + 10.0f;
             float textY = rowStartY + (rowHeight - ui.GetTextLineHeight()) * 0.5f;
-            ui.DrawTextAt(0, textX, textY, EditorUI::Rgba(255, 255, 255, 255),
-                        icons[iconIdx].name.c_str());
+            ui.DrawTextAt(0, textX, textY, EditorUI::Rgba(255, 255, 255, 255), icons[iconIdx].name.c_str());
 
             ui.PopID();
         }
@@ -1591,6 +1810,6 @@ void IconFontExporter::DrawIconGrid()
     ui.EndChild();
 }
 
-} // namespace DekiEditor
+}  // namespace DekiEditor
 
 #endif  // DEKI_EDITOR

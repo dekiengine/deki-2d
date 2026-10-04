@@ -30,6 +30,6 @@ void RegisterFontSyncHandlers();
  */
 void EnsureFontSizeBaked(const std::string& sourceGuid, int fontSize);
 
-} // namespace Deki2D
+}  // namespace Deki2D
 
-#endif // DEKI_EDITOR
+#endif  // DEKI_EDITOR

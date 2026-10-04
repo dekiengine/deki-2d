@@ -39,7 +39,6 @@
 
 #include "ImageResample.h"
 
-
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 
@@ -53,7 +52,7 @@ namespace
 struct ImageSidecar
 {
     bool exists = false;
-    json data;                     // the whole file, for the staleness checks
+    json data;  // the whole file, for the staleness checks
     SpriteSettings sprite;
     // Frames' own 9-slice borders, by frame index: [top, right, bottom, left].
     std::map<int, std::array<int, 4>> frameNineSlice;  // by frame id (AtlasFrame::id)
@@ -66,10 +65,14 @@ ImageSidecar ReadImageSidecar(const std::string& imagePath)
     ImageSidecar out;
     const std::string dataPath = imagePath + ".data";
     if (!fs::exists(dataPath))
+    {
         return out;
+    }
     std::ifstream dataFile(dataPath);
     if (!dataFile.is_open())
+    {
         return out;
+    }
     try
     {
         out.data = json::parse(dataFile);
@@ -110,8 +113,12 @@ ImageSidecar ReadImageSidecar(const std::string& imagePath)
             out.sprite.frameWidth = sprite.value("frameWidth", 0);
             out.sprite.frameHeight = sprite.value("frameHeight", 0);
             if (sprite.contains("frameIds") && sprite["frameIds"].is_array())
+            {
                 for (const auto& id : sprite["frameIds"])
+                {
                     out.sprite.frameIds.push_back(id.is_number_integer() ? id.get<int32_t>() : -1);
+                }
+            }
         }
     }
     else if (d.contains("sprite"))
@@ -125,9 +132,13 @@ ImageSidecar ReadImageSidecar(const std::string& imagePath)
     // Optional 9-slice borders: "nine_slice": [top, right, bottom, left]
     const json* nineSliceNode = nullptr;
     if (d.contains("settings") && d["settings"].contains("nine_slice"))
+    {
         nineSliceNode = &d["settings"]["nine_slice"];
+    }
     else if (d.contains("nine_slice"))
+    {
         nineSliceNode = &d["nine_slice"];
+    }
     if (nineSliceNode && nineSliceNode->is_array() && nineSliceNode->size() >= 4)
     {
         out.sprite.hasNineSlice = true;
@@ -145,13 +156,17 @@ ImageSidecar ReadImageSidecar(const std::string& imagePath)
         for (const auto& [key, borders] : d["settings"]["frame_nine_slice"].items())
         {
             if (!borders.is_array() || borders.size() < 4)
+            {
                 continue;
+            }
             try
             {
                 out.frameNineSlice[std::stoi(key)] = { borders[0].get<int>(), borders[1].get<int>(),
                                                        borders[2].get<int>(), borders[3].get<int>() };
             }
-            catch (...) {}
+            catch (...)
+            {
+            }
         }
     }
 
@@ -177,7 +192,9 @@ bool ReadCachedFormat(const std::string& cachePath, TextureFormat& format, bool&
     std::ifstream f(cachePath, std::ios::binary);
     TexHeader header{};
     if (!f.read(reinterpret_cast<char*>(&header), sizeof(header)))
+    {
         return false;
+    }
     format = static_cast<TextureFormat>(header.format);
     hasAlpha = (header.flags & static_cast<uint32_t>(TexFlags::HasAlpha)) != 0;
     return true;
@@ -207,42 +224,60 @@ std::vector<Deki2DEditor::PixelRect> ShrinkRegions(const ImageSidecar& sidecar, 
     if (sprite.mode == SpriteSlicingMode::Atlas)
     {
         for (const AtlasFrame& f : sprite.frames)
+        {
             out.push_back({ f.x, f.y, f.x + f.width, f.y + f.height });
+        }
     }
     else if (sprite.mode == SpriteSlicingMode::Grid && (sprite.frameWidth > 0 || sprite.frameHeight > 0))
     {
         const int fw = sprite.frameWidth > 0 ? sprite.frameWidth : w;
         const int fh = sprite.frameHeight > 0 ? sprite.frameHeight : h;
         for (int y = 0; y + fh <= h; y += fh)
+        {
             for (int x = 0; x + fw <= w; x += fw)
+            {
                 out.push_back({ x, y, x + fw, y + fh });
+            }
+        }
     }
     if (sprite.hasNineSlice)
     {
         const int xs[4] = { 0, sprite.nineSliceLeft, w - sprite.nineSliceRight, w };
         const int ys[4] = { 0, sprite.nineSliceTop, h - sprite.nineSliceBottom, h };
         for (int j = 0; j < 3; ++j)
+        {
             for (int i = 0; i < 3; ++i)
+            {
                 out.push_back({ xs[i], ys[j], xs[i + 1], ys[j + 1] });
+            }
+        }
     }
     // A bordered frame's nine parts. Frame rects are listed above in frame
     // order (atlas frames, or the grid row by row); borders are keyed by id.
     const size_t frameCount = out.size() - (sprite.hasNineSlice ? 9 : 0);
     std::map<int32_t, size_t> positionOfId;
     for (size_t i = 0; i < frameCount; ++i)
+    {
         positionOfId[sprite.FrameId(i)] = i;
+    }
     std::vector<Deki2DEditor::PixelRect> frameParts;
     for (const auto& [id, b] : sidecar.frameNineSlice)
     {
         auto pos = positionOfId.find(id);
         if (pos == positionOfId.end())
+        {
             continue;
+        }
         const Deki2DEditor::PixelRect f = out[pos->second];
         const int xs[4] = { f.x0, f.x0 + b[3], f.x1 - b[1], f.x1 };
         const int ys[4] = { f.y0, f.y0 + b[0], f.y1 - b[2], f.y1 };
         for (int j = 0; j < 3; ++j)
+        {
             for (int i = 0; i < 3; ++i)
+            {
                 frameParts.push_back({ xs[i], ys[j], xs[i + 1], ys[j + 1] });
+            }
+        }
     }
     out.insert(out.end(), frameParts.begin(), frameParts.end());
     return out;
@@ -256,13 +291,14 @@ bool CompileImage(const std::string& imagePath, const std::string& guid, const I
 {
     DecodedImage decoded;
     if (!DecodeImageFile(imagePath, decoded))
+    {
         return false;
+    }
 
     const size_t pixelCount = static_cast<size_t>(decoded.width) * static_cast<size_t>(decoded.height);
     const bool hasAlpha = TextureImporter::HasAlphaChannel(decoded.rgba.data(), pixelCount);
-    const TextureFormat format = ResolveTextureFormat(sidecar.texture.format,
-                                                      sidecar.texture.TargetFormat(target.platformId),
-                                                      target.colorFormat, hasAlpha);
+    const TextureFormat format = ResolveTextureFormat(
+        sidecar.texture.format, sidecar.texture.TargetFormat(target.platformId), target.colorFormat, hasAlpha);
 
     // Max Size. Frames, nine-slice borders and the frame list stay in the
     // image's pixels; the file records the image's size and the runtime maps
@@ -273,9 +309,9 @@ bool CompileImage(const std::string& imagePath, const std::string& guid, const I
     const uint8_t* pixels = decoded.rgba.data();
     if (storedW != decoded.width || storedH != decoded.height)
     {
-        shrunk = Deki2DEditor::ShrinkImage(decoded.rgba.data(), decoded.width, decoded.height, storedW, storedH,
-                                           ShrinkRegions(sidecar, decoded.width, decoded.height),
-                                           sidecar.chromaKey.enabled);
+        shrunk =
+            Deki2DEditor::ShrinkImage(decoded.rgba.data(), decoded.width, decoded.height, storedW, storedH,
+                                      ShrinkRegions(sidecar, decoded.width, decoded.height), sidecar.chromaKey.enabled);
         pixels = shrunk.data();
     }
 
@@ -285,14 +321,16 @@ bool CompileImage(const std::string& imagePath, const std::string& guid, const I
         subAssets = TextureImporter::GenerateFrameSubAssets(guid, decoded.width, decoded.height, sidecar.sprite);
         RegisterFrameNineSlices(sidecar, subAssets);
         if (pipeline)
+        {
             pipeline->RegisterSubAssets(guid, subAssets);
+        }
     }
 
     const SpriteSettings* settingsPtr = sidecar.sprite.HasData() ? &sidecar.sprite : nullptr;
     const std::vector<SubAssetInfo>* subAssetsPtr = subAssets.empty() ? nullptr : &subAssets;
     const ChromaKeySettings* chromaPtr = sidecar.chromaKey.enabled ? &sidecar.chromaKey : nullptr;
-    return TextureImporter::WriteTexFile(outPath, pixels, static_cast<uint32_t>(storedW), static_cast<uint32_t>(storedH),
-                                         format, settingsPtr, subAssetsPtr, chromaPtr,
+    return TextureImporter::WriteTexFile(outPath, pixels, static_cast<uint32_t>(storedW),
+                                         static_cast<uint32_t>(storedH), format, settingsPtr, subAssetsPtr, chromaPtr,
                                          static_cast<uint32_t>(decoded.width), static_cast<uint32_t>(decoded.height));
 }
 
@@ -301,7 +339,9 @@ bool CompileImage(const std::string& imagePath, const std::string& guid, const I
 bool SidecarNewerThanCache(const ImageSidecar& sidecar, const std::string& imagePath, const std::string& cachePath)
 {
     if (!sidecar.exists)
+    {
         return false;
+    }
     const std::string dataPath = imagePath + ".data";
     std::error_code ec;
     const auto dataTime = fs::last_write_time(dataPath, ec);
@@ -374,7 +414,9 @@ AssetCacheResult HandleSpriteImageCache(const AssetCacheContext& ctx)
 
     // Generate cache if not cached
     if (!result)
+    {
         result = CompileImage(ctx.absolutePath, ctx.guid, sidecar, editorTarget, ctx.cachePath, ctx.pipeline);
+    }
 
     // Always register sub-assets for cached images (warm-cache path). In the
     // image's pixels, which a shrunk cache records.
@@ -407,25 +449,29 @@ struct ImageCacheRegistrar
 {
     ImageCacheRegistrar()
     {
-        AssetPipeline::OnStarted([](AssetPipeline* p) {
-            for (const char* ext : {".png", ".jpg", ".jpeg", ".bmp", ".tga", ".gif"})
+        AssetPipeline::OnStarted(
+            [](AssetPipeline* p)
             {
-                p->RegisterCacheHandler(ext, HandleSpriteImageCache);
-                p->RegisterExportEncoder(ext, EncodeImageForTarget);
-            }
-        });
+                for (const char* ext : { ".png", ".jpg", ".jpeg", ".bmp", ".tga", ".gif" })
+                {
+                    p->RegisterCacheHandler(ext, HandleSpriteImageCache);
+                    p->RegisterExportEncoder(ext, EncodeImageForTarget);
+                }
+            });
         // Claim the Texture category for raster image extensions so the
         // editor's UI classification (icons, browser grouping, file dialogs)
         // can resolve `.png` etc. through the registry instead of a
         // hardcoded list. .dtex (the compiled texture) is also Texture so
         // the picker treats already-cached previews uniformly.
-        for (const char* ext : {".png", ".jpg", ".jpeg", ".bmp", ".tga", ".gif", ".dtex"})
+        for (const char* ext : { ".png", ".jpg", ".jpeg", ".bmp", ".tga", ".gif", ".dtex" })
+        {
             AssetTypeRegistry::Instance().RegisterCategory(ext, AssetCategory::Texture);
+        }
     }
 };
 static ImageCacheRegistrar s_ImageCacheRegistrar;
 
-} // namespace
-} // namespace DekiEditor
+}  // namespace
+}  // namespace DekiEditor
 
-#endif // DEKI_EDITOR
+#endif  // DEKI_EDITOR

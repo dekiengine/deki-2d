@@ -11,11 +11,20 @@
 #include <deki/reflection/Property.h>
 
 // Forward declarations
-namespace Deki { class Object; }
+namespace Deki
+{
+class Object;
+}
 
-namespace Deki { class Scene; }
+namespace Deki
+{
+class Scene;
+}
 
-namespace DekiInput { class InputCollider; }
+namespace DekiInput
+{
+class InputCollider;
+}
 
 namespace Deki2D
 {
@@ -68,11 +77,10 @@ DEKI_DESCRIPTION("Scrolls its children by dragging, with momentum.")
 DEKI_FORMER_NAME("ScrollComponent")
 class ScrollComponent : public Deki::Component
 {
-    public:
+public:
     using Deki::Component::Update;
 
 public:
-
     // === Editor-visible properties ===
 
     // DekiInput::InputCollider reference (required for receiving input)
@@ -81,7 +89,8 @@ public:
     Deki::ObjectRef<DekiInput::InputCollider> inputCollider;
 
     DEKI_EXPORT
-    DEKI_TOOLTIP("Whether items come from the children already present or are spawned from the scene below as they are needed.")
+    DEKI_TOOLTIP(
+        "Whether items come from the children already present or are spawned from the scene below as they are needed.")
     ScrollMode mode = ScrollMode::NonTemplate;
 
     DEKI_VISIBLE_WHEN(mode, Template)
@@ -185,18 +194,18 @@ private:
     // All sizes/offsets/positions below are world meters.
     // Child object references
     Deki::Object* m_ClipObj = nullptr;
-    Deki::Object* m_TemplateObj = nullptr;              // Template mode: blueprint child (hidden)
+    Deki::Object* m_TemplateObj = nullptr;  // Template mode: blueprint child (hidden)
     // Child counts at the last discovery. Discovery (name scans, component
     // lookups, prefix sums) ran on every frame of a scroll; it now runs only
     // when the owner's or the clip's child list changed size.
     size_t m_DiscoveredOwnerChildren = static_cast<size_t>(-1);
     size_t m_DiscoveredClipChildren = static_cast<size_t>(-1);
     bool NeedsChildDiscovery(const Deki::Object* owner) const;
-    std::vector<Deki::Object*> m_SlotObjs;              // Template mode: pool slots
-    std::vector<int32_t> m_SlotItemIndices;           // Template mode: item index per slot (-1 = unassigned)
-    std::vector<Deki::Object*> m_NonTemplateChildren;    // NonTemplate mode: all item children
-    std::vector<float> m_NonTemplateSizes;          // NonTemplate mode: per-child size in scroll direction (m)
-    std::vector<float> m_NonTemplateOffsets;        // NonTemplate mode: prefix-sum offsets, size = itemCount + 1 (m)
+    std::vector<Deki::Object*> m_SlotObjs;             // Template mode: pool slots
+    std::vector<int32_t> m_SlotItemIndices;            // Template mode: item index per slot (-1 = unassigned)
+    std::vector<Deki::Object*> m_NonTemplateChildren;  // NonTemplate mode: all item children
+    std::vector<float> m_NonTemplateSizes;             // NonTemplate mode: per-child size in scroll direction (m)
+    std::vector<float> m_NonTemplateOffsets;           // NonTemplate mode: prefix-sum offsets, size = itemCount + 1 (m)
 
     // Computed from ScrollElement
     float m_ItemSize = 0.0f;
@@ -215,8 +224,8 @@ private:
     bool m_DragConfirmed = false;
     // Drag threshold: ~10 px at ppm=16 (preserves prior tap/drag feel).
     float m_DragThreshold;
-    float m_LastTouchPos    = 0.0f;
-    float m_TouchStartPos   = 0.0f;
+    float m_LastTouchPos = 0.0f;
+    float m_TouchStartPos = 0.0f;
     float m_TouchStartOffset = 0.0f;
 
     // Velocity ring buffer for smooth momentum

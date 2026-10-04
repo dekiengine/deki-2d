@@ -32,7 +32,6 @@
 #include <filesystem>
 #include <nlohmann/json.hpp>
 
-
 namespace DekiEditor
 {
 
@@ -59,10 +58,7 @@ public:
         }
     }
 
-    const char* GetComponentName() const override
-    {
-        return "TextComponent";
-    }
+    const char* GetComponentName() const override { return "TextComponent"; }
 
 private:
     // Pointer to the component we're editing (for cleanup in destructor)
@@ -73,9 +69,9 @@ private:
     // these member variables start fresh for each component and don't persist
     // across different components.
     std::string m_LastSource;
-    int32_t m_LastRenderSize = 0;      // Track the actual render size used
-    bool m_LastPreviewEnabled = false; // Track preview state changes
-    int32_t m_LastPreviewSize = 0;     // Track preview size for cache invalidation
+    int32_t m_LastRenderSize = 0;       // Track the actual render size used
+    bool m_LastPreviewEnabled = false;  // Track preview state changes
+    int32_t m_LastPreviewSize = 0;      // Track preview size for cache invalidation
 
     /**
      * @brief Read the baked font sizes from the font's .data file
@@ -89,18 +85,24 @@ private:
         auto* pipeline = DekiEditor::AssetPipeline::Instance();
         const DekiEditor::AssetInfo* fontInfo = pipeline->GetAssetInfoByGuid(sourceGuid);
         if (!fontInfo)
+        {
             return sizes;
+        }
 
         namespace fs = std::filesystem;
         std::string fontPath = (fs::path(pipeline->GetProjectPath()) / fontInfo->path).string();
         std::string dataPath = fontPath + ".data";
 
         if (!fs::exists(dataPath))
+        {
             return sizes;
+        }
 
         std::ifstream file(dataPath);
         if (!file.is_open())
+        {
             return sizes;
+        }
 
         try
         {
@@ -139,27 +141,31 @@ private:
         auto* pipeline = DekiEditor::AssetPipeline::Instance();
         const DekiEditor::AssetInfo* fontInfo = pipeline->GetAssetInfoByGuid(sourceGuid);
         if (!fontInfo)
+        {
             return "";
+        }
 
         namespace fs = std::filesystem;
         std::string fontPath = (fs::path(pipeline->GetProjectPath()) / fontInfo->path).string();
         std::string dataPath = fontPath + ".data";
 
         if (!fs::exists(dataPath))
+        {
             return "";
+        }
 
         std::ifstream file(dataPath);
         if (!file.is_open())
+        {
             return "";
+        }
 
         try
         {
             nlohmann::json j = nlohmann::json::parse(file);
             std::string sizeKey = std::to_string(fontSize);
 
-            if (j.contains("variants") &&
-                j["variants"].contains(sizeKey) &&
-                j["variants"][sizeKey].contains("guid"))
+            if (j.contains("variants") && j["variants"].contains(sizeKey) && j["variants"][sizeKey].contains("guid"))
             {
                 return j["variants"][sizeKey]["guid"].get<std::string>();
             }
@@ -177,30 +183,36 @@ private:
         auto* pipeline = DekiEditor::AssetPipeline::Instance();
         const DekiEditor::AssetInfo* fontInfo = pipeline->GetAssetInfoByGuid(sourceGuid);
         if (!fontInfo)
+        {
             return "";
+        }
 
         namespace fs = std::filesystem;
         std::string fontPath = (fs::path(pipeline->GetProjectPath()) / fontInfo->path).string();
         std::string dataPath = fontPath + ".data";
 
         if (!fs::exists(dataPath))
+        {
             return "";
+        }
 
         std::ifstream file(dataPath);
         if (!file.is_open())
+        {
             return "";
+        }
 
         try
         {
             nlohmann::json j = nlohmann::json::parse(file);
-            if (j.contains("variants") &&
-                j["variants"].contains("bdf") &&
-                j["variants"]["bdf"].contains("guid"))
+            if (j.contains("variants") && j["variants"].contains("bdf") && j["variants"]["bdf"].contains("guid"))
             {
                 return j["variants"]["bdf"]["guid"].get<std::string>();
             }
         }
-        catch (...) {}
+        catch (...)
+        {
+        }
 
         return "";
     }
@@ -208,21 +220,22 @@ private:
     void UpdateBakedFontGuid(TextComponent* textComp)
     {
         if (!textComp)
+        {
             return;
+        }
 
         // Resolve source GUID (font.source if set, otherwise font.guid IS the source)
-        std::string resolvedSource = textComp->font.source.empty()
-            ? textComp->font.guid : textComp->font.source;
+        std::string resolvedSource = textComp->font.source.empty() ? textComp->font.guid : textComp->font.source;
         if (resolvedSource.empty())
+        {
             return;
+        }
 
         // Store component pointer for destructor cleanup
         m_TextComponent = textComp;
 
         // Calculate the actual render size based on preview state
-        int32_t actualRenderSize = textComp->previewEnabled
-            ? textComp->previewSize
-            : textComp->fontSize;
+        int32_t actualRenderSize = textComp->previewEnabled ? textComp->previewSize : textComp->fontSize;
 
         // Check if anything rendering-relevant changed
         bool sourceChanged = (resolvedSource != m_LastSource);
@@ -230,7 +243,9 @@ private:
         bool previewStateChanged = (textComp->previewEnabled != m_LastPreviewEnabled);
 
         if (!sourceChanged && !sizeChanged && !previewStateChanged)
+        {
             return;
+        }
 
         // Read the variant GUID
         // For BDF fonts, use deterministic GUID; for TTF, use fontSize key from .data
@@ -241,7 +256,10 @@ private:
             if (fi)
             {
                 std::string ext = std::filesystem::path(fi->path).extension().string();
-                for (char& c : ext) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+                for (char& c : ext)
+                {
+                    c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+                }
                 if (ext == ".bdf")
                 {
                     variantGuid = Deki::GenerateDeterministicGuid(resolvedSource + ":bdf");
@@ -249,10 +267,14 @@ private:
                     Deki::AssetManager::Get()->RegisterGuid(variantGuid, variantGuid);
                     // Set font.source so subsequent lookups work
                     if (textComp->font.source.empty())
+                    {
                         textComp->font.source = resolvedSource;
+                    }
                 }
                 else
+                {
                     variantGuid = GetVariantGuidFromData(resolvedSource, textComp->fontSize);
+                }
             }
         }
         if (!variantGuid.empty() && textComp->font.guid != variantGuid)
@@ -281,17 +303,18 @@ private:
     }
 
 public:
-
     // width/height are world meters; gizmo consumers want pixels.
     bool GetDisplaySize(Deki::Component* comp, float& outWidth, float& outHeight) override
     {
         auto* textComp = static_cast<TextComponent*>(comp);
         if (!textComp)
+        {
             return false;
+        }
 
         const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
         const float effective = ppm > 0.0f ? ppm : 1.0f;
-        outWidth  = textComp->width  * effective;
+        outWidth = textComp->width * effective;
         outHeight = textComp->height * effective;
         return true;
     }
@@ -303,16 +326,15 @@ public:
         return (localX >= -halfW && localX <= halfW && localY >= -halfH && localY <= halfH);
     }
 
-    bool WantsInspectorOverride(Deki::Component* comp) override
-    {
-        return true;
-    }
+    bool WantsInspectorOverride(Deki::Component* comp) override { return true; }
 
     void OnInspectorGUI(Deki::Component* comp) override
     {
         auto* textComp = static_cast<TextComponent*>(comp);
         if (!textComp)
+        {
             return;
+        }
 
         UpdateBakedFontGuid(textComp);
 
@@ -324,8 +346,7 @@ public:
         gui.PropertyField("font");
 
         // Get source GUID for font operations
-        const std::string& sourceGuid = textComp->font.source.empty()
-            ? textComp->font.guid : textComp->font.source;
+        const std::string& sourceGuid = textComp->font.source.empty() ? textComp->font.guid : textComp->font.source;
 
         // Detect if font is BDF (check source extension)
         bool isBdfFont = false;
@@ -338,7 +359,10 @@ public:
                 if (fontInfo)
                 {
                     std::string ext = std::filesystem::path(fontInfo->path).extension().string();
-                    for (char& c : ext) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+                    for (char& c : ext)
+                    {
+                        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+                    }
                     isBdfFont = (ext == ".bdf");
                 }
             }
@@ -370,9 +394,8 @@ public:
                 }
 
                 // Build combo items
-                std::string previewText = (currentIndex >= 0)
-                    ? std::to_string(bakedSizes[currentIndex]) + " px"
-                    : std::to_string(textComp->fontSize) + " px (not baked)";
+                std::string previewText = (currentIndex >= 0) ? std::to_string(bakedSizes[currentIndex]) + " px"
+                                                              : std::to_string(textComp->fontSize) + " px (not baked)";
 
                 gui.PropertyRow("Font Size");
                 if (gui.BeginCombo("##fontSize", previewText.c_str()))
@@ -397,7 +420,8 @@ public:
                     if (gui.IsItemHovered())
                     {
                         char tipBuf[256];
-                        std::snprintf(tipBuf, sizeof(tipBuf), "Current size %d is not baked. Use Font Preview to bake it.", textComp->fontSize);
+                        std::snprintf(tipBuf, sizeof(tipBuf),
+                                      "Current size %d is not baked. Use Font Preview to bake it.", textComp->fontSize);
                         gui.SetTooltip(tipBuf);
                     }
                 }
@@ -464,7 +488,8 @@ public:
 
                     // Show preview atlas
                     uint32_t atlasWidth = 0, atlasHeight = 0;
-                    uint32_t textureId = gui.GetFontAtlasTexture(sourceGuid, textComp->previewSize, &atlasWidth, &atlasHeight);
+                    uint32_t textureId =
+                        gui.GetFontAtlasTexture(sourceGuid, textComp->previewSize, &atlasWidth, &atlasHeight);
 
                     if (textureId != 0 && atlasWidth > 0 && atlasHeight > 0)
                     {
@@ -507,6 +532,6 @@ public:
 REGISTER_EDITOR(TextComponentEditor)
 REGISTER_CREATE_MENU_ITEM(TextComponent, "2D", "Text", "Text", "TextComponent")
 
-} // namespace DekiEditor
+}  // namespace DekiEditor
 
-#endif // DEKI_EDITOR
+#endif  // DEKI_EDITOR

@@ -14,7 +14,8 @@
 namespace Deki2D
 {
 
-Sprite::Sprite() : Deki::Texture2D()
+Sprite::Sprite()
+    : Deki::Texture2D()
 {
     SetDefaultSpriteProperties();
 }
@@ -34,7 +35,9 @@ void ReadFrameNineSlices(std::vector<SpriteFrame>& frames, const uint8_t* chunk,
                          uint32_t entriesEnd)
 {
     if (chunkSize < entriesEnd + sizeof(uint16_t))
+    {
         return;
+    }
     uint16_t count = 0;
     std::memcpy(&count, chunk + entriesEnd, sizeof(count));
     const uint32_t kEntry = 5 * sizeof(uint16_t);
@@ -44,7 +47,9 @@ void ReadFrameNineSlices(std::vector<SpriteFrame>& frames, const uint8_t* chunk,
         uint16_t v[5];
         std::memcpy(v, chunk + at, sizeof(v));
         if (v[0] >= frames.size())
+        {
             continue;
+        }
         SpriteFrame& f = frames[v[0]];
         f.hasNineSlice = true;
         f.nineSliceLeft = v[1];
@@ -60,7 +65,9 @@ const SpriteFrame* Sprite::FindFrame(const std::string& guid) const
     for (size_t i = 0; i < frames.size(); i++)
     {
         if (guid == frames[i].guid)
+        {
             return &frames[i];
+        }
     }
     return nullptr;
 }
@@ -100,7 +107,9 @@ void Sprite::SetDefaultSpriteProperties()
 void Sprite::ApplySourceSize(int32_t imageWidth, int32_t imageHeight)
 {
     if (imageWidth <= 0 || imageHeight <= 0 || (imageWidth == width && imageHeight == height))
+    {
         return;
+    }
     sourceWidth = imageWidth;
     sourceHeight = imageHeight;
     sourceScale = static_cast<float>(width) / static_cast<float>(imageWidth);
@@ -123,9 +132,13 @@ void Sprite::ApplySourceSize(int32_t imageWidth, int32_t imageHeight)
         f.height = y1 > y0 ? y1 - y0 : 1;
     }
     if (defaultFrameWidth > 0)
+    {
         defaultFrameWidth = SourceToStoredX(defaultFrameWidth) > 0 ? SourceToStoredX(defaultFrameWidth) : 1;
+    }
     if (defaultFrameHeight > 0)
+    {
         defaultFrameHeight = SourceToStoredY(defaultFrameHeight) > 0 ? SourceToStoredY(defaultFrameHeight) : 1;
+    }
     if (hasNineSlice)
     {
         nineSliceLeft = static_cast<uint16_t>(SourceToStoredX(nineSliceLeft));
@@ -147,7 +160,8 @@ Sprite* Sprite::Load(const char* file_path)
     }
 
     Deki::IFileSystem* fs = Deki::FileSystem::GetFileSystemForPath(file_path);
-    if (!fs) {
+    if (!fs)
+    {
         DEKI_LOG_INTERNAL("FileSystem not initialized for path: %s", file_path);
         return nullptr;
     }
@@ -205,8 +219,7 @@ Sprite* Sprite::Load(const char* file_path)
     }
 
     // Read pixel data
-    uint8_t* pixel_data = (uint8_t*)Deki::Memory::Allocate(
-        header.dataSize, Deki::Memory::External);
+    uint8_t* pixel_data = (uint8_t*)Deki::Memory::Allocate(header.dataSize, Deki::Memory::External);
 
     if (!pixel_data)
     {
@@ -228,8 +241,7 @@ Sprite* Sprite::Load(const char* file_path)
     uint8_t* metadata = nullptr;
     if (header.metadataSize > 0)
     {
-        metadata = (uint8_t*)Deki::Memory::Allocate(
-            header.metadataSize, Deki::Memory::Internal);
+        metadata = (uint8_t*)Deki::Memory::Allocate(header.metadataSize, Deki::Memory::Internal);
 
         if (metadata)
         {
@@ -251,7 +263,10 @@ Sprite* Sprite::Load(const char* file_path)
     {
         DEKI_LOG_ERROR("Failed to load sprite from memory");
         Deki::Memory::Free(pixel_data);
-        if (metadata) Deki::Memory::Free(metadata);
+        if (metadata)
+        {
+            Deki::Memory::Free(metadata);
+        }
         delete sprite;
         return nullptr;
     }
@@ -274,7 +289,9 @@ Sprite* Sprite::Load(const char* file_path)
 
             // Written so it cannot wrap: offset + a huge chunk_size did, on 32 bits.
             if (chunk_size > header.metadataSize - offset)
+            {
                 break;  // Corrupted metadata
+            }
 
             if (chunk_type == 1 && chunk_size >= 8)  // Sprite chunk
             {
@@ -289,16 +306,16 @@ Sprite* Sprite::Load(const char* file_path)
                     const uint8_t* nine = metadata + offset + 8;
                     if (nine[0])
                     {
-                        sprite->hasNineSlice    = true;
-                        sprite->nineSliceLeft   = *(uint16_t*)(nine + 1);
-                        sprite->nineSliceRight  = *(uint16_t*)(nine + 3);
-                        sprite->nineSliceTop    = *(uint16_t*)(nine + 5);
+                        sprite->hasNineSlice = true;
+                        sprite->nineSliceLeft = *(uint16_t*)(nine + 1);
+                        sprite->nineSliceRight = *(uint16_t*)(nine + 3);
+                        sprite->nineSliceTop = *(uint16_t*)(nine + 5);
                         sprite->nineSliceBottom = *(uint16_t*)(nine + 7);
                     }
                 }
 
-                DEKI_LOG_INTERNAL("  Sprite metadata: frame %dx%d, 9-slice=%d",
-                                  frameWidth, frameHeight, sprite->hasNineSlice ? 1 : 0);
+                DEKI_LOG_INTERNAL("  Sprite metadata: frame %dx%d, 9-slice=%d", frameWidth, frameHeight,
+                                  sprite->hasNineSlice ? 1 : 0);
             }
             else if (chunk_type == 2 && chunk_size >= 2)  // Frame list chunk
             {
@@ -350,20 +367,23 @@ Sprite* Sprite::Load(const char* file_path)
                 // Divided, not multiplied: spansCount comes from the file and
                 // `spansCount * sizeof(int16_t)` is a 32-bit size_t on the device, so
                 // a large count wraps to a small one and the bound passes.
-                const bool spansFit = chunk_size >= 8 &&
-                                      spansCount <= (chunk_size - 8) / sizeof(int16_t);
+                const bool spansFit = chunk_size >= 8 && spansCount <= (chunk_size - 8) / sizeof(int16_t);
                 if (enabled && spansCount > 0 && spansFit)
                 {
                     sprite->chromaRowSpans.Allocate(spansCount, Deki::Memory::Internal);
                     if (sprite->chromaRowSpans)
+                    {
                         memcpy(sprite->chromaRowSpans.Data(), p + 8, spansCount * sizeof(int16_t));
+                    }
                     else
+                    {
                         DEKI_LOG_WARNING("Sprite: no room for %u chroma spans; "
                                          "the slower per-pixel compare will be used",
                                          (unsigned)spansCount);
+                    }
                 }
-                DEKI_LOG_INTERNAL("  Chroma key: enabled=%d rgb=(%u,%u,%u) spans=%u",
-                                  (int)enabled, p[1], p[2], p[3], spansCount);
+                DEKI_LOG_INTERNAL("  Chroma key: enabled=%d rgb=(%u,%u,%u) spans=%u", (int)enabled, p[1], p[2], p[3],
+                                  spansCount);
             }
             else if (chunk_type == 4 && chunk_size >= 8)  // Source size (Max Size)
             {
@@ -422,21 +442,21 @@ Sprite* Sprite::Load(const char* file_path)
                 // Build per-row opaque span data for fast blitting.
                 sprite->alphaRowSpans.Allocate(static_cast<size_t>(h) * 2, Deki::Memory::Internal);
                 if (sprite->alphaRowSpans)
+                {
                     BuildOpaqueRowSpans(pixel_data, w, h, sprite->alphaRowSpans.Data());
+                }
                 else
+                {
                     DEKI_LOG_WARNING("Sprite: no room for %d alpha spans; the slower "
-                                     "per-pixel path will be used", h * 2);
+                                     "per-pixel path will be used",
+                                     h * 2);
+                }
             }
         }
     }
 
-    DEKI_LOG_INTERNAL("Loaded sprite: %s (%dx%d, %s, pivot: %.2f,%.2f)",
-              file_path,
-              sprite->width,
-              sprite->height,
-              Deki::Texture2D::GetFormatName(sprite->format),
-              sprite->pivotX,
-              sprite->pivotY);
+    DEKI_LOG_INTERNAL("Loaded sprite: %s (%dx%d, %s, pivot: %.2f,%.2f)", file_path, sprite->width, sprite->height,
+                      Deki::Texture2D::GetFormatName(sprite->format), sprite->pivotX, sprite->pivotY);
 
     return sprite;
 }
@@ -470,8 +490,7 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
     const uint8_t* src = fileData + sizeof(Deki::Texture2D::Header);
 
     // Copy pixel data into PSRAM (sprite takes ownership)
-    uint8_t* pixel_data = (uint8_t*)Deki::Memory::Allocate(
-        header.dataSize, Deki::Memory::External);
+    uint8_t* pixel_data = (uint8_t*)Deki::Memory::Allocate(header.dataSize, Deki::Memory::External);
     if (!pixel_data)
     {
         DEKI_LOG_ERROR("Sprite::LoadFromFileData: alloc failed");
@@ -508,7 +527,10 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
                 uint32_t chunk_size = *(uint32_t*)(metadata + offset);
                 offset += sizeof(uint32_t);
 
-                if (chunk_size > header.metadataSize - offset) break;  // cannot wrap, unlike offset + size
+                if (chunk_size > header.metadataSize - offset)
+                {
+                    break;  // cannot wrap, unlike offset + size
+                }
 
                 if (chunk_type == 1 && chunk_size >= 8)
                 {
@@ -520,10 +542,10 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
                         const uint8_t* nine = metadata + offset + 8;
                         if (nine[0])
                         {
-                            sprite->hasNineSlice    = true;
-                            sprite->nineSliceLeft   = *(uint16_t*)(nine + 1);
-                            sprite->nineSliceRight  = *(uint16_t*)(nine + 3);
-                            sprite->nineSliceTop    = *(uint16_t*)(nine + 5);
+                            sprite->hasNineSlice = true;
+                            sprite->nineSliceLeft = *(uint16_t*)(nine + 1);
+                            sprite->nineSliceRight = *(uint16_t*)(nine + 3);
+                            sprite->nineSliceTop = *(uint16_t*)(nine + 5);
                             sprite->nineSliceBottom = *(uint16_t*)(nine + 7);
                         }
                     }
@@ -543,10 +565,14 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
                             memcpy(frame.guid, metadata + offset + frame_offset, 36);
                             frame.guid[36] = '\0';
                             frame_offset += 36;
-                            frame.x = *(int32_t*)(metadata + offset + frame_offset); frame_offset += sizeof(int32_t);
-                            frame.y = *(int32_t*)(metadata + offset + frame_offset); frame_offset += sizeof(int32_t);
-                            frame.width = *(int32_t*)(metadata + offset + frame_offset); frame_offset += sizeof(int32_t);
-                            frame.height = *(int32_t*)(metadata + offset + frame_offset); frame_offset += sizeof(int32_t);
+                            frame.x = *(int32_t*)(metadata + offset + frame_offset);
+                            frame_offset += sizeof(int32_t);
+                            frame.y = *(int32_t*)(metadata + offset + frame_offset);
+                            frame_offset += sizeof(int32_t);
+                            frame.width = *(int32_t*)(metadata + offset + frame_offset);
+                            frame_offset += sizeof(int32_t);
+                            frame.height = *(int32_t*)(metadata + offset + frame_offset);
+                            frame_offset += sizeof(int32_t);
                         }
                         ReadFrameNineSlices(sprite->frames, metadata + offset, chunk_size, frame_offset);
                     }
@@ -566,17 +592,20 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
                     // Divided, not multiplied: spansCount comes from the file and
                     // `spansCount * sizeof(int16_t)` is a 32-bit size_t on the device, so
                     // a large count wraps to a small one and the bound passes.
-                    const bool spansFit = chunk_size >= 8 &&
-                                          spansCount <= (chunk_size - 8) / sizeof(int16_t);
+                    const bool spansFit = chunk_size >= 8 && spansCount <= (chunk_size - 8) / sizeof(int16_t);
                     if (enabled && spansCount > 0 && spansFit)
                     {
                         sprite->chromaRowSpans.Allocate(spansCount, Deki::Memory::Internal);
                         if (sprite->chromaRowSpans)
+                        {
                             memcpy(sprite->chromaRowSpans.Data(), p + 8, spansCount * sizeof(int16_t));
+                        }
                         else
+                        {
                             DEKI_LOG_WARNING("Sprite: no room for %u chroma spans; "
                                              "the slower per-pixel compare will be used",
                                              (unsigned)spansCount);
+                        }
                     }
                 }
                 else if (chunk_type == 4 && chunk_size >= 8)  // Source size (Max Size)
@@ -611,7 +640,11 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
 
             for (int32_t i = 0; i < w * h; i++)
             {
-                if (pixel_data[i * 3 + 2] != 255) { allOpaque = false; break; }
+                if (pixel_data[i * 3 + 2] != 255)
+                {
+                    allOpaque = false;
+                    break;
+                }
             }
 
             if (allOpaque)
@@ -622,10 +655,15 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
             {
                 sprite->alphaRowSpans.Allocate(static_cast<size_t>(h) * 2, Deki::Memory::Internal);
                 if (sprite->alphaRowSpans)
+                {
                     BuildOpaqueRowSpans(pixel_data, w, h, sprite->alphaRowSpans.Data());
+                }
                 else
+                {
                     DEKI_LOG_WARNING("Sprite: no room for %d alpha spans; the slower "
-                                     "per-pixel path will be used", h * 2);
+                                     "per-pixel path will be used",
+                                     h * 2);
+                }
             }
         }
     }
@@ -665,8 +703,7 @@ Sprite* Sprite::CreateSolid(int32_t width, int32_t height, uint8_t r, uint8_t g,
     size_t dataSize = width * height * 2;  // RGB565 format = 2 bytes per pixel
     DEKI_LOG_INTERNAL("Sprite::CreateSolid - Allocating %zu bytes for RGB565 data", dataSize);
 
-    sprite->data = (uint8_t*)Deki::Memory::Allocate(
-        dataSize, Deki::Memory::External);
+    sprite->data = (uint8_t*)Deki::Memory::Allocate(dataSize, Deki::Memory::External);
 
     if (!sprite->data)
     {
@@ -696,7 +733,10 @@ Sprite* Sprite::CreateSolid(int32_t width, int32_t height, uint8_t r, uint8_t g,
 
 Sprite* Sprite::CreateSolidRGBA(int32_t width, int32_t height, uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
-    if (width <= 0 || height <= 0) return nullptr;
+    if (width <= 0 || height <= 0)
+    {
+        return nullptr;
+    }
 
     Sprite* sprite = new Sprite();
     sprite->width = width;
@@ -705,10 +745,9 @@ Sprite* Sprite::CreateSolidRGBA(int32_t width, int32_t height, uint8_t r, uint8_
     sprite->hasTransparency = false;
     sprite->hasAlpha = true;
 
-        size_t dataSize = width * height * 3;  // RGB565A8 format (2 bytes RGB565 + 1 byte alpha)
+    size_t dataSize = width * height * 3;  // RGB565A8 format (2 bytes RGB565 + 1 byte alpha)
 
-    sprite->data = (uint8_t*)Deki::Memory::Allocate(
-        dataSize, Deki::Memory::External);
+    sprite->data = (uint8_t*)Deki::Memory::Allocate(dataSize, Deki::Memory::External);
 
     if (!sprite->data)
     {
@@ -727,7 +766,7 @@ Sprite* Sprite::CreateSolidRGBA(int32_t width, int32_t height, uint8_t r, uint8_
     {
         size_t byte_index = i * 3;
         *(uint16_t*)(sprite->data + byte_index) = rgb565;  // RGB565
-        sprite->data[byte_index + 2] = a;  // Alpha
+        sprite->data[byte_index + 2] = a;                  // Alpha
     }
 
     return sprite;
@@ -812,8 +851,8 @@ bool Sprite::SetNineSliceBorders(uint16_t left, uint16_t right, uint16_t top, ui
     // Validate that borders don't exceed sprite dimensions
     if (left + right >= width || top + bottom >= height)
     {
-        DEKI_LOG_ERROR("Invalid 9-slice borders: L=%u R=%u T=%u B=%u for sprite %dx%d",
-                      left, right, top, bottom, width, height);
+        DEKI_LOG_ERROR("Invalid 9-slice borders: L=%u R=%u T=%u B=%u for sprite %dx%d", left, right, top, bottom, width,
+                       height);
         return false;
     }
 
@@ -864,9 +903,8 @@ void Sprite::BakeNineSliceRegion(uint8_t* dst, int32_t target_width, int32_t tar
 
     // Helper lambda to copy a pixel region with nearest-neighbor scaling
     // src_x/src_y are inside the region; the region's offset is added here.
-    auto CopyRegion = [rx, ry](uint8_t* dst, int32_t dst_width, int32_t dst_x, int32_t dst_y,
-                               int32_t dst_w, int32_t dst_h,
-                               const uint8_t* src, int32_t src_width, int32_t src_x, int32_t src_y,
+    auto CopyRegion = [rx, ry](uint8_t* dst, int32_t dst_width, int32_t dst_x, int32_t dst_y, int32_t dst_w,
+                               int32_t dst_h, const uint8_t* src, int32_t src_width, int32_t src_x, int32_t src_y,
                                int32_t src_w, int32_t src_h, uint32_t bytes_per_pixel)
     {
         for (int32_t dy = 0; dy < dst_h; dy++)
@@ -904,64 +942,65 @@ void Sprite::BakeNineSliceRegion(uint8_t* dst, int32_t target_width, int32_t tar
     // Top-left corner (copy as-is)
     if (src_left > 0 && src_top > 0)
     {
-        CopyRegion(dst, target_width, 0, 0, dst_left, dst_top,
-                  source->data, source->width, 0, 0, src_left, src_top, bytes_per_pixel);
+        CopyRegion(dst, target_width, 0, 0, dst_left, dst_top, source->data, source->width, 0, 0, src_left, src_top,
+                   bytes_per_pixel);
     }
 
     // Top edge (stretch horizontally)
     if (src_top > 0 && src_center_w > 0)
     {
-        CopyRegion(dst, target_width, dst_left, 0, dst_center_w, dst_top,
-                  source->data, source->width, src_left, 0, src_center_w, src_top, bytes_per_pixel);
+        CopyRegion(dst, target_width, dst_left, 0, dst_center_w, dst_top, source->data, source->width, src_left, 0,
+                   src_center_w, src_top, bytes_per_pixel);
     }
 
     // Top-right corner (copy as-is)
     if (src_right > 0 && src_top > 0)
     {
-        CopyRegion(dst, target_width, target_width - dst_right, 0, dst_right, dst_top,
-                  source->data, source->width, rw - src_right, 0, src_right, src_top, bytes_per_pixel);
+        CopyRegion(dst, target_width, target_width - dst_right, 0, dst_right, dst_top, source->data, source->width,
+                   rw - src_right, 0, src_right, src_top, bytes_per_pixel);
     }
 
     // Left edge (stretch vertically)
     if (src_left > 0 && src_center_h > 0)
     {
-        CopyRegion(dst, target_width, 0, dst_top, dst_left, dst_center_h,
-                  source->data, source->width, 0, src_top, src_left, src_center_h, bytes_per_pixel);
+        CopyRegion(dst, target_width, 0, dst_top, dst_left, dst_center_h, source->data, source->width, 0, src_top,
+                   src_left, src_center_h, bytes_per_pixel);
     }
 
     // Center (stretch both directions)
     if (src_center_w > 0 && src_center_h > 0)
     {
-        CopyRegion(dst, target_width, dst_left, dst_top, dst_center_w, dst_center_h,
-                  source->data, source->width, src_left, src_top, src_center_w, src_center_h, bytes_per_pixel);
+        CopyRegion(dst, target_width, dst_left, dst_top, dst_center_w, dst_center_h, source->data, source->width,
+                   src_left, src_top, src_center_w, src_center_h, bytes_per_pixel);
     }
 
     // Right edge (stretch vertically)
     if (src_right > 0 && src_center_h > 0)
     {
-        CopyRegion(dst, target_width, target_width - dst_right, dst_top, dst_right, dst_center_h,
-                  source->data, source->width, rw - src_right, src_top, src_right, src_center_h, bytes_per_pixel);
+        CopyRegion(dst, target_width, target_width - dst_right, dst_top, dst_right, dst_center_h, source->data,
+                   source->width, rw - src_right, src_top, src_right, src_center_h, bytes_per_pixel);
     }
 
     // Bottom-left corner (copy as-is)
     if (src_left > 0 && src_bottom > 0)
     {
-        CopyRegion(dst, target_width, 0, target_height - dst_bottom, dst_left, dst_bottom,
-                  source->data, source->width, 0, rh - src_bottom, src_left, src_bottom, bytes_per_pixel);
+        CopyRegion(dst, target_width, 0, target_height - dst_bottom, dst_left, dst_bottom, source->data, source->width,
+                   0, rh - src_bottom, src_left, src_bottom, bytes_per_pixel);
     }
 
     // Bottom edge (stretch horizontally)
     if (src_center_w > 0 && src_bottom > 0)
     {
-        CopyRegion(dst, target_width, dst_left, target_height - dst_bottom, dst_center_w, dst_bottom,
-                  source->data, source->width, src_left, rh - src_bottom, src_center_w, src_bottom, bytes_per_pixel);
+        CopyRegion(dst, target_width, dst_left, target_height - dst_bottom, dst_center_w, dst_bottom, source->data,
+                   source->width, src_left, rh - src_bottom, src_center_w, src_bottom, bytes_per_pixel);
     }
 
     // Bottom-right corner (copy as-is)
     if (src_right > 0 && src_bottom > 0)
     {
         CopyRegion(dst, target_width, target_width - dst_right, target_height - dst_bottom, dst_right, dst_bottom,
-                  source->data, source->width, rw - src_right, rh - src_bottom, src_right, src_bottom, bytes_per_pixel);
+                   source->data, source->width, rw - src_right, rh - src_bottom, src_right, src_bottom,
+                   bytes_per_pixel);
     }
 }
 
@@ -986,8 +1025,8 @@ Sprite* Sprite::CreateNineSlice(Sprite* source, int32_t target_width, int32_t ta
 
     if (target_width < min_width || target_height < min_height)
     {
-        DEKI_LOG_ERROR("CreateNineSlice: Target size %dx%d too small (min: %dx%d)",
-                      target_width, target_height, min_width, min_height);
+        DEKI_LOG_ERROR("CreateNineSlice: Target size %dx%d too small (min: %dx%d)", target_width, target_height,
+                       min_width, min_height);
         return nullptr;
     }
 
@@ -1026,36 +1065,49 @@ Sprite* Sprite::CreateNineSlice(Sprite* source, int32_t target_width, int32_t ta
 
     BakeNineSliceInto(result->data, target_width, target_height, source);
 
-    DEKI_LOG_INTERNAL("Created 9-slice sprite: %dx%d -> %dx%d",
-                  source->width, source->height, target_width, target_height);
+    DEKI_LOG_INTERNAL("Created 9-slice sprite: %dx%d -> %dx%d", source->width, source->height, target_width,
+                      target_height);
 
     return result;
 }
 
 // Self-register sprite loader with AssetManager
-namespace {
-    struct _SpriteLoaderReg {
-        _SpriteLoaderReg() {
-            Deki::AssetManager::RegisterLoader("Sprite",
-                [](const char* p) -> void* {
-                    auto* s = Sprite::Load(p);
-                    if (s) Deki::Time::Delay(1); // Yield for watchdog on embedded
-                    return s;
-                },
-                [](void* a) { delete static_cast<Sprite*>(a); },
-                [](const uint8_t* d, size_t s) -> void* { return Sprite::LoadFromFileData(d, s); });
-            // Also register as "Texture" (alias)
-            Deki::AssetManager::RegisterLoader("Texture",
-                [](const char* p) -> void* {
-                    auto* s = Sprite::Load(p);
-                    if (s) Deki::Time::Delay(1);
-                    return s;
-                },
-                [](void* a) { delete static_cast<Sprite*>(a); },
-                [](const uint8_t* d, size_t s) -> void* { return Sprite::LoadFromFileData(d, s); });
-        }
-    };
-    static _SpriteLoaderReg s_spriteLoaderReg;
-}
+namespace
+{
+struct _SpriteLoaderReg
+{
+    _SpriteLoaderReg()
+    {
+        Deki::AssetManager::RegisterLoader(
+            "Sprite",
+            [](const char* p) -> void*
+            {
+                auto* s = Sprite::Load(p);
+                if (s)
+                {
+                    Deki::Time::Delay(1);  // Yield for watchdog on embedded
+                }
+                return s;
+            },
+            [](void* a) { delete static_cast<Sprite*>(a); },
+            [](const uint8_t* d, size_t s) -> void* { return Sprite::LoadFromFileData(d, s); });
+        // Also register as "Texture" (alias)
+        Deki::AssetManager::RegisterLoader(
+            "Texture",
+            [](const char* p) -> void*
+            {
+                auto* s = Sprite::Load(p);
+                if (s)
+                {
+                    Deki::Time::Delay(1);
+                }
+                return s;
+            },
+            [](void* a) { delete static_cast<Sprite*>(a); },
+            [](const uint8_t* d, size_t s) -> void* { return Sprite::LoadFromFileData(d, s); });
+    }
+};
+static _SpriteLoaderReg s_spriteLoaderReg;
+}  // namespace
 
 }  // namespace Deki2D

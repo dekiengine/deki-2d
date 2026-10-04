@@ -23,7 +23,6 @@
 #include <SDL3/SDL_opengl.h>
 #include <nlohmann/json.hpp>
 
-
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 
@@ -101,11 +100,13 @@ void SpritesheetEditorWindow::OnClose()
 
 bool SpritesheetEditorWindow::CanOpenFile(const char* extension)
 {
-    if (!extension) return false;
+    if (!extension)
+    {
+        return false;
+    }
 
     // Can open PNG textures
-    return strcmp(extension, ".png") == 0 ||
-           strcmp(extension, ".PNG") == 0;
+    return strcmp(extension, ".png") == 0 || strcmp(extension, ".PNG") == 0;
 }
 
 void SpritesheetEditorWindow::OpenFile(const char* filePath, const char* cachePath)
@@ -129,7 +130,10 @@ void SpritesheetEditorWindow::OpenFile(const char* filePath, const char* cachePa
         // Normalize to forward slashes
         for (char& c : relativePathStr)
         {
-            if (c == '\\') c = '/';
+            if (c == '\\')
+            {
+                c = '/';
+            }
         }
         m_TextureGuid = AssetDatabase::AssetPathToGUID(relativePathStr);
     }
@@ -145,10 +149,16 @@ namespace
 bool SameFrames(const std::vector<DekiEditor::AtlasFrame>& a, const std::vector<DekiEditor::AtlasFrame>& b)
 {
     if (a.size() != b.size())
+    {
         return false;
+    }
     for (size_t i = 0; i < a.size(); ++i)
+    {
         if (a[i].x != b[i].x || a[i].y != b[i].y || a[i].width != b[i].width || a[i].height != b[i].height)
+        {
             return false;
+        }
+    }
     return true;
 }
 
@@ -171,17 +181,25 @@ void DrawChecker(ImDrawList* dl, ImVec2 a, ImVec2 b, float cell)
 {
     dl->AddRectFilled(a, b, IM_COL32(44, 45, 48, 255));
     if (cell < 2.0f)
+    {
         return;
+    }
     // Only the cells that show: a zoomed-in image can be far larger than the canvas.
     const ImVec2 clipMin = dl->GetClipRectMin(), clipMax = dl->GetClipRectMax();
     const int i0 = (int)std::max(0.0f, std::floor((clipMin.x - a.x) / cell));
     const int j0 = (int)std::max(0.0f, std::floor((clipMin.y - a.y) / cell));
     for (int j = j0; a.y + j * cell < std::min(b.y, clipMax.y); ++j)
+    {
         for (int i = i0; a.x + i * cell < std::min(b.x, clipMax.x); ++i)
+        {
             if ((i + j) & 1)
+            {
                 dl->AddRectFilled(ImVec2(a.x + i * cell, a.y + j * cell),
                                   ImVec2(std::min(a.x + (i + 1) * cell, b.x), std::min(a.y + (j + 1) * cell, b.y)),
                                   IM_COL32(56, 57, 61, 255));
+            }
+        }
+    }
 }
 
 // A rounded, translucent label for readouts drawn over the canvas. Returns
@@ -208,9 +226,13 @@ void DrawThumb(ImDrawList* dl, ImTextureID tex, ImVec2 boxMin, float side, float
     if (srcW > 0 && srcH > 0)
     {
         if (srcW > srcH)
+        {
             h = side * srcH / srcW;
+        }
         else
+        {
             w = side * srcW / srcH;
+        }
     }
     const ImVec2 a(boxMin.x + (side - w) * 0.5f, boxMin.y + (side - h) * 0.5f);
     dl->AddImage(tex, a, ImVec2(a.x + w, a.y + h), uv0, uv1);
@@ -256,7 +278,9 @@ void SpritesheetEditorWindow::OnGUI()
 
     std::string title = "Sprite Slicer";
     if (IsDirty())
+    {
         title += " *";
+    }
     title += "###SpriteSlicer";
 
     if (ui.Begin(title.c_str(), &isOpen, 0))
@@ -268,7 +292,9 @@ void SpritesheetEditorWindow::OnGUI()
         const std::string& selected = EditorApplication::Get().GetSelectedAssetPath();
         std::string selectedExt = fs::path(selected).extension().string();
         for (char& c : selectedExt)
+        {
             c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        }
         const std::string selectedFull =
             (!selected.empty() && !m_ProjectPath.empty()) ? (fs::path(m_ProjectPath) / selected).string() : "";
         const bool canOpenSelected = !selectedFull.empty() && CanOpenFile(selectedExt.c_str()) &&
@@ -277,7 +303,9 @@ void SpritesheetEditorWindow::OnGUI()
         // ── Toolbar ─────────────────────────────────────────────────────────
         ui.BeginToolbar();
         if (ui.ToolbarButton(dirty ? "Save*" : "Save", dirty))
+        {
             SaveAndReimport();
+        }
         if (ui.ToolbarButton("Revert", dirty))
         {
             LoadSliceSettings();
@@ -289,7 +317,9 @@ void SpritesheetEditorWindow::OnGUI()
             OnSettingsLoaded();
         }
         if (canOpenSelected && dirty && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+        {
             DekiEditor::Tooltip("Save or revert this image's slices first.");
+        }
         ui.EndToolbar();
 
         if (!hasImage)
@@ -303,7 +333,9 @@ void SpritesheetEditorWindow::OnGUI()
             ui.GetContentRegionAvail(&availW, &availH);
             const float settingsW = std::min(300.0f * dpi, availW * 0.42f);
             if (ui.BeginChild("##slicer_settings", settingsW, availH, false))
+            {
                 DrawSlicingControls();
+            }
             ui.EndChild();
             ui.SameLine(0.0f, 0.0f);
             float seamX = 0.0f, seamY = 0.0f;
@@ -312,7 +344,9 @@ void SpritesheetEditorWindow::OnGUI()
             ui.Dummy(1.0f, availH);
             ui.SameLine(0.0f, 0.0f);
             if (ui.BeginChild("##slicer_canvas", 0.0f, availH, false))
+            {
                 DrawTexturePreview();
+            }
             ui.EndChild();
         }
     }
@@ -339,7 +373,12 @@ void SpritesheetEditorWindow::SaveAndReimport()
     {
         std::string relativePathStr = fs::relative(fs::path(m_TexturePath), m_ProjectPath).string();
         for (char& c : relativePathStr)
-            if (c == '\\') c = '/';
+        {
+            if (c == '\\')
+            {
+                c = '/';
+            }
+        }
         AssetDatabase::ImportAsset(relativePathStr);
     }
 }
@@ -357,7 +396,9 @@ void SpritesheetEditorWindow::DrawSlicingControls()
         const std::string& selected = EditorApplication::Get().GetSelectedAssetPath();
         std::string ext = fs::path(selected).extension().string();
         for (char& c : ext)
+        {
             c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        }
         const bool canOpen = !selected.empty() && CanOpenFile(ext.c_str()) && !m_ProjectPath.empty();
 
         const ImVec2 avail = ImGui::GetContentRegionAvail();
@@ -367,16 +408,19 @@ void SpritesheetEditorWindow::DrawSlicingControls()
                                    : "Select an image in the Asset Browser, then come back here.";
         const float lineH = ImGui::GetTextLineHeight();
         const float iconSize = 28.0f * dpi;
-        const float blockH = iconSize + lineH * 2.0f + 18.0f * dpi + (canOpen ? ImGui::GetFrameHeight() + 14.0f * dpi : 0.0f);
+        const float blockH =
+            iconSize + lineH * 2.0f + 18.0f * dpi + (canOpen ? ImGui::GetFrameHeight() + 14.0f * dpi : 0.0f);
         float y = origin.y + std::max(pad, (avail.y - blockH) * 0.45f);
 
         ImFont* font = ImGui::GetFont();
         const char* icon = ICON_TI_GRID_DOTS;
         const ImVec2 iconTs = font->CalcTextSizeA(iconSize, FLT_MAX, 0.0f, icon);
-        dl->AddText(font, iconSize, ImVec2(origin.x + (avail.x - iconTs.x) * 0.5f, y), PaletteU32(DekiEditor::Palette::Dim), icon);
+        dl->AddText(font, iconSize, ImVec2(origin.x + (avail.x - iconTs.x) * 0.5f, y),
+                    PaletteU32(DekiEditor::Palette::Dim), icon);
         y += iconSize + 10.0f * dpi;
         const ImVec2 titleTs = ImGui::CalcTextSize(titleStr.c_str());
-        dl->AddText(ImVec2(origin.x + (avail.x - titleTs.x) * 0.5f, y), ImGui::GetColorU32(ImGuiCol_Text), titleStr.c_str());
+        dl->AddText(ImVec2(origin.x + (avail.x - titleTs.x) * 0.5f, y), ImGui::GetColorU32(ImGuiCol_Text),
+                    titleStr.c_str());
         y += lineH + 4.0f * dpi;
         const ImVec2 lineTs = ImGui::CalcTextSize(line);
         dl->AddText(ImVec2(origin.x + (avail.x - lineTs.x) * 0.5f, y), PaletteU32(DekiEditor::Palette::Dim), line);
@@ -408,12 +452,15 @@ void SpritesheetEditorWindow::DrawSlicingControls()
         const ImVec2 p = ImGui::GetCursorScreenPos();
         const float side = 46.0f * dpi;
         if (m_TextureId != 0)
+        {
             DrawThumb(dl, tex, ImVec2(p.x + pad, p.y), side, (float)m_TextureWidth, (float)m_TextureHeight,
                       ImVec2(0, 0), ImVec2(1, 1), dpi);
+        }
         const float tx = p.x + pad + side + 12.0f * dpi;
         const float lineH = ImGui::GetTextLineHeight();
         const float ty = p.y + (side - lineH * 2.0f - 3.0f * dpi) * 0.5f;
-        dl->AddText(ImVec2(tx, ty), ImGui::GetColorU32(ImGuiCol_Text), fs::path(m_TexturePath).filename().string().c_str());
+        dl->AddText(ImVec2(tx, ty), ImGui::GetColorU32(ImGuiCol_Text),
+                    fs::path(m_TexturePath).filename().string().c_str());
         std::snprintf(buf, sizeof(buf), "%d \xc3\x97 %d px", m_TextureWidth, m_TextureHeight);
         dl->AddText(ImVec2(tx, ty + lineH + 3.0f * dpi), PaletteU32(DekiEditor::Palette::Dim), buf);
         ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x, side));
@@ -423,9 +470,13 @@ void SpritesheetEditorWindow::DrawSlicingControls()
     // ── How it is cut: Grid or Detect, as tabs ───────────────────────────
     ui.BeginTabLinks();
     if (ui.TabLink("Grid", m_UIMode == SlicingUIMode::Grid))
+    {
         m_UIMode = SlicingUIMode::Grid;
+    }
     if (ui.TabLink("Detect", m_UIMode == SlicingUIMode::Free))
+    {
         m_UIMode = SlicingUIMode::Free;
+    }
     ui.EndTabLinks();
     ImGui::Dummy(ImVec2(0.0f, 6.0f * dpi));
 
@@ -451,9 +502,13 @@ void SpritesheetEditorWindow::DrawSlicingControls()
         {
             m_SelectedFrame = -1;
             if (m_FrameWidth > 0 && m_FrameHeight > 0)
+            {
                 GenerateGrid();
+            }
             else
+            {
                 m_AtlasFrames.clear();
+            }
         }
 
         ui.PropertyRow("Layout");
@@ -474,11 +529,18 @@ void SpritesheetEditorWindow::DrawSlicingControls()
             {
                 ui.PropertyRow("");
                 if (restX > 0 && restY > 0)
-                    std::snprintf(buf, sizeof(buf), "%d px on the right and %d px at the bottom are left out.", restX, restY);
+                {
+                    std::snprintf(buf, sizeof(buf), "%d px on the right and %d px at the bottom are left out.", restX,
+                                  restY);
+                }
                 else if (restX > 0)
+                {
                     std::snprintf(buf, sizeof(buf), "%d px on the right are left out.", restX);
+                }
                 else
+                {
                     std::snprintf(buf, sizeof(buf), "%d px at the bottom are left out.", restY);
+                }
                 ImGui::PushStyleColor(ImGuiCol_Text, DekiEditor::Palette::Amber);
                 ImGui::TextUnformatted(ICON_TI_ALERT_TRIANGLE);
                 ImGui::SameLine(0.0f, 6.0f * dpi);
@@ -541,11 +603,15 @@ void SpritesheetEditorWindow::DrawSlicingControls()
             ImGui::PushStyleColor(ImGuiCol_HeaderHovered, IM_COL32(0, 0, 0, 0));
             ImGui::PushStyleColor(ImGuiCol_HeaderActive, IM_COL32(0, 0, 0, 0));
             if (ImGui::Selectable("##frame", selected, 0, ImVec2(0.0f, rowH)))
+            {
                 m_SelectedFrame = selected ? -1 : static_cast<int>(i);
+            }
             ImGui::PopStyleColor(3);
             const bool rowHovered = ImGui::IsItemHovered();
             if (rowHovered)
+            {
                 hoveredRow = static_cast<int>(i);
+            }
             const float rowW = ImGui::GetItemRectSize().x;
             const ImVec2 rowMax(rowMin.x + rowW, rowMin.y + rowH);
 
@@ -564,15 +630,16 @@ void SpritesheetEditorWindow::DrawSlicingControls()
                 const ImVec2 uv0((float)frame.x / m_TextureWidth, (float)frame.y / m_TextureHeight);
                 const ImVec2 uv1((float)(frame.x + frame.width) / m_TextureWidth,
                                  (float)(frame.y + frame.height) / m_TextureHeight);
-                DrawThumb(dl, tex, ImVec2(rowMin.x + pad, rowMin.y + (rowH - thumb) * 0.5f), thumb,
-                          (float)frame.width, (float)frame.height, uv0, uv1, dpi);
+                DrawThumb(dl, tex, ImVec2(rowMin.x + pad, rowMin.y + (rowH - thumb) * 0.5f), thumb, (float)frame.width,
+                          (float)frame.height, uv0, uv1, dpi);
             }
             const float lineH = ImGui::GetTextLineHeight();
             const float tx = rowMin.x + pad + thumb + 10.0f * dpi;
             const float ty = rowMin.y + (rowH - lineH * 2.0f) * 0.5f;
             char name[32], where[48];
             std::snprintf(name, sizeof(name), "Frame %zu", i);
-            std::snprintf(where, sizeof(where), "%d \xc3\x97 %d  at %d, %d", frame.width, frame.height, frame.x, frame.y);
+            std::snprintf(where, sizeof(where), "%d \xc3\x97 %d  at %d, %d", frame.width, frame.height, frame.x,
+                          frame.y);
             dl->AddText(ImVec2(tx, ty), selected ? AccentWithAlpha(1.0f) : ImGui::GetColorU32(ImGuiCol_Text), name);
             dl->AddText(ImVec2(tx, ty + lineH), PaletteU32(DekiEditor::Palette::Dim), where);
             ImGui::PopID();
@@ -580,7 +647,9 @@ void SpritesheetEditorWindow::DrawSlicingControls()
         ImGui::PopStyleVar();
         // The list hovers the canvas' frame, and the canvas hovers the list's row.
         if (hoveredRow >= 0)
+        {
             m_HoveredFrame = hoveredRow;
+        }
         ImGui::Dummy(ImVec2(0.0f, 8.0f * dpi));
     }
 }
@@ -592,7 +661,9 @@ void SpritesheetEditorWindow::DrawTexturePreview()
     const ImVec2 origin = ImGui::GetCursorScreenPos();
     const ImVec2 avail = ImGui::GetContentRegionAvail();
     if (avail.x < 32.0f || avail.y < 32.0f)
+    {
         return;
+    }
     ImDrawList* dl = ImGui::GetWindowDrawList();
     const ImVec2 canvasMax(origin.x + avail.x, origin.y + avail.y);
     dl->AddRectFilled(origin, canvasMax, IM_COL32(17, 18, 20, 255));
@@ -626,7 +697,8 @@ void SpritesheetEditorWindow::DrawTexturePreview()
                           mouse.y < ctrlMin.y + ctrlSize.y;
 
     ImGui::SetNextItemAllowOverlap();
-    ImGui::InvisibleButton("##slicer_canvas_input", avail, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonMiddle);
+    ImGui::InvisibleButton("##slicer_canvas_input", avail,
+                           ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonMiddle);
     const bool hovered = ImGui::IsItemHovered() && !overCtrl;
     const bool active = ImGui::IsItemActive();
     dl->PushClipRect(origin, canvasMax, true);
@@ -641,8 +713,8 @@ void SpritesheetEditorWindow::DrawTexturePreview()
     for (int s = 3; s >= 1; --s)
     {
         const float o = s * 3.0f * dpi;
-        dl->AddRectFilled(ImVec2(imgMin.x - o, imgMin.y - o + 2.0f * dpi), ImVec2(imgMax.x + o, imgMax.y + o + 2.0f * dpi),
-                          IM_COL32(0, 0, 0, 22), o);
+        dl->AddRectFilled(ImVec2(imgMin.x - o, imgMin.y - o + 2.0f * dpi),
+                          ImVec2(imgMax.x + o, imgMax.y + o + 2.0f * dpi), IM_COL32(0, 0, 0, 22), o);
     }
     DrawChecker(dl, imgMin, imgMax, 8.0f * dpi);
     dl->AddImage((ImTextureID)(intptr_t)m_TextureId, imgMin, imgMax);
@@ -655,21 +727,29 @@ void SpritesheetEditorWindow::DrawTexturePreview()
         const float usedY = imgMin.y + rows * m_FrameHeight * m_Zoom;
         const ImU32 left = PaletteU32(DekiEditor::Palette::Amber, 0.22f);
         if (usedX < imgMax.x - 0.5f)
+        {
             dl->AddRectFilled(ImVec2(usedX, imgMin.y), imgMax, left);
+        }
         if (usedY < imgMax.y - 0.5f)
+        {
             dl->AddRectFilled(ImVec2(imgMin.x, usedY), ImVec2(usedX, imgMax.y), left);
+        }
     }
 
     // Which frame is under the mouse
     int underMouse = -1;
     if (hovered)
+    {
         for (size_t i = 0; i < m_AtlasFrames.size(); ++i)
         {
             const auto& f = m_AtlasFrames[i];
             const float x1 = imgMin.x + f.x * m_Zoom, y1 = imgMin.y + f.y * m_Zoom;
             if (mouse.x >= x1 && mouse.x < x1 + f.width * m_Zoom && mouse.y >= y1 && mouse.y < y1 + f.height * m_Zoom)
+            {
                 underMouse = static_cast<int>(i);
+            }
         }
+    }
 
     // Frames: a quiet outline each; the hovered one lit, the selected one
     // lit and tinted; numbered on a badge when there is room.
@@ -683,9 +763,13 @@ void SpritesheetEditorWindow::DrawTexturePreview()
         const bool selected = static_cast<int>(i) == m_SelectedFrame;
         const bool lit = selected || static_cast<int>(i) == underMouse || static_cast<int>(i) == m_HoveredFrame;
         if (selected)
+        {
             dl->AddRectFilled(a, b, AccentWithAlpha(0.18f));
+        }
         else if (lit)
+        {
             dl->AddRectFilled(a, b, AccentWithAlpha(0.08f));
+        }
         dl->AddRect(a, b, lit ? AccentWithAlpha(1.0f) : AccentWithAlpha(0.45f), 0.0f, 0, selected ? 2.0f : 1.0f);
 
         char n[16];
@@ -695,8 +779,8 @@ void SpritesheetEditorWindow::DrawTexturePreview()
         if (b.x - a.x >= badge.x + 6.0f * dpi && b.y - a.y >= badge.y + 6.0f * dpi)
         {
             const ImVec2 bm(a.x + 3.0f * dpi, a.y + 3.0f * dpi);
-            dl->AddRectFilled(bm, ImVec2(bm.x + badge.x, bm.y + badge.y), lit ? AccentWithAlpha(1.0f) : IM_COL32(12, 13, 15, 200),
-                              3.0f * dpi);
+            dl->AddRectFilled(bm, ImVec2(bm.x + badge.x, bm.y + badge.y),
+                              lit ? AccentWithAlpha(1.0f) : IM_COL32(12, 13, 15, 200), 3.0f * dpi);
             dl->AddText(small, smallSize, ImVec2(bm.x + 4.0f * dpi, bm.y + 1.0f * dpi),
                         lit ? IM_COL32(10, 11, 13, 255) : AccentWithAlpha(0.9f), n);
         }
@@ -708,13 +792,15 @@ void SpritesheetEditorWindow::DrawTexturePreview()
     if (m_SelectedFrame >= 0 && m_SelectedFrame < static_cast<int>(m_AtlasFrames.size()))
     {
         const auto& f = m_AtlasFrames[m_SelectedFrame];
-        std::snprintf(info, sizeof(info), "Frame %d   %d \xc3\x97 %d at %d, %d", m_SelectedFrame, f.width, f.height, f.x, f.y);
+        std::snprintf(info, sizeof(info), "Frame %d   %d \xc3\x97 %d at %d, %d", m_SelectedFrame, f.width, f.height,
+                      f.x, f.y);
         DrawPill(dl, ImVec2(origin.x + 12.0f * dpi, origin.y + 12.0f * dpi), info, AccentWithAlpha(1.0f), false, dpi);
     }
     else if (m_AtlasFrames.empty())
     {
         DrawPill(dl, ImVec2(origin.x + 12.0f * dpi, origin.y + 12.0f * dpi),
-                 m_UIMode == SlicingUIMode::Grid ? "Set a frame size to cut the image" : "Detect the sprites to cut the image",
+                 m_UIMode == SlicingUIMode::Grid ? "Set a frame size to cut the image"
+                                                 : "Detect the sprites to cut the image",
                  PaletteU32(DekiEditor::Palette::Dim), false, dpi);
     }
     else
@@ -736,20 +822,29 @@ void SpritesheetEditorWindow::DrawTexturePreview()
         m_PanOffsetY += at.y - (origin.y + (avail.y - m_TextureHeight * m_Zoom) * 0.5f + m_PanOffsetY + fy * m_Zoom);
     };
     if (hovered && ImGui::GetIO().MouseWheel != 0.0f)
+    {
         zoomAbout(ImGui::GetIO().MouseWheel > 0.0f ? 1.2f : 1.0f / 1.2f, mouse);
-    if (active && (ImGui::IsMouseDragging(ImGuiMouseButton_Left) || ImGui::IsMouseDragging(ImGuiMouseButton_Middle, 0.0f)))
+    }
+    if (active &&
+        (ImGui::IsMouseDragging(ImGuiMouseButton_Left) || ImGui::IsMouseDragging(ImGuiMouseButton_Middle, 0.0f)))
     {
         m_PanOffsetX += ImGui::GetIO().MouseDelta.x;
         m_PanOffsetY += ImGui::GetIO().MouseDelta.y;
     }
     if (hovered && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && ImGui::GetIO().MouseDragMaxDistanceSqr[0] < 16.0f)
+    {
         m_SelectedFrame = underMouse;
+    }
     if (hovered && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+    {
         m_FitPending = true;
+    }
 
     // Zoom control: − 100% + and fit, in a pill at the bottom right.
-    dl->AddRectFilled(ctrlMin, ImVec2(ctrlMin.x + ctrlSize.x, ctrlMin.y + ctrlSize.y), IM_COL32(12, 13, 15, 225), 6.0f * dpi);
-    dl->AddRect(ctrlMin, ImVec2(ctrlMin.x + ctrlSize.x, ctrlMin.y + ctrlSize.y), IM_COL32(255, 255, 255, 18), 6.0f * dpi);
+    dl->AddRectFilled(ctrlMin, ImVec2(ctrlMin.x + ctrlSize.x, ctrlMin.y + ctrlSize.y), IM_COL32(12, 13, 15, 225),
+                      6.0f * dpi);
+    dl->AddRect(ctrlMin, ImVec2(ctrlMin.x + ctrlSize.x, ctrlMin.y + ctrlSize.y), IM_COL32(255, 255, 255, 18),
+                6.0f * dpi);
     ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(0, 0, 0, 0));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(255, 255, 255, 22));
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(255, 255, 255, 36));
@@ -759,25 +854,41 @@ void SpritesheetEditorWindow::DrawTexturePreview()
     const ImVec2 center(origin.x + avail.x * 0.5f, origin.y + avail.y * 0.5f);
     ImGui::SetCursorScreenPos(ImVec2(ctrlMin.x + 3.0f * dpi, ctrlMin.y + 3.0f * dpi));
     if (ImGui::Button(ICON_TI_MINUS "##zoomout", ImVec2(btnW, ctrlH)))
+    {
         zoomAbout(1.0f / 1.25f, center);
+    }
     if (ImGui::IsItemHovered())
+    {
         DekiEditor::Tooltip("Zoom out");
+    }
     ImGui::SameLine();
     std::snprintf(info, sizeof(info), "%.0f%%##zoompct", m_Zoom * 100.0f);
     if (ImGui::Button(info, ImVec2(pctW, ctrlH)))
+    {
         zoomAbout(1.0f / m_Zoom, center);  // 100%: one screen pixel per image pixel
+    }
     if (ImGui::IsItemHovered())
+    {
         DekiEditor::Tooltip("Actual size");
+    }
     ImGui::SameLine();
     if (ImGui::Button(ICON_TI_PLUS "##zoomin", ImVec2(btnW, ctrlH)))
+    {
         zoomAbout(1.25f, center);
+    }
     if (ImGui::IsItemHovered())
+    {
         DekiEditor::Tooltip("Zoom in");
+    }
     ImGui::SameLine();
     if (ImGui::Button(ICON_TI_MAXIMIZE "##fit", ImVec2(btnW, ctrlH)))
+    {
         m_FitPending = true;
+    }
     if (ImGui::IsItemHovered())
+    {
         DekiEditor::Tooltip("Fit the image (or double-click it)");
+    }
     ImGui::PopStyleVar(3);
     ImGui::PopStyleColor(3);
 
@@ -787,7 +898,9 @@ void SpritesheetEditorWindow::DrawTexturePreview()
 void SpritesheetEditorWindow::LoadTextureData()
 {
     if (m_TexturePath.empty())
+    {
         return;
+    }
 
     // The original image, not the cache: frames are authored in the image's
     // own pixels, and a cache shrunk by Max Size has fewer of them.
@@ -805,7 +918,9 @@ void SpritesheetEditorWindow::LoadTextureData()
 
     // Copy to member buffer
     if (m_TextureData)
+    {
         delete[] m_TextureData;
+    }
 
     m_TextureData = new uint8_t[rgba.size()];
     memcpy(m_TextureData, rgba.data(), rgba.size());
@@ -816,7 +931,9 @@ void SpritesheetEditorWindow::LoadTextureData()
 void SpritesheetEditorWindow::UploadTextureToGPU()
 {
     if (!m_TextureData || m_TextureWidth == 0 || m_TextureHeight == 0)
+    {
         return;
+    }
 
     // Delete old texture
     if (m_TextureId != 0)
@@ -839,17 +956,8 @@ void SpritesheetEditorWindow::UploadTextureToGPU()
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        GL_RGBA,
-        m_TextureWidth,
-        m_TextureHeight,
-        0,
-        GL_RGBA,
-        GL_UNSIGNED_BYTE,
-        m_TextureData
-    );
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_TextureWidth, m_TextureHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 m_TextureData);
 
     glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -857,7 +965,9 @@ void SpritesheetEditorWindow::UploadTextureToGPU()
 bool SpritesheetEditorWindow::LoadSliceSettings()
 {
     if (m_TexturePath.empty())
+    {
         return false;
+    }
 
     // Load from .png.data file
     std::string dataPath = m_TexturePath + ".data";
@@ -873,7 +983,9 @@ bool SpritesheetEditorWindow::LoadSliceSettings()
     {
         std::ifstream file(dataPath);
         if (!file.is_open())
+        {
             return false;
+        }
 
         json j;
         file >> j;
@@ -932,9 +1044,15 @@ bool SpritesheetEditorWindow::LoadSliceSettings()
                         }
                     }
                     if (sprite.contains("frameIds") && sprite["frameIds"].is_array())
+                    {
                         for (size_t i = 0; i < sprite["frameIds"].size() && i < m_AtlasFrames.size(); ++i)
+                        {
                             if (sprite["frameIds"][i].is_number_integer())
+                            {
                                 m_AtlasFrames[i].id = sprite["frameIds"][i].get<int32_t>();
+                            }
+                        }
+                    }
                 }
             }
             m_NextFrameId = sprite.value("nextFrameId", 0);
@@ -944,7 +1062,9 @@ bool SpritesheetEditorWindow::LoadSliceSettings()
         for (size_t i = 0; i < m_AtlasFrames.size(); ++i)
         {
             if (m_AtlasFrames[i].id < 0)
+            {
                 m_AtlasFrames[i].id = static_cast<int32_t>(i);
+            }
             m_NextFrameId = std::max(m_NextFrameId, m_AtlasFrames[i].id + 1);
         }
 
@@ -959,7 +1079,9 @@ bool SpritesheetEditorWindow::LoadSliceSettings()
 bool SpritesheetEditorWindow::SaveSliceSettings()
 {
     if (m_TexturePath.empty())
+    {
         return false;
+    }
 
     std::string dataPath = m_TexturePath + ".data";
 
@@ -971,12 +1093,15 @@ bool SpritesheetEditorWindow::SaveSliceSettings()
     {
         std::string text, err;
         if (!DekiEditor::ReadFileToString(dataPath, text, err))
+        {
             return false;
+        }
         j = json::parse(text, nullptr, false);
         if (j.is_discarded() || !j.is_object())
         {
             DEKI_LOG_ERROR("Sprite Slicer: %s could not be read (a merge conflict?). Fix it, then save again; "
-                           "it was left as it is.", dataPath.c_str());
+                           "it was left as it is.",
+                           dataPath.c_str());
             return false;
         }
     }
@@ -985,7 +1110,9 @@ bool SpritesheetEditorWindow::SaveSliceSettings()
     // frames were never re-sliced keeps the file it always had (ids = positions).
     bool idsArePositions = m_NextFrameId <= static_cast<int32_t>(m_AtlasFrames.size());
     for (size_t i = 0; i < m_AtlasFrames.size() && idsArePositions; ++i)
+    {
         idsArePositions = m_AtlasFrames[i].id == static_cast<int32_t>(i);
+    }
 
     // Intelligently choose storage format
     json sprite = json::object();
@@ -1003,7 +1130,9 @@ bool SpritesheetEditorWindow::SaveSliceSettings()
         {
             json ids = json::array();
             for (const auto& frame : m_AtlasFrames)
+            {
                 ids.push_back(frame.id);
+            }
             sprite["frameIds"] = ids;
         }
     }
@@ -1021,14 +1150,20 @@ bool SpritesheetEditorWindow::SaveSliceSettings()
             frameJson["width"] = frame.width;
             frameJson["height"] = frame.height;
             if (!frame.name.empty())
+            {
                 frameJson["name"] = frame.name;
+            }
             if (!idsArePositions)
+            {
                 frameJson["id"] = frame.id;
+            }
             sprite["frames"].push_back(frameJson);
         }
     }
     if (!idsArePositions)
+    {
         sprite["nextFrameId"] = m_NextFrameId;
+    }
     j["settings"]["sprite"] = sprite;
 
     // Write back in one step (temp file + rename): a torn sidecar loses the GUID.
@@ -1086,13 +1221,10 @@ void SpritesheetEditorWindow::RunAutoCut()
     }
 
     // Run auto-detect algorithm
-    m_AtlasFrames = DekiEditor::TextureImporter::AutoDetectFrames(
-        m_TextureData,
-        m_TextureWidth,
-        m_TextureHeight,
-        10,  // alpha threshold
-        1,   // min width
-        1    // min height
+    m_AtlasFrames = DekiEditor::TextureImporter::AutoDetectFrames(m_TextureData, m_TextureWidth, m_TextureHeight,
+                                                                  10,  // alpha threshold
+                                                                  1,   // min width
+                                                                  1    // min height
     );
     DekiEditor::TextureImporter::CarryFrameIds(m_SavedFrames, m_AtlasFrames, m_NextFrameId);
 
@@ -1111,7 +1243,9 @@ void SpritesheetEditorWindow::RunAutoCut()
 bool SpritesheetEditorWindow::IsUniformGrid() const
 {
     if (m_AtlasFrames.empty())
+    {
         return false;
+    }
 
     // Check if all frames have the same size
     int width = m_AtlasFrames[0].width;
@@ -1120,14 +1254,18 @@ bool SpritesheetEditorWindow::IsUniformGrid() const
     for (const auto& frame : m_AtlasFrames)
     {
         if (frame.width != width || frame.height != height)
+        {
             return false;
+        }
     }
 
     // Check if frames are arranged in a grid pattern
     // Calculate expected columns based on texture width
     int cols = m_TextureWidth / width;
     if (cols == 0)
+    {
         return false;
+    }
 
     for (size_t i = 0; i < m_AtlasFrames.size(); ++i)
     {
@@ -1135,7 +1273,9 @@ bool SpritesheetEditorWindow::IsUniformGrid() const
         int expectedY = (i / cols) * height;
 
         if (m_AtlasFrames[i].x != expectedX || m_AtlasFrames[i].y != expectedY)
+        {
             return false;
+        }
     }
 
     return true;
@@ -1143,6 +1283,6 @@ bool SpritesheetEditorWindow::IsUniformGrid() const
 
 REGISTER_EDITOR_WINDOW(SpritesheetEditorWindow, "Sprite Slicer", "2D/Sprite Slicer")
 
-} // namespace DekiEditor
+}  // namespace DekiEditor
 
 #endif  // DEKI_EDITOR

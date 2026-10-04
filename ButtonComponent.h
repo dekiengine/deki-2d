@@ -9,9 +9,15 @@
 #include <deki/reflection/ObjectRef.h>
 
 // Forward declarations
-namespace Deki { class Object; }
+namespace Deki
+{
+class Object;
+}
 
-namespace DekiInput { class InputCollider; }
+namespace DekiInput
+{
+class InputCollider;
+}
 
 namespace Deki2D
 {
@@ -21,10 +27,10 @@ namespace Deki2D
  */
 enum class ButtonState : uint8_t
 {
-    Normal = 0,    // Default state
-    Hovered = 1,   // Mouse/finger hovering over button
-    Pressed = 2,   // Button is being pressed
-    Disabled = 3   // Button is disabled and cannot be interacted with
+    Normal = 0,   // Default state
+    Hovered = 1,  // Mouse/finger hovering over button
+    Pressed = 2,  // Button is being pressed
+    Disabled = 3  // Button is disabled and cannot be interacted with
 };
 
 /**
@@ -63,8 +69,7 @@ DEKI_DESCRIPTION("Makes the object a button: tracks hover and press, and fires a
 DEKI_FORMER_NAME("ButtonComponent")
 class ButtonComponent : public Deki::Component
 {
-   public:
-
+public:
     // DekiInput::InputCollider reference (required for receiving input)
     DEKI_EXPORT
     DEKI_TOOLTIP("The hit area that makes this button clickable. Without one the button has no way to notice a press.")
@@ -72,10 +77,12 @@ class ButtonComponent : public Deki::Component
 
     // State management
     DEKI_EXPORT
-    DEKI_TOOLTIP("Normal, hovered, pressed or disabled. Set by input; a style component watches it to decide what to draw.")
+    DEKI_TOOLTIP(
+        "Normal, hovered, pressed or disabled. Set by input; a style component watches it to decide what to draw.")
     ButtonState state;
     DEKI_EXPORT
-    DEKI_TOOLTIP("A disabled button ignores input and reports the disabled state, so it can be greyed out rather than hidden.")
+    DEKI_TOOLTIP(
+        "A disabled button ignores input and reports the disabled state, so it can be greyed out rather than hidden.")
     bool isEnabled;
 
     // Callbacks (not exposed to editor - runtime only)
@@ -131,7 +138,7 @@ class ButtonComponent : public Deki::Component
      */
     void CancelPress();
 
-   private:
+private:
     bool m_WasPressedInside = false;
 
     void InvokeCallbacks(const std::vector<ButtonCallback>& callbacks);

@@ -9,7 +9,7 @@
 #include <deki-editor/AssetData.h>  // For DekiEditor::GenerateGuid
 #include "FontCompiler.h"
 #include <deki/LogSystem.h>
-#include <deki/Guid.h>  // For Deki::GenerateDeterministicGuid
+#include <deki/Guid.h>                 // For Deki::GenerateDeterministicGuid
 #include <deki/assets/AssetManager.h>  // For registering variant GUIDs
 #include <nlohmann/json.hpp>
 #include <fstream>
@@ -25,19 +25,22 @@ namespace Deki2D
  * @brief Get or create variant GUIDs using deterministic generation
  * GUIDs are always regenerated to ensure consistency with CleanCache
  */
-static bool GetOrCreateVariantGuids(const std::string& fontGuid, int fontSize,
-                                     std::string& outVariantGuid, std::string& outAtlasGuid,
-                                     json& j)
+static bool GetOrCreateVariantGuids(const std::string& fontGuid, int fontSize, std::string& outVariantGuid,
+                                    std::string& outAtlasGuid, json& j)
 {
     std::string sizeKey = std::to_string(fontSize);
 
     // Ensure variants object exists
     if (!j.contains("variants"))
+    {
         j["variants"] = json::object();
+    }
 
     // Ensure size entry exists
     if (!j["variants"].contains(sizeKey))
+    {
         j["variants"][sizeKey] = json::object();
+    }
 
     // Always use deterministic GUIDs based on fontGuid:size
     outVariantGuid = Deki::GenerateDeterministicGuid(fontGuid + ":" + sizeKey);
@@ -70,7 +73,10 @@ static void RegisterFontSubAssets(const std::string& fontGuid, const std::string
         std::string vGuid = Deki::GenerateDeterministicGuid(seed);
         std::string vPath = cachePath + "/" + vGuid;
 
-        if (!fs::exists(vPath)) continue;
+        if (!fs::exists(vPath))
+        {
+            continue;
+        }
 
         // Variant lives in a separate cache file (filename == GUID).
         Deki::AssetManager::Get()->RegisterGuid(vGuid, vGuid);
@@ -105,17 +111,16 @@ static void RegisterFontSubAssets(const std::string& fontGuid, const std::string
     {
         auto* pipeline = DekiEditor::AssetPipeline::Instance();
         if (pipeline)
+        {
             pipeline->RegisterSubAssets(fontGuid, subAssets);
+        }
     }
 }
 
 /**
  * @brief Handle font sync - auto-bake configured font sizes
  */
-static void HandleFontSync(
-    const std::string& absolutePath,
-    const std::string& fontGuid,
-    const std::string& projectPath)
+static void HandleFontSync(const std::string& absolutePath, const std::string& fontGuid, const std::string& projectPath)
 {
     // Read .data sidecar for configured sizes
     std::string dataPath = absolutePath + ".data";
@@ -160,27 +165,66 @@ static void HandleFontSync(
     int lastChar = settings.value("lastChar", 126);
     std::string hintingStr = settings.value("hinting", std::string("light"));
     FontCompiler::HintingMode hinting = FontCompiler::HintingMode::Light;
-    if (hintingStr == "none")        hinting = FontCompiler::HintingMode::None;
-    else if (hintingStr == "normal") hinting = FontCompiler::HintingMode::Normal;
-    else if (hintingStr == "mono")   hinting = FontCompiler::HintingMode::Mono;
+    if (hintingStr == "none")
+    {
+        hinting = FontCompiler::HintingMode::None;
+    }
+    else if (hintingStr == "normal")
+    {
+        hinting = FontCompiler::HintingMode::Normal;
+    }
+    else if (hintingStr == "mono")
+    {
+        hinting = FontCompiler::HintingMode::Mono;
+    }
 
     int oversample = settings.value("oversample", 2);
-    if (oversample < 1) oversample = 1;
-    if (oversample > 4) oversample = 4;
+    if (oversample < 1)
+    {
+        oversample = 1;
+    }
+    if (oversample > 4)
+    {
+        oversample = 4;
+    }
 
     std::string decorationStr = settings.value("decoration", std::string("none"));
     FontCompiler::DecorationMode decoration = FontCompiler::DecorationMode::None;
-    if (decorationStr == "outline")      decoration = FontCompiler::DecorationMode::Outline;
-    else if (decorationStr == "shadow")  decoration = FontCompiler::DecorationMode::Shadow;
+    if (decorationStr == "outline")
+    {
+        decoration = FontCompiler::DecorationMode::Outline;
+    }
+    else if (decorationStr == "shadow")
+    {
+        decoration = FontCompiler::DecorationMode::Shadow;
+    }
     int outlineSize = settings.value("outlineSize", 1);
-    if (outlineSize < 1) outlineSize = 1;
-    if (outlineSize > 3) outlineSize = 3;
+    if (outlineSize < 1)
+    {
+        outlineSize = 1;
+    }
+    if (outlineSize > 3)
+    {
+        outlineSize = 3;
+    }
     int shadowDx = settings.value("shadowDx", 1);
-    if (shadowDx < -3) shadowDx = -3;
-    if (shadowDx > 3) shadowDx = 3;
+    if (shadowDx < -3)
+    {
+        shadowDx = -3;
+    }
+    if (shadowDx > 3)
+    {
+        shadowDx = 3;
+    }
     int shadowDy = settings.value("shadowDy", 1);
-    if (shadowDy < -3) shadowDy = -3;
-    if (shadowDy > 3) shadowDy = 3;
+    if (shadowDy < -3)
+    {
+        shadowDy = -3;
+    }
+    if (shadowDy > 3)
+    {
+        shadowDy = 3;
+    }
 
     std::string cacheDir = DekiEditor::GetCacheDirectory(projectPath);
     fs::create_directories(cacheDir);
@@ -190,16 +234,17 @@ static void HandleFontSync(
     for (const auto& sizeVal : settings["sizes"])
     {
         if (!sizeVal.is_number_integer())
+        {
             continue;
+        }
 
         int fontSize = sizeVal.get<int>();
 
         // Get or create variant GUIDs
         std::string sizeKey = std::to_string(fontSize);
-        bool guidsExistedBefore = j.contains("variants") &&
-                                   j["variants"].contains(sizeKey) &&
-                                   j["variants"][sizeKey].contains("guid") &&
-                                   j["variants"][sizeKey].contains("atlasGuid");
+        bool guidsExistedBefore = j.contains("variants") && j["variants"].contains(sizeKey) &&
+                                  j["variants"][sizeKey].contains("guid") &&
+                                  j["variants"][sizeKey].contains("atlasGuid");
 
         std::string variantGuid, atlasGuid;
         if (!GetOrCreateVariantGuids(fontGuid, fontSize, variantGuid, atlasGuid, j))
@@ -222,7 +267,9 @@ static void HandleFontSync(
         // AssetManager registration happens centrally in RegisterFontSubAssets via
         // OnImportComplete, so we don't need to register here.
         if (fs::exists(dfontPath) && fs::exists(atlasPath))
+        {
             continue;
+        }
 
         // Delete stale dfont file if atlas is missing (will re-bake below)
         if (fs::exists(dfontPath) && !fs::exists(atlasPath))
@@ -253,8 +300,8 @@ static void HandleFontSync(
 
         // Write atlas (filename is atlasGuid, no extension)
         // atlasPath already defined above
-        if (!DekiEditor::TextureImporter::WriteTexFile(atlasPath, result.atlasRGBA.data(),
-            result.atlasWidth, result.atlasHeight, DekiEditor::TextureFormat::ALPHA8))
+        if (!DekiEditor::TextureImporter::WriteTexFile(atlasPath, result.atlasRGBA.data(), result.atlasWidth,
+                                                       result.atlasHeight, DekiEditor::TextureFormat::ALPHA8))
         {
             DEKI_LOG_WARNING("FontSync: Failed to write atlas %s", atlasPath.c_str());
             continue;
@@ -270,8 +317,8 @@ static void HandleFontSync(
 
         // AssetManager registration happens centrally in RegisterFontSubAssets via
         // OnImportComplete (after ImportAllAssets). No per-size RegisterGuid needed here.
-        DEKI_LOG_EDITOR("FontSync: baked %s @ %d px -> font=%s, atlas=%s",
-            absolutePath.c_str(), fontSize, variantGuid.c_str(), atlasGuid.c_str());
+        DEKI_LOG_EDITOR("FontSync: baked %s @ %d px -> font=%s, atlas=%s", absolutePath.c_str(), fontSize,
+                        variantGuid.c_str(), atlasGuid.c_str());
 
         dataFileModified = true;
     }
@@ -307,7 +354,10 @@ static void RegisterBdfSubAssets(const std::string& fontGuid, const std::string&
     std::string vGuid = Deki::GenerateDeterministicGuid(fontGuid + ":bdf");
     std::string vPath = cachePath + "/" + vGuid;
 
-    if (!fs::exists(vPath)) return;
+    if (!fs::exists(vPath))
+    {
+        return;
+    }
 
     // Variant lives in a separate cache file. Centralized here so HandleBdfSync
     // can run only on source changes (OnSourceChange policy).
@@ -339,13 +389,12 @@ static void RegisterBdfSubAssets(const std::string& fontGuid, const std::string&
 
     auto* pipeline = DekiEditor::AssetPipeline::Instance();
     if (pipeline)
+    {
         pipeline->RegisterSubAssets(fontGuid, subAssets);
+    }
 }
 
-static void HandleBdfSync(
-    const std::string& absolutePath,
-    const std::string& fontGuid,
-    const std::string& projectPath)
+static void HandleBdfSync(const std::string& absolutePath, const std::string& fontGuid, const std::string& projectPath)
 {
     // Read .data sidecar
     std::string dataPath = absolutePath + ".data";
@@ -357,8 +406,14 @@ static void HandleBdfSync(
         std::ifstream file(dataPath);
         if (file.is_open())
         {
-            try { j = json::parse(file); hasData = true; }
-            catch (...) {}
+            try
+            {
+                j = json::parse(file);
+                hasData = true;
+            }
+            catch (...)
+            {
+            }
         }
     }
 
@@ -369,7 +424,9 @@ static void HandleBdfSync(
         for (const auto& val : j["bdfSettings"]["selectedChars"])
         {
             if (val.is_number_integer())
+            {
                 selectedChars.push_back(val.get<int>());
+            }
         }
     }
 
@@ -380,17 +437,41 @@ static void HandleBdfSync(
     {
         const auto& settings = j["bdfSettings"];
         std::string dec = settings.value("decoration", std::string("none"));
-        if (dec == "outline")      bdfDecoration = FontCompiler::DecorationMode::Outline;
-        else if (dec == "shadow")  bdfDecoration = FontCompiler::DecorationMode::Shadow;
+        if (dec == "outline")
+        {
+            bdfDecoration = FontCompiler::DecorationMode::Outline;
+        }
+        else if (dec == "shadow")
+        {
+            bdfDecoration = FontCompiler::DecorationMode::Shadow;
+        }
         bdfOutlineSize = settings.value("outlineSize", 1);
-        if (bdfOutlineSize < 1) bdfOutlineSize = 1;
-        if (bdfOutlineSize > 3) bdfOutlineSize = 3;
+        if (bdfOutlineSize < 1)
+        {
+            bdfOutlineSize = 1;
+        }
+        if (bdfOutlineSize > 3)
+        {
+            bdfOutlineSize = 3;
+        }
         bdfShadowDx = settings.value("shadowDx", 1);
-        if (bdfShadowDx < -3) bdfShadowDx = -3;
-        if (bdfShadowDx > 3) bdfShadowDx = 3;
+        if (bdfShadowDx < -3)
+        {
+            bdfShadowDx = -3;
+        }
+        if (bdfShadowDx > 3)
+        {
+            bdfShadowDx = 3;
+        }
         bdfShadowDy = settings.value("shadowDy", 1);
-        if (bdfShadowDy < -3) bdfShadowDy = -3;
-        if (bdfShadowDy > 3) bdfShadowDy = 3;
+        if (bdfShadowDy < -3)
+        {
+            bdfShadowDy = -3;
+        }
+        if (bdfShadowDy > 3)
+        {
+            bdfShadowDy = 3;
+        }
     }
 
     // No settings yet — auto-select all codepoints from the BDF file
@@ -409,7 +490,9 @@ static void HandleBdfSync(
         j["bdfSettings"]["selectedChars"] = selectedChars;
         std::ofstream outFile(dataPath);
         if (outFile.is_open())
+        {
             outFile << j.dump(2);
+        }
     }
 
     // Deterministic GUIDs
@@ -418,8 +501,10 @@ static void HandleBdfSync(
 
     // Update variants in .data
     if (!j.contains("variants"))
+    {
         j["variants"] = json::object();
-    j["variants"]["bdf"] = { {"guid", variantGuid}, {"atlasGuid", atlasGuid} };
+    }
+    j["variants"]["bdf"] = { { "guid", variantGuid }, { "atlasGuid", atlasGuid } };
 
     std::string cacheDir = DekiEditor::GetCacheDirectory(projectPath);
     fs::create_directories(cacheDir);
@@ -430,11 +515,15 @@ static void HandleBdfSync(
     // Skip if already cached. AssetManager registration + sub-asset registration
     // happen centrally in RegisterBdfSubAssets via OnImportComplete.
     if (fs::exists(dfontPath) && fs::exists(atlasPath))
+    {
         return;
+    }
 
     // Delete stale dfont if atlas missing
     if (fs::exists(dfontPath) && !fs::exists(atlasPath))
+    {
         fs::remove(dfontPath);
+    }
 
     // Compile
     FontCompiler::BdfCompileOptions options;
@@ -454,8 +543,8 @@ static void HandleBdfSync(
     }
 
     // Write atlas
-    if (!DekiEditor::TextureImporter::WriteTexFile(atlasPath, result.atlasRGBA.data(),
-        result.atlasWidth, result.atlasHeight, DekiEditor::TextureFormat::ALPHA8))
+    if (!DekiEditor::TextureImporter::WriteTexFile(atlasPath, result.atlasRGBA.data(), result.atlasWidth,
+                                                   result.atlasHeight, DekiEditor::TextureFormat::ALPHA8))
     {
         DEKI_LOG_WARNING("BdfSync: Failed to write atlas %s", atlasPath.c_str());
         return;
@@ -468,12 +557,15 @@ static void HandleBdfSync(
         return;
     }
 
-    DEKI_LOG_EDITOR("BdfSync: baked %s -> font=%s, atlas=%s", absolutePath.c_str(), variantGuid.c_str(), atlasGuid.c_str());
+    DEKI_LOG_EDITOR("BdfSync: baked %s -> font=%s, atlas=%s", absolutePath.c_str(), variantGuid.c_str(),
+                    atlasGuid.c_str());
 
     // Save .data with variant GUIDs
     std::ofstream outFile(dataPath);
     if (outFile.is_open())
+    {
         outFile << j.dump(2);
+    }
 
     // AssetManager registration + sub-asset registration happen centrally in
     // RegisterBdfSubAssets via OnImportComplete (called after ImportAllAssets).
@@ -487,72 +579,86 @@ void RegisterFontSyncHandlers()
     // Only add the callback once - it will be invoked every time a pipeline starts
     // (because AssetPipeline::Stop() clears m_SyncHandlers)
     if (s_FontSyncRegistrationSetup)
+    {
         return;
+    }
     s_FontSyncRegistrationSetup = true;
 
-    DekiEditor::AssetPipeline::OnStarted([](DekiEditor::AssetPipeline* pipeline) {
-        pipeline->RegisterSyncHandler(".ttf", HandleFontSync);
-        pipeline->RegisterSyncHandler(".otf", HandleFontSync);
-        pipeline->RegisterSyncHandler(".bdf", HandleBdfSync);
+    DekiEditor::AssetPipeline::OnStarted(
+        [](DekiEditor::AssetPipeline* pipeline)
+        {
+            pipeline->RegisterSyncHandler(".ttf", HandleFontSync);
+            pipeline->RegisterSyncHandler(".otf", HandleFontSync);
+            pipeline->RegisterSyncHandler(".bdf", HandleBdfSync);
 
-        // .dfont is pre-compiled at the source path — the engine's pipeline
-        // dispatches a PreCached cache handler so the source IS treated as the
-        // cache (no separate cache file, no staleness check). This keeps
-        // .dfont knowledge out of AssetPipeline.cpp.
-        pipeline->RegisterCacheHandler(".dfont", [](const DekiEditor::AssetCacheContext&) {
-            return DekiEditor::AssetCacheResult::PreCached;
-        });
+            // .dfont is pre-compiled at the source path — the engine's pipeline
+            // dispatches a PreCached cache handler so the source IS treated as the
+            // cache (no separate cache file, no staleness check). This keeps
+            // .dfont knowledge out of AssetPipeline.cpp.
+            pipeline->RegisterCacheHandler(".dfont", [](const DekiEditor::AssetCacheContext&)
+                                           { return DekiEditor::AssetCacheResult::PreCached; });
 
-        // Cache-variant providers — tell the pipeline which derived cache GUIDs
-        // belong to a TTF/OTF/BDF source. Without this, cache cleanup would
-        // delete baked font variants as orphans.
-        auto ttfProvider = [](const DekiEditor::AssetInfo& info,
-                              std::unordered_set<std::string>& valid) {
-            // Match the size range that BakeFont actually emits — see
-            // FontCompiler / RuntimeFontCache for the canonical size enumeration.
-            for (int sz = 8; sz <= 128; ++sz)
+            // Cache-variant providers — tell the pipeline which derived cache GUIDs
+            // belong to a TTF/OTF/BDF source. Without this, cache cleanup would
+            // delete baked font variants as orphans.
+            auto ttfProvider = [](const DekiEditor::AssetInfo& info, std::unordered_set<std::string>& valid)
             {
-                std::string sizeKey = std::to_string(sz);
-                valid.insert(Deki::GenerateDeterministicGuid(info.guid + ":" + sizeKey));
-                valid.insert(Deki::GenerateDeterministicGuid(info.guid + ":" + sizeKey + ":atlas"));
-            }
-        };
-        pipeline->RegisterCacheVariantProvider(".ttf", ttfProvider);
-        pipeline->RegisterCacheVariantProvider(".otf", ttfProvider);
-        pipeline->RegisterCacheVariantProvider(".bdf",
-            [](const DekiEditor::AssetInfo& info,
-               std::unordered_set<std::string>& valid) {
-                valid.insert(Deki::GenerateDeterministicGuid(info.guid + ":bdf"));
-                valid.insert(Deki::GenerateDeterministicGuid(info.guid + ":bdf:atlas"));
-            });
-    });
+                // Match the size range that BakeFont actually emits — see
+                // FontCompiler / RuntimeFontCache for the canonical size enumeration.
+                for (int sz = 8; sz <= 128; ++sz)
+                {
+                    std::string sizeKey = std::to_string(sz);
+                    valid.insert(Deki::GenerateDeterministicGuid(info.guid + ":" + sizeKey));
+                    valid.insert(Deki::GenerateDeterministicGuid(info.guid + ":" + sizeKey + ":atlas"));
+                }
+            };
+            pipeline->RegisterCacheVariantProvider(".ttf", ttfProvider);
+            pipeline->RegisterCacheVariantProvider(".otf", ttfProvider);
+            pipeline->RegisterCacheVariantProvider(
+                ".bdf",
+                [](const DekiEditor::AssetInfo& info, std::unordered_set<std::string>& valid)
+                {
+                    valid.insert(Deki::GenerateDeterministicGuid(info.guid + ":bdf"));
+                    valid.insert(Deki::GenerateDeterministicGuid(info.guid + ":bdf:atlas"));
+                });
+        });
 
     // After all assets are imported, scan for existing baked font variants
     // and register them as sub-assets (for warm cache / project re-open)
-    DekiEditor::AssetPipeline::OnImportComplete([](DekiEditor::AssetPipeline* pipeline) {
-        const auto& allAssets = pipeline->GetAllAssets();
-        for (const auto& [path, info] : allAssets)
+    DekiEditor::AssetPipeline::OnImportComplete(
+        [](DekiEditor::AssetPipeline* pipeline)
         {
-            if (info.guid.empty()) continue;
-            std::string ext = fs::path(path).extension().string();
-            for (auto& c : ext) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-            if (ext == ".ttf" || ext == ".otf")
+            const auto& allAssets = pipeline->GetAllAssets();
+            for (const auto& [path, info] : allAssets)
             {
-                RegisterFontSubAssets(info.guid, pipeline->GetProjectPath());
+                if (info.guid.empty())
+                {
+                    continue;
+                }
+                std::string ext = fs::path(path).extension().string();
+                for (auto& c : ext)
+                {
+                    c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+                }
+                if (ext == ".ttf" || ext == ".otf")
+                {
+                    RegisterFontSubAssets(info.guid, pipeline->GetProjectPath());
+                }
+                else if (ext == ".bdf")
+                {
+                    RegisterBdfSubAssets(info.guid, pipeline->GetProjectPath());
+                }
             }
-            else if (ext == ".bdf")
-            {
-                RegisterBdfSubAssets(info.guid, pipeline->GetProjectPath());
-            }
-        }
-    });
+        });
 }
 
 void EnsureFontSizeBaked(const std::string& sourceGuid, int fontSize)
 {
     auto* pipeline = DekiEditor::AssetPipeline::Instance();
     if (!pipeline)
+    {
         return;
+    }
 
     const DekiEditor::AssetInfo* fontInfo = pipeline->GetAssetInfoByGuid(sourceGuid);
     if (!fontInfo)
@@ -584,13 +690,21 @@ void EnsureFontSizeBaked(const std::string& sourceGuid, int fontSize)
 
     // Ensure fontSettings structure
     if (!j.contains("fontSettings"))
+    {
         j["fontSettings"] = json::object();
+    }
     if (!j["fontSettings"].contains("sizes"))
+    {
         j["fontSettings"]["sizes"] = json::array();
+    }
     if (!j["fontSettings"].contains("firstChar"))
+    {
         j["fontSettings"]["firstChar"] = 32;
+    }
     if (!j["fontSettings"].contains("lastChar"))
+    {
         j["fontSettings"]["lastChar"] = 126;
+    }
 
     // Add size if not present
     auto& sizes = j["fontSettings"]["sizes"];
@@ -611,7 +725,9 @@ void EnsureFontSizeBaked(const std::string& sourceGuid, int fontSize)
         for (const auto& s : sizes)
         {
             if (s.is_number_integer())
+            {
                 sizeVec.push_back(s.get<int>());
+            }
         }
         std::sort(sizeVec.begin(), sizeVec.end());
         sizes = sizeVec;
@@ -642,6 +758,6 @@ void EnsureFontSizeBaked(const std::string& sourceGuid, int fontSize)
     DEKI_LOG_DEBUG("FontSync: EnsureFontSizeBaked completed for %s @ %d px", sourceGuid.c_str(), fontSize);
 }
 
-} // namespace Deki2D
+}  // namespace Deki2D
 
-#endif // DEKI_EDITOR
+#endif  // DEKI_EDITOR

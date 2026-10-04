@@ -39,9 +39,15 @@ static const char* s_BdfExtensions[] = { ".bdf" };
 
 bool BdfFileInspector::IsCached(const std::string& assetGuid) const
 {
-    if (assetGuid.empty()) return false;
+    if (assetGuid.empty())
+    {
+        return false;
+    }
     auto* pipeline = DekiEditor::AssetPipeline::Instance();
-    if (!pipeline) return false;
+    if (!pipeline)
+    {
+        return false;
+    }
     std::string variantGuid = Deki::GenerateDeterministicGuid(assetGuid + ":bdf");
     std::string cachePath = pipeline->GetProjectPath() + "/cache/" + variantGuid;
     return fs::exists(cachePath);
@@ -93,8 +99,8 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
 
     {
         char buf[128];
-        std::snprintf(buf, sizeof(buf), "Ascent: %d  |  Descent: %d  |  Available: %d glyphs",
-                      m_Ascent, m_Descent, (int)m_AvailableChars.size());
+        std::snprintf(buf, sizeof(buf), "Ascent: %d  |  Descent: %d  |  Available: %d glyphs", m_Ascent, m_Descent,
+                      (int)m_AvailableChars.size());
         ui.Text(buf);
     }
 
@@ -128,7 +134,13 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
         };
         int decorationIndex = 0;
         for (int i = 0; i < 3; ++i)
-            if (kDecorationValues[i] == m_Decoration) { decorationIndex = i; break; }
+        {
+            if (kDecorationValues[i] == m_Decoration)
+            {
+                decorationIndex = i;
+                break;
+            }
+        }
         ui.SetNextItemWidth(220);
         if (ui.Combo("Decoration", &decorationIndex, kDecorationLabels, 3))
         {
@@ -140,8 +152,14 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
             ui.SetNextItemWidth(100);
             if (ui.InputInt("Outline Size (px)", &m_OutlineSize))
             {
-                if (m_OutlineSize < 1) m_OutlineSize = 1;
-                if (m_OutlineSize > 3) m_OutlineSize = 3;
+                if (m_OutlineSize < 1)
+                {
+                    m_OutlineSize = 1;
+                }
+                if (m_OutlineSize > 3)
+                {
+                    m_OutlineSize = 3;
+                }
                 m_SettingsModified = true;
             }
         }
@@ -150,15 +168,27 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
             ui.SetNextItemWidth(100);
             if (ui.InputInt("Shadow dX", &m_ShadowDx))
             {
-                if (m_ShadowDx < -3) m_ShadowDx = -3;
-                if (m_ShadowDx > 3) m_ShadowDx = 3;
+                if (m_ShadowDx < -3)
+                {
+                    m_ShadowDx = -3;
+                }
+                if (m_ShadowDx > 3)
+                {
+                    m_ShadowDx = 3;
+                }
                 m_SettingsModified = true;
             }
             ui.SetNextItemWidth(100);
             if (ui.InputInt("Shadow dY", &m_ShadowDy))
             {
-                if (m_ShadowDy < -3) m_ShadowDy = -3;
-                if (m_ShadowDy > 3) m_ShadowDy = 3;
+                if (m_ShadowDy < -3)
+                {
+                    m_ShadowDy = -3;
+                }
+                if (m_ShadowDy > 3)
+                {
+                    m_ShadowDy = 3;
+                }
                 m_SettingsModified = true;
             }
         }
@@ -168,7 +198,9 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
     // Apply & Bake button
     bool canBake = m_SettingsModified || !isCached;
     if (!canBake || m_SelectedChars.empty())
+    {
         ui.BeginDisabled();
+    }
 
     if (ui.Button("Apply & Bake"))
     {
@@ -178,7 +210,9 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
     }
 
     if (!canBake || m_SelectedChars.empty())
+    {
         ui.EndDisabled();
+    }
 
     ui.Separator();
 
@@ -202,10 +236,11 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
             continue;
         }
         std::string label = m_AvailableChars[i].label;
-        std::transform(label.begin(), label.end(), label.begin(),
-                       [](unsigned char c) { return std::tolower(c); });
+        std::transform(label.begin(), label.end(), label.begin(), [](unsigned char c) { return std::tolower(c); });
         if (label.find(filterLower) != std::string::npos)
+        {
             filtered.push_back(i);
+        }
     }
 
     // Select All filtered
@@ -214,7 +249,9 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
         for (int idx : filtered)
         {
             if (m_SelectedChars.insert(idx).second)
+            {
                 m_SettingsModified = true;
+            }
         }
     }
 
@@ -225,9 +262,11 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
     }
 
     if (filtered.empty())
+    {
         return;
+    }
 
-    float iconSize = 32.0f; // Fixed display size, GL_NEAREST keeps it crisp
+    float iconSize = 32.0f;  // Fixed display size, GL_NEAREST keeps it crisp
     float rowHeight = iconSize + 4.0f;
 
     ui.BeginChild("GlyphList", 0, 400, true);
@@ -260,9 +299,13 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
             if (ui.InvisibleButton("##row", availW, rowHeight))
             {
                 if (isSelected)
+                {
                     m_SelectedChars.erase(charIdx);
+                }
                 else
+                {
                     m_SelectedChars.insert(charIdx);
+                }
                 m_SettingsModified = true;
             }
 
@@ -274,15 +317,14 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
                 float imgP0Y = rowStartY + 2.0f;
                 float imgP1X = rowStartX + 2.0f + iconSize;
                 float imgP1Y = rowStartY + 2.0f + iconSize;
-                ui.DrawImage(m_GlyphAtlasTexture, imgP0X, imgP0Y, imgP1X, imgP1Y,
-                             uv.u0, uv.v0, uv.u1, uv.v1);
+                ui.DrawImage(m_GlyphAtlasTexture, imgP0X, imgP0Y, imgP1X, imgP1Y, uv.u0, uv.v0, uv.u1, uv.v1);
             }
 
             // Draw label
             float textPosX = rowStartX + iconSize + 10.0f;
             float textPosY = rowStartY + (rowHeight - ui.GetTextLineHeight()) * 0.5f;
             ui.DrawTextAt(0, textPosX, textPosY, DekiEditor::EditorUI::Rgba(255, 255, 255, 255),
-                        m_AvailableChars[charIdx].label);
+                          m_AvailableChars[charIdx].label);
 
             ui.PopID();
         }
@@ -307,10 +349,16 @@ void BdfFileInspector::LoadBdf(const std::string& assetPath)
 
     // Resolve full path
     auto* pipeline = DekiEditor::AssetPipeline::Instance();
-    if (!pipeline) return;
+    if (!pipeline)
+    {
+        return;
+    }
 
     std::string fullPath = (fs::path(pipeline->GetProjectPath()) / assetPath).string();
-    if (!fs::exists(fullPath)) return;
+    if (!fs::exists(fullPath))
+    {
+        return;
+    }
 
     // Quick parse for glyph metadata + bitmaps
     struct ParsedGlyph
@@ -328,8 +376,14 @@ void BdfFileInspector::LoadBdf(const std::string& assetPath)
     std::ifstream file(fullPath);
     while (std::getline(file, line))
     {
-        if (!line.empty() && line.back() == '\r') line.pop_back();
-        if (line.empty()) continue;
+        if (!line.empty() && line.back() == '\r')
+        {
+            line.pop_back();
+        }
+        if (line.empty())
+        {
+            continue;
+        }
 
         if (inBitmap)
         {
@@ -338,24 +392,39 @@ void BdfFileInspector::LoadBdf(const std::string& assetPath)
                 inBitmap = false;
                 inChar = false;
                 if (cur.encoding >= 0 && cur.encoding <= 255)
+                {
                     parsedGlyphs.push_back(std::move(cur));
+                }
                 cur = ParsedGlyph();
                 continue;
             }
             int bytesPerRow = (cur.bbxW + 7) / 8;
             for (int bi = 0; bi < bytesPerRow && (bi * 2 + 1) < (int)line.size(); bi++)
             {
-                auto hex = [](char c) -> uint8_t {
-                    if (c >= '0' && c <= '9') return (uint8_t)(c - '0');
-                    if (c >= 'A' && c <= 'F') return (uint8_t)(c - 'A' + 10);
-                    if (c >= 'a' && c <= 'f') return (uint8_t)(c - 'a' + 10);
+                auto hex = [](char c) -> uint8_t
+                {
+                    if (c >= '0' && c <= '9')
+                    {
+                        return (uint8_t)(c - '0');
+                    }
+                    if (c >= 'A' && c <= 'F')
+                    {
+                        return (uint8_t)(c - 'A' + 10);
+                    }
+                    if (c >= 'a' && c <= 'f')
+                    {
+                        return (uint8_t)(c - 'a' + 10);
+                    }
                     return 0;
                 };
                 uint8_t byte = (hex(line[bi * 2]) << 4) | hex(line[bi * 2 + 1]);
                 for (int bit = 7; bit >= 0; bit--)
                 {
                     int px = bi * 8 + (7 - bit);
-                    if (px >= cur.bbxW) break;
+                    if (px >= cur.bbxW)
+                    {
+                        break;
+                    }
                     cur.bitmap[bitmapRow * cur.bbxW + px] = (byte & (1 << bit)) ? 255 : 0;
                 }
             }
@@ -367,16 +436,44 @@ void BdfFileInspector::LoadBdf(const std::string& assetPath)
         std::string kw;
         iss >> kw;
 
-        if (kw == "FONT_ASCENT") iss >> m_Ascent;
-        else if (kw == "FONT_DESCENT") iss >> m_Descent;
-        else if (kw == "STARTCHAR") { inChar = true; cur = ParsedGlyph(); }
-        else if (kw == "ENCODING" && inChar) iss >> cur.encoding;
-        else if (kw == "BBX" && inChar) { int offx, offy; iss >> cur.bbxW >> cur.bbxH >> offx >> offy; }
-        else if (kw == "BITMAP" && inChar) { inBitmap = true; bitmapRow = 0; cur.bitmap.resize(cur.bbxW * cur.bbxH, 0); }
-        else if (kw == "ENDFONT") break;
+        if (kw == "FONT_ASCENT")
+        {
+            iss >> m_Ascent;
+        }
+        else if (kw == "FONT_DESCENT")
+        {
+            iss >> m_Descent;
+        }
+        else if (kw == "STARTCHAR")
+        {
+            inChar = true;
+            cur = ParsedGlyph();
+        }
+        else if (kw == "ENCODING" && inChar)
+        {
+            iss >> cur.encoding;
+        }
+        else if (kw == "BBX" && inChar)
+        {
+            int offx, offy;
+            iss >> cur.bbxW >> cur.bbxH >> offx >> offy;
+        }
+        else if (kw == "BITMAP" && inChar)
+        {
+            inBitmap = true;
+            bitmapRow = 0;
+            cur.bitmap.resize(cur.bbxW * cur.bbxH, 0);
+        }
+        else if (kw == "ENDFONT")
+        {
+            break;
+        }
     }
 
-    if (parsedGlyphs.empty()) return;
+    if (parsedGlyphs.empty())
+    {
+        return;
+    }
 
     std::sort(parsedGlyphs.begin(), parsedGlyphs.end(),
               [](const auto& a, const auto& b) { return a.encoding < b.encoding; });
@@ -388,17 +485,28 @@ void BdfFileInspector::LoadBdf(const std::string& assetPath)
         m_AvailableChars[i].codepoint = parsedGlyphs[i].encoding;
         char ch = (char)parsedGlyphs[i].encoding;
         if (ch >= 33 && ch <= 126)
-            snprintf(m_AvailableChars[i].label, sizeof(m_AvailableChars[i].label), "%c (%d)", ch, parsedGlyphs[i].encoding);
+        {
+            snprintf(m_AvailableChars[i].label, sizeof(m_AvailableChars[i].label), "%c (%d)", ch,
+                     parsedGlyphs[i].encoding);
+        }
         else
+        {
             snprintf(m_AvailableChars[i].label, sizeof(m_AvailableChars[i].label), "(%d)", parsedGlyphs[i].encoding);
+        }
     }
 
     // Build glyph atlas texture for display
     int maxW = 1, maxH = 1;
     for (auto& g : parsedGlyphs)
     {
-        if (g.bbxW > maxW) maxW = g.bbxW;
-        if (g.bbxH > maxH) maxH = g.bbxH;
+        if (g.bbxW > maxW)
+        {
+            maxW = g.bbxW;
+        }
+        if (g.bbxH > maxH)
+        {
+            maxH = g.bbxH;
+        }
     }
     m_GlyphDisplaySize = (std::max)(maxW, maxH) + 4;
 
@@ -428,7 +536,10 @@ void BdfFileInspector::LoadBdf(const std::string& assetPath)
                 uint8_t alpha = parsedGlyphs[i].bitmap[y * parsedGlyphs[i].bbxW + x];
                 int dstX = cellX + offX + x;
                 int dstY = cellY + offY + y;
-                if (dstX < 0 || dstX >= atlasW || dstY < 0 || dstY >= atlasH) continue;
+                if (dstX < 0 || dstX >= atlasW || dstY < 0 || dstY >= atlasH)
+                {
+                    continue;
+                }
                 int dstIdx = (dstY * atlasW + dstX) * 4;
                 rgba[dstIdx + 0] = 255;
                 rgba[dstIdx + 1] = 255;
@@ -466,8 +577,14 @@ void BdfFileInspector::LoadBdf(const std::string& assetPath)
 
 static FontCompiler::DecorationMode BdfDecorationFromString(const std::string& s)
 {
-    if (s == "outline") return FontCompiler::DecorationMode::Outline;
-    if (s == "shadow")  return FontCompiler::DecorationMode::Shadow;
+    if (s == "outline")
+    {
+        return FontCompiler::DecorationMode::Outline;
+    }
+    if (s == "shadow")
+    {
+        return FontCompiler::DecorationMode::Shadow;
+    }
     return FontCompiler::DecorationMode::None;
 }
 
@@ -475,10 +592,10 @@ static const char* BdfDecorationToString(FontCompiler::DecorationMode m)
 {
     switch (m)
     {
-    case FontCompiler::DecorationMode::Outline: return "outline";
-    case FontCompiler::DecorationMode::Shadow:  return "shadow";
-    case FontCompiler::DecorationMode::None:
-    default:                                    return "none";
+        case FontCompiler::DecorationMode::Outline: return "outline";
+        case FontCompiler::DecorationMode::Shadow: return "shadow";
+        case FontCompiler::DecorationMode::None:
+        default: return "none";
     }
 }
 
@@ -491,7 +608,10 @@ void BdfFileInspector::LoadSettings(const std::string& assetPath)
     m_ShadowDy = 1;
 
     auto* pipeline = DekiEditor::AssetPipeline::Instance();
-    if (!pipeline) return;
+    if (!pipeline)
+    {
+        return;
+    }
 
     std::string fullPath = (fs::path(pipeline->GetProjectPath()) / assetPath).string();
     std::string dataPath = fullPath + ".data";
@@ -500,29 +620,44 @@ void BdfFileInspector::LoadSettings(const std::string& assetPath)
     {
         // No .data → select all by default
         for (int i = 0; i < (int)m_AvailableChars.size(); i++)
+        {
             m_SelectedChars.insert(i);
+        }
         return;
     }
 
     std::ifstream file(dataPath);
-    if (!file.is_open()) return;
+    if (!file.is_open())
+    {
+        return;
+    }
 
     json j;
-    try { j = json::parse(file); }
-    catch (...) { return; }
+    try
+    {
+        j = json::parse(file);
+    }
+    catch (...)
+    {
+        return;
+    }
 
     if (!j.contains("bdfSettings") || !j["bdfSettings"].contains("selectedChars"))
     {
         // Settings exist but no selection → select all
         for (int i = 0; i < (int)m_AvailableChars.size(); i++)
+        {
             m_SelectedChars.insert(i);
+        }
         return;
     }
 
     // Build codepoint → index map
     std::unordered_map<int, int> cpToIdx;
     for (int i = 0; i < (int)m_AvailableChars.size(); i++)
+    {
         cpToIdx[m_AvailableChars[i].codepoint] = i;
+    }
 
     for (const auto& val : j["bdfSettings"]["selectedChars"])
     {
@@ -531,32 +666,54 @@ void BdfFileInspector::LoadSettings(const std::string& assetPath)
             int cp = val.get<int>();
             auto it = cpToIdx.find(cp);
             if (it != cpToIdx.end())
+            {
                 m_SelectedChars.insert(it->second);
+            }
         }
     }
 
     const auto& settings = j["bdfSettings"];
     if (settings.contains("decoration") && settings["decoration"].is_string())
+    {
         m_Decoration = BdfDecorationFromString(settings["decoration"].get<std::string>());
+    }
     if (settings.contains("outlineSize") && settings["outlineSize"].is_number_integer())
     {
         int v = settings["outlineSize"].get<int>();
-        if (v < 1) v = 1;
-        if (v > 3) v = 3;
+        if (v < 1)
+        {
+            v = 1;
+        }
+        if (v > 3)
+        {
+            v = 3;
+        }
         m_OutlineSize = v;
     }
     if (settings.contains("shadowDx") && settings["shadowDx"].is_number_integer())
     {
         int v = settings["shadowDx"].get<int>();
-        if (v < -3) v = -3;
-        if (v > 3) v = 3;
+        if (v < -3)
+        {
+            v = -3;
+        }
+        if (v > 3)
+        {
+            v = 3;
+        }
         m_ShadowDx = v;
     }
     if (settings.contains("shadowDy") && settings["shadowDy"].is_number_integer())
     {
         int v = settings["shadowDy"].get<int>();
-        if (v < -3) v = -3;
-        if (v > 3) v = 3;
+        if (v < -3)
+        {
+            v = -3;
+        }
+        if (v > 3)
+        {
+            v = 3;
+        }
         m_ShadowDy = v;
     }
 }
@@ -564,7 +721,10 @@ void BdfFileInspector::LoadSettings(const std::string& assetPath)
 void BdfFileInspector::SaveSettings(const std::string& assetPath, const std::string& assetGuid)
 {
     auto* pipeline = DekiEditor::AssetPipeline::Instance();
-    if (!pipeline) return;
+    if (!pipeline)
+    {
+        return;
+    }
 
     std::string fullPath = (fs::path(pipeline->GetProjectPath()) / assetPath).string();
     std::string dataPath = fullPath + ".data";
@@ -576,8 +736,14 @@ void BdfFileInspector::SaveSettings(const std::string& assetPath, const std::str
         std::ifstream inFile(dataPath);
         if (inFile.is_open())
         {
-            try { j = json::parse(inFile); }
-            catch (...) { j = json::object(); }
+            try
+            {
+                j = json::parse(inFile);
+            }
+            catch (...)
+            {
+                j = json::object();
+            }
         }
     }
 
@@ -601,18 +767,24 @@ void BdfFileInspector::SaveSettings(const std::string& assetPath, const std::str
     // Trigger sync handler to bake
     pipeline->RefreshAsset(assetPath);
 
-    DEKI_LOG_EDITOR("BdfInspector: Saved %d chars and triggered bake for %s",
-                     (int)codepoints.size(), assetPath.c_str());
+    DEKI_LOG_EDITOR("BdfInspector: Saved %d chars and triggered bake for %s", (int)codepoints.size(),
+                    assetPath.c_str());
 }
 
 void BdfFileInspector::BakeFont(const std::string& assetPath, const std::string& assetGuid)
 {
     auto* pipeline = DekiEditor::AssetPipeline::Instance();
-    if (!pipeline || assetGuid.empty()) return;
+    if (!pipeline || assetGuid.empty())
+    {
+        return;
+    }
 
     std::string fullPath = (fs::path(pipeline->GetProjectPath()) / assetPath).string();
     std::vector<int> codepoints = GetSelectedCodepoints();
-    if (codepoints.empty()) return;
+    if (codepoints.empty())
+    {
+        return;
+    }
 
     // Deterministic GUIDs
     std::string variantGuid = Deki::GenerateDeterministicGuid(assetGuid + ":bdf");
@@ -642,8 +814,8 @@ void BdfFileInspector::BakeFont(const std::string& assetPath, const std::string&
     }
 
     // Write atlas
-    if (!DekiEditor::TextureImporter::WriteTexFile(atlasPath, result.atlasRGBA.data(),
-        result.atlasWidth, result.atlasHeight, DekiEditor::TextureFormat::ALPHA8))
+    if (!DekiEditor::TextureImporter::WriteTexFile(atlasPath, result.atlasRGBA.data(), result.atlasWidth,
+                                                   result.atlasHeight, DekiEditor::TextureFormat::ALPHA8))
     {
         DEKI_LOG_WARNING("BdfInspector: Failed to write atlas %s", atlasPath.c_str());
         return;
@@ -696,7 +868,9 @@ std::vector<int> BdfFileInspector::GetSelectedCodepoints() const
     for (int idx : m_SelectedChars)
     {
         if (idx >= 0 && idx < (int)m_AvailableChars.size())
+        {
             codepoints.push_back(m_AvailableChars[idx].codepoint);
+        }
     }
     return codepoints;
 }
@@ -719,6 +893,6 @@ void RegisterBdfFileInspector()
     DekiEditor::FileInspectorRegistry::Instance().Register(&s_BdfFileInspector);
 }
 
-} // namespace Deki2D
+}  // namespace Deki2D
 
-#endif // DEKI_EDITOR
+#endif  // DEKI_EDITOR

@@ -20,7 +20,6 @@
 #include <filesystem>
 #include <fstream>
 
-
 namespace DekiEditor
 {
 
@@ -31,11 +30,15 @@ namespace
 AssetCacheResult HandleFrameAnimCache(const AssetCacheContext& ctx)
 {
     if (ctx.hasCachedVersion)
+    {
         return AssetCacheResult::Cached;
+    }
 
     std::ifstream file(ctx.absolutePath);
     if (!file.is_open())
+    {
         return AssetCacheResult::NotCached;
+    }
 
     try
     {
@@ -46,12 +49,18 @@ AssetCacheResult HandleFrameAnimCache(const AssetCacheContext& ctx)
         std::filesystem::path outPath(ctx.cachePath);
         std::filesystem::path parentDir = outPath.parent_path();
         if (!parentDir.empty() && !std::filesystem::exists(parentDir))
+        {
             std::filesystem::create_directories(parentDir);
+        }
 
         if (FrameAnimationMsgPackHelper::SaveAnimation(ctx.cachePath.c_str(), &engineData))
+        {
             return AssetCacheResult::Cached;
+        }
     }
-    catch (const std::exception&) {}
+    catch (const std::exception&)
+    {
+    }
 
     return AssetCacheResult::NotCached;
 }
@@ -60,14 +69,12 @@ struct FrameAnimCacheRegistrar
 {
     FrameAnimCacheRegistrar()
     {
-        AssetPipeline::OnStarted([](AssetPipeline* p) {
-            p->RegisterCacheHandler(".anim", HandleFrameAnimCache);
-        });
+        AssetPipeline::OnStarted([](AssetPipeline* p) { p->RegisterCacheHandler(".anim", HandleFrameAnimCache); });
         AssetTypeRegistry::Instance().RegisterCategory(".anim", AssetCategory::Animation);
     }
 };
 static FrameAnimCacheRegistrar s_FrameAnimCacheRegistrar;
-} // namespace
+}  // namespace
 
 class FrameAnimationEditor : public AssetTypeEditor
 {
@@ -92,15 +99,12 @@ public:
     int GetCompileTarget() const override { return 2; }  // Data
 
     // Not used for Data targets
-    bool Compile(const std::string& jsonData,
-                 std::vector<uint8_t>& rgba,
-                 int& width, int& height) override
+    bool Compile(const std::string& jsonData, std::vector<uint8_t>& rgba, int& width, int& height) override
     {
         return false;
     }
 
-    bool CompileToFile(const std::string& jsonData,
-                       const std::string& cachePath) override
+    bool CompileToFile(const std::string& jsonData, const std::string& cachePath) override
     {
         // Create cache directory if needed
         std::filesystem::path filePath(cachePath);
@@ -118,9 +122,7 @@ public:
         return FrameAnimationMsgPackHelper::SaveAnimation(cachePath.c_str(), &engineData);
     }
 
-    bool OnInspectorGUI(std::string& jsonData,
-                        const std::string& assetPath,
-                        const std::string& assetGuid) override
+    bool OnInspectorGUI(std::string& jsonData, const std::string& assetPath, const std::string& assetGuid) override
     {
         // Frame animation editing is done via the FrameAnimationEditorWindow tool
         // Return false (no modifications via inspector)
@@ -130,6 +132,6 @@ public:
 
 REGISTER_EDITOR(FrameAnimationEditor)
 
-} // namespace DekiEditor
+}  // namespace DekiEditor
 
-#endif // DEKI_EDITOR
+#endif  // DEKI_EDITOR

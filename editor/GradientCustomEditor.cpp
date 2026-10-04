@@ -21,16 +21,15 @@ namespace DekiEditor
 class GradientCustomEditor : public CustomEditor
 {
 public:
-    const char* GetComponentName() const override
-    {
-        return "GradientComponent";
-    }
+    const char* GetComponentName() const override { return "GradientComponent"; }
 
     bool GetDisplaySize(Deki::Component* comp, float& outWidth, float& outHeight) override
     {
         auto* gradient = static_cast<GradientComponent*>(comp);
         if (!gradient)
+        {
             return false;
+        }
 
         // width/height are world meters; display bounds want pixels.
         const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
@@ -43,6 +42,6 @@ public:
 REGISTER_EDITOR(GradientCustomEditor)
 REGISTER_CREATE_MENU_ITEM(GradientComponent, "2D", "Gradient", "Gradient", "GradientComponent")
 
-} // namespace DekiEditor
+}  // namespace DekiEditor
 
-#endif // DEKI_EDITOR
+#endif  // DEKI_EDITOR

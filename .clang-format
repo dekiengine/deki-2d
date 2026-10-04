@@ -1,0 +1,70 @@
+# Layout rules for Deki C++ code. The full style, names included, is in
+# docs/codestyle/: CodeStyle.h and CodeStyle.cpp show every rule, and
+# .clang-tidy checks the names. The editor and every package use a copy of
+# this file.
+Language: Cpp
+BasedOnStyle: LLVM
+
+# Braces on their own line.
+BreakBeforeBraces: Allman
+
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+AccessModifierOffset: -4
+NamespaceIndentation: None
+
+ColumnLimit: 120
+
+PointerAlignment: Left
+ReferenceAlignment: Left
+DerivePointerAlignment: false
+
+# Every if, for and while body has braces, and clang-format adds missing ones.
+InsertBraces: true
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
+
+# Short accessors may stay on one line inside a class. Elsewhere, even an
+# empty body goes on its own lines.
+AllowShortFunctionsOnASingleLine: InlineOnly
+AllowShortLambdasOnASingleLine: All
+# `case X: return "y";` may stay on one line.
+AllowShortCaseLabelsOnASingleLine: true
+
+# Includes keep the order the author wrote; see CodeStyle.h for the order.
+SortIncludes: Never
+SortUsingDeclarations: Never
+
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignTrailingComments: true
+
+SpaceAfterCStyleCast: false
+SpacesBeforeTrailingComments: 2
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+
+# `template <...>` on its own line; a constructor's initializers start on the
+# next line, one per line.
+BreakTemplateDeclarations: Yes
+BreakConstructorInitializers: BeforeColon
+PackConstructorInitializers: Never
+
+# Braced lists have spaces inside: `{ 0 }`, `T{ x }`.
+Cpp11BracedListStyle: false
+BinPackArguments: true
+BinPackParameters: true
+IndentCaseLabels: true
+---
+# clang-format 18 reads the reflection attributes in reflection/DekiProperty.h
+# ([[=deki_refl::exported{}]]) as Objective-C and stops without this section.
+# It repeats the C++ rules so the tool runs.
+Language: ObjC
+BasedOnStyle: LLVM
+BreakBeforeBraces: Allman
+IndentWidth: 4
+ColumnLimit: 120
+PointerAlignment: Left
+SortIncludes: Never

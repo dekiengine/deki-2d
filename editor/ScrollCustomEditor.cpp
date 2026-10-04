@@ -17,7 +17,6 @@
 #include <deki/Object.h>
 #include <deki/Scene.h>
 
-
 namespace DekiEditor
 {
 
@@ -26,35 +25,58 @@ namespace
 
 Deki::Object* FindChildByName(Deki::Object* parent, const char* name)
 {
-    if (!parent) return nullptr;
+    if (!parent)
+    {
+        return nullptr;
+    }
     for (auto* child : parent->GetChildren())
     {
         if (child->GetName() == name)
+        {
             return child;
+        }
     }
     return nullptr;
 }
 
 Deki::Object* EnsureChild(Deki::Object* parent, const char* name, const char* componentType)
 {
-    if (!parent) return nullptr;
-    if (Deki::Object* found = FindChildByName(parent, name)) return found;
+    if (!parent)
+    {
+        return nullptr;
+    }
+    if (Deki::Object* found = FindChildByName(parent, name))
+    {
+        return found;
+    }
 
     Deki::Object* child = new Deki::Object(name);
     parent->AddChild(child);
-    if (componentType) DekiEditor::AddComponentByName(child, componentType);
+    if (componentType)
+    {
+        DekiEditor::AddComponentByName(child, componentType);
+    }
     return child;
 }
 
 Deki::Object* InstantiateTemplateFromScene(Deki::Object* clip, Deki::Scene* itemScene)
 {
-    if (!clip || !itemScene) return nullptr;
+    if (!clip || !itemScene)
+    {
+        return nullptr;
+    }
 
     Deki::Scene* ownerScene = clip->GetOwnerScene();
-    if (!ownerScene) return nullptr;
+    if (!ownerScene)
+    {
+        return nullptr;
+    }
 
     Deki::Object* instance = itemScene->Instantiate(ownerScene);
-    if (!instance) return nullptr;
+    if (!instance)
+    {
+        return nullptr;
+    }
 
     clip->AddChild(instance);
     instance->SetName("Template");
@@ -63,8 +85,11 @@ Deki::Object* InstantiateTemplateFromScene(Deki::Object* clip, Deki::Scene* item
 
 void DeleteSlotChildren(Deki::Object* clip)
 {
-    if (!clip) return;
-    auto children = clip->GetChildren(); // copy
+    if (!clip)
+    {
+        return;
+    }
+    auto children = clip->GetChildren();  // copy
     for (auto* child : children)
     {
         if (child->GetName().rfind("Slot", 0) == 0)
@@ -77,7 +102,10 @@ void DeleteSlotChildren(Deki::Object* clip)
 
 void DeleteChild(Deki::Object* parent, Deki::Object* child)
 {
-    if (!parent || !child) return;
+    if (!parent || !child)
+    {
+        return;
+    }
     parent->RemoveChild(child);
     delete child;
 }
@@ -90,7 +118,7 @@ const std::string& SceneIdentity(const Deki::AssetRef<Deki::Scene>& ref)
     return !ref.source.empty() ? ref.source : ref.guid;
 }
 
-} // namespace
+}  // namespace
 
 class ScrollCustomEditor : public CustomEditor
 {
@@ -100,13 +128,22 @@ public:
     void OnEditorUpdate(Deki::Component* comp) override
     {
         auto* scroll = static_cast<ScrollComponent*>(comp);
-        if (!scroll) return;
+        if (!scroll)
+        {
+            return;
+        }
 
         Deki::Object* owner = scroll->GetOwner();
-        if (!owner) return;
+        if (!owner)
+        {
+            return;
+        }
 
         Deki::Object* clip = EnsureChild(owner, "Clip", "ClipComponent");
-        if (!clip) return;
+        if (!clip)
+        {
+            return;
+        }
 
         if (scroll->mode == ScrollMode::Template)
         {
@@ -139,7 +176,10 @@ private:
         if (!tmpl && itemScene && !selectedGuid.empty())
         {
             tmpl = InstantiateTemplateFromScene(clip, itemScene);
-            if (tmpl) tmpl->SetSourceSceneGuid(selectedGuid);
+            if (tmpl)
+            {
+                tmpl->SetSourceSceneGuid(selectedGuid);
+            }
         }
 
         if (tmpl)
@@ -149,7 +189,7 @@ private:
         }
 
         DeleteSlotChildren(clip);
-        m_LastChildCount = -1; // force resync if user switches back to NonTemplate
+        m_LastChildCount = -1;  // force resync if user switches back to NonTemplate
     }
 
     void SyncNonTemplate(ScrollComponent* scroll, Deki::Object* owner, Deki::Object* clip)
@@ -167,6 +207,6 @@ private:
 
 REGISTER_EDITOR(ScrollCustomEditor)
 
-} // namespace DekiEditor
+}  // namespace DekiEditor
 
-#endif // DEKI_EDITOR
+#endif  // DEKI_EDITOR

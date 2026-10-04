@@ -24,21 +24,20 @@ namespace DekiEditor
 class RollerCustomEditor : public CustomEditor
 {
 public:
-    const char* GetComponentName() const override
-    {
-        return "RollerComponent";
-    }
+    const char* GetComponentName() const override { return "RollerComponent"; }
 
     // width and GetHeight() are world meters; gizmo consumers want pixels.
     bool GetDisplaySize(Deki::Component* comp, float& outWidth, float& outHeight) override
     {
         auto* roller = static_cast<RollerComponent*>(comp);
         if (!roller)
+        {
             return false;
+        }
 
         const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
         const float effective = ppm > 0.0f ? ppm : 1.0f;
-        outWidth  = roller->width       * effective;
+        outWidth = roller->width * effective;
         outHeight = roller->GetHeight() * effective;
         return true;
     }
@@ -55,15 +54,15 @@ public:
     // Until the editor API gains a float variant, the roller is sized via
     // the inspector instead.
 
-    bool WantsInspectorOverride(Deki::Component* comp) override
-    {
-        return true;
-    }
+    bool WantsInspectorOverride(Deki::Component* comp) override { return true; }
 
     void OnInspectorGUI(Deki::Component* comp) override
     {
         auto* roller = static_cast<RollerComponent*>(comp);
-        if (!roller) return;
+        if (!roller)
+        {
+            return;
+        }
 
         auto& ui = EditorUI::Get();
 
@@ -85,24 +84,34 @@ public:
 
             ui.InputInt("Start", &m_FillStart);
             ui.InputInt("Count", &m_FillCount);
-            if (m_FillCount < 1) m_FillCount = 1;
-            if (m_FillCount > 9999) m_FillCount = 9999;
+            if (m_FillCount < 1)
+            {
+                m_FillCount = 1;
+            }
+            if (m_FillCount > 9999)
+            {
+                m_FillCount = 9999;
+            }
             ui.Checkbox("Leading zeros", &m_FillLeadingZeros);
 
             // Preview
             int lastVal = m_FillStart + m_FillCount - 1;
             int digits = static_cast<int>(std::to_string(lastVal).size());
-            auto fmt = [&](int val) -> std::string {
+            auto fmt = [&](int val) -> std::string
+            {
                 std::string s = std::to_string(val);
                 if (m_FillLeadingZeros)
-                    while (static_cast<int>(s.size()) < digits) s = "0" + s;
+                {
+                    while (static_cast<int>(s.size()) < digits)
+                    {
+                        s = "0" + s;
+                    }
+                }
                 return s;
             };
             char previewBuf[256];
-            std::snprintf(previewBuf, sizeof(previewBuf), "Preview: %s, %s, ... %s",
-                fmt(m_FillStart).c_str(),
-                fmt(m_FillStart + 1).c_str(),
-                fmt(lastVal).c_str());
+            std::snprintf(previewBuf, sizeof(previewBuf), "Preview: %s, %s, ... %s", fmt(m_FillStart).c_str(),
+                          fmt(m_FillStart + 1).c_str(), fmt(lastVal).c_str());
             ui.TextDisabled(previewBuf);
 
             ui.Separator();
@@ -110,15 +119,21 @@ public:
             {
                 roller->options.clear();
                 for (int i = 0; i < m_FillCount; ++i)
+                {
                     roller->options.push_back(fmt(m_FillStart + i));
+                }
                 // Sync child text objects
                 if (auto* owner = roller->GetOwner())
+                {
                     roller->SyncChildObjects(owner);
+                }
                 ui.CloseCurrentPopup();
             }
             ui.SameLine();
             if (ui.Button("Cancel", 120, 0))
+            {
                 ui.CloseCurrentPopup();
+            }
 
             ui.EndPopup();
         }
@@ -132,6 +147,6 @@ private:
 
 REGISTER_EDITOR(RollerCustomEditor)
 
-} // namespace DekiEditor
+}  // namespace DekiEditor
 
-#endif // DEKI_EDITOR
+#endif  // DEKI_EDITOR

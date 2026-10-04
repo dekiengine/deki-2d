@@ -18,13 +18,13 @@
 
 // DLL export macro
 #ifdef _WIN32
-    #if defined(DEKI_2D_EXPORTS) || defined(DEKI_PLUGIN_EXPORTS)
-        #define DEKI_2D_API __declspec(dllexport)
-    #else
-        #define DEKI_2D_API __declspec(dllimport)
-    #endif
+#if defined(DEKI_2D_EXPORTS) || defined(DEKI_PLUGIN_EXPORTS)
+#define DEKI_2D_API __declspec(dllexport)
 #else
-    #define DEKI_2D_API __attribute__((visibility("default")))
+#define DEKI_2D_API __declspec(dllimport)
+#endif
+#else
+#define DEKI_2D_API __attribute__((visibility("default")))
 #endif
 
 // Include all package headers when package is enabled
@@ -79,9 +79,9 @@
 #ifdef DEKI_FEATURE_TEXT
 #include "TextComponent.h"
 #endif
-#endif // !defined(DEKI_EDITOR) || !defined(DEKI_ENGINE_EXPORTS)
+#endif  // !defined(DEKI_EDITOR) || !defined(DEKI_ENGINE_EXPORTS)
 
-#endif // DEKI_PACKAGE_2D
+#endif  // DEKI_PACKAGE_2D
 
 // Editor-only: Font preview API for live editing in scene view
 // NOTE: This is outside DEKI_PACKAGE_2D because deki-2d.dll builds need these
@@ -93,65 +93,57 @@
 class BitmapFont;
 struct GlyphInfo;
 
-namespace Deki2D {
-    /**
-     * @brief Set a preview font from raw data (cross-DLL safe)
-     *
-     * This function takes raw data and allocates all objects internally within deki-2d.dll,
-     * avoiding cross-DLL heap allocation issues in debug builds.
-     *
-     * @param sourceGuid The base font GUID (TTF/OTF)
-     * @param fontSize The font size in pixels
-     * @param atlasRGBA Raw RGBA pixel data for the atlas (copied, caller retains ownership)
-     * @param atlasWidth Atlas width in pixels
-     * @param atlasHeight Atlas height in pixels
-     * @param glyphs Array of glyph info (copied, caller retains ownership)
-     * @param glyphCount Number of glyphs
-     * @param firstChar First character code
-     * @param lastChar Last character code
-     * @param lineHeight Line height in pixels
-     * @param baseline Baseline offset in pixels
-     * @return true on success, false on failure
-     */
-    DEKI_2D_API bool SetPreviewFontFromData(
-        const std::string& sourceGuid,
-        int fontSize,
-        const uint8_t* atlasRGBA,
-        uint32_t atlasWidth,
-        uint32_t atlasHeight,
-        const GlyphInfo* glyphs,
-        size_t glyphCount,
-        uint8_t firstChar,
-        uint8_t lastChar,
-        uint8_t lineHeight,
-        uint8_t baseline
-    );
+namespace Deki2D
+{
+/**
+ * @brief Set a preview font from raw data (cross-DLL safe)
+ *
+ * This function takes raw data and allocates all objects internally within deki-2d.dll,
+ * avoiding cross-DLL heap allocation issues in debug builds.
+ *
+ * @param sourceGuid The base font GUID (TTF/OTF)
+ * @param fontSize The font size in pixels
+ * @param atlasRGBA Raw RGBA pixel data for the atlas (copied, caller retains ownership)
+ * @param atlasWidth Atlas width in pixels
+ * @param atlasHeight Atlas height in pixels
+ * @param glyphs Array of glyph info (copied, caller retains ownership)
+ * @param glyphCount Number of glyphs
+ * @param firstChar First character code
+ * @param lastChar Last character code
+ * @param lineHeight Line height in pixels
+ * @param baseline Baseline offset in pixels
+ * @return true on success, false on failure
+ */
+DEKI_2D_API bool SetPreviewFontFromData(const std::string& sourceGuid, int fontSize, const uint8_t* atlasRGBA,
+                                        uint32_t atlasWidth, uint32_t atlasHeight, const GlyphInfo* glyphs,
+                                        size_t glyphCount, uint8_t firstChar, uint8_t lastChar, uint8_t lineHeight,
+                                        uint8_t baseline);
 
-    /**
-     * @brief Clear the current preview font
-     */
-    DEKI_2D_API void ClearPreviewFont();
+/**
+ * @brief Clear the current preview font
+ */
+DEKI_2D_API void ClearPreviewFont();
 
-    /**
-     * @brief Clear the preview texture cache (GPU textures)
-     * Called when preview fonts are cleared to keep caches in sync
-     */
-    DEKI_2D_API void ClearPreviewTextureCache();
+/**
+ * @brief Clear the preview texture cache (GPU textures)
+ * Called when preview fonts are cleared to keep caches in sync
+ */
+DEKI_2D_API void ClearPreviewTextureCache();
 
-    /**
-     * @brief Check if a preview font is active for the given source and size
-     */
-    DEKI_2D_API bool HasPreviewFont(const std::string& sourceGuid, int fontSize);
+/**
+ * @brief Check if a preview font is active for the given source and size
+ */
+DEKI_2D_API bool HasPreviewFont(const std::string& sourceGuid, int fontSize);
 
-    /**
-     * @brief Get preview font from cache (returns nullptr if not found)
-     */
-    DEKI_2D_API BitmapFont* GetPreviewFont(const std::string& sourceGuid, int fontSize);
+/**
+ * @brief Get preview font from cache (returns nullptr if not found)
+ */
+DEKI_2D_API BitmapFont* GetPreviewFont(const std::string& sourceGuid, int fontSize);
 
-    /**
-     * @brief Initialize font preview callbacks for live editing
-     * Called during Deki2D_EnsureRegistered to set up EditorAssets callbacks
-     */
-    DEKI_2D_API void InitializeFontPreviewCallbacks();
-}
-#endif // DEKI_EDITOR
+/**
+ * @brief Initialize font preview callbacks for live editing
+ * Called during Deki2D_EnsureRegistered to set up EditorAssets callbacks
+ */
+DEKI_2D_API void InitializeFontPreviewCallbacks();
+}  // namespace Deki2D
+#endif  // DEKI_EDITOR

@@ -28,7 +28,7 @@
 
 // Engine logging and utilities
 #include <deki/LogSystem.h>
-#include <deki/Guid.h>  // For Deki::GenerateDeterministicGuid (kept for preview)
+#include <deki/Guid.h>                 // For Deki::GenerateDeterministicGuid (kept for preview)
 #include <deki/assets/AssetManager.h>  // For registering variant GUIDs
 
 namespace fs = std::filesystem;
@@ -45,19 +45,28 @@ static const char* HintingToString(FontCompiler::HintingMode m)
 {
     switch (m)
     {
-    case FontCompiler::HintingMode::None:   return "none";
-    case FontCompiler::HintingMode::Normal: return "normal";
-    case FontCompiler::HintingMode::Mono:   return "mono";
-    case FontCompiler::HintingMode::Light:
-    default:                                return "light";
+        case FontCompiler::HintingMode::None: return "none";
+        case FontCompiler::HintingMode::Normal: return "normal";
+        case FontCompiler::HintingMode::Mono: return "mono";
+        case FontCompiler::HintingMode::Light:
+        default: return "light";
     }
 }
 
 static FontCompiler::HintingMode HintingFromString(const std::string& s)
 {
-    if (s == "none")   return FontCompiler::HintingMode::None;
-    if (s == "normal") return FontCompiler::HintingMode::Normal;
-    if (s == "mono")   return FontCompiler::HintingMode::Mono;
+    if (s == "none")
+    {
+        return FontCompiler::HintingMode::None;
+    }
+    if (s == "normal")
+    {
+        return FontCompiler::HintingMode::Normal;
+    }
+    if (s == "mono")
+    {
+        return FontCompiler::HintingMode::Mono;
+    }
     return FontCompiler::HintingMode::Light;
 }
 
@@ -66,17 +75,23 @@ static const char* DecorationToString(FontCompiler::DecorationMode m)
 {
     switch (m)
     {
-    case FontCompiler::DecorationMode::Outline: return "outline";
-    case FontCompiler::DecorationMode::Shadow:  return "shadow";
-    case FontCompiler::DecorationMode::None:
-    default:                                    return "none";
+        case FontCompiler::DecorationMode::Outline: return "outline";
+        case FontCompiler::DecorationMode::Shadow: return "shadow";
+        case FontCompiler::DecorationMode::None:
+        default: return "none";
     }
 }
 
 static FontCompiler::DecorationMode DecorationFromString(const std::string& s)
 {
-    if (s == "outline") return FontCompiler::DecorationMode::Outline;
-    if (s == "shadow")  return FontCompiler::DecorationMode::Shadow;
+    if (s == "outline")
+    {
+        return FontCompiler::DecorationMode::Outline;
+    }
+    if (s == "shadow")
+    {
+        return FontCompiler::DecorationMode::Shadow;
+    }
     return FontCompiler::DecorationMode::None;
 }
 
@@ -97,7 +112,8 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
     // Reload settings if asset changed
     if (m_CurrentAssetPath != assetPath)
     {
-        DEKI_LOG_DEBUG("FontInspector: Asset changed, loading settings for %s (guid=%s)", assetPath.c_str(), assetGuid.c_str());
+        DEKI_LOG_DEBUG("FontInspector: Asset changed, loading settings for %s (guid=%s)", assetPath.c_str(),
+                       assetGuid.c_str());
         LoadSettings(assetPath);
         m_CurrentAssetPath = assetPath;
         m_SettingsModified = false;
@@ -158,23 +174,27 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
             std::snprintf(buf, sizeof(buf), "Total: %d characters", charCount);
             ui.TextDisabled(buf);
         }
-
     }
 
     // Rasterization settings
     if (ui.CollapsingHeader("Rasterization", nullptr, true))
     {
-        static const char* kHintingLabels[] = { "None (unhinted AA)", "Light (smoother AA)", "Normal (FreeType default)", "Mono (1-bit, no AA)" };
+        static const char* kHintingLabels[] = { "None (unhinted AA)", "Light (smoother AA)",
+                                                "Normal (FreeType default)", "Mono (1-bit, no AA)" };
         static const FontCompiler::HintingMode kHintingValues[] = {
             FontCompiler::HintingMode::None,
             FontCompiler::HintingMode::Light,
             FontCompiler::HintingMode::Normal,
             FontCompiler::HintingMode::Mono,
         };
-        int currentIndex = 1; // Light
+        int currentIndex = 1;  // Light
         for (int i = 0; i < 4; ++i)
         {
-            if (kHintingValues[i] == m_Hinting) { currentIndex = i; break; }
+            if (kHintingValues[i] == m_Hinting)
+            {
+                currentIndex = i;
+                break;
+            }
         }
         ui.SetNextItemWidth(220);
         if (ui.Combo("Hinting Mode", &currentIndex, kHintingLabels, 4))
@@ -186,8 +206,14 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
         // Oversample combo — Mono hinting disables it (1-bit source doesn't benefit)
         static const char* kOversampleLabels[] = { "1x (off)", "2x", "3x", "4x" };
         int oversampleIndex = m_Oversample - 1;
-        if (oversampleIndex < 0) oversampleIndex = 0;
-        if (oversampleIndex > 3) oversampleIndex = 3;
+        if (oversampleIndex < 0)
+        {
+            oversampleIndex = 0;
+        }
+        if (oversampleIndex > 3)
+        {
+            oversampleIndex = 3;
+        }
         const bool oversampleDisabled = (m_Hinting == FontCompiler::HintingMode::Mono);
         if (oversampleDisabled)
         {
@@ -202,7 +228,9 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
             m_SettingsModified = true;
         }
         if (oversampleDisabled)
+        {
             ui.EndDisabled();
+        }
 
         // Decoration combo — None / Outline / Shadow. NDS-style baked halo or drop shadow.
         static const char* kDecorationLabels[] = { "None", "Outline", "Shadow" };
@@ -213,7 +241,13 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
         };
         int decorationIndex = 0;
         for (int i = 0; i < 3; ++i)
-            if (kDecorationValues[i] == m_Decoration) { decorationIndex = i; break; }
+        {
+            if (kDecorationValues[i] == m_Decoration)
+            {
+                decorationIndex = i;
+                break;
+            }
+        }
         ui.SetNextItemWidth(220);
         if (ui.Combo("Decoration", &decorationIndex, kDecorationLabels, 3))
         {
@@ -225,8 +259,14 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
             ui.SetNextItemWidth(100);
             if (ui.InputInt("Outline Size (px)", &m_OutlineSize))
             {
-                if (m_OutlineSize < 1) m_OutlineSize = 1;
-                if (m_OutlineSize > 3) m_OutlineSize = 3;
+                if (m_OutlineSize < 1)
+                {
+                    m_OutlineSize = 1;
+                }
+                if (m_OutlineSize > 3)
+                {
+                    m_OutlineSize = 3;
+                }
                 m_SettingsModified = true;
             }
         }
@@ -235,15 +275,27 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
             ui.SetNextItemWidth(100);
             if (ui.InputInt("Shadow dX", &m_ShadowDx))
             {
-                if (m_ShadowDx < -3) m_ShadowDx = -3;
-                if (m_ShadowDx > 3) m_ShadowDx = 3;
+                if (m_ShadowDx < -3)
+                {
+                    m_ShadowDx = -3;
+                }
+                if (m_ShadowDx > 3)
+                {
+                    m_ShadowDx = 3;
+                }
                 m_SettingsModified = true;
             }
             ui.SetNextItemWidth(100);
             if (ui.InputInt("Shadow dY", &m_ShadowDy))
             {
-                if (m_ShadowDy < -3) m_ShadowDy = -3;
-                if (m_ShadowDy > 3) m_ShadowDy = 3;
+                if (m_ShadowDy < -3)
+                {
+                    m_ShadowDy = -3;
+                }
+                if (m_ShadowDy > 3)
+                {
+                    m_ShadowDy = 3;
+                }
                 m_SettingsModified = true;
             }
         }
@@ -277,7 +329,8 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
             ui.SameLine();
             {
                 char buf[64];
-                std::snprintf(buf, sizeof(buf), "(%s...)", variantGuid.length() > 8 ? variantGuid.substr(0, 8).c_str() : variantGuid.c_str());
+                std::snprintf(buf, sizeof(buf), "(%s...)",
+                              variantGuid.length() > 8 ? variantGuid.substr(0, 8).c_str() : variantGuid.c_str());
                 ui.TextDisabled(buf);
             }
 
@@ -397,8 +450,14 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
                     std::string variantGuid = GetVariantGuidFromData(assetPath, size);
                     std::string atlasGuid = GetAtlasGuidFromData(assetPath, size);
                     std::error_code ec;
-                    if (!variantGuid.empty()) fs::remove(cacheDir + variantGuid, ec);
-                    if (!atlasGuid.empty()) fs::remove(cacheDir + atlasGuid, ec);
+                    if (!variantGuid.empty())
+                    {
+                        fs::remove(cacheDir + variantGuid, ec);
+                    }
+                    if (!atlasGuid.empty())
+                    {
+                        fs::remove(cacheDir + atlasGuid, ec);
+                    }
                 }
             }
 
@@ -522,7 +581,9 @@ void FontFileInspector::RefreshVariantCache(const std::string& assetPath)
 
     auto* pipeline = DekiEditor::AssetPipeline::Instance();
     if (!pipeline || m_Sizes.empty())
+    {
         return;
+    }
 
     const std::string cacheDir = pipeline->GetProjectPath() + "/cache/";
     for (int size : m_Sizes)
@@ -537,7 +598,10 @@ void FontFileInspector::RefreshVariantCache(const std::string& assetPath)
         std::string cachePath = cacheDir + variantGuid;
         for (char& c : cachePath)
         {
-            if (c == '/') c = '\\';
+            if (c == '/')
+            {
+                c = '\\';
+            }
         }
 
         m_VariantCached[size] = fs::exists(cachePath);
@@ -558,11 +622,15 @@ void FontFileInspector::LoadSettings(const std::string& assetPath)
 
     std::string dataPath = assetPath + ".data";
     if (!fs::exists(dataPath))
+    {
         return;
+    }
 
     std::ifstream file(dataPath);
     if (!file.is_open())
+    {
         return;
+    }
 
     try
     {
@@ -584,43 +652,75 @@ void FontFileInspector::LoadSettings(const std::string& assetPath)
             }
 
             if (settings.contains("firstChar") && settings["firstChar"].is_number_integer())
+            {
                 m_FirstChar = settings["firstChar"].get<int>();
+            }
 
             if (settings.contains("lastChar") && settings["lastChar"].is_number_integer())
+            {
                 m_LastChar = settings["lastChar"].get<int>();
+            }
 
             if (settings.contains("hinting") && settings["hinting"].is_string())
+            {
                 m_Hinting = HintingFromString(settings["hinting"].get<std::string>());
+            }
 
             if (settings.contains("oversample") && settings["oversample"].is_number_integer())
             {
                 int v = settings["oversample"].get<int>();
-                if (v < 1) v = 1;
-                if (v > 4) v = 4;
+                if (v < 1)
+                {
+                    v = 1;
+                }
+                if (v > 4)
+                {
+                    v = 4;
+                }
                 m_Oversample = v;
             }
 
             if (settings.contains("decoration") && settings["decoration"].is_string())
+            {
                 m_Decoration = DecorationFromString(settings["decoration"].get<std::string>());
+            }
             if (settings.contains("outlineSize") && settings["outlineSize"].is_number_integer())
             {
                 int v = settings["outlineSize"].get<int>();
-                if (v < 1) v = 1;
-                if (v > 3) v = 3;
+                if (v < 1)
+                {
+                    v = 1;
+                }
+                if (v > 3)
+                {
+                    v = 3;
+                }
                 m_OutlineSize = v;
             }
             if (settings.contains("shadowDx") && settings["shadowDx"].is_number_integer())
             {
                 int v = settings["shadowDx"].get<int>();
-                if (v < -3) v = -3;
-                if (v > 3) v = 3;
+                if (v < -3)
+                {
+                    v = -3;
+                }
+                if (v > 3)
+                {
+                    v = 3;
+                }
                 m_ShadowDx = v;
             }
             if (settings.contains("shadowDy") && settings["shadowDy"].is_number_integer())
             {
                 int v = settings["shadowDy"].get<int>();
-                if (v < -3) v = -3;
-                if (v > 3) v = 3;
+                if (v < -3)
+                {
+                    v = -3;
+                }
+                if (v > 3)
+                {
+                    v = 3;
+                }
                 m_ShadowDy = v;
             }
         }
@@ -655,7 +755,9 @@ void FontFileInspector::SaveSettings(const std::string& assetPath, const std::st
 
     // Ensure GUID is set
     if (!assetGuid.empty())
+    {
         j["guid"] = assetGuid;
+    }
 
     // Save font settings
     j["fontSettings"] = json::object();
@@ -670,7 +772,9 @@ void FontFileInspector::SaveSettings(const std::string& assetPath, const std::st
     j["fontSettings"]["shadowDy"] = m_ShadowDy;
     // Generate random variant GUIDs (only if they don't exist)
     if (!j.contains("variants"))
+    {
         j["variants"] = json::object();
+    }
 
     for (int size : m_Sizes)
     {
@@ -678,7 +782,9 @@ void FontFileInspector::SaveSettings(const std::string& assetPath, const std::st
 
         // Create variant entry if missing
         if (!j["variants"].contains(sizeKey))
+        {
             j["variants"][sizeKey] = json::object();
+        }
 
         // Generate deterministic font GUID (based on fontGuid:size)
         std::string variantGuid = Deki::GenerateDeterministicGuid(assetGuid + ":" + sizeKey);
@@ -705,7 +811,10 @@ void FontFileInspector::SaveSettings(const std::string& assetPath, const std::st
         std::string relativePath = fs::relative(assetPath, assetsPath).string();
         for (char& c : relativePath)
         {
-            if (c == '\\') c = '/';
+            if (c == '\\')
+            {
+                c = '/';
+            }
         }
 
         // Force re-read of sidecar
@@ -725,19 +834,22 @@ std::string FontFileInspector::GetVariantGuidFromData(const std::string& assetPa
 {
     std::string dataPath = assetPath + ".data";
     if (!fs::exists(dataPath))
+    {
         return "";
+    }
 
     std::ifstream file(dataPath);
     if (!file.is_open())
+    {
         return "";
+    }
 
     try
     {
         json j = json::parse(file);
         std::string sizeKey = std::to_string(fontSize);
 
-        if (j.contains("variants") && j["variants"].contains(sizeKey) &&
-            j["variants"][sizeKey].contains("guid"))
+        if (j.contains("variants") && j["variants"].contains(sizeKey) && j["variants"][sizeKey].contains("guid"))
         {
             return j["variants"][sizeKey]["guid"].get<std::string>();
         }
@@ -754,19 +866,22 @@ std::string FontFileInspector::GetAtlasGuidFromData(const std::string& assetPath
 {
     std::string dataPath = assetPath + ".data";
     if (!fs::exists(dataPath))
+    {
         return "";
+    }
 
     std::ifstream file(dataPath);
     if (!file.is_open())
+    {
         return "";
+    }
 
     try
     {
         json j = json::parse(file);
         std::string sizeKey = std::to_string(fontSize);
 
-        if (j.contains("variants") && j["variants"].contains(sizeKey) &&
-            j["variants"][sizeKey].contains("atlasGuid"))
+        if (j.contains("variants") && j["variants"].contains(sizeKey) && j["variants"][sizeKey].contains("atlasGuid"))
         {
             return j["variants"][sizeKey]["atlasGuid"].get<std::string>();
         }
@@ -783,7 +898,9 @@ void FontFileInspector::BakeFontVariant(const std::string& assetPath, const std:
 {
     auto* pipeline = DekiEditor::AssetPipeline::Instance();
     if (!pipeline)
+    {
         return;
+    }
 
     // Read GUIDs from .data file (they should have been generated in SaveSettings)
     std::string variantGuid = GetVariantGuidFromData(assetPath, fontSize);
@@ -824,9 +941,8 @@ void FontFileInspector::BakeFontVariant(const std::string& assetPath, const std:
 
     // Write atlas as DTEX (filename is atlasGuid, no extension)
     std::string atlasPath = cacheDir + "/" + atlasGuid;
-    if (!DekiEditor::TextureImporter::WriteTexFile(atlasPath, result.atlasRGBA.data(),
-                                                    result.atlasWidth, result.atlasHeight,
-                                                    DekiEditor::TextureFormat::ALPHA8))
+    if (!DekiEditor::TextureImporter::WriteTexFile(atlasPath, result.atlasRGBA.data(), result.atlasWidth,
+                                                   result.atlasHeight, DekiEditor::TextureFormat::ALPHA8))
     {
         DEKI_LOG_ERROR("Failed to write font atlas: %s", atlasPath.c_str());
         return;
@@ -845,8 +961,8 @@ void FontFileInspector::BakeFontVariant(const std::string& assetPath, const std:
     // Use just the GUID as filename - AssetManager prepends cache dir
     Deki::AssetManager::Get()->RegisterGuid(variantGuid, variantGuid);
 
-    DEKI_LOG_EDITOR("Baked font variant: %s @ %d px -> font=%s, atlas=%s",
-                  assetPath.c_str(), fontSize, variantGuid.c_str(), atlasGuid.c_str());
+    DEKI_LOG_EDITOR("Baked font variant: %s @ %d px -> font=%s, atlas=%s", assetPath.c_str(), fontSize,
+                    variantGuid.c_str(), atlasGuid.c_str());
 }
 
 void FontFileInspector::GeneratePreview(const std::string& assetPath, int fontSize)
@@ -876,7 +992,9 @@ void FontFileInspector::GeneratePreview(const std::string& assetPath, int fontSi
     const char* text = m_PreviewText;
     int textLen = static_cast<int>(strlen(text));
     if (textLen == 0)
+    {
         text = "Preview";
+    }
 
     // Calculate text dimensions
     int textWidth = 0;
@@ -901,10 +1019,10 @@ void FontFileInspector::GeneratePreview(const std::string& assetPath, int fontSi
     // Fill with dark background
     for (int i = 0; i < bufferWidth * bufferHeight; ++i)
     {
-        buffer[i * 4 + 0] = 40;  // R
-        buffer[i * 4 + 1] = 40;  // G
-        buffer[i * 4 + 2] = 40;  // B
-        buffer[i * 4 + 3] = 255; // A
+        buffer[i * 4 + 0] = 40;   // R
+        buffer[i * 4 + 1] = 40;   // G
+        buffer[i * 4 + 2] = 40;   // B
+        buffer[i * 4 + 3] = 255;  // A
     }
 
     // Render text
@@ -939,9 +1057,9 @@ void FontFileInspector::GeneratePreview(const std::string& assetPath, int fontSi
                         uint8_t alpha = result.atlasRGBA[srcIdx + 3];
                         if (alpha > 0)
                         {
-                            buffer[dstIdx + 0] = 255; // R
-                            buffer[dstIdx + 1] = 255; // G
-                            buffer[dstIdx + 2] = 255; // B
+                            buffer[dstIdx + 0] = 255;  // R
+                            buffer[dstIdx + 1] = 255;  // G
+                            buffer[dstIdx + 2] = 255;  // B
                             buffer[dstIdx + 3] = alpha;
                         }
                     }
@@ -971,7 +1089,8 @@ void FontFileInspector::GeneratePreview(const std::string& assetPath, int fontSi
     m_PreviewTextureHeight = bufferHeight;
     m_LastPreviewSize = fontSize;
 
-    DEKI_LOG_DEBUG("Generated font preview: %s @ %d px (%dx%d)", assetPath.c_str(), fontSize, bufferWidth, bufferHeight);
+    DEKI_LOG_DEBUG("Generated font preview: %s @ %d px (%dx%d)", assetPath.c_str(), fontSize, bufferWidth,
+                   bufferHeight);
 }
 
 void FontFileInspector::CleanupPreview()
@@ -994,6 +1113,6 @@ void RegisterFontFileInspector()
     DekiEditor::FileInspectorRegistry::Instance().Register(&s_FontFileInspector);
 }
 
-} // namespace Deki2D
+}  // namespace Deki2D
 
-#endif // DEKI_EDITOR
+#endif  // DEKI_EDITOR

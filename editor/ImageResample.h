@@ -29,7 +29,9 @@ struct PixelRect
 inline int MapEdge(int v, int sourceSize, int storedSize)
 {
     if (sourceSize <= 0 || sourceSize == storedSize)
+    {
         return v;
+    }
     return static_cast<int>((static_cast<int64_t>(v) * storedSize * 2 + sourceSize) /
                             (2 * static_cast<int64_t>(sourceSize)));
 }
@@ -45,7 +47,9 @@ inline void ResampleRect(const uint8_t* src, int srcW, const PixelRect& from, ui
     const int fw = from.x1 - from.x0, fh = from.y1 - from.y0;
     const int tw = to.x1 - to.x0, th = to.y1 - to.y0;
     if (fw <= 0 || fh <= 0 || tw <= 0 || th <= 0)
+    {
         return;
+    }
     const double sx = static_cast<double>(fw) / tw, sy = static_cast<double>(fh) / th;
 
     for (int y = 0; y < th; ++y)
@@ -67,18 +71,24 @@ inline void ResampleRect(const uint8_t* src, int srcW, const PixelRect& from, ui
                 continue;
             }
             double r = 0, g = 0, b = 0, a = 0, cr = 0, cg = 0, cb = 0, area = 0;
-            const int iy0 = static_cast<int>(std::floor(fy0)), iy1 = std::min(from.y1, static_cast<int>(std::ceil(fy1)));
-            const int ix0 = static_cast<int>(std::floor(fx0)), ix1 = std::min(from.x1, static_cast<int>(std::ceil(fx1)));
+            const int iy0 = static_cast<int>(std::floor(fy0)),
+                      iy1 = std::min(from.y1, static_cast<int>(std::ceil(fy1)));
+            const int ix0 = static_cast<int>(std::floor(fx0)),
+                      ix1 = std::min(from.x1, static_cast<int>(std::ceil(fx1)));
             for (int iy = iy0; iy < iy1; ++iy)
             {
                 const double wy = std::min(fy1, iy + 1.0) - std::max(fy0, static_cast<double>(iy));
                 if (wy <= 0)
+                {
                     continue;
+                }
                 for (int ix = ix0; ix < ix1; ++ix)
                 {
                     const double wx = std::min(fx1, ix + 1.0) - std::max(fx0, static_cast<double>(ix));
                     if (wx <= 0)
+                    {
                         continue;
+                    }
                     const double w = wx * wy;
                     const uint8_t* in = src + (static_cast<size_t>(iy) * srcW + ix) * 4;
                     const double wa = w * in[3];
@@ -93,7 +103,9 @@ inline void ResampleRect(const uint8_t* src, int srcW, const PixelRect& from, ui
                 }
             }
             if (area <= 0)
+            {
                 continue;
+            }
             if (a > 0)
             {
                 out[0] = static_cast<uint8_t>(std::lround(r / a));
@@ -132,10 +144,14 @@ inline std::vector<uint8_t> ShrinkImage(const uint8_t* src, int srcW, int srcH, 
     {
         PixelRect clamped{ std::max(0, r.x0), std::max(0, r.y0), std::min(srcW, r.x1), std::min(srcH, r.y1) };
         if (clamped.x1 <= clamped.x0 || clamped.y1 <= clamped.y0)
+        {
             continue;
+        }
         const PixelRect to = MapRect(clamped, srcW, srcH, dstW, dstH);
         if (to.x1 <= to.x0 || to.y1 <= to.y0)
+        {
             continue;
+        }
         ResampleRect(src, srcW, clamped, dst.data(), dstW, to, nearest);
     }
     return dst;

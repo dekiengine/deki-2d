@@ -32,7 +32,6 @@ DEKI_FORMER_NAME("ClipComponent")
 class ClipComponent : public Deki::Component, public Deki::IClipProvider, public Deki::ISortableProvider
 {
 public:
-
     /** @brief Width of clip region in meters */
     DEKI_EXPORT
     DEKI_TOOLTIP("Width of the clipping window in meters. Children are cut off at this edge.")

@@ -18,33 +18,37 @@ namespace Deki2D
 
 namespace
 {
-    // Populate chroma-key fields on a QuadBlit::Source from a Sprite. Quantizes
-    // the key to 5/6/5 precision when the source is RGB565-family so it matches
-    // pixels extracted at that precision. attachRowSpans is false for sprites
-    // whose pixel buffer is a derived bake (frame copy, tiled, 9-slice) — the
-    // source-level row spans don't map to the derived buffer's rows.
-    inline void ApplyChromaKey(QuadBlit::Source& src, const Sprite* spr, bool attachRowSpans)
+// Populate chroma-key fields on a QuadBlit::Source from a Sprite. Quantizes
+// the key to 5/6/5 precision when the source is RGB565-family so it matches
+// pixels extracted at that precision. attachRowSpans is false for sprites
+// whose pixel buffer is a derived bake (frame copy, tiled, 9-slice) — the
+// source-level row spans don't map to the derived buffer's rows.
+inline void ApplyChromaKey(QuadBlit::Source& src, const Sprite* spr, bool attachRowSpans)
+{
+    if (!spr || !spr->hasChromaKey)
     {
-        if (!spr || !spr->hasChromaKey)
-            return;
-        src.hasChromaKey = true;
-        if (src.isRGB565)
-        {
-            src.keyR = spr->transparentR;
-            src.keyG = spr->transparentG;
-            src.keyB = spr->transparentB;
-            DekiPixel::QuantizeRGB565(src.keyR, src.keyG, src.keyB);
-        }
-        else
-        {
-            src.keyR = spr->transparentR;
-            src.keyG = spr->transparentG;
-            src.keyB = spr->transparentB;
-        }
-        if (attachRowSpans)
-            src.chromaRowSpans = spr->chromaRowSpans.Data();
+        return;
+    }
+    src.hasChromaKey = true;
+    if (src.isRGB565)
+    {
+        src.keyR = spr->transparentR;
+        src.keyG = spr->transparentG;
+        src.keyB = spr->transparentB;
+        DekiPixel::QuantizeRGB565(src.keyR, src.keyG, src.keyB);
+    }
+    else
+    {
+        src.keyR = spr->transparentR;
+        src.keyG = spr->transparentG;
+        src.keyB = spr->transparentB;
+    }
+    if (attachRowSpans)
+    {
+        src.chromaRowSpans = spr->chromaRowSpans.Data();
     }
 }
+}  // namespace
 
 // ============================================================================
 // Component Registration
@@ -52,19 +56,22 @@ namespace
 // NOTE: s_Properties[] and s_ComponentMeta are now auto-generated in
 // SpriteComponent.gen.h (included at end of SpriteComponent.h)
 
-
 SpriteComponent::SpriteComponent(Sprite* spr)
-: frameX(0)
-, frameY(0)
-, frameWidth(0)  // 0 means use full sprite width
-, frameHeight(0) // 0 means use full sprite height
-, tintColor(Deki::Color::White)
-, renderMode(SpriteRenderMode::Normal)
-, width(0.0f)
-, height(0.0f)
+    : frameX(0),
+      frameY(0),
+      frameWidth(0)  // 0 means use full sprite width
+      ,
+      frameHeight(0)  // 0 means use full sprite height
+      ,
+      tintColor(Deki::Color::White),
+      renderMode(SpriteRenderMode::Normal),
+      width(0.0f),
+      height(0.0f)
 {
     if (spr)
+    {
         sprite = spr;  // AssetRef assignment operator
+    }
 }
 
 void SpriteComponent::SetTint(const Deki::Color& color)
@@ -105,10 +112,14 @@ void SpriteComponent::SetFrame(const SpriteFrame& frame)
 void SpriteComponent::RefreshFrame(const Sprite* spr)
 {
     if (m_FrameGuid[0] == '\0' || !spr)
+    {
         return;
+    }
     const uint64_t epoch = Deki::AssetManager::Get() ? Deki::AssetManager::Get()->GetEpoch() : 0;
     if (epoch == m_FrameEpoch)
+    {
         return;
+    }
     m_FrameEpoch = epoch;
     if (const SpriteFrame* frame = spr->FindFrame(m_FrameGuid))
     {
@@ -123,17 +134,23 @@ void SpriteComponent::OnAssetRefResolved(const char* propertyName, void* asset, 
 {
     // Check if this is the sprite property being resolved
     if (std::strcmp(propertyName, "sprite") != 0)
+    {
         return;
+    }
 
     Sprite* spr = static_cast<Sprite*>(asset);
     if (!spr)
+    {
         return;
+    }
 
     // Check if the GUID matches a frame in the sprite's frame list (SubAsset)
     // Sprites without frames (e.g. procedural assets) are normal - no warning needed
     const SpriteFrame* frame = spr->FindFrame(guid);
     if (frame)
+    {
         SetFrame(*frame);
+    }
 }
 
 // NOTE: Lifecycle methods (LoadAssets, UnloadAssets) are no longer needed
@@ -153,10 +170,10 @@ void SpriteComponent::UnloadAssets()
 
     // Free cached Tiled/NineSlice bake buffer
     m_cachedRenderBuffer.Reset();
-    m_cachedRenderW      = 0;
-    m_cachedRenderH      = 0;
-    m_cachedRenderSrc    = nullptr;
-    m_cachedRenderMode   = SpriteRenderMode::Normal;
+    m_cachedRenderW = 0;
+    m_cachedRenderH = 0;
+    m_cachedRenderSrc = nullptr;
+    m_cachedRenderMode = SpriteRenderMode::Normal;
 }
 
 SpriteComponent::~SpriteComponent()
@@ -174,7 +191,9 @@ bool SpriteComponent::GetContentExtents(float& outWidth, float& outHeight) const
 {
     const Sprite* spr = sprite.Get();
     if (!spr || spr->width <= 0 || spr->height <= 0)
+    {
         return false;
+    }
     if (renderMode == SpriteRenderMode::Tiled || renderMode == SpriteRenderMode::NineSlice)
     {
         // The bake is width x height meters (0 = the frame's or sprite's
@@ -215,9 +234,11 @@ Sprite::SliceRegion SpriteComponent::SliceSource(const Sprite* spr, bool& hasBor
 
     // A shown frame, clamped to the texture.
     if (frameWidth <= 0 || frameHeight <= 0)
+    {
         return region;
-    const int32_t x0 = std::clamp(frameX, int32_t{0}, spr->width - 1);
-    const int32_t y0 = std::clamp(frameY, int32_t{0}, spr->height - 1);
+    }
+    const int32_t x0 = std::clamp(frameX, int32_t{ 0 }, spr->width - 1);
+    const int32_t y0 = std::clamp(frameY, int32_t{ 0 }, spr->height - 1);
     region.x = x0;
     region.y = y0;
     region.width = std::min(frameWidth, spr->width - x0);
@@ -237,20 +258,17 @@ void SpriteComponent::ApplyFlip(QuadBlit::Source& src) const
     src.flipV = flipVertical;
 }
 
-bool SpriteComponent::RenderContent(const Deki::Object* owner,
-                                     QuadBlit::Source& outSource,
-                                     float& outPivotX,
-                                     float& outPivotY,
-                                     uint8_t& outTintR,
-                                     uint8_t& outTintG,
-                                     uint8_t& outTintB,
-                                     uint8_t& outTintA)
+bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& outSource, float& outPivotX,
+                                    float& outPivotY, uint8_t& outTintR, uint8_t& outTintG, uint8_t& outTintB,
+                                    uint8_t& outTintA)
 {
     DEKI_PROFILE_SCOPE_N("SpriteComponent::RenderContent");
 
     Sprite* spr = sprite.Get();
     if (!spr || !spr->data)
+    {
         return false;
+    }
     RefreshFrame(spr);
 
     // Output tint color
@@ -258,7 +276,6 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
     outTintG = tintColor.g;
     outTintB = tintColor.b;
     outTintA = tintColor.a;
-
 
     // Still needed for sizing the bake buffer and striding into the atlas;
     // the blit's own shape comes from PixelLayout::FromTexture below.
@@ -273,20 +290,22 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
         // width/height are world meters; pixel-baking math runs in the
         // sprite's stored pixels (fewer when Max Size shrank it).
         if (spr->width <= 0 || spr->height <= 0)
+        {
             return false;
+        }
         // The shown frame, or the whole sprite.
         bool hasBorders = false;
         const Sprite::SliceRegion region = SliceSource(spr, hasBorders);
         const float ppm = Deki::EngineSettings::Global().pixelsPerMeter * spr->sourceScale;
-        int32_t target_w = (width  > 0.0f) ? static_cast<int32_t>(width  * ppm) : region.width;
+        int32_t target_w = (width > 0.0f) ? static_cast<int32_t>(width * ppm) : region.width;
         int32_t target_h = (height > 0.0f) ? static_cast<int32_t>(height * ppm) : region.height;
 
         // Hard guard: bake helpers assume positive dims and at least 1 source
         // pixel per axis. Refuse degenerate input rather than crash.
         if (target_w <= 0 || target_h <= 0 || region.width <= 0 || region.height <= 0)
         {
-            DEKI_LOG_ERROR("SpriteComponent: invalid dims (target %dx%d, source %dx%d)",
-                           target_w, target_h, region.width, region.height);
+            DEKI_LOG_ERROR("SpriteComponent: invalid dims (target %dx%d, source %dx%d)", target_w, target_h,
+                           region.width, region.height);
             return false;
         }
 
@@ -305,19 +324,19 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
                 return false;
             }
             int32_t min_w = region.left + region.right;
-            int32_t min_h = region.top  + region.bottom;
+            int32_t min_h = region.top + region.bottom;
             // Borders must also fit inside the SOURCE — otherwise the bake
             // computes a negative center region and corner reads can underflow.
             if (min_w >= region.width || min_h >= region.height)
             {
-                DEKI_LOG_ERROR("SpriteComponent: 9-slice borders %dx%d exceed source size %dx%d",
-                               min_w, min_h, region.width, region.height);
+                DEKI_LOG_ERROR("SpriteComponent: 9-slice borders %dx%d exceed source size %dx%d", min_w, min_h,
+                               region.width, region.height);
                 return false;
             }
             if (target_w < min_w || target_h < min_h)
             {
-                DEKI_LOG_ERROR("SpriteComponent: 9-slice target %dx%d smaller than borders %dx%d",
-                               target_w, target_h, min_w, min_h);
+                DEKI_LOG_ERROR("SpriteComponent: 9-slice target %dx%d smaller than borders %dx%d", target_w, target_h,
+                               min_w, min_h);
                 return false;
             }
         }
@@ -326,13 +345,9 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
         const Sprite::SliceRegion& was = m_cachedRenderRegion;
         const bool regionChanged = was.x != region.x || was.y != region.y || was.width != region.width ||
                                    was.height != region.height || was.left != region.left ||
-                                   was.right != region.right || was.top != region.top ||
-                                   was.bottom != region.bottom;
-        if (m_cachedRenderSrc != spr ||
-            m_cachedRenderW   != target_w ||
-            m_cachedRenderH   != target_h ||
-            m_cachedRenderMode != renderMode ||
-            regionChanged)
+                                   was.right != region.right || was.top != region.top || was.bottom != region.bottom;
+        if (m_cachedRenderSrc != spr || m_cachedRenderW != target_w || m_cachedRenderH != target_h ||
+            m_cachedRenderMode != renderMode || regionChanged)
         {
             size_t need = (size_t)target_w * (size_t)target_h * (size_t)bytesPerPixel;
             // Allocate() leaves an unchanged size alone, so the reuse path
@@ -346,22 +361,24 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
                 return false;
             }
             if (renderMode == SpriteRenderMode::NineSlice)
+            {
                 Sprite::BakeNineSliceRegion(m_cachedRenderBuffer.Data(), target_w, target_h, spr, region);
+            }
             else
+            {
                 Sprite::BakeTiledRegion(m_cachedRenderBuffer.Data(), target_w, target_h, spr, region);
+            }
 
             m_cachedRenderRegion = region;
-            m_cachedRenderSrc  = spr;
-            m_cachedRenderW    = target_w;
-            m_cachedRenderH    = target_h;
+            m_cachedRenderSrc = spr;
+            m_cachedRenderW = target_w;
+            m_cachedRenderH = target_h;
             m_cachedRenderMode = renderMode;
         }
 
-        outSource = QuadBlit::MakeSource(
-            m_cachedRenderBuffer.Data(),
-            target_w,
-            target_h, QuadBlit::PixelLayout::FromTexture(spr->format, spr->hasAlpha),
-            false  // ownsPixels = false - component owns this buffer
+        outSource = QuadBlit::MakeSource(m_cachedRenderBuffer.Data(), target_w, target_h,
+                                         QuadBlit::PixelLayout::FromTexture(spr->format, spr->hasAlpha),
+                                         false  // ownsPixels = false - component owns this buffer
         );
         // Tiled / 9-slice produce a derived buffer with different dimensions
         // from the source — sprite's chromaRowSpans don't apply.
@@ -383,13 +400,10 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
     if (!hasFrame)
     {
         // Full sprite - point directly to sprite's data
-        outSource = QuadBlit::MakeSource(
-            spr->data,
-            spr->width,
-            spr->height, QuadBlit::PixelLayout::FromTexture(spr->format, spr->hasAlpha),
-            false,  // ownsPixels = false - sprite owns its data
-            spr->alphaRowSpans.Data()
-        );
+        outSource = QuadBlit::MakeSource(spr->data, spr->width, spr->height,
+                                         QuadBlit::PixelLayout::FromTexture(spr->format, spr->hasAlpha),
+                                         false,  // ownsPixels = false - sprite owns its data
+                                         spr->alphaRowSpans.Data());
         // Full-sprite blit uses the same row layout as the source — spans apply.
         ApplyChromaKey(outSource, spr, /*attachRowSpans=*/true);
         outSource.pixelsPerMeter = spr->pixelsPerMeter;
@@ -404,20 +418,28 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner,
 
         // Clamp frame to sprite bounds
         if (frameX < 0 || frameY < 0 || frameX >= spr->width || frameY >= spr->height)
+        {
             return false;
-        if (frameX + fw > spr->width) fw = spr->width - frameX;
-        if (frameY + fh > spr->height) fh = spr->height - frameY;
+        }
+        if (frameX + fw > spr->width)
+        {
+            fw = spr->width - frameX;
+        }
+        if (frameY + fh > spr->height)
+        {
+            fh = spr->height - frameY;
+        }
         if (fw <= 0 || fh <= 0)
+        {
             return false;
+        }
 
         // Point QuadBlit at the frame inside the sprite's own pixels. The
         // stride keeps the atlas row pitch, so nothing is copied: this used to
         // memcpy the whole frame into a cached buffer on every render.
-        outSource = QuadBlit::MakeSource(
-            spr->data + ((size_t)frameY * spr->width + frameX) * bytesPerPixel,
-            fw,
-            fh, QuadBlit::PixelLayout::FromTexture(spr->format, spr->hasAlpha),
-            false  // ownsPixels = false - sprite owns its data
+        outSource = QuadBlit::MakeSource(spr->data + ((size_t)frameY * spr->width + frameX) * bytesPerPixel, fw, fh,
+                                         QuadBlit::PixelLayout::FromTexture(spr->format, spr->hasAlpha),
+                                         false  // ownsPixels = false - sprite owns its data
         );
         outSource.stride = spr->width * bytesPerPixel;
         // Frame is a sub-region of the source — its row layout doesn't match

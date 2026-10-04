@@ -22,7 +22,6 @@ DEKI_FORMER_NAME("ScrollElement")
 class ScrollElement : public Deki::Component
 {
 public:
-
     DEKI_EXPORT
     DEKI_TOOLTIP("Width of one item in meters. The scroll uses it to work out spacing and how far it can travel.")
     DEKI_UNIT(Distance)
