@@ -24,7 +24,7 @@ namespace fs = std::filesystem;
 namespace DekiEditor
 {
 
-// Replace the alpha byte of a packed Rgba() color (keeps RGB).
+// Replaces the alpha byte of a packed Rgba() color, keeping RGB.
 static uint32_t WithAlpha(uint32_t rgba, uint32_t alpha)
 {
     return (rgba & 0x00FFFFFFu) | (alpha << 24u);
@@ -66,8 +66,8 @@ void NineSliceEditorWindow::OnOpen()
 
 void NineSliceEditorWindow::OnClose()
 {
-    // ToolHost recreates the window after OnClose, but reset here too in case
-    // it doesn't (e.g. if OpenFile is called again on a still-open instance).
+    // ToolHost recreates the window after OnClose, but reset here too, for
+    // when OpenFile is called again on a window that is still open.
     m_Source = Source::None;
     m_AssetPath.clear();
     m_CachePath.clear();
@@ -113,7 +113,7 @@ void NineSliceEditorWindow::OpenFile(const char* filePath, const char* cachePath
         m_Source = Source::None;
     }
 
-    // Resolve GUID for texture preview
+    // The GUID, for the texture preview.
     if (!m_ProjectPath.empty())
     {
         fs::path rel = fs::relative(fs::path(m_AssetPath), m_ProjectPath);
@@ -258,10 +258,10 @@ void NineSliceEditorWindow::LoadFromDisk()
 
 namespace
 {
-// Load a JSON file that is about to be changed and written back. A missing
-// file gives an empty object; one that is there but does not parse (a merge
-// conflict) refuses, because writing over it drops the GUID it carries and
-// every reference to the asset with it. That used to happen silently.
+// Loads a JSON file that is about to be changed and written back. A missing
+// file gives an empty object. A file that does not parse (a merge conflict)
+// is refused: writing over it would drop the GUID it carries and break every
+// reference to the asset.
 bool ReadJsonToChange(const std::string& path, nlohmann::json& j)
 {
     j = nlohmann::json::object();
@@ -330,7 +330,7 @@ void NineSliceEditorWindow::SaveToDisk()
             return;
         }
 
-        // Force re-bake of the .dtex so the runtime sees the new metadata
+        // Re-bake the .dtex so the runtime sees the new borders.
         if (!m_ProjectPath.empty())
         {
             fs::path rel = fs::relative(fs::path(m_AssetPath), m_ProjectPath);
@@ -404,9 +404,9 @@ void NineSliceEditorWindow::SaveToDisk()
         {
             return;
         }
-        // Re-import the image now: its cache handler sees the sidecar is newer
-        // and re-bakes the .dtex. Waiting for a refresh to notice left the
-        // scene drawing the old borders.
+        // Re-import the image now, so its cache handler sees the newer sidecar
+        // and re-bakes the .dtex; otherwise the scene keeps drawing the old
+        // borders until a refresh.
         if (!m_ProjectPath.empty())
         {
             std::string relStr = fs::relative(fs::path(m_AssetPath), m_ProjectPath).string();
@@ -439,7 +439,7 @@ void NineSliceEditorWindow::PushUndoSnapshot(const Borders& previous)
     }
     m_UndoStack.push_back(previous);
     m_RedoStack.clear();
-    // Cap history to keep memory bounded
+    // Cap the history, to bound memory.
     if (m_UndoStack.size() > 128)
     {
         m_UndoStack.erase(m_UndoStack.begin());
@@ -530,7 +530,7 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
     m_TexW = texW;
     m_TexH = texH;
 
-    // Reserve a canvas filling the rest of the window
+    // A canvas filling the rest of the window.
     float availX, availY;
     ui.GetContentRegionAvail(&availX, &availY);
     if (availX < 64.0f)
@@ -542,7 +542,7 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
         availY = 64.0f;
     }
 
-    // Deferred fit-to-view: needs the canvas size, so it runs here
+    // Fit to view needs the canvas size, so it runs here.
     if (m_FitViewPending)
     {
         m_FitViewPending = false;
@@ -559,13 +559,13 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
 
     ui.PushClipRect(canvasOriginX, canvasOriginY, canvasOriginX + availX, canvasOriginY + availY, true);
 
-    // Sprite top-left in canvas-space, computed from pan + zoom and centered
+    // The sprite's top-left in canvas space, from pan and zoom, centered.
     float displayW = texW * m_Zoom;
     float displayH = texH * m_Zoom;
     float spriteX = canvasOriginX + (availX - displayW) * 0.5f + m_PanX;
     float spriteY = canvasOriginY + (availY - displayH) * 0.5f + m_PanY;
 
-    // Checkered background to make alpha visible
+    // Checkered background, so alpha shows.
     {
         const float cell = 8.0f;
         uint32_t c1 = EditorUI::Rgba(60, 60, 60, 255);
@@ -583,12 +583,12 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
 
     ui.DrawImage(texId, spriteX, spriteY, spriteX + displayW, spriteY + displayH, u0, v0, u1, v1);
 
-    // Wheel zoom around the cursor
+    // Wheel zoom around the cursor.
     if (canvasHovered && ui.GetMouseWheel() != 0.0f)
     {
         float oldZoom = m_Zoom;
         m_Zoom = std::clamp(m_Zoom * (ui.GetMouseWheel() > 0.0f ? 1.2f : 1.0f / 1.2f), 0.5f, 32.0f);
-        // Keep the texel under the cursor stationary
+        // The texel under the cursor stays put.
         float mx, my;
         ui.GetMousePos(&mx, &my);
         float fx = (mx - spriteX) / oldZoom;
@@ -597,7 +597,7 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
         m_PanY += (my - (canvasOriginY + (availY - texH * m_Zoom) * 0.5f + fy * m_Zoom));
     }
 
-    // Middle-mouse pan
+    // Middle-mouse pan.
     if (ui.IsItemActive() && ui.IsMouseDragging(/*middle*/ 2, 0.0f))
     {
         float mdx, mdy;
@@ -606,7 +606,7 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
         m_PanY += mdy;
     }
 
-    // Clamp borders to the texture
+    // Clamp the borders to the texture.
     auto clampLR = [&](int32_t& a, int32_t& b)
     {
         if (a < 0)
@@ -654,7 +654,7 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
     clampLR(m_Current.left, m_Current.right);
     clampTB(m_Current.top, m_Current.bottom);
 
-    // Pixel→canvas conversions
+    // Pixel to canvas conversions.
     auto pxX = [&](int32_t px) { return spriteX + px * m_Zoom; };
     auto pxY = [&](int32_t py) { return spriteY + py * m_Zoom; };
 
@@ -740,7 +740,7 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
         }
     }
 
-    // Double-click on empty canvas re-fits the view
+    // A double-click on empty canvas fits the view again.
     if (canvasHovered && hover == DragHandle::None && ui.IsMouseDoubleClicked(0))
     {
         m_FitViewPending = true;
@@ -771,7 +771,7 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
                 m_Current.bottom = std::clamp(m_BordersAtDragStart.bottom - dy, 0, (int32_t)texH - m_Current.top);
             }
 
-            // Redraw guides at the dragged position this same frame
+            // Draw the guides at the dragged position this same frame.
             lineLeftX = pxX(m_Current.left);
             lineRightX = pxX((int32_t)texW - m_Current.right);
             lineTopY = pxY(m_Current.top);
@@ -779,7 +779,7 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
         }
         else
         {
-            // Mouse released — commit one undo step for the whole drag
+            // Mouse released: one undo step for the whole drag.
             PushUndoSnapshot(m_BordersAtDragStart);
             m_ActiveDrag = DragHandle::None;
         }
@@ -834,7 +834,7 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
         }
     };
 
-    // Dim the sliced-off border strips so the stretchable center reads at a glance
+    // Dim the border strips, so the stretchable center stands out.
     uint32_t dimFill = EditorUI::Rgba(0, 0, 0, 100);
     if (m_Current.top > 0)
     {
@@ -853,10 +853,9 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
         ui.DrawRectFilled(lineRightX, lineTopY, sx1, lineBottomY, dimFill);
     }
 
-    // Sprite outline
     ui.DrawRect(sx0, sy0, sx1, sy1, EditorUI::Rgba(90, 95, 105, 255));
 
-    // Guide lines in the theme accent — brighter + thicker when hot
+    // Guide lines in the theme accent, brighter and thicker when hot.
     uint32_t accent = ui.GetStyleColor(EditorUI::Col::CheckMark);
     uint32_t colIdle = WithAlpha(accent, 150);
     auto lineStyle = [&](DragHandle edge, uint32_t& col, float& thick)
@@ -876,7 +875,7 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
     lineStyle(DragHandle::Bottom, lc, lt);
     ui.DrawLine(sx0, lineBottomY, sx1, lineBottomY, lc, lt);
 
-    // Midpoint grips: a small pill on each guide advertising "this line drags"
+    // A small pill at the middle of each guide shows it can be dragged.
     {
         const float gLen = ui.GetTextLineHeight() * 0.55f;  // half-length
         const float gThick = 2.5f;                          // half-thickness
@@ -892,7 +891,7 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
                           gThick);
     }
 
-    // Corner handles at the guide intersections (drag two borders at once)
+    // Corner handles where guides cross (they drag two borders at once).
     {
         const float ch = ui.GetTextLineHeight() * 0.28f;  // half-size
         uint32_t darkFill = EditorUI::Rgba(10, 11, 13, 230);
@@ -921,7 +920,7 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
         }
     }
 
-    // Pixel value labels just outside the sprite (hidden at 0 unless hot)
+    // Pixel value labels just outside the sprite (hidden at 0 unless hot).
     {
         uint32_t labelDim = EditorUI::Rgba(200, 198, 190, 235);
         uint32_t backdrop = EditorUI::Rgba(10, 11, 13, 200);
@@ -953,7 +952,7 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
         drawLabel(DragHandle::Bottom, m_Current.bottom, sx1 + 8.0f, lineBottomY, false, true);
     }
 
-    // Usage hint pinned to the canvas bottom-left
+    // Usage hint at the canvas bottom-left.
     ui.DrawTextAt(0.0f, canvasOriginX + 8.0f, canvasOriginY + availY - ui.GetTextLineHeight() - 6.0f,
                   EditorUI::Rgba(120, 120, 116, 200),
                   "Drag guides or corners   |   Scroll: zoom   |   Drag empty space: pan   |   Double-click: fit");
@@ -975,9 +974,9 @@ void NineSliceEditorWindow::DrawSavePromptModalIfNeeded()
         m_OpenSavePromptNextFrame = false;
     }
 
-    // Schematic modal shell — centered, fixed width, generous padding, matching
-    // the editor's asset-browser dialogs (sizes are font-size multiples so the
-    // package needs no DPI accessor).
+    // Schematic modal: centered, fixed width, generous padding, like the
+    // editor's asset-browser dialogs. Sizes are multiples of the font size, so
+    // the package needs no DPI accessor.
     const float em = ui.GetTextLineHeight();
     float vx, vy, vw, vh;
     ui.GetMainViewportRect(&vx, &vy, &vw, &vh);
@@ -1032,15 +1031,17 @@ void NineSliceEditorWindow::DrawSavePromptModalIfNeeded()
 void NineSliceEditorWindow::OnGUI()
 {
     auto& ui = EditorUI::Get();
-    // Begin returns false when window is collapsed; we still want to End and run the modal.
+    // Begin returns false when the window is collapsed; End and the modal
+    // still run.
     bool wantOpen = m_IsOpen;
-    // Room for the canvas, centred; auto-size left it a strip at the top left.
+    // Room for the canvas, centred; auto-size would leave a strip at the top left.
     const float dpi = ui.GetDpiScale();
     ui.SetNextWindowSize(640.0f * dpi, 560.0f * dpi, true);
     ui.SetNextWindowSizeConstraints(420.0f * dpi, 320.0f * dpi, 100000.0f, 100000.0f);
     bool visible = ui.Begin(GetTitle(), &wantOpen, EditorUI::WinNoSavedSettings);
 
-    // Veto close-via-X if there are unsaved changes — open prompt instead
+    // Closing with the X while there are unsaved changes opens the prompt
+    // instead.
     if (m_IsOpen && !wantOpen && m_Current != m_Saved)
     {
         m_OpenSavePromptNextFrame = true;
@@ -1101,9 +1102,9 @@ void NineSliceEditorWindow::OnGUI()
             }
             ui.Dummy(0.0f, 4.0f * dpi);
 
-            // ── Border fields (one undo step per edit session) ──────────────
-            // Snapshot the pre-edit values while no field is active; drags span
-            // many frames, so the snapshot must be from before the edit began.
+            // ── Border fields (one undo step per edit) ──────────────────────
+            // Take the snapshot while no field is active: a drag spans many
+            // frames, so it must be from before the edit began.
             if (!m_FieldEditActive)
             {
                 m_FieldsSnapshot = m_Current;
@@ -1156,7 +1157,7 @@ void NineSliceEditorWindow::OnGUI()
     ui.End();
 }
 
-// Package DLLs auto-discover this on load. Macro must be inside the namespace.
+// Package DLLs find this on load. The macro must be inside the namespace.
 REGISTER_EDITOR_WINDOW(NineSliceEditorWindow, "9-Slice Editor", "2D/9-Slice Editor")
 
 }  // namespace DekiEditor

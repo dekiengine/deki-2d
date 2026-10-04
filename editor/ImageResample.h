@@ -1,16 +1,13 @@
 #pragma once
 
-/**
- * @file ImageResample.h
- * @brief Shrinking an image for Max Size (editor only, header-only so the
- *        package's tests can reach it).
- *
- * Each region is resampled on its own: every sprite frame, and the nine
- * parts of a nine-slice image, into the stored rect its edges map to
- * (Sprite::SourceToStored, the rule the runtime uses). A stored pixel of one
- * frame is then made only of that frame's pixels, so neighbouring frames
- * cannot bleed into each other.
- */
+// Shrinking an image for Max Size. Editor only; header-only so the package's
+// tests can reach it.
+//
+// Each region is resampled on its own: every sprite frame, and the nine
+// parts of a nine-slice image, into the stored rect its edges map to
+// (Sprite::SourceToStored, the rule the runtime uses). A stored pixel of one
+// frame is then made only of that frame's pixels, so neighbouring frames
+// cannot bleed into each other.
 
 #include <algorithm>
 #include <cmath>
@@ -36,7 +33,7 @@ inline int MapEdge(int v, int sourceSize, int storedSize)
                             (2 * static_cast<int64_t>(sourceSize)));
 }
 
-/// Resample `from` (in an RGBA image srcW wide) into `to` (in one dstW wide).
+/// Resamples `from` (in an RGBA image srcW wide) into `to` (in one dstW wide).
 /// Area average: each stored pixel is the coverage-weighted mean of the
 /// source pixels under it, colour weighted by alpha so transparent pixels do
 /// not darken an edge. `nearest` takes the pixel under the centre instead,
@@ -132,7 +129,7 @@ inline PixelRect MapRect(const PixelRect& r, int srcW, int srcH, int dstW, int d
              MapEdge(r.y1, srcH, dstH) };
 }
 
-/// Shrink a whole RGBA image to dstW x dstH. `regions` are resampled on
+/// Shrinks a whole RGBA image to dstW x dstH. `regions` are resampled on
 /// their own after the whole image (frames, nine-slice parts), each into its
 /// mapped rect; pixels outside every region come from the whole-image pass.
 inline std::vector<uint8_t> ShrinkImage(const uint8_t* src, int srcW, int srcH, int dstW, int dstH,

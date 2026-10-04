@@ -1,11 +1,10 @@
-// The opaque-run rule, pinned against the bug it was written for.
+// The opaque-run rule.
 //
-// A sprite row is split by the blitter into a straight copy over the opaque
-// span and per-pixel blending either side. Getting the span wrong does not
-// crash or assert: it draws the wrong pixels, in a finished frame, and that is
-// how first-to-last-opaque survived until someone noticed hearts with black
-// notches. Every case below is a row shape that distinguishes "longest opaque
-// run" from a plausible wrong answer.
+// The blitter splits a sprite row into a straight copy over the opaque span
+// and per-pixel blending on either side. A wrong span does not crash or
+// assert; it draws wrong pixels (a heart with a black notch, when the span is
+// first-to-last-opaque). Each case below is a row shape that tells "longest
+// opaque run" apart from a plausible wrong answer.
 
 #include <gtest/gtest.h>
 
@@ -15,7 +14,7 @@
 #include <initializer_list>
 #include <vector>
 
-// The package's types moved into its namespace; tests name them unqualified.
+// The package's types are in its namespace; tests name them unqualified.
 using namespace Deki2D;
 
 namespace
@@ -109,9 +108,9 @@ TEST(SpriteRowSpans, TheFirstOfTwoEqualRunsWins)
 
 TEST(SpriteRowSpans, AnEmptyRowGetsAnEmptySpanAtTheRowEnd)
 {
-    // start = end = w, NOT start=w end=0. The latter made the blitter's left
-    // and right regions both cover the whole row, blending every soft pixel
-    // twice and starting the right loop at x=0 regardless of the clip rect.
+    // start = end = w, not start = w, end = 0: that would make the blitter's
+    // left and right regions both cover the whole row, blending every soft
+    // pixel twice and starting the right loop at x = 0 whatever the clip rect.
     const Span s = SpanOf(Row({ kClear, kClear, kClear }));
     EXPECT_EQ(s.start, 3);
     EXPECT_EQ(s.end, 3);
@@ -134,7 +133,7 @@ TEST(SpriteRowSpans, ASingleOpaquePixelIsASpanOfOne)
 
 TEST(SpriteRowSpans, ARunTouchingTheRightEdgeIsClosedAtTheRowEnd)
 {
-    // The loop runs to x == w to close an open run. Without that the trailing
+    // The loop runs to x == w to close an open run; otherwise the trailing
     // run is never recorded and the row reads as empty.
     const Span s = SpanOf(Row({ kClear, kOpaque, kOpaque }));
     EXPECT_EQ(s.start, 1);

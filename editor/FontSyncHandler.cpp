@@ -21,48 +21,41 @@ using json = nlohmann::json;
 namespace Deki2D
 {
 
-/**
- * @brief Get or create variant GUIDs using deterministic generation
- * GUIDs are always regenerated to ensure consistency with CleanCache
- */
+// The deterministic variant and atlas GUIDs for one size. They are always
+// regenerated, so they match what CleanCache expects.
 static bool GetOrCreateVariantGuids(const std::string& fontGuid, int fontSize, std::string& outVariantGuid,
                                     std::string& outAtlasGuid, json& j)
 {
     std::string sizeKey = std::to_string(fontSize);
 
-    // Ensure variants object exists
     if (!j.contains("variants"))
     {
         j["variants"] = json::object();
     }
 
-    // Ensure size entry exists
     if (!j["variants"].contains(sizeKey))
     {
         j["variants"][sizeKey] = json::object();
     }
 
-    // Always use deterministic GUIDs based on fontGuid:size
+    // Deterministic, from "fontGuid:size".
     outVariantGuid = Deki::GenerateDeterministicGuid(fontGuid + ":" + sizeKey);
     j["variants"][sizeKey]["guid"] = outVariantGuid;
 
-    // Atlas GUID: fontGuid:size:atlas
+    // The atlas: "fontGuid:size:atlas".
     outAtlasGuid = Deki::GenerateDeterministicGuid(fontGuid + ":" + sizeKey + ":atlas");
     j["variants"][sizeKey]["atlasGuid"] = outAtlasGuid;
 
     return true;
 }
 
-// Register baked font variants as sub-assets AND with AssetManager for a given font GUID.
-// AssetManager registration mirrors what HandleFontSync used to do per-size; centralizing
-// it here lets HandleFontSync run only on source changes (OnSourceChange policy) instead
-// of every project open.
+// Registers a font's baked variants as sub-assets and with AssetManager.
+// Doing it here lets HandleFontSync run only when the source changes
+// (OnSourceChange policy) instead of on every project open.
 static void RegisterFontSubAssets(const std::string& fontGuid, const std::string& projectPath)
 {
     namespace fs = std::filesystem;
-    // Layout comes from the editor's shared definition; a package must not
-    // restate where the cache lives. This built <project>/cache directly and
-    // kept recreating that folder after the editor moved to generated/cache.
+    // The editor defines where the cache lives; a package must not hardcode it.
     std::string cachePath = DekiEditor::GetCacheDirectory(projectPath);
     std::vector<DekiEditor::SubAssetInfo> subAssets;
     int index = 0;
@@ -117,12 +110,10 @@ static void RegisterFontSubAssets(const std::string& fontGuid, const std::string
     }
 }
 
-/**
- * @brief Handle font sync - auto-bake configured font sizes
- */
+// Font sync: bakes every size the font's settings list.
 static void HandleFontSync(const std::string& absolutePath, const std::string& fontGuid, const std::string& projectPath)
 {
-    // Read .data sidecar for configured sizes
+    // The configured sizes, from the .data sidecar.
     std::string dataPath = absolutePath + ".data";
     if (!fs::exists(dataPath))
     {
@@ -240,7 +231,6 @@ static void HandleFontSync(const std::string& absolutePath, const std::string& f
 
         int fontSize = sizeVal.get<int>();
 
-        // Get or create variant GUIDs
         std::string sizeKey = std::to_string(fontSize);
         bool guidsExistedBefore = j.contains("variants") && j["variants"].contains(sizeKey) &&
                                   j["variants"][sizeKey].contains("guid") &&
@@ -253,32 +243,30 @@ static void HandleFontSync(const std::string& absolutePath, const std::string& f
             continue;
         }
 
-        // If GUIDs didn't exist before, we created new ones
+        // New GUIDs were created.
         if (!guidsExistedBefore)
         {
             dataFileModified = true;
         }
 
-        // Cache file uses GUID as filename (no extension)
+        // The cache file is named by the GUID, with no extension.
         std::string dfontPath = cacheDir + "/" + variantGuid;
         std::string atlasPath = cacheDir + "/" + atlasGuid;
 
-        // Only skip if BOTH dfont and atlas exist - if atlas is missing, re-bake.
-        // AssetManager registration happens centrally in RegisterFontSubAssets via
-        // OnImportComplete, so we don't need to register here.
+        // Skip only when both the dfont and the atlas exist. AssetManager
+        // registration happens in RegisterFontSubAssets (OnImportComplete).
         if (fs::exists(dfontPath) && fs::exists(atlasPath))
         {
             continue;
         }
 
-        // Delete stale dfont file if atlas is missing (will re-bake below)
+        // The atlas is missing: delete the dfont and bake again below.
         if (fs::exists(dfontPath) && !fs::exists(atlasPath))
         {
             DEKI_LOG_EDITOR("FontSync: Deleting stale dfont (atlas missing): %s", dfontPath.c_str());
             fs::remove(dfontPath);
         }
 
-        // Bake the variant
         FontCompiler::CompileOptions options;
         options.fontSize = fontSize;
         options.firstChar = firstChar;
@@ -298,8 +286,7 @@ static void HandleFontSync(const std::string& absolutePath, const std::string& f
             continue;
         }
 
-        // Write atlas (filename is atlasGuid, no extension)
-        // atlasPath already defined above
+        // The atlas file is named by atlasGuid, with no extension.
         if (!DekiEditor::TextureImporter::WriteTexFile(atlasPath, result.atlasRGBA.data(), result.atlasWidth,
                                                        result.atlasHeight, DekiEditor::TextureFormat::ALPHA8))
         {
@@ -307,23 +294,23 @@ static void HandleFontSync(const std::string& absolutePath, const std::string& f
             continue;
         }
 
-        // Write DFONT file (filename is variantGuid, no extension)
-        // Atlas filename stored inside dfont is just the atlasGuid (no extension)
+        // The dfont is named by variantGuid; the atlas name stored inside it is
+        // just atlasGuid. Neither has an extension.
         if (!FontCompiler::WriteDfontFile(dfontPath, result, atlasGuid))
         {
             DEKI_LOG_WARNING("FontSync: Failed to write dfont %s", dfontPath.c_str());
             continue;
         }
 
-        // AssetManager registration happens centrally in RegisterFontSubAssets via
-        // OnImportComplete (after ImportAllAssets). No per-size RegisterGuid needed here.
+        // AssetManager registration happens in RegisterFontSubAssets, from
+        // OnImportComplete (after ImportAllAssets).
         DEKI_LOG_EDITOR("FontSync: baked %s @ %d px -> font=%s, atlas=%s", absolutePath.c_str(), fontSize,
                         variantGuid.c_str(), atlasGuid.c_str());
 
         dataFileModified = true;
     }
 
-    // Save .data file if we generated new GUIDs
+    // Save the .data file when new GUIDs were made.
     if (dataFileModified)
     {
         std::ofstream outFile(dataPath);
@@ -334,9 +321,8 @@ static void HandleFontSync(const std::string& absolutePath, const std::string& f
         }
     }
 
-    // Sub-asset registration for Asset Browser display happens in the
-    // OnImportComplete callback below (see RegisterFontSyncHandlers). Doing it
-    // here on every cold-changed path is redundant.
+    // Sub-assets for the Asset Browser are registered in the OnImportComplete
+    // callback (see RegisterFontSyncHandlers).
 }
 
 // =========================================================================
@@ -345,9 +331,7 @@ static void HandleFontSync(const std::string& absolutePath, const std::string& f
 
 static void RegisterBdfSubAssets(const std::string& fontGuid, const std::string& projectPath)
 {
-    // Layout comes from the editor's shared definition; a package must not
-    // restate where the cache lives. This built <project>/cache directly and
-    // kept recreating that folder after the editor moved to generated/cache.
+    // The editor defines where the cache lives; a package must not hardcode it.
     std::string cachePath = DekiEditor::GetCacheDirectory(projectPath);
     std::vector<DekiEditor::SubAssetInfo> subAssets;
 
@@ -359,8 +343,8 @@ static void RegisterBdfSubAssets(const std::string& fontGuid, const std::string&
         return;
     }
 
-    // Variant lives in a separate cache file. Centralized here so HandleBdfSync
-    // can run only on source changes (OnSourceChange policy).
+    // The variant has its own cache file. Registered here so HandleBdfSync
+    // runs only when the source changes (OnSourceChange policy).
     Deki::AssetManager::Get()->RegisterGuid(vGuid, vGuid);
 
     DekiEditor::SubAssetInfo fontSub;
@@ -396,7 +380,6 @@ static void RegisterBdfSubAssets(const std::string& fontGuid, const std::string&
 
 static void HandleBdfSync(const std::string& absolutePath, const std::string& fontGuid, const std::string& projectPath)
 {
-    // Read .data sidecar
     std::string dataPath = absolutePath + ".data";
     json j;
     bool hasData = false;
@@ -417,7 +400,7 @@ static void HandleBdfSync(const std::string& absolutePath, const std::string& fo
         }
     }
 
-    // Read selected chars from .data, or auto-select all if missing
+    // The selected characters from .data; all of them when none are listed.
     std::vector<int> selectedChars;
     if (hasData && j.contains("bdfSettings") && j["bdfSettings"].contains("selectedChars"))
     {
@@ -430,7 +413,8 @@ static void HandleBdfSync(const std::string& absolutePath, const std::string& fo
         }
     }
 
-    // Read decoration settings (same schema as TTF's fontSettings — decoration/outlineSize/shadowDx/shadowDy)
+    // Decoration settings, in the same form as a TTF's fontSettings
+    // (decoration, outlineSize, shadowDx, shadowDy).
     FontCompiler::DecorationMode bdfDecoration = FontCompiler::DecorationMode::None;
     int bdfOutlineSize = 1, bdfShadowDx = 1, bdfShadowDy = 1;
     if (hasData && j.contains("bdfSettings"))
@@ -474,7 +458,7 @@ static void HandleBdfSync(const std::string& absolutePath, const std::string& fo
         }
     }
 
-    // No settings yet — auto-select all codepoints from the BDF file
+    // No settings yet: select every codepoint in the BDF file.
     if (selectedChars.empty())
     {
         selectedChars = FontCompiler::GetBdfCodepoints(absolutePath);
@@ -485,7 +469,7 @@ static void HandleBdfSync(const std::string& absolutePath, const std::string& fo
         }
         DEKI_LOG_DEBUG("BdfSync: Auto-selecting all %zu chars for %s", selectedChars.size(), absolutePath.c_str());
 
-        // Save default settings to .data so future syncs use them
+        // Save them to .data so later syncs use them.
         std::sort(selectedChars.begin(), selectedChars.end());
         j["bdfSettings"]["selectedChars"] = selectedChars;
         std::ofstream outFile(dataPath);
@@ -495,11 +479,9 @@ static void HandleBdfSync(const std::string& absolutePath, const std::string& fo
         }
     }
 
-    // Deterministic GUIDs
     std::string variantGuid = Deki::GenerateDeterministicGuid(fontGuid + ":bdf");
     std::string atlasGuid = Deki::GenerateDeterministicGuid(fontGuid + ":bdf:atlas");
 
-    // Update variants in .data
     if (!j.contains("variants"))
     {
         j["variants"] = json::object();
@@ -512,20 +494,19 @@ static void HandleBdfSync(const std::string& absolutePath, const std::string& fo
     std::string dfontPath = cacheDir + "/" + variantGuid;
     std::string atlasPath = cacheDir + "/" + atlasGuid;
 
-    // Skip if already cached. AssetManager registration + sub-asset registration
-    // happen centrally in RegisterBdfSubAssets via OnImportComplete.
+    // Already cached. AssetManager and sub-asset registration happen in
+    // RegisterBdfSubAssets (OnImportComplete).
     if (fs::exists(dfontPath) && fs::exists(atlasPath))
     {
         return;
     }
 
-    // Delete stale dfont if atlas missing
+    // The atlas is missing: delete the dfont and bake again.
     if (fs::exists(dfontPath) && !fs::exists(atlasPath))
     {
         fs::remove(dfontPath);
     }
 
-    // Compile
     FontCompiler::BdfCompileOptions options;
     options.selectedChars = selectedChars;
     options.padding = 2;
@@ -542,7 +523,6 @@ static void HandleBdfSync(const std::string& absolutePath, const std::string& fo
         return;
     }
 
-    // Write atlas
     if (!DekiEditor::TextureImporter::WriteTexFile(atlasPath, result.atlasRGBA.data(), result.atlasWidth,
                                                    result.atlasHeight, DekiEditor::TextureFormat::ALPHA8))
     {
@@ -550,7 +530,6 @@ static void HandleBdfSync(const std::string& absolutePath, const std::string& fo
         return;
     }
 
-    // Write dfont
     if (!FontCompiler::WriteDfontFile(dfontPath, result, atlasGuid))
     {
         DEKI_LOG_WARNING("BdfSync: Failed to write dfont %s", dfontPath.c_str());
@@ -560,24 +539,24 @@ static void HandleBdfSync(const std::string& absolutePath, const std::string& fo
     DEKI_LOG_EDITOR("BdfSync: baked %s -> font=%s, atlas=%s", absolutePath.c_str(), variantGuid.c_str(),
                     atlasGuid.c_str());
 
-    // Save .data with variant GUIDs
+    // Save .data with the variant GUIDs.
     std::ofstream outFile(dataPath);
     if (outFile.is_open())
     {
         outFile << j.dump(2);
     }
 
-    // AssetManager registration + sub-asset registration happen centrally in
-    // RegisterBdfSubAssets via OnImportComplete (called after ImportAllAssets).
+    // AssetManager and sub-asset registration happen in RegisterBdfSubAssets
+    // (OnImportComplete, after ImportAllAssets).
 }
 
-// Static flag to prevent adding duplicate callbacks
+// Keeps the callback from being added twice.
 static bool s_FontSyncRegistrationSetup = false;
 
 void RegisterFontSyncHandlers()
 {
-    // Only add the callback once - it will be invoked every time a pipeline starts
-    // (because AssetPipeline::Stop() clears m_SyncHandlers)
+    // Added once; it runs every time a pipeline starts, because
+    // AssetPipeline::Stop() clears m_SyncHandlers.
     if (s_FontSyncRegistrationSetup)
     {
         return;
@@ -591,20 +570,19 @@ void RegisterFontSyncHandlers()
             pipeline->RegisterSyncHandler(".otf", HandleFontSync);
             pipeline->RegisterSyncHandler(".bdf", HandleBdfSync);
 
-            // .dfont is pre-compiled at the source path — the engine's pipeline
-            // dispatches a PreCached cache handler so the source IS treated as the
-            // cache (no separate cache file, no staleness check). This keeps
-            // .dfont knowledge out of AssetPipeline.cpp.
+            // A .dfont is already compiled, so its handler returns PreCached:
+            // the source is its own cache (no separate file, no staleness
+            // check). This keeps .dfont knowledge out of AssetPipeline.cpp.
             pipeline->RegisterCacheHandler(".dfont", [](const DekiEditor::AssetCacheContext&)
                                            { return DekiEditor::AssetCacheResult::PreCached; });
 
-            // Cache-variant providers — tell the pipeline which derived cache GUIDs
-            // belong to a TTF/OTF/BDF source. Without this, cache cleanup would
-            // delete baked font variants as orphans.
+            // Cache-variant providers tell the pipeline which derived cache GUIDs
+            // belong to a TTF/OTF/BDF source, so cache cleanup keeps the baked
+            // variants.
             auto ttfProvider = [](const DekiEditor::AssetInfo& info, std::unordered_set<std::string>& valid)
             {
-                // Match the size range that BakeFont actually emits — see
-                // FontCompiler / RuntimeFontCache for the canonical size enumeration.
+                // The size range BakeFont emits (see FontCompiler and
+                // RuntimeFontCache).
                 for (int sz = 8; sz <= 128; ++sz)
                 {
                     std::string sizeKey = std::to_string(sz);
@@ -623,8 +601,8 @@ void RegisterFontSyncHandlers()
                 });
         });
 
-    // After all assets are imported, scan for existing baked font variants
-    // and register them as sub-assets (for warm cache / project re-open)
+    // After all assets are imported, register the baked font variants already
+    // on disk as sub-assets (for a reopened project with a warm cache).
     DekiEditor::AssetPipeline::OnImportComplete(
         [](DekiEditor::AssetPipeline* pipeline)
         {
@@ -670,7 +648,6 @@ void EnsureFontSizeBaked(const std::string& sourceGuid, int fontSize)
     std::string fontPath = (fs::path(pipeline->GetProjectPath()) / fontInfo->path).string();
     std::string dataPath = fontPath + ".data";
 
-    // Load or create .data file
     json j;
     if (fs::exists(dataPath))
     {
@@ -688,7 +665,6 @@ void EnsureFontSizeBaked(const std::string& sourceGuid, int fontSize)
         }
     }
 
-    // Ensure fontSettings structure
     if (!j.contains("fontSettings"))
     {
         j["fontSettings"] = json::object();
@@ -706,7 +682,6 @@ void EnsureFontSizeBaked(const std::string& sourceGuid, int fontSize)
         j["fontSettings"]["lastChar"] = 126;
     }
 
-    // Add size if not present
     auto& sizes = j["fontSettings"]["sizes"];
     bool found = false;
     for (const auto& s : sizes)
@@ -733,7 +708,7 @@ void EnsureFontSizeBaked(const std::string& sourceGuid, int fontSize)
         sizes = sizeVec;
     }
 
-    // Save .data file (only fontSettings - HandleFontSync manages variants)
+    // Only fontSettings changes here; HandleFontSync manages the variants.
     std::ofstream outFile(dataPath);
     if (outFile.is_open())
     {
@@ -741,18 +716,13 @@ void EnsureFontSizeBaked(const std::string& sourceGuid, int fontSize)
         outFile.close();
     }
 
-    // Trigger HandleFontSync via RefreshAsset
+    // Runs HandleFontSync.
     pipeline->RefreshAsset(fontInfo->path);
 
-    // Register what was just baked.
-    //
-    // The bake writes cache/{variantGuid} and cache/{atlasGuid}, but the only
-    // thing that hands those GUIDs to AssetManager is the OnImportComplete
-    // callback, which runs after a full ImportAllAssets — i.e. at project open.
-    // Baking a size mid-session therefore produced correct files that
-    // AssetManager could not resolve, and TextComponent logged "AssetRef 'font'
-    // failed to load" for a font sitting right there in the cache. Registering
-    // here closes that window; RegisterFontSubAssets is idempotent.
+    // Register what was just baked. Otherwise only the OnImportComplete
+    // callback, which runs at project open, would give these GUIDs to
+    // AssetManager, and a size baked mid-session could not be loaded.
+    // RegisterFontSubAssets can safely run again.
     RegisterFontSubAssets(sourceGuid, pipeline->GetProjectPath());
 
     DEKI_LOG_DEBUG("FontSync: EnsureFontSizeBaked completed for %s @ %d px", sourceGuid.c_str(), fontSize);

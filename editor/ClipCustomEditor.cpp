@@ -1,9 +1,5 @@
-/**
- * @file ClipCustomEditor.cpp
- * @brief Editor support for ClipComponent
- *
- * Provides display size info for gizmos/selection.
- */
+// Editor support for ClipComponent: display size for gizmos and selection,
+// and an Edit Rect button.
 
 #ifdef DEKI_EDITOR
 
@@ -25,9 +21,9 @@ class ClipCustomEditor : public CustomEditor
 public:
     const char* GetComponentName() const override { return "ClipComponent"; }
 
-    // Override the inspector to append an "Edit Rect" button below the standard
-    // properties. The button activates the scene-view Rect tool so the clip's
-    // width/height can be dragged directly on the canvas via the resize handles.
+    // Adds an "Edit Rect" button below the standard properties. It switches
+    // the scene view to the Rect tool, so the clip's width/height can be
+    // dragged on the canvas with the resize handles.
     bool WantsInspectorOverride(Deki::Component* comp) override { return comp != nullptr; }
 
     void OnInspectorGUI(Deki::Component* comp) override
@@ -40,18 +36,15 @@ public:
         ui.Spacing();
         if (ui.Button("Edit Rect"))
         {
-            // Drain happens in EditorApp; switches the scene view to the Rect
-            // resize tool. The clip is already the selected object (it's the
-            // one being inspected), so its resize handles appear immediately.
+            // EditorApp carries out the request. The clip is already selected
+            // (it is the one being inspected), so its handles show at once.
             EditorApplication::Get().RequestSceneTool(SceneEditTool::Rect);
         }
     }
 
-    // GetDisplaySize's contract is pixels (gizmo/selection consumers in
-    // SceneGizmos/SceneSelection treat the returned values as pixel
-    // dimensions). ClipComponent stores meters, so convert via the project
-    // pixels-per-meter. Mirrors what the renderer does with the camera PPM;
-    // diverges only if a camera overrides its own pixelsPerMeter.
+    // GetDisplaySize returns pixels (SceneGizmos and SceneSelection read them
+    // as pixels). ClipComponent stores meters, so convert with the project's
+    // pixels per meter.
     bool GetDisplaySize(Deki::Component* comp, float& outWidth, float& outHeight) override
     {
         auto* clipComp = static_cast<ClipComponent*>(comp);

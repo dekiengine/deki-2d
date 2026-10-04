@@ -1,9 +1,4 @@
-/**
- * @file ScrollElementCustomEditor.cpp
- * @brief Editor support for ScrollElement
- *
- * Provides display size info and rect tool resize support.
- */
+// Editor support for ScrollElement: its display size.
 
 #ifdef DEKI_EDITOR
 
@@ -46,10 +41,9 @@ public:
         return (localX >= -halfW && localX <= halfW && localY >= -halfH && localY <= halfH);
     }
 
-    // Resize gizmo not exposed: ScrollElement.width/height are now float
-    // (world meters), but GetResizeTarget hands the gizmo int32_t* fields.
-    // Until the editor API gains a float variant, the element is sized via
-    // the inspector instead.
+    // No resize gizmo: ScrollElement.width/height are floats (world meters),
+    // but GetResizeTarget hands the gizmo int32_t* fields. Until the editor
+    // API has a float variant, the element is sized in the Inspector.
 };
 
 REGISTER_EDITOR(ScrollElementCustomEditor)

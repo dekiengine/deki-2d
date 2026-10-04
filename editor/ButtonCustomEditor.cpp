@@ -1,10 +1,5 @@
-/**
- * @file ButtonCustomEditor.cpp
- * @brief Editor support for ButtonComponent
- *
- * Provides display size, hit testing, and resize support so the button's
- * hit area is visible and editable in the scene view.
- */
+// Editor support for ButtonComponent: display size and hit testing, so the
+// button's hit area shows in the scene view.
 
 #ifdef DEKI_EDITOR
 
@@ -25,7 +20,7 @@ class ButtonCustomEditor : public CustomEditor
 public:
     const char* GetComponentName() const override { return "ButtonComponent"; }
 
-    // collider width/height are world meters; gizmo consumers want pixels.
+    // The collider's width/height are world meters; the gizmos want pixels.
     bool GetDisplaySize(Deki::Component* comp, float& outWidth, float& outHeight) override
     {
         auto* button = static_cast<ButtonComponent*>(comp);
@@ -64,7 +59,7 @@ public:
         float halfW = width * 0.5f;
         float halfH = height * 0.5f;
 
-        // Expand hit area by padding
+        // The padding widens the hit area.
         float left = -halfW - collider->paddingLeft;
         float right = halfW + collider->paddingRight;
         float top = -halfH - collider->paddingTop;
@@ -73,10 +68,10 @@ public:
         return (localX >= left && localX <= right && localY >= top && localY <= bottom);
     }
 
-    // Resize gizmo not exposed: the button's hit area lives on DekiInput::InputCollider,
-    // whose width/height are float (world units), but GetResizeTarget hands the
-    // gizmo int32_t* fields. Until the editor API gains a float variant, the
-    // collider is sized via the inspector instead.
+    // No resize gizmo: the hit area is the InputCollider's float width/height
+    // (world units), but GetResizeTarget hands the gizmo int32_t* fields.
+    // Until the editor API has a float variant, the collider is sized in the
+    // inspector.
 };
 
 REGISTER_EDITOR(ButtonCustomEditor)

@@ -9,21 +9,19 @@ namespace Deki2D
 // fully opaque pixels in each row.
 //
 // The blitter copies that run straight and blends everything outside it per
-// pixel, so the run must not contain a soft or transparent pixel. Recording
-// first-to-last opaque instead is what made the notch of a heart and the gap
-// between two legs come out in whatever colour the transparent pixel carried.
+// pixel, so the run must not contain a soft or transparent pixel. It must not
+// be "first to last opaque pixel": then the notch of a heart or the gap
+// between two legs comes out in whatever colour the transparent pixel holds.
 //
 // A row with no opaque pixel gets an EMPTY span at the row end (start = end =
 // w), so the blitter's left region covers the row once and its right region is
-// empty. start=w, end=0 made both regions cover the whole row: every soft
-// pixel blended twice, and the right loop started at x=0 regardless of the
-// clip rect.
+// empty. It must not be start=w, end=0: then both regions cover the whole row,
+// every soft pixel blends twice, and the right loop ignores the clip rect.
 //
-// In its own header so the rule can be tested directly. It is the kind of
-// small index calculation whose failure is visible only as a wrong pixel in a
-// finished frame, and it has been wrong before.
+// In its own header so the rule can be tested directly: a mistake here shows
+// only as a wrong pixel in a finished frame.
 //
-// `pixel_data` is w*h*3 bytes, alpha at byte 2 of each pixel. `spans` receives
+// `pixelData` is w*h*3 bytes, alpha at byte 2 of each pixel. `spans` receives
 // 2 int16 per row: [start, end).
 inline void BuildOpaqueRowSpans(const uint8_t* pixelData, int32_t w, int32_t h, int16_t* spans)
 {

@@ -13,9 +13,6 @@
 namespace Deki2D
 {
 
-/**
- * @brief Text alignment options
- */
 enum class TextAlign : uint8_t
 {
     Left = 0,
@@ -23,30 +20,21 @@ enum class TextAlign : uint8_t
     Right = 2
 };
 
-/**
- * @brief Text vertical alignment options
- *
- * Top/Middle/Bottom (0-2) are the legacy modes. The additional anchors use
- * font-wide typographic metrics so text centers optically regardless of
- * whether the string contains ascenders or descenders.
- */
+/// Vertical text alignment. Top, Middle and Bottom use the font's full
+/// ascent and descent. The other anchors use font-wide typographic metrics,
+/// so text centres the same whether or not it has ascenders or descenders.
 enum class TextVerticalAlign : uint8_t
 {
     Top = 0,
-    Middle = 1,  // Legacy: centers on visual bounds of the whole font (ascent+descent)
+    Middle = 1,  // centres on the whole font's visual bounds (ascent+descent)
     Bottom = 2,
-    CapCenter = 3,   // Centers on cap-height — best for uppercase / mixed UI labels
-    XCenter = 4,     // Centers on x-height — best for lowercase-heavy body text
+    CapCenter = 3,   // centres on cap height; best for uppercase and mixed UI labels
+    XCenter = 4,     // centres on x-height; best for mostly lowercase body text
     TypoCenter = 5,  // Centers on typographic midline; same as Middle for single-line
     Baseline = 6     // Baseline sits on the container center line
 };
 
-/**
- * @brief Component for rendering text using bitmap fonts
- *
- * TextComponent renders text strings using BitmapFont for glyph data.
- * Supports color tinting, alignment, and word wrapping.
- */
+/// Draws text with a BitmapFont, with colour, alignment and word wrap.
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Draws text with a bitmap font, alignment and word wrap.")
 DEKI_FORMER_NAME("TextComponent")
@@ -60,171 +48,96 @@ public:
     // Editor-visible properties
     // ========================================================================
 
-    /** @brief Text to display (editor-editable) */
     DEKI_EXPORT
     DEKI_TOOLTIP("The string to draw. Newlines start a new line; the box below does not wrap it for you.")
     std::string text;
 
-    /** @brief Font asset reference (GUID stored in editor, auto-loaded) */
+    // The AssetRef stores the GUID and loads the font.
     DEKI_EXPORT
     DEKI_TOOLTIP("A bitmap font asset. Fonts are baked to a fixed size, so pick one close to the size you want rather "
                  "than scaling far from it.")
     Deki::AssetRef<BitmapFont> font;
 
 #ifdef DEKI_EDITOR
-    /** @brief Font size in pixels (maps to baked variant) */
+    /// Font size in pixels; picks the baked variant of that size.
     DEKI_EXPORT
     DEKI_TOOLTIP(
         "Size used for the editor preview only. What the device draws is the size the font asset was baked at.")
     DEKI_EDITOR_ONLY
     int32_t fontSize = 16;
 
-    /** @brief Enable live font preview (editor-only, not serialized) */
+    /// Live font preview. Not serialized.
     bool previewEnabled = false;
 
-    /** @brief Font size to preview (editor-only, not serialized) */
+    /// Font size to preview. Not serialized.
     int32_t previewSize = 16;
 
-    /** @brief True if fontSize is not available as a baked variant (editor-only) */
+    /// True when no baked variant of fontSize exists.
     bool fontSizeUnavailable = false;
 
-    /**
-     * @brief What the editor's font-resolve hook last synced font.guid from
-     * (editor-only, not serialized). The hook derives the baked variant's GUID
-     * from (font.source, fontSize) with a string build, a deterministic-GUID
-     * hash and an asset-pipeline path lookup; with these it does that once per
-     * change instead of once per frame per text.
-     */
+    /// What the editor's font-resolve hook last synced font.guid from. Not
+    /// serialized. Working out the baked variant's GUID from (font.source,
+    /// fontSize) takes a string build, a GUID hash and an asset-pipeline path
+    /// lookup; these let the hook do that once per change instead of every
+    /// frame for every text.
     std::string editorSyncedFontSource;
     int32_t editorSyncedFontSize = -1;
     std::string editorSyncedFontGuid;
 #endif
 
-    /**
-     * @brief Set the text to display
-     * @param text Text string (copied internally)
-     */
     void SetText(const char* text);
 
-    /**
-     * @brief Set the text to display
-     * @param text Text string
-     */
     void SetText(const std::string& text);
 
-    /**
-     * @brief Get the current text
-     * @return Current text string
-     */
     const std::string& GetText() const { return text; }
 
-    /**
-     * @brief Font resolve callback for editor integration
-     *
-     * Called during RenderContent to let external code (editor) handle font resolution
-     * (GUID sync, preview, baking). Return non-null to use that font directly,
-     * or nullptr to fall through to the runtime path (font.Get()).
-     */
+    /// Lets the editor resolve the font during RenderContent (GUID sync,
+    /// preview, baking). The callback returns the font to use, or nullptr to
+    /// fall back to font.Get().
     using FontResolveCallback = BitmapFont* (*)(TextComponent*);
     static void SetFontResolveCallback(FontResolveCallback cb);
 
-    /**
-     * @brief Set the font to use for rendering
-     * @param f Pointer to bitmap font (not owned by TextComponent)
-     */
+    /// The component does not own the font.
     void SetFont(BitmapFont* f);
 
-    /**
-     * @brief Get the current font
-     * @return Current font or nullptr
-     */
+    /// The font, or nullptr.
     BitmapFont* GetFont() { return font.Get(); }
     const BitmapFont* GetFont() const { return font.Get(); }
 
-    /**
-     * @brief Set text color
-     * @param color Text color
-     */
     void SetColor(const Deki::Color& color);
 
-    /**
-     * @brief Set text color (RGB convenience)
-     * @param r Red (0-255)
-     * @param g Green (0-255)
-     * @param b Blue (0-255)
-     */
     void SetColor(uint8_t r, uint8_t g, uint8_t b);
 
-    /**
-     * @brief Get text color
-     * @return Current text color
-     */
     const Deki::Color& GetColor() const { return color; }
 
-    /**
-     * @brief Set horizontal text alignment
-     * @param alignVal Alignment mode
-     */
     void SetAlign(TextAlign alignVal) { align = alignVal; }
 
-    /**
-     * @brief Get horizontal text alignment
-     * @return Current alignment
-     */
     TextAlign GetAlign() const { return align; }
 
-    /**
-     * @brief Set vertical text alignment
-     * @param alignVal Vertical alignment mode
-     */
     void SetVerticalAlign(TextVerticalAlign alignVal) { verticalAlign = alignVal; }
 
-    /**
-     * @brief Get vertical text alignment
-     * @return Current vertical alignment
-     */
     TextVerticalAlign GetVerticalAlign() const { return verticalAlign; }
 
-    /**
-     * @brief Set text box width
-     * @param w Width in meters
-     */
+    /// Text box width, in meters.
     void SetWidth(float w) { width = w; }
 
-    /**
-     * @brief Get text box width
-     * @return Width in meters
-     */
     float GetWidth() const { return width; }
 
-    /**
-     * @brief Set text box height
-     * @param h Height in meters
-     */
+    /// Text box height, in meters.
     void SetHeight(float h) { height = h; }
 
-    /**
-     * @brief Get text box height
-     * @return Height in meters
-     */
     float GetHeight() const { return height; }
 
-    /**
-     * @brief Get the measured width of the current text
-     * @return Width in pixels
-     */
+    /// Width of the text on one line, in pixels.
     int32_t GetTextWidth() const;
 
-    /**
-     * @brief Get the measured height of the current text
-     * @return Height in pixels (considering line wrapping)
-     */
+    /// Height of the text in pixels. Counts one line only; wrapping is not included.
     int32_t GetTextHeight() const;
 
-    // Clear cached font pointer to force reload (used when fonts are re-baked in editor)
+    // Drops the cached font so it loads again; the editor calls it after re-baking a font.
     void UnloadAssets() override;
 
-    // Unified rendering via QuadBlit
+    // Rendering through QuadBlit.
     // Culling extents (meters): the box the content is baked into.
     bool GetContentExtents(float& outWidth, float& outHeight) const override
     {
@@ -244,9 +157,6 @@ public:
     // Layout methods (shared between runtime and editor)
     // ========================================================================
 
-    /**
-     * @brief Glyph layout info for rendering
-     */
     struct GlyphLayout
     {
         const GlyphInfo* glyph;  // Glyph data from font
@@ -254,79 +164,64 @@ public:
         float worldY;            // Y position relative to component center
     };
 
-    /**
-     * @brief Calculate glyph positions for rendering
-     * @param fontPtr Font to use (can be different from component's font for editor)
-     * @param outGlyphs Output vector of glyph layouts
-     *
-     * Positions are in WORLD coordinates relative to component center.
-     * Editor multiplies by zoom, runtime uses directly.
-     */
+    /// Positions every glyph of the text, relative to the component's centre.
+    /// `fontPtr` may differ from the component's font (the editor passes its
+    /// own). The runtime uses the positions as they are; the editor scales
+    /// them by its zoom.
     void CalculateGlyphLayout(const BitmapFont* fontPtr, std::vector<GlyphLayout>& outGlyphs) const;
 
-    /**
-     * @brief Word-wrap text to fit within maxWidth (public for editor use)
-     * @param fontPtr Font to use for measurements
-     * @return Vector of wrapped lines
-     */
+    /// The text split into lines: at each newline, and word-wrapped to the
+    /// box width as measured with `fontPtr`. Public for the editor.
     std::vector<std::string> WrapTextWithFont(const BitmapFont* fontPtr) const;
 
     // ========================================================================
     // Editor-visible properties (public for reflection)
     // ========================================================================
 
-    /** @brief Text box width in meters */
     DEKI_EXPORT
     DEKI_TOOLTIP("Width of the text box in meters. Alignment is measured against this, so it matters even when the "
                  "text is shorter.")
     DEKI_UNIT(Distance)
     float width = 6.25f;
 
-    /** @brief Text box height in meters */
     DEKI_EXPORT
     DEKI_TOOLTIP("Height of the text box in meters. Vertical alignment is measured against this.")
     DEKI_UNIT(Distance)
     float height = 1.5f;
 
-    /** @brief Text color */
     DEKI_EXPORT
     DEKI_TOOLTIP("Colour of the glyphs.")
     Deki::Color color;
 
-    /**
-     * @brief Decoration color (outline / shadow).
-     * Only used when the bound font is v4+ and was baked with a decoration other
-     * than None. Ignored for plain alpha fonts.
-     */
+    /// Outline or shadow colour. Used only when the font (v4 or later) was
+    /// baked with a decoration.
     DEKI_EXPORT
     DEKI_TOOLTIP("Colour of the outline or shadow, when the font asset was baked with one. Ignored by a plain font.")
     Deki::Color decorationColor;
 
-    /** @brief Pixel scale for bitmap fonts (1x, 2x, 3x nearest-neighbor) */
+    /// Whole-number nearest-neighbour magnification (1x, 2x, 3x).
     DEKI_EXPORT
     DEKI_TOOLTIP("Whole-number magnification. 2 draws every glyph pixel as a 2x2 block, which keeps a pixel font crisp "
                  "instead of blurring it.")
     int32_t pixelScale = 1;
 
-    /** @brief Horizontal text alignment */
     DEKI_EXPORT
     DEKI_TOOLTIP("Horizontal placement inside the width above.")
     TextAlign align = TextAlign::Left;
 
-    /** @brief Vertical text alignment (new components default to cap-center for optical centering) */
+    /// Defaults to cap centre, which looks centred to the eye.
     DEKI_EXPORT
     DEKI_TOOLTIP("Vertical placement inside the height above. Cap-centre lines up the capital letters, which usually "
                  "looks centred to the eye; true centre includes descenders.")
     TextVerticalAlign verticalAlign = TextVerticalAlign::CapCenter;
 
-    // Invalidate the render cache (call when text/font/color/size changes)
+    // Call when the text, font, colour or size changes.
     void InvalidateRenderCache();
 
 private:
     static FontResolveCallback s_FontResolveCallback;
 
-    // Cached render buffer
-    // Owning, and it knows its own size.
+    // The baked text, RGB565A8. Owning, and it knows its own size.
     Deki::Buffer<uint8_t> m_CachedBuffer;
     std::string m_CachedText;
     int32_t m_CachedWidth = 0;
@@ -338,12 +233,10 @@ private:
     BitmapFont* m_CachedFont = nullptr;
     int32_t m_CachedPixelScale = 1;
 
-    // Cached vertical crop bounds (tight Y range of actual glyph content)
+    // The rows of the bake that hold glyph pixels.
     int32_t m_CropFirstRow = 0;
     int32_t m_CropHeight = 0;
     float m_CropPivotY = 0.5f;
 };
-
-// Generated property metadata (after class definition for offsetof)
 
 }  // namespace Deki2D

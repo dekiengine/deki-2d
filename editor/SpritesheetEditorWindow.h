@@ -12,22 +12,15 @@ using namespace Deki2D;
 namespace DekiEditor
 {
 
-/**
- * @brief UI mode for sprite slicing
- */
+/// How sprites are sliced.
 enum class SlicingUIMode
 {
-    Grid = 0,  // Uniform grid generation
-    Free = 1   // Free-form auto-cut detection
+    Grid = 0,  // a uniform grid
+    Free = 1   // free-form, found by auto-cut
 };
 
-/**
- * @brief Spritesheet slicing editor window
- *
- * Sets frame dimensions for spritesheet textures.
- * Saves frameWidth/frameHeight to .png.data file.
- * Does NOT handle animations - use Animation Editor for that.
- */
+/// Window that slices a spritesheet texture into frames and saves them to its
+/// .png.data file. Animations are made in the Animation Editor.
 class SpritesheetEditorWindow : public EditorWindow
 {
 public:
@@ -57,34 +50,34 @@ private:
     bool IsDirty() const;     // the frames differ from what is saved
 
     // File I/O
-    void LoadTextureData();     // Load pixel data from cache
-    void UploadTextureToGPU();  // Create OpenGL texture (called from OnGUI)
-    bool LoadSliceSettings();   // Load from .png.data
-    bool SaveSliceSettings();   // Save to .png.data
+    void LoadTextureData();     // pixel data from the cache
+    void UploadTextureToGPU();  // creates the OpenGL texture (called from OnGUI)
+    bool LoadSliceSettings();   // from .png.data
+    bool SaveSliceSettings();   // to .png.data
 
     // Frame generation
-    void GenerateGrid();         // Generate uniform grid frames
-    void RunAutoCut();           // Detect sprites from transparent regions
-    bool IsUniformGrid() const;  // Check if atlas frames form a uniform grid
+    void GenerateGrid();         // uniform grid frames
+    void RunAutoCut();           // finds sprites between transparent regions
+    bool IsUniformGrid() const;  // whether the atlas frames form a uniform grid
 
-    // Context paths from EditorApplication
+    // Paths from EditorApplication.
     std::string m_ProjectPath;
     std::string m_AssetsPath;
     std::string m_CachePath;
 
     // Source texture
-    std::string m_TexturePath;       // Full path to texture PNG
-    std::string m_TextureCachePath;  // Full path to cached DTEX
-    std::string m_TextureGuid;       // Texture GUID
+    std::string m_TexturePath;       // full path to the texture PNG
+    std::string m_TextureCachePath;  // full path to the cached DTEX
+    std::string m_TextureGuid;
     uint32_t m_TextureId = 0;
     int m_TextureWidth = 0;
     int m_TextureHeight = 0;
     uint8_t* m_TextureData = nullptr;
     bool m_NeedsTextureUpload = false;
 
-    // Slicing settings (all frames stored as atlas internally)
-    int m_FrameWidth = 0;   // For grid generation UI
-    int m_FrameHeight = 0;  // For grid generation UI
+    // Slicing settings. Every frame is stored as an atlas frame.
+    int m_FrameWidth = 0;   // for the grid generation UI
+    int m_FrameHeight = 0;  // for the grid generation UI
     std::vector<DekiEditor::AtlasFrame> m_AtlasFrames;
 
     // UI mode

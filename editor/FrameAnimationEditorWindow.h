@@ -12,12 +12,8 @@ using namespace Deki2D;
 namespace DekiEditor
 {
 
-/**
- * @brief Frame animation editor window
- *
- * Creates and edits .frameanim files by selecting frames from a spritesheet.
- * Frames are referenced by GUID (sub-assets of the parent spritesheet).
- */
+/// Window that creates and edits .frameanim files by picking frames from a
+/// spritesheet. Frames are referenced by GUID (sub-assets of the spritesheet).
 class FrameAnimationEditorWindow : public EditorWindow
 {
 public:
@@ -72,21 +68,21 @@ private:
         std::vector<TimelineFrame> frames;
     };
 
-    // Context paths from EditorApplication
+    // Paths from EditorApplication.
     std::string m_ProjectPath;
     std::string m_AssetsPath;
     std::string m_CachePath;
 
     // Animation file
-    std::string m_AnimationPath;  // Full path to .frameanim file
-    bool m_IsDirty = false;       // Has unsaved changes
+    std::string m_AnimationPath;  // full path to the .frameanim file
+    bool m_IsDirty = false;       // has unsaved changes
 
-    // Animation data (multiple sequences per file)
+    // Animation data (several sequences per file).
     std::string m_SpritesheetGuid;
     std::vector<AnimationSequence> m_Animations;
-    int m_CurrentAnimationIndex = 0;  // Currently selected animation for editing
+    int m_CurrentAnimationIndex = 0;  // the animation being edited
 
-    // Available frames from spritesheet
+    // The spritesheet's frames.
     struct AvailableFrame
     {
         std::string guid;
@@ -110,7 +106,7 @@ private:
 
     // Selection
     int m_SelectedTimelineIndex = -1;
-    int m_DefaultDuration = 100;  // Default duration for new frames
+    int m_DefaultDuration = 100;  // duration for new frames, in milliseconds
 
     // Status
     std::string m_StatusMessage;

@@ -32,10 +32,8 @@ void ButtonStyleComponent::Start()
         return;
     }
 
-    // Register for state changes
     btn->AddOnStateChangedCallback([this](ButtonState newState) { ApplyState(newState); });
 
-    // Apply initial state
     ApplyState(btn->GetState());
 }
 
@@ -71,7 +69,7 @@ void ButtonStyleComponent::ApplyState(ButtonState state)
                 case ButtonState::Disabled: target = &disabledSprite; break;
             }
 
-            // Fall back to normalSprite if the state's sprite has no GUID
+            // A state without its own sprite uses normalSprite
             if (target && !target->HasGuid())
             {
                 target = &normalSprite;

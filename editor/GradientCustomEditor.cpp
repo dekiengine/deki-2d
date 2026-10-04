@@ -1,9 +1,5 @@
-/**
- * @file GradientCustomEditor.cpp
- * @brief Editor support for GradientComponent
- *
- * Provides display size info for gizmos/selection.
- */
+// Editor support for GradientComponent: its display size, for gizmos and
+// selection.
 
 #ifdef DEKI_EDITOR
 

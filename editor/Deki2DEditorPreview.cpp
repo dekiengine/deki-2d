@@ -1,11 +1,6 @@
-/**
- * @file Deki2DEditorPreview.cpp
- * @brief Editor-only font and texture preview support for deki-2d.
- *
- * Moved out of the package entry point (Deki2DModule.cpp), which should not
- * carry windows.h, OpenGL, JSON and the asset pipeline. Everything here is
- * editor-only.
- */
+// Editor-only font and texture preview support for deki-2d. Kept out of the
+// package entry point (Deki2DModule.cpp), which should not pull in
+// windows.h, OpenGL, JSON and the asset pipeline.
 
 #ifdef DEKI_EDITOR
 
@@ -31,9 +26,9 @@
 
 // OpenGL for preview texture upload
 #ifdef _WIN32
-// NOMINMAX: windows.h defines min/max as macros, which breaks every std::min/std::max
-// call that follows it in the same translation unit. That is invisible under one-file-
-// per-TU compilation but bites as soon as this file shares a TU (unity build).
+// NOMINMAX: windows.h defines min/max as macros, which break every
+// std::min/std::max after it in the same translation unit. That matters once
+// this file shares a translation unit with others (unity build).
 #define NOMINMAX
 #include <windows.h>
 #endif
@@ -49,7 +44,7 @@ Deki2D::BitmapFont* EditorFontResolve(Deki2D::TextComponent* tc);
 }  // namespace Deki2D
 
 // =============================================================================
-// Preview Font Management (moved from Deki2D::TextComponent.cpp for clean separation)
+// Preview font management, kept here so TextComponent.cpp has no editor code.
 // =============================================================================
 
 namespace
@@ -175,9 +170,9 @@ static std::string ComputeBakedFontGuid(const std::string& sourceGuid, int fontS
 }
 
 // The baked variant's GUID for the component's (font.source, fontSize),
-// recomputed only when either changed. This runs for every Deki2D::TextComponent on
-// every frame in play and edit mode, and ComputeBakedFontGuid builds strings,
-// hashes a deterministic GUID and resolves an asset path each time.
+// worked out again only when either changes. This runs for every
+// TextComponent every frame, in play and edit mode, and ComputeBakedFontGuid
+// builds strings, hashes a GUID and resolves an asset path each time.
 static const std::string& SyncedBakedFontGuid(Deki2D::TextComponent* tc)
 {
     if (tc->editorSyncedFontSize != tc->fontSize || tc->editorSyncedFontSource != tc->font.source)
@@ -193,7 +188,7 @@ Deki2D::BitmapFont* Deki2D::EditorFontResolve(Deki2D::TextComponent* tc)
 {
     if (Deki::Engine::IsRuntimeMode())
     {
-        // Play mode: update GUID if fontSize changed (e.g., by RollerComponent)
+        // Play mode: follow fontSize changes (RollerComponent makes them, say).
         if (!tc->font.source.empty() && tc->fontSize > 0)
         {
             const std::string& expectedGuid = SyncedBakedFontGuid(tc);
@@ -207,13 +202,13 @@ Deki2D::BitmapFont* Deki2D::EditorFontResolve(Deki2D::TextComponent* tc)
         return nullptr;
     }
 
-    // Edit mode: preview takes priority
+    // Edit mode: the preview comes first.
     if (tc->previewEnabled && tc->previewSize > 0)
     {
         return GetEditorFontVariant(tc->font.source, tc->previewSize);
     }
 
-    // Edit mode: GUID sync with font baking
+    // Edit mode: sync the GUID to the baked variant.
     if (!tc->font.source.empty() && tc->fontSize > 0)
     {
         const std::string& expectedGuid = SyncedBakedFontGuid(tc);
@@ -233,7 +228,7 @@ Deki2D::BitmapFont* Deki2D::EditorFontResolve(Deki2D::TextComponent* tc)
 namespace Deki2D
 {
 
-// Forward declaration — defined in Font Preview Callbacks section below
+// Defined in the Font Preview Callbacks section below.
 void ClearPreviewTextureCache();
 
 void ClearPreviewFont()
@@ -331,7 +326,7 @@ Deki2D::BitmapFont* GetPreviewFont(const std::string& sourceGuid, int fontSize)
 
 namespace
 {
-// Cache for preview font GPU textures (keyed by "preview:sourceGuid:fontSize")
+// GPU textures of preview fonts, keyed by "preview:sourceGuid:fontSize".
 struct PreviewFontTexture
 {
     uint32_t textureId = 0;
@@ -340,12 +335,8 @@ struct PreviewFontTexture
 };
 static std::unordered_map<std::string, PreviewFontTexture> s_PreviewTextureCache;
 
-/**
- * @brief Read the variant GUID from the font's .data sidecar file
- * @param sourceGuid The source font GUID (TTF/OTF file)
- * @param fontSize The font size to look up
- * @return The variant GUID if found, empty string otherwise
- */
+// The GUID of the font's baked variant of this size, from the source font's
+// .data sidecar, or "" when there is none.
 static std::string GetVariantGuidFromData(const std::string& sourceGuid, int fontSize)
 {
     auto* pipeline = DekiEditor::AssetPipeline::Instance();
@@ -387,7 +378,7 @@ static std::string GetVariantGuidFromData(const std::string& sourceGuid, int fon
     }
     catch (...)
     {
-        // Parse error
+        // A file that does not parse has no variant.
     }
 
     return "";
@@ -430,8 +421,8 @@ static uint32_t UploadTextureToGPU(const uint8_t* rgba, uint32_t width, uint32_t
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    // Unpack state is global; other GL users (e.g. ImGui glyph uploads) can leave
-    // a row stride behind, which would shear/overread this tightly packed upload.
+    // Unpack state is global, and other GL users (ImGui glyph uploads, say) can
+    // leave a row stride set that would shear or overread this tight upload.
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
@@ -446,7 +437,7 @@ namespace Deki2D
 void InitializeFontPreviewCallbacks()
 {
     DekiEditor::EditorAssets::Get()->SetFontBakingCallbacks(
-        // Font callback - returns Deki2D::BitmapFont for text metrics
+        // Returns the BitmapFont, for text metrics.
         [](const std::string& sourceGuid, int fontSize) -> Deki2D::BitmapFont*
         {
             if (sourceGuid.empty() || fontSize <= 0)
@@ -454,7 +445,7 @@ void InitializeFontPreviewCallbacks()
                 return nullptr;
             }
 
-            // 1. Check if already baked to disk - use actual variant GUID from .data file
+            // 1. Already baked to disk: use the variant GUID from the .data file.
             std::string variantGuid = GetVariantGuidFromData(sourceGuid, fontSize);
             if (!variantGuid.empty())
             {
@@ -465,24 +456,23 @@ void InitializeFontPreviewCallbacks()
                 }
             }
 
-            // 2. Check if preview font already exists AND has GPU texture
-            // Use "preview:" prefix to keep separate from baked font GUIDs
+            // 2. A preview font that already has its GPU texture. The
+            // "preview:" prefix keeps the key apart from baked font GUIDs.
             std::string cacheKey = "preview:" + sourceGuid + ":" + std::to_string(fontSize);
             Deki2D::BitmapFont* preview = Deki2D::GetPreviewFont(sourceGuid, fontSize);
             if (preview)
             {
-                // Make sure GPU texture exists too
                 auto texIt = s_PreviewTextureCache.find(cacheKey);
                 if (texIt != s_PreviewTextureCache.end() && texIt->second.textureId != 0)
                 {
                     return preview;
                 }
-                // Font exists but no texture - need to recompile to get texture
+                // The font is there but its texture is not: compile again for the texture.
                 DEKI_LOG_DEBUG("FontPreview: Preview font exists but no GPU texture, recompiling %s @ %d px",
                                sourceGuid.c_str(), fontSize);
             }
 
-            // 3. Compile font on-demand
+            // 3. Compile the font now.
             std::string ttfPath = ResolveTTFPath(sourceGuid);
             if (ttfPath.empty() || !std::filesystem::exists(ttfPath))
             {
@@ -503,7 +493,7 @@ void InitializeFontPreviewCallbacks()
                 return nullptr;
             }
 
-            // 4. Create preview font in engine cache
+            // 4. Put the preview font in the engine's cache.
             if (!Deki2D::SetPreviewFontFromData(sourceGuid, fontSize, result.atlasRGBA.data(), result.atlasWidth,
                                                 result.atlasHeight, result.glyphs.data(), result.glyphs.size(),
                                                 result.firstChar, result.lastChar, result.lineHeight, result.baseline))
@@ -512,10 +502,7 @@ void InitializeFontPreviewCallbacks()
                 return nullptr;
             }
 
-            // 5. Upload atlas to GPU for editor rendering
-            // (cacheKey already defined above)
-
-            // Delete old texture if exists
+            // 5. Upload the atlas to the GPU for the editor, replacing any old texture.
             auto it = s_PreviewTextureCache.find(cacheKey);
             if (it != s_PreviewTextureCache.end() && it->second.textureId != 0)
             {
@@ -536,11 +523,10 @@ void InitializeFontPreviewCallbacks()
             DEKI_LOG_EDITOR("FontPreview: compiled %s @ %d px (atlas %ux%u)", sourceGuid.c_str(), fontSize,
                             result.atlasWidth, result.atlasHeight);
 
-            // Return the font we just created
             return Deki2D::GetPreviewFont(sourceGuid, fontSize);
         },
 
-        // Atlas callback - returns GPU texture for rendering
+        // Returns the atlas's GPU texture, for drawing.
         [](const std::string& sourceGuid, int fontSize, uint32_t* outW, uint32_t* outH) -> uint32_t
         {
             if (sourceGuid.empty() || fontSize <= 0)
@@ -556,7 +542,7 @@ void InitializeFontPreviewCallbacks()
                 return 0;
             }
 
-            // 1. Check if already baked to disk - use actual variant GUID from .data file
+            // 1. Already baked to disk: use the variant GUID from the .data file.
             std::string variantGuid = GetVariantGuidFromData(sourceGuid, fontSize);
             if (!variantGuid.empty())
             {
@@ -567,8 +553,8 @@ void InitializeFontPreviewCallbacks()
                 }
             }
 
-            // 2. Check preview texture cache
-            // Use "preview:" prefix to keep separate from baked font GUIDs
+            // 2. The preview texture cache. The "preview:" prefix keeps the
+            // key apart from baked font GUIDs.
             std::string cacheKey = "preview:" + sourceGuid + ":" + std::to_string(fontSize);
             auto it = s_PreviewTextureCache.find(cacheKey);
             if (it != s_PreviewTextureCache.end() && it->second.textureId != 0)
@@ -584,7 +570,7 @@ void InitializeFontPreviewCallbacks()
                 return it->second.textureId;
             }
 
-            // 3. Not found - compile on demand
+            // 3. Not found: compile now.
             std::string ttfPath = ResolveTTFPath(sourceGuid);
             if (ttfPath.empty() || !std::filesystem::exists(ttfPath))
             {
@@ -621,7 +607,7 @@ void InitializeFontPreviewCallbacks()
                 return 0;
             }
 
-            // Create preview font in engine cache
+            // Put the preview font in the engine's cache.
             if (!Deki2D::SetPreviewFontFromData(sourceGuid, fontSize, result.atlasRGBA.data(), result.atlasWidth,
                                                 result.atlasHeight, result.glyphs.data(), result.glyphs.size(),
                                                 result.firstChar, result.lastChar, result.lineHeight, result.baseline))
@@ -638,7 +624,6 @@ void InitializeFontPreviewCallbacks()
                 return 0;
             }
 
-            // Upload atlas to GPU
             uint32_t texId = UploadTextureToGPU(result.atlasRGBA.data(), result.atlasWidth, result.atlasHeight);
             if (texId != 0)
             {

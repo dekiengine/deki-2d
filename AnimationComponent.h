@@ -12,38 +12,35 @@
 namespace Deki2D
 {
 
-/**
- * @brief Component for handling sprite frame animations
- *
- * Uses .frameanim files which reference spritesheet frames by GUID.
- */
+/// Plays sprite frame animations from a .frameanim asset, which names
+/// spritesheet frames by GUID.
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Plays a frame animation asset on the object's sprite.")
 DEKI_FORMER_NAME("AnimationComponent")
 class AnimationComponent : public Deki::Component
 {
 public:
-    SpriteComponent* spriteComponent;  // Associated sprite component
+    SpriteComponent* spriteComponent;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("A frame animation asset, which lists the frames and how long each is held.")
-    Deki::AssetRef<FrameAnimationData> animation;  // Frame animation asset reference (.frameanim)
+    Deki::AssetRef<FrameAnimationData> animation;  // .frameanim asset
 
     FrameAnimationData* animationData;  // Loaded frame animation data
-    bool ownsAnimationData;             // True if we own animationData
+    bool ownsAnimationData;             // True if this component deletes animationData
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Which named sequence is playing, by index. Sequences are the separate animations inside one asset, "
                  "such as idle and walk.")
-    int32_t currentSequence;  // Current animation sequence index
+    int32_t currentSequence;
     DEKI_EXPORT
     DEKI_TOOLTIP("Frame within the current sequence. Set it to scrub; it is also useful to read while debugging.")
-    int32_t currentFrame;     // Current frame index within sequence
-    uint32_t frameStartTime;  // When current frame started (in ms)
+    int32_t currentFrame;     // Index within the current sequence
+    uint32_t frameStartTime;  // When the current frame started, in ms
 
-    // Frame GUID -> SpriteFrame resolved once per (sprite, animation data)
-    // pair; each frame change used to string-compare the GUID against every
-    // frame of the sheet. Rebuilt lazily when either pointer changes.
+    // Frame GUID -> SpriteFrame, resolved once per (sprite, animation data)
+    // pair so a frame change does not search the sheet by string. Rebuilt
+    // lazily when either pointer changes.
     std::vector<std::vector<const SpriteFrame*>> resolvedFrames;
     const Sprite* resolvedSprite = nullptr;
     const FrameAnimationData* resolvedData = nullptr;
@@ -55,16 +52,16 @@ public:
     DEKI_EXPORT
     DEKI_TOOLTIP(
         "Whether the animation is advancing. Clearing this freezes it on the current frame rather than resetting it.")
-    bool isPlaying;  // Whether animation is currently playing
+    bool isPlaying;
     DEKI_EXPORT
     DEKI_TOOLTIP("Set when a non-looping sequence reaches its last frame. Read it to know when to move on.")
-    bool hasFinished;  // Whether non-looping animation has finished
+    bool hasFinished;
     DEKI_EXPORT
     DEKI_TOOLTIP(
         "Play the current sequence once even if the asset marks it as looping. Cleared when the sequence changes.")
-    bool playOnceOverride;  // Override loop setting to play once
+    bool playOnceOverride;
 
-    std::function<void()> completionCallback;  // Callback to execute when animation completes
+    std::function<void()> completionCallback;  // Runs once when a non-looping play finishes
 
     AnimationComponent(SpriteComponent* spriteComp = nullptr);
     virtual ~AnimationComponent();
@@ -73,116 +70,67 @@ public:
     void Awake() override;
     void Update() override;
 
-    /**
-     * @brief Setup the animation component after spriteComponent is linked
-     */
+    /// Takes the animation from the asset reference, finds the sprite
+    /// component on the same object if none is set, and starts the first
+    /// sequence.
     void Setup();
 
-    /**
-     * @brief Play the current animation
-     * @param restartIfPlaying Whether to restart if already playing
-     */
+    /// Plays the current sequence from its first frame. When it is already
+    /// playing, restarts it only if `restartIfPlaying` is true.
     void Play(bool restartIfPlaying = false);
 
-    /**
-     * @brief Play a specific animation by name
-     * @param name Animation sequence name (e.g., "idle", "walk")
-     * @param restartIfPlaying Whether to restart if same animation is already playing
-     * @return true if animation was found and started
-     */
+    /// Plays the sequence called `name` (such as "idle" or "walk"). Returns
+    /// false when there is no such sequence.
     bool PlayAnimation(const char* name, bool restartIfPlaying = false);
 
-    /**
-     * @brief Play the current animation once (ignoring loop setting)
-     */
+    /// Plays the current sequence once, even if it is set to loop.
     void PlayOnce();
 
-    /**
-     * @brief Play a specific animation once by name
-     * @param name Animation sequence name
-     * @return true if animation was found and started
-     */
+    /// Plays the sequence called `name` once. Returns false when there is no
+    /// such sequence.
     bool PlayAnimationOnce(const char* name);
 
-    /**
-     * @brief Set current animation without playing
-     * @param name Animation sequence name
-     * @return true if animation was found
-     */
+    /// Selects the sequence called `name` and shows its first frame without
+    /// playing it. Returns false when there is no such sequence.
     bool SetAnimation(const char* name);
 
-    /**
-     * @brief Get current animation sequence name
-     * @return Animation name or empty string if none
-     */
+    /// The current sequence's name, or an empty string when there is none.
     const char* GetCurrentAnimationName() const;
 
-    /**
-     * @brief Get number of animation sequences
-     */
     int GetAnimationCount() const;
 
-    /**
-     * @brief Get animation sequence name by index
-     */
+    /// The name of sequence `index`, or an empty string when out of range.
     const char* GetAnimationName(int index) const;
 
-    /**
-     * @brief Stop the animation
-     */
+    /// Stops playing and shows the first frame.
     void Stop();
 
-    /**
-     * @brief Pause the animation
-     */
+    /// Stops playing and keeps the current frame.
     void Pause();
 
-    /**
-     * @brief Resume the animation
-     */
+    /// Continues from the current frame.
     void Resume();
 
-    /**
-     * @brief Check if animation has finished (for non-looping animations)
-     * @return true if animation has completed
-     */
+    /// True once a non-looping sequence has reached its last frame.
     bool HasFinished() const { return hasFinished; }
 
-    /**
-     * @brief Set callback to execute when animation completes
-     * @param callback Function to call when animation finishes
-     */
+    /// Sets a function to run once when a non-looping sequence finishes.
     void SetCompletionCallback(std::function<void()> callback) { completionCallback = callback; }
 
 private:
-    /**
-     * @brief Get current animation sequence (or nullptr if invalid)
-     */
+    /// The current sequence, or nullptr when the index is invalid.
     const FrameAnimSequence* GetCurrentSequence() const;
 
-    /**
-     * @brief Find animation sequence index by name
-     * @return Index or -1 if not found
-     */
+    /// The index of the sequence called `name`, or -1.
     int FindAnimationIndex(const char* name) const;
 
-    /**
-     * @brief Update animation timing and advance frames
-     * @param currentTime Current time in milliseconds
-     */
+    /// Advances frames by the time passed. `currentTime` is in milliseconds.
     void UpdateAnimation(uint32_t currentTime);
 
-    /**
-     * @brief Apply current frame to the sprite component
-     */
+    /// Shows the current frame on the sprite component.
     void ApplyCurrentFrame();
 
-    /**
-     * @brief Initialize to first frame
-     */
     void InitializeToFirstFrame();
 };
-
-// Generated property metadata (after class definition for offsetof)
 
 }  // namespace Deki2D

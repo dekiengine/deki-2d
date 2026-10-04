@@ -19,9 +19,9 @@
 namespace Deki2D
 {
 
-// Square-kernel morphological dilation: dst = max over (2N+1)×(2N+1) neighborhood.
-// src is (srcW × srcH). dst must be allocated as (srcW + 2*N) × (srcH + 2*N). The
-// source glyph sits centered inside the dst canvas at offset (N, N).
+// Dilation with a square kernel: each dst pixel is the max over a
+// (2N+1)x(2N+1) neighbourhood. src is srcW x srcH; dst must be
+// (srcW + 2*N) x (srcH + 2*N), with the source glyph at offset (N, N).
 static void DilateAlphaSquare(const uint8_t* src, int srcW, int srcH, uint8_t* dst, int n)
 {
     const int dstW = srcW + 2 * n;
@@ -30,8 +30,7 @@ static void DilateAlphaSquare(const uint8_t* src, int srcW, int srcH, uint8_t* d
     {
         for (int dx = 0; dx < dstW; ++dx)
         {
-            // Each dst pixel at (dx, dy) corresponds to source position (dx - N, dy - N).
-            // Its dilated value is the max over a ±N square neighborhood in source space.
+            // dst (dx, dy) is source (dx - N, dy - N).
             uint8_t maxA = 0;
             for (int ky = -n; ky <= n; ++ky)
             {
@@ -59,8 +58,8 @@ static void DilateAlphaSquare(const uint8_t* src, int srcW, int srcH, uint8_t* d
     }
 }
 
-// Copy src into dst (which is zero-cleared) at pixel offset (ox, oy). Used to place
-// fill-on-expanded-canvas and shadow-on-expanded-canvas in the same coordinate frame.
+// Copies src into the zero-cleared dst at offset (ox, oy). Puts the fill and
+// the shadow on the same expanded canvas.
 static void CopyAlphaAt(const uint8_t* src, int srcW, int srcH, uint8_t* dst, int dstW, int dstH, int ox, int oy)
 {
     for (int y = 0; y < srcH; ++y)
@@ -82,8 +81,8 @@ static void CopyAlphaAt(const uint8_t* src, int srcW, int srcH, uint8_t* dst, in
     }
 }
 
-// Classify a (decoration_alpha, fill_alpha) pair into a 4-bit palette index 0..15.
-// Callers pack the index into the low nibble of an atlas byte; high nibble stays 0.
+// Maps a (decoration alpha, fill alpha) pair to a 4-bit palette index 0..15.
+// Callers put it in the low nibble of an atlas byte; the high nibble stays 0.
 static uint8_t ClassifyToPaletteIndex(uint8_t decoA, uint8_t fillA)
 {
     if (fillA > 0)
@@ -117,9 +116,9 @@ static uint8_t ClassifyToPaletteIndex(uint8_t decoA, uint8_t fillA)
     return 0;
 }
 
-// Box-filter downsample an 8-bit grayscale bitmap by factor N in each axis.
-// Source dimensions need not be divisible by N — fractional edge cells are
-// averaged over the samples that actually exist (dst dimensions = ceil(src/N)).
+// Box-filter downsample of an 8-bit grayscale bitmap by N on each axis.
+// The source size need not divide by N (dst size = ceil(src/N)); see below
+// for the edge cells.
 static void BoxDownsample(const uint8_t* src, int srcW, int srcH, uint8_t* dst, int dstW, int dstH, int n)
 {
     const int denom = n * n;
@@ -150,8 +149,8 @@ static void BoxDownsample(const uint8_t* src, int srcW, int srcH, uint8_t* dst, 
                     ++covered;
                 }
             }
-            // Normalize by the full N×N window so edge cells fade out naturally
-            // (missing samples count as 0 — that's what a transparent bg is).
+            // Divide by the full NxN window, so edge cells fade out: missing
+            // samples count as 0, which is what a transparent background is.
             (void)covered;
             dst[dy * dstW + dx] = static_cast<uint8_t>((sum + half) / denom);
         }
@@ -166,7 +165,6 @@ bool FontCompiler::CompileTrueTypeFont(const std::string& ttfPath, const Compile
         return false;
     }
 
-    // Initialize FreeType
     FT_Library ft;
     if (FT_Init_FreeType(&ft))
     {
@@ -180,15 +178,14 @@ bool FontCompiler::CompileTrueTypeFont(const std::string& ttfPath, const Compile
         return false;
     }
 
-    // Read font-wide metrics at TARGET size (baseline / lineHeight are stored
-    // in target-pixel units regardless of oversample factor).
+    // Font-wide metrics at the TARGET size: baseline and lineHeight are stored
+    // in target pixels whatever the oversampling.
     FT_Set_Pixel_Sizes(face, 0, options.fontSize);
     int ascender = static_cast<int>(face->size->metrics.ascender >> 6);     // Max height above baseline
     int descender = -static_cast<int>(face->size->metrics.descender >> 6);  // Max depth below baseline (make positive)
     int cellHeight = ascender + descender;                                  // Uniform height for all glyphs
     int baseline = ascender;                                                // Baseline position from top of cell
 
-    // Translate hinting mode into FreeType load flags
     FT_Int32 loadFlags = FT_LOAD_RENDER;
     switch (options.hinting)
     {
@@ -199,7 +196,7 @@ bool FontCompiler::CompileTrueTypeFont(const std::string& ttfPath, const Compile
     }
     const bool isMono = (options.hinting == HintingMode::Mono);
 
-    // Oversample factor: Mono is 1-bit, supersampling doesn't help there.
+    // Mono is 1-bit, so oversampling does not help it.
     int oversampleN = options.oversample;
     if (oversampleN < 1)
     {
@@ -214,9 +211,8 @@ bool FontCompiler::CompileTrueTypeFont(const std::string& ttfPath, const Compile
         oversampleN = 1;
     }
 
-    // Decoration (None / Outline / Shadow) parameters — determine the per-glyph
-    // canvas padding up-front so we can classify pixels into palette indices
-    // during the per-glyph loop.
+    // Decoration settings. The per-glyph canvas padding is worked out first,
+    // so the glyph loop can map pixels to palette indices.
     DecorationMode decoration = options.decoration;
     int outlineSize = options.outlineSize;
     int shadowDx = options.shadowDx;
@@ -245,7 +241,7 @@ bool FontCompiler::CompileTrueTypeFont(const std::string& ttfPath, const Compile
     {
         shadowDy = 3;
     }
-    // Shadow at (0, 0) would be identical to fill — treat as no-op.
+    // A shadow at (0, 0) would match the fill, so it is no decoration.
     if (decoration == DecorationMode::Shadow && shadowDx == 0 && shadowDy == 0)
     {
         decoration = DecorationMode::None;
@@ -265,15 +261,15 @@ bool FontCompiler::CompileTrueTypeFont(const std::string& ttfPath, const Compile
     }
     const bool decorate = (decoration != DecorationMode::None);
 
-    // Switch to oversampled rasterization size for glyph loading. Cap/x-height
-    // probe runs on this same grid so bearings / metrics stay consistent.
+    // Glyphs load at the oversampled size. The cap/x-height probe below uses
+    // the same size, so its metrics match the glyphs'.
     if (oversampleN > 1)
     {
         FT_Set_Pixel_Sizes(face, 0, options.fontSize * oversampleN);
     }
 
-    // Capture cap-height / x-height by probing 'H' and 'x' once up-front.
-    // bitmap_top is in oversampled pixels, divide to get target pixels.
+    // Cap height and x-height come from 'H' and 'x'. bitmap_top is in
+    // oversampled pixels; dividing gives target pixels.
     int capHeight = 0;
     int xHeight = 0;
     if (FT_Load_Char(face, 'H', loadFlags) == 0)
@@ -290,7 +286,6 @@ bool FontCompiler::CompileTrueTypeFont(const std::string& ttfPath, const Compile
     const int charCount = lastChar - firstChar + 1;
     const int padding = options.padding;
 
-    // Gather glyph data
     struct GlyphData
     {
         int width, height;
@@ -318,26 +313,26 @@ bool FontCompiler::CompileTrueTypeFont(const std::string& ttfPath, const Compile
 
         FT_GlyphSlot g = face->glyph;
 
-        // Oversampled source dimensions (equal to target when oversampleN == 1)
+        // Oversampled size (the target size when oversampleN == 1).
         const int srcW = static_cast<int>(g->bitmap.width);
         const int srcH = static_cast<int>(g->bitmap.rows);
 
-        // Target-size dimensions / bearings (ceil so we don't drop edge pixels)
+        // Target size and bearings, rounded up so no edge pixel is lost.
         const int dstW = (srcW + oversampleN - 1) / oversampleN;
         const int dstH = (srcH + oversampleN - 1) / oversampleN;
         glyphData[i].width = dstW;
         glyphData[i].height = dstH;
         glyphData[i].bearingX = g->bitmap_left / oversampleN;
         glyphData[i].bearingY = g->bitmap_top / oversampleN;
-        // Advance is in 26.6 fixed-point at OVERSAMPLED scale. Convert to
-        // target-pixel integer with round-to-nearest in a single division.
+        // Advance is 26.6 fixed point at the OVERSAMPLED scale. One division
+        // turns it into whole target pixels, rounded to nearest.
         glyphData[i].advance = static_cast<int>((g->advance.x + 32 * oversampleN) / (64 * oversampleN));
 
         if (g->bitmap.buffer && srcW > 0 && srcH > 0)
         {
             if (isMono)
             {
-                // Mono forces oversampleN == 1. 1-bit bitmap, MSB-first, row-padded.
+                // Mono, so oversampleN == 1. 1-bit bitmap, MSB first, rows padded.
                 glyphData[i].bitmap.resize(dstW * dstH);
                 for (int row = 0; row < srcH; row++)
                 {
@@ -353,7 +348,7 @@ bool FontCompiler::CompileTrueTypeFont(const std::string& ttfPath, const Compile
             }
             else if (oversampleN == 1)
             {
-                // No oversampling — straight copy, but honor FreeType's row pitch.
+                // No oversampling: a straight copy, keeping FreeType's row pitch.
                 glyphData[i].bitmap.resize(dstW * dstH);
                 for (int row = 0; row < srcH; row++)
                 {
@@ -362,8 +357,8 @@ bool FontCompiler::CompileTrueTypeFont(const std::string& ttfPath, const Compile
             }
             else
             {
-                // Flatten the oversampled FreeType bitmap (respecting pitch) into
-                // a contiguous buffer, then box-filter down to target resolution.
+                // Copy the oversampled bitmap (minding its pitch) into a
+                // contiguous buffer, then box-filter it down to the target size.
                 std::vector<uint8_t> src(srcW * srcH);
                 for (int row = 0; row < srcH; row++)
                 {
@@ -374,10 +369,10 @@ bool FontCompiler::CompileTrueTypeFont(const std::string& ttfPath, const Compile
             }
         }
 
-        // Apply decoration: expand canvas, compute secondary shape, classify each
-        // pixel into a 4-bit palette index packed in the low nibble. Atlas stays
-        // 8 bits/pixel on disk; the font header's m_DecorationMode tells the runtime
-        // to interpret these bytes as palette indices instead of alpha.
+        // Decoration: grow the canvas, make the outline or shadow shape, and
+        // map each pixel to a 4-bit palette index in the low nibble. The atlas
+        // is still 8 bits per pixel on disk; the font header's m_DecorationMode
+        // tells the runtime to read the bytes as palette indices, not alpha.
         if (decorate && !glyphData[i].bitmap.empty())
         {
             const int fillW = glyphData[i].width;
@@ -419,7 +414,7 @@ bool FontCompiler::CompileTrueTypeFont(const std::string& ttfPath, const Compile
         }
     }
 
-    // Sort glyphs by height (tallest first) for tighter shelf packing
+    // Tallest first packs the shelves tighter.
     std::vector<int> sortedIndices(charCount);
     for (int i = 0; i < charCount; i++)
     {
@@ -428,7 +423,7 @@ bool FontCompiler::CompileTrueTypeFont(const std::string& ttfPath, const Compile
     std::sort(sortedIndices.begin(), sortedIndices.end(),
               [&](int a, int b) { return glyphData[a].height > glyphData[b].height; });
 
-    // Try multiple atlas widths and pick the one that minimizes total area
+    // Try several atlas widths and keep the one with the smallest area.
     int bestWidth = 64;
     int bestArea = INT_MAX;
     for (int tryWidth = 64; tryWidth <= options.maxAtlasSize; tryWidth *= 2)
@@ -460,7 +455,6 @@ bool FontCompiler::CompileTrueTypeFont(const std::string& ttfPath, const Compile
     }
     int atlasWidth = bestWidth;
 
-    // Pack glyphs in height-sorted order for tight shelf packing
     outResult.glyphs.resize(charCount);
     int cursorX = padding;
     int cursorY = padding;
@@ -483,7 +477,7 @@ bool FontCompiler::CompileTrueTypeFont(const std::string& ttfPath, const Compile
         outResult.glyphs[idx].width = static_cast<uint8_t>(glyphData[idx].width);
         outResult.glyphs[idx].height = static_cast<uint8_t>(glyphData[idx].height);
         outResult.glyphs[idx].offsetX = static_cast<int8_t>(glyphData[idx].bearingX);
-        // CSS model: offsetY = -bearingY (negative = glyph extends above baseline)
+        // offsetY = -bearingY: negative means the glyph rises above the baseline.
         outResult.glyphs[idx].offsetY = static_cast<int8_t>(-glyphData[idx].bearingY);
         outResult.glyphs[idx].advance = static_cast<uint8_t>(glyphData[idx].advance);
 
@@ -494,10 +488,9 @@ bool FontCompiler::CompileTrueTypeFont(const std::string& ttfPath, const Compile
         }
     }
 
-    // Final atlas height — exact fit, no power-of-2 rounding
+    // Exact fit, not rounded to a power of 2.
     int atlasHeight = cursorY + rowHeight + padding;
 
-    // Create atlas bitmap (RGBA)
     outResult.atlasRGBA.resize(atlasWidth * atlasHeight * 4, 0);
 
     for (int i = 0; i < charCount; i++)
@@ -528,14 +521,13 @@ bool FontCompiler::CompileTrueTypeFont(const std::string& ttfPath, const Compile
     FT_Done_Face(face);
     FT_Done_FreeType(ft);
 
-    // Set result metadata
     outResult.atlasWidth = static_cast<uint32_t>(atlasWidth);
     outResult.atlasHeight = static_cast<uint32_t>(atlasHeight);
     outResult.firstChar = static_cast<uint8_t>(firstChar);
     outResult.lastChar = static_cast<uint8_t>(lastChar);
     outResult.lineHeight = static_cast<uint8_t>(cellHeight);
     outResult.baseline = static_cast<uint8_t>(baseline);
-    // Fall back to reasonable ratios if 'H' / 'x' weren't present
+    // Without 'H' or 'x', use typical ratios.
     if (capHeight <= 0)
     {
         capHeight = (ascender * 7) / 10;
@@ -607,7 +599,7 @@ struct BdfGlyph
     int dwidthX = 0;
     int bbxW = 0, bbxH = 0;
     int bbxOffX = 0, bbxOffY = 0;
-    std::vector<uint8_t> bitmap;  // 1 byte per pixel (0 or 255)
+    std::vector<uint8_t> bitmap;  // one byte per pixel, 0 or 255
 };
 
 struct BdfFontData
@@ -650,7 +642,6 @@ static bool ParseBdfFile(const std::string& path, BdfFontData& outFont)
 
     while (std::getline(file, line))
     {
-        // Strip trailing \r
         if (!line.empty() && line.back() == '\r')
         {
             line.pop_back();
@@ -672,7 +663,7 @@ static bool ParseBdfFile(const std::string& path, BdfFontData& outFont)
                 continue;
             }
 
-            // Decode hex row into bitmap pixels
+            // One hex row of the bitmap.
             int bytesPerRow = (currentGlyph.bbxW + 7) / 8;
             for (int byteIdx = 0; byteIdx < bytesPerRow && (byteIdx * 2 + 1) < (int)line.size(); byteIdx++)
             {
@@ -695,7 +686,6 @@ static bool ParseBdfFile(const std::string& path, BdfFontData& outFont)
             continue;
         }
 
-        // Parse keywords
         std::istringstream iss(line);
         std::string keyword;
         iss >> keyword;
@@ -773,21 +763,20 @@ bool FontCompiler::CompileBdfFont(const std::string& bdfPath, const BdfCompileOp
         return false;
     }
 
-    // Parse BDF file
     BdfFontData bdfData;
     if (!ParseBdfFile(bdfPath, bdfData))
     {
         return false;
     }
 
-    // Build lookup: codepoint -> index in bdfData.glyphs
+    // Codepoint to index in bdfData.glyphs.
     std::unordered_map<int, int> codepointToGlyph;
     for (int i = 0; i < (int)bdfData.glyphs.size(); i++)
     {
         codepointToGlyph[bdfData.glyphs[i].encoding] = i;
     }
 
-    // Build sorted set of selected codepoints that exist in the BDF
+    // The selected codepoints, sorted.
     std::set<int> selectedSet(options.selectedChars.begin(), options.selectedChars.end());
     if (selectedSet.empty() || *selectedSet.begin() < 0)
     {
@@ -798,8 +787,8 @@ bool FontCompiler::CompileBdfFont(const std::string& bdfPath, const BdfCompileOp
     int lastChar = *selectedSet.rbegin();
     int padding = options.padding;
 
-    // Decoration (None / Outline / Shadow) parameters — same convention as
-    // the TTF path: clamp + early-out on no-op shadow + derive per-side padding.
+    // Decoration settings, handled as in the TTF path: clamp, drop a shadow
+    // at (0, 0), and work out the padding per side.
     DecorationMode bdfDecoration = options.decoration;
     int bdfOutlineSize = options.outlineSize;
     int bdfShadowDx = options.shadowDx;
@@ -847,7 +836,7 @@ bool FontCompiler::CompileBdfFont(const std::string& bdfPath, const BdfCompileOp
     }
     const bool bdfDecorate = (bdfDecoration != DecorationMode::None);
 
-    // V2 sparse format: only store glyphs that actually exist in the BDF
+    // v2 sparse format: only the glyphs the BDF has are stored.
     struct PackedGlyph
     {
         int codepoint = 0;
@@ -868,7 +857,7 @@ bool FontCompiler::CompileBdfFont(const std::string& bdfPath, const BdfCompileOp
         auto it = codepointToGlyph.find(codepoint);
         if (it == codepointToGlyph.end())
         {
-            continue;  // Selected but not in BDF - skip entirely
+            continue;  // selected but not in the BDF
         }
 
         const BdfGlyph& g = bdfData.glyphs[it->second];
@@ -896,10 +885,9 @@ bool FontCompiler::CompileBdfFont(const std::string& bdfPath, const BdfCompileOp
         return false;
     }
 
-    // Owned storage for decorated bitmaps — PackedGlyph::bitmapData otherwise points
-    // into BdfGlyph::bitmap which we must not mutate. When decorate is active we
-    // allocate a per-glyph indexed bitmap on the expanded canvas and redirect
-    // bitmapData at it for the rest of the pipeline.
+    // Storage for decorated bitmaps. PackedGlyph::bitmapData otherwise points
+    // into BdfGlyph::bitmap, which must not change, so a decorated glyph gets
+    // its own indexed bitmap on the expanded canvas and bitmapData points there.
     std::vector<std::vector<uint8_t>> decoratedOwned;
     if (bdfDecorate)
     {
@@ -941,15 +929,15 @@ bool FontCompiler::CompileBdfFont(const std::string& bdfPath, const BdfCompileOp
             pg.width = expW;
             pg.height = expH;
             pg.offsetX -= bdfPadL;
-            pg.offsetY -= bdfPadT;  // BDF convention: offsetY is -(bbxOffY + bbxH), halo above baseline shifts offsetY
-                                    // up (more negative).
+            pg.offsetY -= bdfPadT;  // offsetY is -(bbxOffY + bbxH), so padding above the glyph makes it
+                                    // more negative.
             pg.bitmapData = indexed.data();
         }
     }
 
     int glyphCount = static_cast<int>(packedGlyphs.size());
 
-    // Sort glyphs by height (tallest first) for tighter shelf packing
+    // Tallest first packs the shelves tighter.
     std::vector<int> sortedIndices(glyphCount);
     for (int i = 0; i < glyphCount; i++)
     {
@@ -958,7 +946,7 @@ bool FontCompiler::CompileBdfFont(const std::string& bdfPath, const BdfCompileOp
     std::sort(sortedIndices.begin(), sortedIndices.end(),
               [&](int a, int b) { return packedGlyphs[a].height > packedGlyphs[b].height; });
 
-    // Try multiple atlas widths and pick the one that minimizes total area
+    // Try several atlas widths and keep the one with the smallest area.
     int bestWidth = 64;
     int bestArea = INT_MAX;
     for (int tryWidth = 64; tryWidth <= options.maxAtlasSize; tryWidth *= 2)
@@ -994,11 +982,11 @@ bool FontCompiler::CompileBdfFont(const std::string& bdfPath, const BdfCompileOp
     }
     int atlasWidth = bestWidth;
 
-    // Pack glyphs in height-sorted order - sparse: one entry per actual glyph
+    // Sparse: one entry per glyph the font has.
     outResult.glyphs.resize(glyphCount);
     outResult.codepoints.resize(glyphCount);
 
-    // First pass: set codepoints and defaults for all glyphs
+    // First pass: codepoints and defaults for every glyph.
     for (int i = 0; i < glyphCount; i++)
     {
         outResult.codepoints[i] = static_cast<uint32_t>(packedGlyphs[i].codepoint);
@@ -1009,7 +997,7 @@ bool FontCompiler::CompileBdfFont(const std::string& bdfPath, const BdfCompileOp
         }
     }
 
-    // Second pass: pack in height-sorted order
+    // Second pass: pack, tallest first.
     int cursorX = padding;
     int cursorY = padding;
     int rowHeight = 0;
@@ -1046,10 +1034,10 @@ bool FontCompiler::CompileBdfFont(const std::string& bdfPath, const BdfCompileOp
         }
     }
 
-    // Final atlas height — exact fit, no power-of-2 rounding
+    // Exact fit, not rounded to a power of 2.
     int atlasHeight = (std::max)(cursorY + rowHeight + padding, 1);
 
-    // Create atlas bitmap (RGBA: white + alpha)
+    // White, with the glyph in alpha.
     outResult.atlasRGBA.resize(atlasWidth * atlasHeight * 4, 0);
 
     for (int i = 0; i < glyphCount; i++)
@@ -1077,7 +1065,6 @@ bool FontCompiler::CompileBdfFont(const std::string& bdfPath, const BdfCompileOp
         }
     }
 
-    // Set result metadata
     outResult.atlasWidth = static_cast<uint32_t>(atlasWidth);
     outResult.atlasHeight = static_cast<uint32_t>(atlasHeight);
     outResult.firstChar = static_cast<uint32_t>(firstChar);
@@ -1114,12 +1101,11 @@ bool FontCompiler::WriteDfontFile(const std::string& path, const CompileResult& 
         return false;
     }
 
-    // Ensure directory exists
     std::filesystem::path filePath(path);
     std::filesystem::create_directories(filePath.parent_path());
 
-    // V4: unified header (decoration metadata). Sparse flag is carried in the
-    // high bit of `version` (0x80000004) just like v3.
+    // v4 header, with the decoration settings. The sparse flag is the high bit
+    // of `version` (0x80000004), as in v3.
     FontHeaderV4 header;
     memcpy(header.magic, "DFNT", 4);
     const bool sparse = result.isSparse && !result.codepoints.empty();

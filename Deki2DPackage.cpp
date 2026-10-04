@@ -1,20 +1,15 @@
-/**
- * @file Deki2DPackage.cpp
- * @brief Package entry point for deki-2d DLL
- *
- * This file exports the standard Deki plugin interface so the editor
- * can load deki-2d.dll and register its components.
- *
- * For linked DLLs (not dynamically loaded), Deki2DEnsureRegistered()
- * must be called from the main executable to trigger the static initializers.
- */
+// Entry point of deki-2d.dll: exports the standard Deki plugin interface so
+// the editor can load the DLL and register its components.
+//
+// When the DLL is linked rather than loaded at runtime, the main executable
+// must call Deki2DEnsureRegistered() so the static initializers run.
 
 #include "Deki2DPackage.h"
 #include "Deki2DInit.h"
 #include <deki/interop/Plugin.h>
-// The editor's font sync below reaches into TextComponent and friends. A
+// The editor's font sync below uses TextComponent and other components. A
 // device build takes its components from Deki2DPackage.h, feature by feature,
-// so a stripped one does not name what it did not compile.
+// so a stripped build names only what it compiled.
 #ifdef DEKI_EDITOR
 #include "SpriteComponent.h"
 #include "TextComponent.h"
@@ -46,20 +41,16 @@
 
 #ifdef DEKI_EDITOR
 
-// =============================================================================
-// Linked DLL initialization
-// =============================================================================
-// When deki-2d is linked (not dynamically loaded), the editor must call
-// this function to ensure the DLL code is actually loaded and the static
-// initializers (REGISTER_COMPONENT) have run.
+// Linked DLL initialization: when deki-2d is linked rather than loaded at
+// runtime, the editor calls Deki2DEnsureRegistered() so the DLL is loaded and
+// its static initializers have run.
 
 #ifndef DEKI_PLUGIN_EXPORTS
-// Auto-generated registration helpers (standalone DLL only)
+// Generated registration helpers (standalone DLL only)
 extern void Deki2DRegisterComponents();
 extern int Deki2DGetAutoComponentCount();
 extern const Deki::ComponentMeta* Deki2DGetAutoComponentMeta(int index);
 
-// Track if already registered to avoid duplicates
 static bool s_Registered = false;
 #endif
 
@@ -76,14 +67,10 @@ using namespace Deki2D;
 extern "C"
 {
 #ifndef DEKI_PLUGIN_EXPORTS
-    /**
-     * @brief Ensure deki-2d package is loaded and components are registered
-     *
-     * Call this from the editor at startup. Simply calling this function is enough
-     * to force the linker to include the DLL and trigger static initializers.
-     *
-     * @return Number of components registered by this package
-     */
+    /// Makes sure the package is loaded and its components are registered.
+    /// The editor calls it at startup; the call alone makes the linker keep
+    /// the DLL and run its static initializers. Returns the number of
+    /// components the package registers.
     DEKI_2D_API int Deki2DEnsureRegistered(void)
     {
         if (s_Registered)
@@ -92,29 +79,25 @@ extern "C"
         }
         s_Registered = true;
 
-        // Auto-generated: registers all 2D components with ComponentRegistry + ComponentFactory
+        // Generated: registers every 2D component with ComponentRegistry and ComponentFactory
         ::Deki2DRegisterComponents();
 
         // Clipping needs no pass: DekiRendering::Standard2DRenderer pushes a clip rect for every
         // object that provides IClipProvider (Deki2D::ClipComponent) while it draws.
 
-        // Register font-related editor features
         Deki2D::RegisterFontSyncHandlers();
         Deki2D::RegisterFontFileInspector();
         Deki2D::RegisterBdfFileInspector();
 
-        // Initialize font preview callbacks for live editing in SceneView
         Deki2D::InitializeFontPreviewCallbacks();
 
-        // Register font resolve callback for Deki2D::TextComponent (GUID sync, preview, baking)
+        // Font resolving for TextComponent: GUID sync, preview, baking
         Deki2D::TextComponent::SetFontResolveCallback(Deki2D::EditorFontResolve);
 
-        // Register image loader and font factory with EditorAssets
         DekiEditor::EditorAssets::RegisterImageLoader(Deki::Texture2D::LoadAsRGBA);
         DekiEditor::EditorAssets::RegisterFontFactory(
-            // Font factory: load a Deki2D::BitmapFont (handles v1/v2/v3/v4) and, separately,
-            // hand the editor the raw RGBA bytes of the atlas so it can upload a
-            // preview texture.
+            // Loads a BitmapFont (any .dfont version) and also hands the editor
+            // the atlas's raw RGBA bytes, so it can upload a preview texture.
             [](const char* dfontPath, uint8_t** outAtlasRGBA, int32_t& outW, int32_t& outH) -> void*
             {
                 if (!dfontPath)
@@ -156,7 +139,6 @@ extern "C"
                 outH = atlasH;
                 return font;
             },
-            // Font destroyer
             [](void* f) { delete static_cast<Deki2D::BitmapFont*>(f); });
 
         return ::Deki2DGetAutoComponentCount();
@@ -166,9 +148,7 @@ extern "C"
 
 }  // extern "C"
 
-// =============================================================================
-// Plugin metadata (for dynamic loading compatibility)
-// =============================================================================
+// Plugin metadata, for loading at runtime
 
 extern "C"
 {
@@ -216,18 +196,14 @@ extern "C"
 
 #endif  // DEKI_PLUGIN_EXPORTS
 
-    // =============================================================================
-    // Package-specific feature API (for linked DLL access without name conflicts)
-    // =============================================================================
+    // Package-specific API, named so a linked DLL does not clash with other packages
 
     DEKI_2D_API const char* Deki2DGetName(void)
     {
         return "2D";
     }
 
-    // =============================================================================
-    // Play Mode Hook
-    // =============================================================================
+    // Play mode hooks
 
 #ifndef DEKI_PLUGIN_EXPORTS
     DEKI_PLUGIN_API void DekiPluginOnPlayModeStart(void* scenePtr)
@@ -239,7 +215,7 @@ extern "C"
 
         ::Deki::Scene* scene = static_cast<::Deki::Scene*>(scenePtr);
 
-        // Set baked font GUIDs on TextComponents for play mode
+        // Point every TextComponent at its baked font's GUID for play mode
         std::function<void(Deki::Object*)> setFontGuidsRecursive = [&](Deki::Object* obj)
         {
             if (!obj)
@@ -250,7 +226,7 @@ extern "C"
             Deki2D::TextComponent* textComp = obj->GetComponent<Deki2D::TextComponent>();
             if (textComp && !textComp->font.source.empty())
             {
-                // Detect BDF vs TTF to use correct GUID convention
+                // BDF and TTF fonts derive the baked GUID differently
                 bool isBdf = false;
                 auto* pl = DekiEditor::AssetPipeline::Instance();
                 const auto* fi = pl ? pl->GetAssetInfoByGuid(textComp->font.source) : nullptr;
@@ -286,12 +262,10 @@ extern "C"
         // Nothing to reset: Deki2D::AnimationComponent drives itself from Update().
     }
 
-    // =============================================================================
-    // Font Compilation Wrappers (for AssetExporter via function pointers)
-    //
-    // Uses opaque handle pattern so the editor never needs FontCompiler headers.
-    // Flow: CompileFont → GetCompiledFontAtlas → WriteDfont → FreeCompileResult
-    // =============================================================================
+    // Font compilation for AssetExporter, called through function pointers.
+    // The result is an opaque handle, so the editor never needs FontCompiler
+    // headers. Order: CompileFont, GetCompiledFontAtlas, WriteDfont,
+    // FreeCompileResult.
 
     DEKI_PLUGIN_API void* DekiPluginCompileFont(const char* ttfPath, int fontSize, int firstChar, int lastChar,
                                                 int padding, int maxAtlas)

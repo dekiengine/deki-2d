@@ -9,47 +9,36 @@
 namespace Deki2D
 {
 
-/**
- * @brief Gradient types for procedural generation
- */
 enum class GradientType : uint8_t
 {
-    Linear = 0,  // Linear gradient with angle parameter
-    Radial = 1,  // From center outward
-    Conical = 2  // Rotating around center
+    Linear = 0,  // Along a direction set by the angle
+    Radial = 1,  // Out from the centre
+    Conical = 2  // Around the centre
 };
 
-/**
- * @brief Tiling modes for gradient rendering
- */
 enum class GradientTileMode : uint8_t
 {
-    None = 0,        // No tiling - render gradient once
-    Horizontal = 1,  // Tile horizontally
-    Vertical = 2,    // Tile vertically
-    Both = 3,        // Tile both horizontally and vertically
-    Mirror = 4       // Mirror tiling (gradient reverses each tile)
+    None = 0,  // Drawn once
+    Horizontal = 1,
+    Vertical = 2,
+    Both = 3,
+    Mirror = 4  // Every other tile is reversed
 };
 
-/**
- * @brief Dithering modes for gradient rendering
- */
 enum class GradientDitherMode : uint8_t
 {
-    None = 0,         // No dithering
-    Ordered2x2 = 1,   // 2x2 Bayer matrix (fast, low quality)
-    Ordered4x4 = 2,   // 4x4 Bayer matrix (balanced)
-    Ordered8x8 = 3,   // 8x8 Bayer matrix (high quality, slower)
-    Ordered16x16 = 4  // 16x16 Bayer matrix (highest quality, slowest)
+    None = 0,
+    Ordered2x2 = 1,   // 2x2 Bayer matrix (coarse pattern)
+    Ordered4x4 = 2,   // 4x4 Bayer matrix
+    Ordered8x8 = 3,   // 8x8 Bayer matrix
+    Ordered16x16 = 4  // 16x16 Bayer matrix (finest pattern)
 };
 
-/**
- * @brief Color stop for gradient definition
- */
+/// One colour stop of a gradient.
 struct GradientStop
 {
-    float position;     // Position along gradient (0.0 to 1.0)
-    Deki::Color color;  // Color at this position
+    float position;  // Along the gradient, 0 to 1
+    Deki::Color color;
 
     GradientStop(float pos = 0.0f, const Deki::Color& col = Deki::Color::Black)
         : position(pos),
@@ -57,7 +46,7 @@ struct GradientStop
     {
     }
 
-    // Legacy constructor for backward compatibility
+    // From separate 0-255 channels
     GradientStop(float pos, uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha = 255)
         : position(pos),
           color(red, green, blue, alpha)
@@ -65,23 +54,15 @@ struct GradientStop
     }
 };
 
-/**
- * @brief Gradient component for procedural gradient rendering
- *
- * Generates gradients in real-time with support for:
- * - Multiple gradient types (linear, radial, conical)
- * - Tiling modes for pattern repetition
- * - Dithering for smooth color transitions on RGB565
- * - Memory-efficient procedural generation
- * - Performance optimized for embedded systems
- */
+/// Draws a procedural gradient: linear, radial or conical, with optional
+/// tiling, and dithering to hide banding on RGB565 displays. The gradient is
+/// baked into a pixel buffer and re-baked only when an input changes.
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Draws a procedural gradient: linear, radial or conical.")
 DEKI_FORMER_NAME("GradientComponent")
 class GradientComponent : public DekiRendering::RendererComponent
 {
 public:
-    // Gradient properties
     DEKI_EXPORT
     DEKI_TOOLTIP("Linear runs the colours along the angle below. Radial runs them out from the centre point.")
     GradientType gradientType;
@@ -93,20 +74,14 @@ public:
         "Dithering hides the banding a smooth ramp shows on a 16-bit display, by trading it for a fine speckle.")
     GradientDitherMode ditherMode;
 
-    /**
-     * @brief Scale of the dither pattern in pixels per Bayer cell.
-     *
-     * 1 (default) = native 1px dither (current behavior).
-     * 2/4/8/16    = chunkier blocks that make the pattern more visible —
-     *               useful for stylized retro looks.
-     * Non power-of-2 values snap down to the nearest power of 2 (so 3→2, 7→4).
-     */
+    // Size of one Bayer cell, in art pixels. 1 (the default) dithers pixel by
+    // pixel; 2, 4, 8 or 16 make chunkier blocks for a retro look. Other values
+    // snap down to a power of two (3 becomes 2, 7 becomes 4).
     DEKI_EXPORT
     DEKI_TOOLTIP(
         "How strong the speckle is. Raise it until the bands disappear, then stop: past that it is just noise.")
     uint8_t ditherScale;
 
-    // Area to fill (meters)
     DEKI_EXPORT
     DEKI_TOOLTIP("Width of the gradient in meters.")
     DEKI_UNIT(Distance)
@@ -116,23 +91,21 @@ public:
     DEKI_UNIT(Distance)
     float height;
 
-    // Gradient parameters
     DEKI_EXPORT
     DEKI_TOOLTIP("Direction a linear gradient runs, in radians. 0 runs left to right.")
     DEKI_UNIT(Angle)
-    float angle;  // Linear gradient angle. Stored in radians (0 = horizontal, π/2 = vertical); inspector displays
-                  // degrees.
+    float angle;  // Radians (0 = horizontal, pi/2 = vertical); the inspector shows degrees
     DEKI_EXPORT
     DEKI_TOOLTIP("Centre of a radial gradient across the width, 0 to 1. 0.5 is the middle.")
-    float centerX;  // For radial/conical gradients (0.0 to 1.0)
+    float centerX;  // Radial and conical, 0 to 1
     DEKI_EXPORT
     DEKI_TOOLTIP("Centre of a radial gradient down the height, 0 to 1.")
-    float centerY;  // For radial/conical gradients (0.0 to 1.0)
+    float centerY;  // Radial and conical, 0 to 1
     DEKI_EXPORT
     DEKI_TOOLTIP("How far a radial gradient reaches before the last stop, relative to the size.")
-    float radius;  // For radial gradients (0.0 to 1.0)
+    float radius;  // Radial, 0 to 1
 
-    // Color stops (up to 4 stops for memory efficiency)
+    // At most 4 stops, to keep the component small
     static constexpr uint8_t kMaxStops = 4;
     GradientStop stops[kMaxStops];
 
@@ -140,8 +113,8 @@ public:
     DEKI_TOOLTIP("How many of the four colour stops are used. The rest are ignored.")
     uint8_t stopCount;
 
-    // Individual color stop properties for editor serialization
-    // Stop 1 is always visible (minimum 1 stop required)
+    // Each stop as separate properties, for the inspector and serialization.
+    // Stop 1 is always shown: a gradient needs at least one stop.
     DEKI_EXPORT
     DEKI_TOOLTIP("Where the first stop sits along the ramp, 0 to 1.")
     float stop1Position;
@@ -149,7 +122,6 @@ public:
     DEKI_TOOLTIP("Colour at the first stop.")
     Deki::Color stop1Color;
 
-    // Stop 2 visible when stopCount >= 2
     DEKI_EXPORT
     DEKI_TOOLTIP("Where the second stop sits along the ramp, 0 to 1.")
     DEKI_VISIBLE_WHEN(stopCount, 2)
@@ -159,7 +131,6 @@ public:
     DEKI_VISIBLE_WHEN(stopCount, 2)
     Deki::Color stop2Color;
 
-    // Stop 3 visible when stopCount >= 3
     DEKI_EXPORT
     DEKI_TOOLTIP("Where the third stop sits, 0 to 1. Used when the stop count is 3 or more.")
     DEKI_VISIBLE_WHEN(stopCount, 3)
@@ -169,7 +140,6 @@ public:
     DEKI_VISIBLE_WHEN(stopCount, 3)
     Deki::Color stop3Color;
 
-    // Stop 4 visible when stopCount >= 4
     DEKI_EXPORT
     DEKI_TOOLTIP("Where the fourth stop sits, 0 to 1. Used when the stop count is 4.")
     DEKI_VISIBLE_WHEN(stopCount, 4)
@@ -179,7 +149,7 @@ public:
     DEKI_VISIBLE_WHEN(stopCount, 4)
     Deki::Color stop4Color;
 
-    // Tile properties (world meters; 0 = use component width/height)
+    // Tile size in world meters; 0 uses the component's width or height
     DEKI_EXPORT
     DEKI_TOOLTIP("Width of one repeat when the tile mode repeats or mirrors.")
     DEKI_UNIT(Distance)
@@ -192,94 +162,52 @@ public:
     GradientComponent(float w = 0.0f, float h = 0.0f);
     ~GradientComponent();
 
-    /**
-     * @brief Set gradient type and basic parameters
-     */
     void SetGradientType(GradientType type);
 
-    /**
-     * @brief Set linear gradient with angle
-     * @param angleRadians Angle in radians (0 = left to right, π/2 = top to bottom)
-     */
+    /// Makes this a linear gradient at `angleRadians` (0 runs left to right,
+    /// pi/2 top to bottom).
     void SetLinearGradient(float angleRadians = 0.0f);
 
-    /**
-     * @brief Set radial gradient with center and radius
-     * @param centerX Center X position (0.0 to 1.0)
-     * @param centerY Center Y position (0.0 to 1.0)
-     * @param radius Radius (0.0 to 1.0)
-     */
+    /// Makes this a radial gradient. Centre and radius are 0 to 1, relative to
+    /// the size, and are clamped to that range.
     void SetRadialGradient(float centerX = 0.5f, float centerY = 0.5f, float radius = 0.5f);
 
-    /**
-     * @brief Add a color stop to the gradient
-     * @param position Position along gradient (0.0 to 1.0)
-     * @param r Red component (0-255)
-     * @param g Green component (0-255)
-     * @param b Blue component (0-255)
-     */
+    /// Adds a colour stop at `position` (0 to 1) and keeps the stops sorted.
+    /// Does nothing when all four stops are in use.
     void AddColorStop(float position, uint8_t r, uint8_t g, uint8_t b);
 
-    /**
-     * @brief Clear all color stops
-     */
     void ClearColorStops();
 
-    /**
-     * @brief Sync color stops from individual property members
-     * Called before rendering to ensure stops array matches property values
-     */
+    /// Copies the stopN properties into stops[]. Runs before every bake.
     void SyncStopsFromProperties();
 
-    /**
-     * @brief Set simple two-color gradient
-     * @param start_r Start color red
-     * @param start_g Start color green
-     * @param start_b Start color blue
-     * @param end_r End color red
-     * @param end_g End color green
-     * @param end_b End color blue
-     */
+    /// Replaces the stops with two: the start colour at 0 and the end colour
+    /// at 1.
     void SetSimpleGradient(uint8_t startR, uint8_t startG, uint8_t startB, uint8_t endR, uint8_t endG, uint8_t endB);
 
-    /**
-     * @brief Set tiling mode
-     */
+    /// Sets the tiling mode and tile size in world meters (0 uses the
+    /// component's width or height).
     void SetTiling(GradientTileMode mode, float tileW = 0.0f, float tileH = 0.0f);
 
-    /**
-     * @brief Set dithering mode for smooth gradients on RGB565
-     */
     void SetDithering(GradientDitherMode mode);
 
-    /**
-     * @brief Set the area to fill
-     */
+    /// Sets the size, in world meters.
     void SetArea(float w, float h);
 
-    /**
-     * @brief Render gradient to a local buffer at origin (0,0)
-     *
-     * Use this for editor preview or when you want to render to a texture
-     * that will be positioned separately. Buffer size should be width * height * 2 bytes (RGB565).
-     *
-     * @param buffer Output buffer (RGB565 format)
-     */
-    /**
-     * @brief Bake the gradient into an RGB565 buffer of outW x outH pixels.
-     *
-     * The gradient is laid out on its art grid (artW x artH: its size at the
-     * project's pixels per meter); each output pixel takes the art position
-     * it covers, and the dither pattern is laid out in output pixels, cells
-     * `ditherCell` wide. Baked at the density it is drawn at, a gradient
-     * lands 1:1 on the screen at any scale, so the pattern stays regular
-     * where a scaled bake would repeat or drop pixels and show seams. At a
-     * whole-number scale the result is exactly the art-grid bake, scaled.
-     */
+    /// Bakes the gradient into an RGB565 buffer of outW x outH pixels
+    /// (outW * outH * 2 bytes).
+    ///
+    /// The gradient is laid out on its art grid (artW x artH: its size at the
+    /// project's pixels per meter); each output pixel takes the art position
+    /// it covers. The dither pattern is laid out in output pixels, in cells
+    /// `ditherCell` wide. Baked at the density it is drawn at, a gradient
+    /// lands 1:1 on the screen at any scale, so the pattern stays regular
+    /// where a scaled bake would repeat or drop pixels and show seams. At a
+    /// whole-number scale the result is exactly the art-grid bake, scaled.
     void RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t outH, int32_t artW, int32_t artH, int32_t ditherCell);
 
-    // Unified rendering via QuadBlit
-    // Culling extents (meters): the box the content is baked into.
+    // Drawn through QuadBlit.
+    // Culling extents in meters: the box the content is baked into.
     bool GetContentExtents(float& outWidth, float& outHeight) const override
     {
         if (width <= 0.0f || height <= 0.0f)
@@ -295,55 +223,31 @@ public:
                        uint8_t& outTintR, uint8_t& outTintG, uint8_t& outTintB, uint8_t& outTintA) override;
 
 private:
-    /**
-     * @brief Calculate gradient value at normalized position
-     * @param normX Normalized X position (0.0 to 1.0)
-     * @param normY Normalized Y position (0.0 to 1.0)
-     * @return Gradient position (0.0 to 1.0)
-     */
+    /// The position along the gradient (0 to 1) of a point given in 0 to 1
+    /// coordinates across the area.
     float CalculateGradientPosition(float normX, float normY) const;
 
-    /**
-     * @brief Interpolate color at gradient position
-     * @param position Gradient position (0.0 to 1.0)
-     * @param r Output red component
-     * @param g Output green component
-     * @param b Output blue component
-     */
+    /// The colour at `position` (0 to 1), blended between the two stops
+    /// around it.
     void InterpolateColor(float position, uint8_t* r, uint8_t* g, uint8_t* b) const;
 
-    /**
-     * @brief Sample the Bayer threshold at (x, y) for the current ditherMode.
-     * @return Threshold in [0, 1).
-     */
+    /// The Bayer threshold at (x, y) for the current ditherMode, in [0, 1).
     float SampleBayerThreshold(int32_t x, int32_t y) const;
 
-    /**
-     * @brief Pixelorama-style stipple pick: write one of the bracketing stop
-     *        colors based on whether the local-t exceeds a Bayer threshold.
-     *        No interpolation between stops — every output pixel is exactly
-     *        one of the authored colors.
-     */
+    /// Pixelorama-style stipple: picks one of the two stops around `position`,
+    /// by whether the position between them reaches `threshold`. Every output
+    /// pixel is exactly one of the stop colours.
     void PickStopByThreshold(float position, float threshold, uint8_t* r, uint8_t* g, uint8_t* b) const;
 
-    /**
-     * @brief Convert RGB to RGB565 format
-     */
     uint16_t ConvertToRGB565(uint8_t r, uint8_t g, uint8_t b) const;
 
-    /**
-     * @brief Render single pixel with bounds checking
-     */
+    /// Writes one pixel, skipping it when it is outside the buffer.
     void RenderPixel(int32_t x, int32_t y, uint16_t color, uint8_t* renderBuffer, int screenWidth,
                      int screenHeight) const;
 
-    // Baked pixels for the current property set (what RenderContent hands to
-    // QuadBlit). Keyed by a hash of every input so the gradient is rasterised
-    // only when something changed; it used to be rasterised into a freshly
-    // allocated buffer on every frame (with cos/sin/atan2 per pixel) and freed
-    // by the renderer right after.
-    // Owning, and it knows its own size, so there is no separate length to
-    // fall out of step with the pointer.
+    // Baked pixels for the current properties, which RenderContent hands to
+    // QuadBlit. Keyed by a hash of every input, so the gradient is rasterised
+    // (with trig per pixel) only when something changed.
     Deki::Buffer<uint8_t> m_Baked;
     uint64_t m_BakeKey = 0;
     // A bake size the device could not allocate. Retrying it every frame
@@ -356,9 +260,9 @@ private:
     float m_CosAngle = 1.0f;
     float m_SinAngle = 0.0f;
 
-    // Keep the reflected stopN fields equal to stops[] after a programmatic
-    // change, so SyncStopsFromProperties() (which runs before every bake) does
-    // not overwrite AddColorStop()/SetSimpleGradient() with stale values.
+    // Copies stops[] back into the stopN properties after a change from code,
+    // so SyncStopsFromProperties(), which runs before every bake, does not
+    // overwrite AddColorStop()/SetSimpleGradient() with stale values.
     void WriteStopsToProperties();
 };
 

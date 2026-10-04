@@ -22,15 +22,14 @@ Sprite::Sprite()
 
 Sprite::~Sprite()
 {
-    // Base class destructor handles pixel data cleanup
-    // chromaRowSpans frees itself.
+    // The base class frees the pixels; chromaRowSpans frees itself.
 }
 
 namespace
 {
 // The frame list may end with the frames' own 9-slice borders: a u16 count,
-// then per bordered frame u16 index, left, right, top, bottom. Older files
-// stop after the entries; older loaders ignore the tail.
+// then per bordered frame u16 index, left, right, top, bottom. Files may stop
+// after the entries, and loaders that do not know the tail ignore it.
 void ReadFrameNineSlices(std::vector<SpriteFrame>& frames, const uint8_t* chunk, uint32_t chunkSize,
                          uint32_t entriesEnd)
 {
@@ -76,11 +75,8 @@ void Sprite::SetDefaultSpriteProperties()
 {
     pivotX = 0.5f;  // Center pivot
     pivotY = 0.5f;  // Center pivot
-    // Default 16 to match the project's default pixelsPerMeter. This value
-    // is *ignored* in Pixels mode (DekiRendering::Standard2DRenderer overrides to 1.0 — see
-    // its drawScale block) so backward-compat for legacy/Pixel-mode projects
-    // is preserved. In Meters mode, it makes a 16-px sprite occupy 1 m × 1 m
-    // by default (the natural mental model for retro tile workflows).
+    // The project's default pixels per meter, so a 16-px sprite is 1 m
+    // across, which suits tile-based art.
     pixelsPerMeter = 16.0f;
     transparentR = 255;  // Magenta as default transparent color
     transparentG = 0;
@@ -88,14 +84,12 @@ void Sprite::SetDefaultSpriteProperties()
     hasChromaKey = false;
     chromaRowSpans.Reset();
 
-    // 9-slice defaults
     hasNineSlice = false;
     nineSliceLeft = 0;
     nineSliceRight = 0;
     nineSliceTop = 0;
     nineSliceBottom = 0;
 
-    // Spritesheet defaults
     defaultFrameWidth = 0;
     defaultFrameHeight = 0;
 
@@ -150,7 +144,7 @@ void Sprite::ApplySourceSize(int32_t imageWidth, int32_t imageHeight)
     pixelsPerMeter *= sourceScale;
 }
 
-// Loading functions - same for simulator and editor
+// Loading, the same in the simulator and the editor.
 Sprite* Sprite::Load(const char* filePath)
 {
     if (!filePath)
@@ -166,7 +160,6 @@ Sprite* Sprite::Load(const char* filePath)
         return nullptr;
     }
 
-    // Open file
     Deki::IFileSystem::FileHandle file = fs->OpenFile(filePath, Deki::IFileSystem::OpenMode::ReadBinary);
     if (!file)
     {
@@ -174,7 +167,6 @@ Sprite* Sprite::Load(const char* filePath)
         return nullptr;
     }
 
-    // Get file size
     long fileSize = fs->GetFileSize(file);
     if (fileSize < sizeof(Deki::Texture2D::Header))
     {
@@ -183,7 +175,6 @@ Sprite* Sprite::Load(const char* filePath)
         return nullptr;
     }
 
-    // Read header
     Deki::Texture2D::Header header;
     size_t bytesRead = fs->ReadFile(file, &header, sizeof(Deki::Texture2D::Header));
     if (bytesRead != sizeof(Deki::Texture2D::Header))
@@ -193,7 +184,6 @@ Sprite* Sprite::Load(const char* filePath)
         return nullptr;
     }
 
-    // Validate header
     if (!Deki::Texture2D::ValidateHeader(header))
     {
         DEKI_LOG_ERROR("Invalid sprite header: %s", filePath);
@@ -201,14 +191,14 @@ Sprite* Sprite::Load(const char* filePath)
         return nullptr;
     }
 
-    // Non-sprite textures (e.g. font atlases) are loaded through Sprite::Load() — this is normal
+    // Other textures (font atlases, say) load through Sprite::Load() too.
     if (!(header.flags & DTEX_FLAG_IS_SPRITE))
     {
         DEKI_LOG_INTERNAL("Loading non-sprite texture as sprite: %s", filePath);
     }
 
-    // Validate file size, in 64 bits: on a 32-bit board a corrupt dataSize
-    // plus metadataSize wrapped to a small number and passed.
+    // Checked in 64 bits: on a 32-bit board a corrupt dataSize plus
+    // metadataSize can wrap to a small number and pass.
     const uint64_t expectedSize =
         uint64_t(sizeof(Deki::Texture2D::Header)) + uint64_t(header.dataSize) + uint64_t(header.metadataSize);
     if (fileSize < 0 || uint64_t(fileSize) < expectedSize)
@@ -218,7 +208,6 @@ Sprite* Sprite::Load(const char* filePath)
         return nullptr;
     }
 
-    // Read pixel data
     uint8_t* pixelData = (uint8_t*)Deki::Memory::Allocate(header.dataSize, Deki::Memory::External);
 
     if (!pixelData)
@@ -237,7 +226,6 @@ Sprite* Sprite::Load(const char* filePath)
         return nullptr;
     }
 
-    // Read metadata if present
     uint8_t* metadata = nullptr;
     if (header.metadataSize > 0)
     {
@@ -257,7 +245,6 @@ Sprite* Sprite::Load(const char* filePath)
 
     fs->CloseFile(file);
 
-    // Create sprite instance
     Sprite* sprite = new Sprite();
     if (!sprite->LoadFromMemory(header, pixelData))
     {
@@ -271,10 +258,9 @@ Sprite* Sprite::Load(const char* filePath)
         return nullptr;
     }
 
-    // Process metadata (chunked format for 2DTX)
+    // The metadata is a list of chunks.
     if (metadata && header.metadataSize >= sizeof(uint32_t))
     {
-        // Parse chunked metadata
         uint32_t offset = 0;
         uint32_t numChunks = *(uint32_t*)(metadata + offset);
         offset += sizeof(uint32_t);
@@ -287,7 +273,7 @@ Sprite* Sprite::Load(const char* filePath)
             uint32_t chunkSize = *(uint32_t*)(metadata + offset);
             offset += sizeof(uint32_t);
 
-            // Written so it cannot wrap: offset + a huge chunk_size did, on 32 bits.
+            // Written so it cannot wrap; offset + a huge chunkSize can, on 32 bits.
             if (chunkSize > header.metadataSize - offset)
             {
                 break;  // Corrupted metadata
@@ -300,7 +286,7 @@ Sprite* Sprite::Load(const char* filePath)
                 sprite->defaultFrameWidth = frameWidth;
                 sprite->defaultFrameHeight = frameHeight;
 
-                // Optional 9-slice tail (1 byte flag + 4 * uint16) — chunk_size 17+
+                // Optional 9-slice tail (1 byte flag + 4 * uint16) when chunkSize is 17 or more.
                 if (chunkSize >= 17)
                 {
                     const uint8_t* nine = metadata + offset + 8;
@@ -332,11 +318,9 @@ Sprite* Sprite::Load(const char* filePath)
                     for (uint16_t fi = 0; fi < frameCount; ++fi)
                     {
                         SpriteFrame& frame = sprite->frames[fi];
-                        // Read GUID (36 chars)
                         memcpy(frame.guid, metadata + offset + frameOffset, 36);
                         frame.guid[36] = '\0';
                         frameOffset += 36;
-                        // Read coordinates
                         frame.x = *(int32_t*)(metadata + offset + frameOffset);
                         frameOffset += sizeof(int32_t);
                         frame.y = *(int32_t*)(metadata + offset + frameOffset);
@@ -364,9 +348,9 @@ Sprite* Sprite::Load(const char* filePath)
                     sprite->transparentB = p[3];
                 }
                 uint32_t spansCount = *(const uint32_t*)(p + 4);
-                // Divided, not multiplied: spansCount comes from the file and
-                // `spansCount * sizeof(int16_t)` is a 32-bit size_t on the device, so
-                // a large count wraps to a small one and the bound passes.
+                // Divided, not multiplied: spansCount comes from the file, and
+                // `spansCount * sizeof(int16_t)` is a 32-bit size_t on the device,
+                // where a large count wraps to a small one and passes the check.
                 const bool spansFit = chunkSize >= 8 && spansCount <= (chunkSize - 8) / sizeof(int16_t);
                 if (enabled && spansCount > 0 && spansFit)
                 {
@@ -390,7 +374,6 @@ Sprite* Sprite::Load(const char* filePath)
                 imageWidth = *(int32_t*)(metadata + offset);
                 imageHeight = *(int32_t*)(metadata + offset + sizeof(int32_t));
             }
-            // Skip to next chunk
             offset += chunkSize;
         }
         sprite->ApplySourceSize(imageWidth, imageHeight);
@@ -402,17 +385,17 @@ Sprite* Sprite::Load(const char* filePath)
         Deki::Memory::Free(metadata);
     }
 
-    // Pixel data is now owned by sprite
+    // The sprite owns the pixels now.
     sprite->data = pixelData;
 #ifdef DEKI_EDITOR
     sprite->allocatedWithBackend = true;  // Allocated with Deki::Memory in play mode
 #endif
 
-    // For RGB565A8 sprites marked as having alpha, check if all pixels are actually opaque.
-    // If so, clear hasAlpha so QuadBlit can use the fast memcpy path instead of per-pixel blending.
+    // An RGB565A8 sprite whose pixels are all opaque drops hasAlpha, so
+    // QuadBlit copies rows with memcpy instead of blending each pixel.
     if (sprite->hasAlpha && sprite->format == Deki::Texture2D::TextureFormat::RGB565A8)
     {
-        // If exporter already determined all pixels are opaque, skip the scan
+        // The exporter may have checked already.
         if (header.flags & DTEX_FLAG_ALL_OPAQUE)
         {
             sprite->hasAlpha = false;
@@ -423,7 +406,6 @@ Sprite* Sprite::Load(const char* filePath)
             int32_t w = sprite->width;
             int32_t h = sprite->height;
 
-            // Scan for any non-opaque pixel
             for (int32_t i = 0; i < w * h; i++)
             {
                 if (pixelData[i * 3 + 2] != 255)
@@ -439,7 +421,7 @@ Sprite* Sprite::Load(const char* filePath)
             }
             else
             {
-                // Build per-row opaque span data for fast blitting.
+                // Opaque spans per row let the blitter copy those runs straight.
                 sprite->alphaRowSpans.Allocate(static_cast<size_t>(h) * 2, Deki::Memory::Internal);
                 if (sprite->alphaRowSpans)
                 {
@@ -469,7 +451,6 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
         return nullptr;
     }
 
-    // Parse header from buffer
     Deki::Texture2D::Header header;
     memcpy(&header, fileData, sizeof(Deki::Texture2D::Header));
 
@@ -489,7 +470,7 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
 
     const uint8_t* src = fileData + sizeof(Deki::Texture2D::Header);
 
-    // Copy pixel data into PSRAM (sprite takes ownership)
+    // Pixels go to external memory (PSRAM); the sprite owns them.
     uint8_t* pixelData = (uint8_t*)Deki::Memory::Allocate(header.dataSize, Deki::Memory::External);
     if (!pixelData)
     {
@@ -499,7 +480,6 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
     memcpy(pixelData, src, header.dataSize);
     src += header.dataSize;
 
-    // Create sprite
     Sprite* sprite = new Sprite();
     if (!sprite->LoadFromMemory(header, pixelData))
     {
@@ -508,7 +488,7 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
         return nullptr;
     }
 
-    // Process metadata (same logic as Load)
+    // Metadata, as in Load.
     if (header.metadataSize > 0)
     {
         const uint8_t* metadata = src;
@@ -589,9 +569,9 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
                         sprite->transparentB = p[3];
                     }
                     uint32_t spansCount = *(const uint32_t*)(p + 4);
-                    // Divided, not multiplied: spansCount comes from the file and
-                    // `spansCount * sizeof(int16_t)` is a 32-bit size_t on the device, so
-                    // a large count wraps to a small one and the bound passes.
+                    // Divided, not multiplied: spansCount comes from the file, and
+                    // `spansCount * sizeof(int16_t)` is a 32-bit size_t on the device,
+                    // where a large count wraps to a small one and passes the check.
                     const bool spansFit = chunkSize >= 8 && spansCount <= (chunkSize - 8) / sizeof(int16_t);
                     if (enabled && spansCount > 0 && spansFit)
                     {
@@ -619,13 +599,12 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
         }
     }
 
-    // Own pixel data
     sprite->data = pixelData;
 #ifdef DEKI_EDITOR
     sprite->allocatedWithBackend = true;
 #endif
 
-    // Alpha scan (same as Load)
+    // Alpha scan, as in Load.
     if (sprite->hasAlpha && sprite->format == Deki::Texture2D::TextureFormat::RGB565A8)
     {
         if (header.flags & DTEX_FLAG_ALL_OPAQUE)
@@ -673,13 +652,12 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
 
 bool Sprite::LoadFromMemory(const Deki::Texture2D::Header& header, const uint8_t* pixelData)
 {
-    // Call base class implementation
     if (!Deki::Texture2D::LoadFromMemory(header, pixelData))
     {
         return false;
     }
 
-    // Sprite-specific initialization already done in constructor
+    // The constructor already set the sprite defaults.
     return true;
 }
 
@@ -696,7 +674,7 @@ Sprite* Sprite::CreateSolid(int32_t width, int32_t height, uint8_t r, uint8_t g,
     Sprite* sprite = new Sprite();
     sprite->width = width;
     sprite->height = height;
-    sprite->format = Deki::Texture2D::TextureFormat::RGB565;  // Use RGB565 directly - native format!
+    sprite->format = Deki::Texture2D::TextureFormat::RGB565;  // native format, no conversion
     sprite->hasTransparency = false;
     sprite->hasAlpha = false;
 
@@ -720,7 +698,6 @@ Sprite* Sprite::CreateSolid(int32_t width, int32_t height, uint8_t r, uint8_t g,
     uint16_t b5 = (b * 31) / 255;  // 5 bits for blue
     uint16_t rgb565 = (r5 << 11) | (g6 << 5) | b5;
 
-    // Fill sprite with solid RGB565 color - much more efficient!
     uint16_t* data16 = (uint16_t*)sprite->data;
     for (int32_t i = 0; i < width * height; i++)
     {
@@ -761,7 +738,6 @@ Sprite* Sprite::CreateSolidRGBA(int32_t width, int32_t height, uint8_t r, uint8_
     uint16_t b5 = (b * 31) / 255;  // 5 bits for blue
     uint16_t rgb565 = (r5 << 11) | (g6 << 5) | b5;
 
-    // Fill sprite with solid color and alpha
     for (int32_t i = 0; i < width * height; i++)
     {
         size_t byteIndex = i * 3;
@@ -816,7 +792,6 @@ Sprite* Sprite::CreateTiled(Sprite* source, int32_t targetWidth, int32_t targetH
     tiled->hasTransparency = source->hasTransparency;
     tiled->hasAlpha = source->hasAlpha;
 
-    // Copy sprite-specific properties
     tiled->pivotX = source->pivotX;
     tiled->pivotY = source->pivotY;
     tiled->pixelsPerMeter = source->pixelsPerMeter;
@@ -824,9 +799,9 @@ Sprite* Sprite::CreateTiled(Sprite* source, int32_t targetWidth, int32_t targetH
     tiled->transparentG = source->transparentG;
     tiled->transparentB = source->transparentB;
     tiled->hasChromaKey = source->hasChromaKey;
-    // chromaRowSpans is intentionally NOT copied: tiled output has different
-    // dimensions, so source spans don't apply. Render falls back to per-pixel
-    // chroma compare for tiled sprites — uncommon and small perf cost.
+    // chromaRowSpans is not copied: the tiled sprite has other dimensions, so
+    // the source spans do not apply. Tiled sprites use the per-pixel chroma
+    // compare, a small cost for a rare case.
 
     uint32_t bytesPerPixel = Deki::Texture2D::GetBytesPerPixel(source->format);
     size_t tiledDataSize = targetWidth * targetHeight * bytesPerPixel;
@@ -846,7 +821,6 @@ Sprite* Sprite::CreateTiled(Sprite* source, int32_t targetWidth, int32_t targetH
 
 bool Sprite::SetNineSliceBorders(uint16_t left, uint16_t right, uint16_t top, uint16_t bottom)
 {
-    // Validate that borders don't exceed sprite dimensions
     if (left + right >= width || top + bottom >= height)
     {
         DEKI_LOG_ERROR("Invalid 9-slice borders: L=%u R=%u T=%u B=%u for sprite %dx%d", left, right, top, bottom, width,
@@ -881,7 +855,6 @@ void Sprite::BakeNineSliceRegion(uint8_t* dst, int32_t targetWidth, int32_t targ
 {
     uint32_t bytesPerPixel = Deki::Texture2D::GetBytesPerPixel(source->format);
 
-    // Calculate region dimensions
     // Source regions, inside `region`
     const int32_t rx = region.x, ry = region.y, rw = region.width, rh = region.height;
     int32_t srcLeft = region.left;
@@ -899,27 +872,24 @@ void Sprite::BakeNineSliceRegion(uint8_t* dst, int32_t targetWidth, int32_t targ
     int32_t dstCenterW = targetWidth - dstLeft - dstRight;
     int32_t dstCenterH = targetHeight - dstTop - dstBottom;
 
-    // Helper lambda to copy a pixel region with nearest-neighbor scaling
-    // src_x/src_y are inside the region; the region's offset is added here.
+    // Copies a block of pixels with nearest-neighbour scaling. srcX/srcY are
+    // inside the region; the region's offset is added here.
     auto copyRegion = [rx, ry](uint8_t* dst, int32_t dstWidth, int32_t dstX, int32_t dstY, int32_t dstW, int32_t dstH,
                                const uint8_t* src, int32_t srcWidth, int32_t srcX, int32_t srcY, int32_t srcW,
                                int32_t srcH, uint32_t bytesPerPixel)
     {
         for (int32_t dy = 0; dy < dstH; dy++)
         {
-            // Calculate source Y using nearest-neighbor
             int32_t sy = (dy * srcH) / dstH;
             const uint8_t* srcRow = src + ((ry + srcY + sy) * srcWidth + rx + srcX) * bytesPerPixel;
             uint8_t* dstRow = dst + ((dstY + dy) * dstWidth + dstX) * bytesPerPixel;
 
             for (int32_t dx = 0; dx < dstW; dx++)
             {
-                // Calculate source X using nearest-neighbor
                 int32_t sx = (dx * srcW) / dstW;
                 const uint8_t* srcPixel = srcRow + sx * bytesPerPixel;
                 uint8_t* dstPixel = dstRow + dx * bytesPerPixel;
 
-                // Copy pixel data
                 for (uint32_t b = 0; b < bytesPerPixel; b++)
                 {
                     dstPixel[b] = srcPixel[b];
@@ -928,7 +898,7 @@ void Sprite::BakeNineSliceRegion(uint8_t* dst, int32_t targetWidth, int32_t targ
         }
     };
 
-    // Process all 9 regions:
+    // The 9 regions:
     // +----+--------+----+
     // | TL |  Top   | TR |
     // +----+--------+----+
@@ -1003,7 +973,6 @@ void Sprite::BakeNineSliceRegion(uint8_t* dst, int32_t targetWidth, int32_t targ
 
 Sprite* Sprite::CreateNineSlice(Sprite* source, int32_t targetWidth, int32_t targetHeight)
 {
-    // Validate input
     if (!source || !source->data)
     {
         DEKI_LOG_ERROR("CreateNineSlice: Invalid source sprite");
@@ -1016,7 +985,6 @@ Sprite* Sprite::CreateNineSlice(Sprite* source, int32_t targetWidth, int32_t tar
         return nullptr;
     }
 
-    // Validate target dimensions
     int32_t minWidth = source->nineSliceLeft + source->nineSliceRight;
     int32_t minHeight = source->nineSliceTop + source->nineSliceBottom;
 
@@ -1041,7 +1009,7 @@ Sprite* Sprite::CreateNineSlice(Sprite* source, int32_t targetWidth, int32_t tar
     result->transparentG = source->transparentG;
     result->transparentB = source->transparentB;
     result->hasChromaKey = source->hasChromaKey;
-    // chromaRowSpans not copied — see CreateTiled note.
+    // chromaRowSpans is not copied; see CreateTiled.
 
     result->hasNineSlice = source->hasNineSlice;
     result->nineSliceLeft = source->nineSliceLeft;
@@ -1068,7 +1036,7 @@ Sprite* Sprite::CreateNineSlice(Sprite* source, int32_t targetWidth, int32_t tar
     return result;
 }
 
-// Self-register sprite loader with AssetManager
+// Registers the sprite loader with the AssetManager at static init.
 namespace
 {
 struct SpriteLoaderReg
@@ -1082,13 +1050,13 @@ struct SpriteLoaderReg
                 auto* s = Sprite::Load(p);
                 if (s)
                 {
-                    Deki::Time::Delay(1);  // Yield for watchdog on embedded
+                    Deki::Time::Delay(1);  // yields, so the watchdog on a device does not fire
                 }
                 return s;
             },
             [](void* a) { delete static_cast<Sprite*>(a); },
             [](const uint8_t* d, size_t s) -> void* { return Sprite::LoadFromFileData(d, s); });
-        // Also register as "Texture" (alias)
+        // "Texture" loads the same way.
         Deki::AssetManager::RegisterLoader(
             "Texture",
             [](const char* p) -> void*

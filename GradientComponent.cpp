@@ -4,8 +4,8 @@
 #include <deki/Engine.h>
 #include <deki/LogSystem.h>
 #include "deki-rendering/CameraComponent.h"
-// Unconditional: the bake is allocated through Deki::Memory in both builds,
-// so the editor sees the same failure path the device does.
+// In every build: the bake is allocated through Deki::Memory, so the editor
+// takes the same failure path as the device.
 #include <deki/providers/Memory.h>
 #include <cmath>
 #include <algorithm>
@@ -17,13 +17,7 @@ namespace Deki2D
 #define M_PI 3.14159265358979323846
 #endif
 
-// ============================================================================
-// Component Registration
-// ============================================================================
-// NOTE: s_Properties[] and s_ComponentMeta are now auto-generated in
-// GradientComponent.gen.h (included at end of GradientComponent.h)
-
-// Bayer dithering matrices for ordered dithering
+// Bayer matrices for ordered dithering
 static const uint8_t kBayer2x2[4] = { 0, 2, 3, 1 };
 
 static const uint8_t kBayer4x4[16] = { 0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5 };
@@ -33,7 +27,7 @@ static const uint8_t kBayer8x8[64] = { 0,  32, 8,  40, 2,  34, 10, 42, 48, 16, 5
                                        3,  35, 11, 43, 1,  33, 9,  41, 51, 19, 59, 27, 49, 17, 57, 25,
                                        15, 47, 7,  39, 13, 45, 5,  37, 63, 31, 55, 23, 61, 29, 53, 21 };
 
-// 16x16 Bayer matrix (256 values, 0-255 range)
+// 16x16: 256 values, 0-255
 static const uint8_t kBayer16x16[256] = {
     0,   192, 48,  240, 12,  204, 60,  252, 3,   195, 51,  243, 15,  207, 63,  255, 128, 64,  176, 112, 140, 76,
     188, 124, 131, 67,  179, 115, 143, 79,  191, 127, 32,  224, 16,  208, 44,  236, 28,  220, 35,  227, 19,  211,
@@ -73,7 +67,7 @@ GradientComponent::GradientComponent(float w, float h)
       tileWidth(0.0f),
       tileHeight(0.0f)
 {
-    // Initialize stops array with default white-to-black gradient
+    // White to black by default
     stops[0] = GradientStop(0.0f, Deki::Color::White);
     stops[1] = GradientStop(1.0f, Deki::Color::Black);
     stops[2] = GradientStop();
@@ -82,7 +76,6 @@ GradientComponent::GradientComponent(float w, float h)
 
 GradientComponent::~GradientComponent()
 {
-    // m_Baked frees itself.
 }
 
 void GradientComponent::WriteStopsToProperties()
@@ -159,7 +152,7 @@ void GradientComponent::SetGradientType(GradientType type)
 void GradientComponent::SetLinearGradient(float angleRadians)
 {
     gradientType = GradientType::Linear;
-    angle = angleRadians;  // Store directly in radians (engine convention)
+    angle = angleRadians;  // Radians, the engine convention
 }
 
 void GradientComponent::SetRadialGradient(float centerXPos, float centerYPos, float radiusVal)
@@ -180,7 +173,7 @@ void GradientComponent::AddColorStop(float position, uint8_t r, uint8_t g, uint8
     stops[stopCount] = GradientStop(std::clamp(position, 0.0f, 1.0f), r, g, b);
     stopCount++;
 
-    // Sort stops by position (simple bubble sort for small arrays)
+    // Keep stops sorted by position (bubble sort: at most 4 stops)
     for (int i = 0; i < stopCount - 1; i++)
     {
         for (int j = 0; j < stopCount - i - 1; j++)
@@ -203,7 +196,6 @@ void GradientComponent::ClearColorStops()
 
 void GradientComponent::SyncStopsFromProperties()
 {
-    // Sync individual property members to stops array
     if (stopCount >= 1)
     {
         stops[0].position = stop1Position;
@@ -258,17 +250,14 @@ DEKI_FAST_ATTR float GradientComponent::CalculateGradientPosition(float normX, f
     {
         case GradientType::Linear:
         {
-            // angle is in radians (engine convention). cos/sin are computed
-            // once per bake in RenderToBuffer, not per pixel.
+            // cos/sin of the angle are computed once per bake in
+            // RenderToBuffer, not per pixel.
             const float cos_a = m_CosAngle;
             const float sin_a = m_SinAngle;
             float projection = normX * cos_a + normY * sin_a;
-            // For a unit square [0,1]x[0,1], projection ranges from min_proj to max_proj
-            // min_proj = min(0, cos_a) + min(0, sin_a)
-            // max_proj = max(0, cos_a) + max(0, sin_a)
+            // Over the unit square the projection runs from min_proj to max_proj
             float min_proj = std::min(0.0f, cos_a) + std::min(0.0f, sin_a);
             float max_proj = std::max(0.0f, cos_a) + std::max(0.0f, sin_a);
-            // Normalize to [0,1] range
             return std::clamp((projection - min_proj) / (max_proj - min_proj), 0.0f, 1.0f);
         }
 
@@ -284,7 +273,7 @@ DEKI_FAST_ATTR float GradientComponent::CalculateGradientPosition(float normX, f
         {
             float dx = normX - centerX;
             float dy = normY - centerY;
-            float angle_rad = atan2f(dy, dx) + M_PI;  // 0 to 2π
+            float angle_rad = atan2f(dy, dx) + M_PI;  // 0 to 2 pi
             return angle_rad / (2.0f * M_PI);
         }
 
@@ -310,7 +299,7 @@ DEKI_FAST_ATTR void GradientComponent::InterpolateColor(float position, uint8_t*
 
     position = std::clamp(position, 0.0f, 1.0f);
 
-    // Find the two stops to interpolate between
+    // Before the first stop or past the last, the end colour holds
     if (position <= stops[0].position)
     {
         *r = stops[0].color.r;
@@ -327,7 +316,6 @@ DEKI_FAST_ATTR void GradientComponent::InterpolateColor(float position, uint8_t*
         return;
     }
 
-    // Find interpolation range
     for (int i = 0; i < stopCount - 1; i++)
     {
         if (position >= stops[i].position && position <= stops[i + 1].position)
@@ -347,8 +335,7 @@ DEKI_FAST_ATTR void GradientComponent::InterpolateColor(float position, uint8_t*
 
 DEKI_FAST_ATTR float GradientComponent::SampleBayerThreshold(int32_t x, int32_t y) const
 {
-    // Returns Bayer threshold in [0, 1) for ordered dithering. Pixelorama uses
-    // the same M / N² normalisation (no +0.5 centring), which gives crisp
+    // M / N^2, as Pixelorama does (no +0.5 centring), which gives crisp
     // hard-edged transitions at t=0 and t=1.
     switch (ditherMode)
     {
@@ -363,17 +350,16 @@ DEKI_FAST_ATTR float GradientComponent::SampleBayerThreshold(int32_t x, int32_t 
 DEKI_FAST_ATTR void GradientComponent::PickStopByThreshold(float position, float threshold, uint8_t* r, uint8_t* g,
                                                            uint8_t* b) const
 {
-    // Pixelorama-style gradient dithering: instead of blending between stops,
-    // pick ONE of the two bracket stops based on whether the local-t exceeds
-    // a Bayer threshold. This produces the stippled, pixel-art look where
-    // every pixel is exactly one of the authored colors and the dither pattern
-    // fills the transition zones between them.
+    // Pixelorama-style dithering: rather than blending, pick one of the two
+    // stops around the position, by whether the position between them
+    // reaches a Bayer threshold. Every pixel is exactly one of the authored
+    // colours, and the pattern fills the transitions: the stippled pixel-art
+    // look.
     //
-    // Matches Pixelorama's Gradient.gdshader behaviour:
-    //   - position < stops[0].position  → first stop (solid)
-    //   - position >= stops[N-1].position → last stop (solid)
-    //   - inside a bracket: ramp_val = (local_t < threshold) ? 0 : 1
-    //     (i.e. local_t >= threshold picks the upper stop)
+    // Matches Pixelorama's Gradient.gdshader:
+    //   - position < stops[0].position: first stop, solid
+    //   - position >= stops[N-1].position: last stop, solid
+    //   - between two stops: local_t >= threshold picks the upper stop
     if (stopCount == 0)
     {
         *r = *g = *b = 0;
@@ -409,7 +395,6 @@ DEKI_FAST_ATTR void GradientComponent::PickStopByThreshold(float position, float
             float range = stops[i + 1].position - stops[i].position;
             float local_t = (range > 0.0f) ? (position - stops[i].position) / range : 0.0f;
 
-            // Pixelorama's comparison: ramp_val = (local_t < threshold) ? 0 : 1
             const GradientStop& picked = (local_t >= threshold) ? stops[i + 1] : stops[i];
             *r = picked.color.r;
             *g = picked.color.g;
@@ -459,7 +444,7 @@ void GradientComponent::RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t ou
         ditherCell = 1;
     }
 
-    // Sync color stops from property members (for editor serialization)
+    // The inspector edits the stopN properties
     SyncStopsFromProperties();
     m_CosAngle = cosf(angle);
     m_SinAngle = sinf(angle);
@@ -484,7 +469,6 @@ void GradientComponent::RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t ou
             const int32_t x = static_cast<int32_t>((static_cast<int64_t>(ox) * renderWidth) / outW);
             float normX = 0.0f, normY = 0.0f;
 
-            // Handle tiling
             switch (tileMode)
             {
                 case GradientTileMode::None:
@@ -529,26 +513,24 @@ void GradientComponent::RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t ou
                 }
             }
 
-            // Calculate gradient position
             float gradPos = CalculateGradientPosition(normX, normY);
 
             uint8_t r, g, b;
             if (ditherMode == GradientDitherMode::None)
             {
-                // No dither: smooth lerp between stops (legacy behaviour).
+                // No dither: blend smoothly between stops
                 InterpolateColor(gradPos, &r, &g, &b);
             }
             else
             {
-                // Pixelorama-style stipple dither: pick one of the bracketing
-                // stop colors based on a Bayer threshold. The pattern is laid
-                // out in output pixels, each Bayer cell ditherCell wide, so it
-                // stays regular whatever the scale.
+                // Stipple dither: pick one of the two stops around the position
+                // by a Bayer threshold. The pattern is laid out in output
+                // pixels, each Bayer cell ditherCell wide, so it stays regular
+                // at any scale.
                 float threshold = SampleBayerThreshold(ox / ditherCell, cellY);
                 PickStopByThreshold(gradPos, threshold, &r, &g, &b);
             }
 
-            // Convert to RGB565 and write directly to buffer at (ox, oy)
             buffer16[oy * outW + ox] = ConvertToRGB565(r, g, b);
         }
     }
@@ -613,7 +595,7 @@ bool GradientComponent::RenderContent(const Deki::Object* owner, QuadBlit::Sourc
     }
     const int32_t ditherCell = std::max<int32_t>(1, static_cast<int32_t>(std::lround(ditherArt * bakePPM / artPPM)));
 
-    // Sync color stops from property members (for editor serialization)
+    // The inspector edits the stopN properties
     SyncStopsFromProperties();
 
     // Re-bake only when an input changed. The bake is the expensive part
@@ -649,19 +631,18 @@ bool GradientComponent::RenderContent(const Deki::Object* owner, QuadBlit::Sourc
         m_BakeKey = key;
     }
 
-    // Create source descriptor
-    outSource = QuadBlit::MakeSource(m_Baked.Data(), widthPx, heightPx, QuadBlit::PixelLayout::RGB565(),  // isRGB565
-                                     false  // ownsPixels - the component owns its bake
+    outSource = QuadBlit::MakeSource(m_Baked.Data(), widthPx, heightPx, QuadBlit::PixelLayout::RGB565(),
+                                     false  // ownsPixels: the component owns its bake
     );
     // The bake's own density: the renderer then scales it by the object's
     // scale alone, 1:1 for an unscaled object.
     outSource.pixelsPerMeter = static_cast<float>(widthPx) / width;
 
-    // Gradient uses center pivot (0.5, 0.5)
+    // Centre pivot
     outPivotX = 0.5f;
     outPivotY = 0.5f;
 
-    // No tint for gradients (white = no modification)
+    // White: no tint
     outTintR = outTintG = outTintB = outTintA = 255;
 
     return true;

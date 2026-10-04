@@ -9,42 +9,31 @@
 namespace Deki2D
 {
 
-/**
- * @brief Component that clips children to a rectangular region
- *
- * Add this component to any object to clip its children's rendering
- * to the specified width/height bounds. The clip region is centered
- * on the object's position.
- *
- * Usage:
- * @code
- * auto* clip = entity->AddComponent<ClipComponent>();
- * clip->width = 100;
- * clip->height = 50;
- * // All children will be clipped to this 100x50 region
- * @endcode
- *
- * ClipComponents can be nested - child clips are intersected with parent clips.
- */
+/// Clips the rendering of an object's children to a width x height rectangle
+/// centred on the object's position.
+///
+///     auto* clip = entity->AddComponent<ClipComponent>();
+///     clip->width = 100;
+///     clip->height = 50;  // children are now cut to this 100x50 region
+///
+/// Clips can be nested: a child clip is intersected with its parent's.
 DEKI_CATEGORY("Core")
 DEKI_DESCRIPTION("Clips its children's rendering to a rectangle.")
 DEKI_FORMER_NAME("ClipComponent")
 class ClipComponent : public Deki::Component, public Deki::IClipProvider, public Deki::ISortableProvider
 {
 public:
-    /** @brief Width of clip region in meters */
     DEKI_EXPORT
     DEKI_TOOLTIP("Width of the clipping window in meters. Children are cut off at this edge.")
     DEKI_UNIT(Distance)
     float width = 6.25f;
 
-    /** @brief Height of clip region in meters */
     DEKI_EXPORT
     DEKI_TOOLTIP("Height of the clipping window in meters.")
     DEKI_UNIT(Distance)
     float height = 6.25f;
 
-    /** @brief Sorting order for this clip region (lower = behind) */
+    // Lower is further behind
     DEKI_EXPORT
     DEKI_TOOLTIP("Draw order of the clipped group as a whole against everything outside it.")
     int32_t sortingOrder = 0;
@@ -59,7 +48,5 @@ public:
     float GetClipWidth() const override { return width; }
     float GetClipHeight() const override { return height; }
 };
-
-// Generated property metadata (after class definition for offsetof)
 
 }  // namespace Deki2D

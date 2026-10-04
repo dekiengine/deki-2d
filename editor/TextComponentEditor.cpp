@@ -1,9 +1,5 @@
-/**
- * @file TextComponentEditor.cpp
- * @brief Editor-only rendering for TextComponent
- *
- * Uses CustomEditor with SceneView::Get() and EditorUI::Get() singletons.
- */
+// Editor support for TextComponent: its Inspector (baked font sizes, font
+// preview) and its display size.
 
 #ifdef DEKI_EDITOR
 
@@ -42,13 +38,13 @@ public:
 
     ~TextComponentEditor()
     {
-        // When editor is destroyed (e.g., switching scenes), disable preview
-        // and clear the preview font cache to avoid stale state
+        // When the editor is destroyed (e.g. on a scene switch), turn the
+        // preview off and clear the preview font cache, so nothing stale stays.
         if (m_TextComponent && m_TextComponent->previewEnabled)
         {
             m_TextComponent->previewEnabled = false;
 
-            // Invalidate the preview font cache if we were previewing
+            // Invalidate the preview font cache if a preview was shown.
             if (!m_LastSource.empty() && m_LastPreviewSize > 0)
             {
                 std::string previewSeed = "preview:" + m_LastSource + ":" + std::to_string(m_LastPreviewSize);
@@ -61,23 +57,18 @@ public:
     const char* GetComponentName() const override { return "TextComponent"; }
 
 private:
-    // Pointer to the component we're editing (for cleanup in destructor)
+    // The component being edited, for the cleanup in the destructor.
     TextComponent* m_TextComponent = nullptr;
 
-    // Cached state for detecting changes within a single component.
-    // Since factory pattern now creates fresh editor instances per-component,
-    // these member variables start fresh for each component and don't persist
-    // across different components.
+    // The last state seen, to detect changes. Each component gets its own
+    // editor instance, so this belongs to one component.
     std::string m_LastSource;
-    int32_t m_LastRenderSize = 0;       // Track the actual render size used
-    bool m_LastPreviewEnabled = false;  // Track preview state changes
-    int32_t m_LastPreviewSize = 0;      // Track preview size for cache invalidation
+    int32_t m_LastRenderSize = 0;  // the size actually rendered
+    bool m_LastPreviewEnabled = false;
+    int32_t m_LastPreviewSize = 0;  // for invalidating the preview cache
 
-    /**
-     * @brief Read the baked font sizes from the font's .data file
-     * @param sourceGuid The source font GUID (TTF/OTF file)
-     * @return Vector of baked sizes, empty if none found
-     */
+    /// The baked sizes listed in the .data file of the font `sourceGuid`
+    /// (a TTF/OTF asset); empty if none.
     std::vector<int32_t> GetBakedSizesFromData(const std::string& sourceGuid)
     {
         std::vector<int32_t> sizes;
@@ -119,7 +110,6 @@ private:
                 }
             }
 
-            // Sort sizes for display
             std::sort(sizes.begin(), sizes.end());
         }
         catch (...)
@@ -130,12 +120,8 @@ private:
         return sizes;
     }
 
-    /**
-     * @brief Read the variant GUID from the font's .data file
-     * @param sourceGuid The source font GUID (TTF/OTF file)
-     * @param fontSize The font size to look up
-     * @return The variant GUID if found, empty string otherwise
-     */
+    /// The variant GUID for `fontSize` from the .data file of the font
+    /// `sourceGuid` (a TTF/OTF asset), or "" if none.
     std::string GetVariantGuidFromData(const std::string& sourceGuid, int32_t fontSize)
     {
         auto* pipeline = DekiEditor::AssetPipeline::Instance();
@@ -172,7 +158,7 @@ private:
         }
         catch (...)
         {
-            // Parse error, return empty
+            // Parse error: "".
         }
 
         return "";
@@ -224,20 +210,19 @@ private:
             return;
         }
 
-        // Resolve source GUID (font.source if set, otherwise font.guid IS the source)
+        // The source GUID: font.source if set, otherwise font.guid is the source.
         std::string resolvedSource = textComp->font.source.empty() ? textComp->font.guid : textComp->font.source;
         if (resolvedSource.empty())
         {
             return;
         }
 
-        // Store component pointer for destructor cleanup
         m_TextComponent = textComp;
 
-        // Calculate the actual render size based on preview state
+        // The size actually rendered, which depends on the preview.
         int32_t actualRenderSize = textComp->previewEnabled ? textComp->previewSize : textComp->fontSize;
 
-        // Check if anything rendering-relevant changed
+        // Did anything that affects rendering change?
         bool sourceChanged = (resolvedSource != m_LastSource);
         bool sizeChanged = (actualRenderSize != m_LastRenderSize);
         bool previewStateChanged = (textComp->previewEnabled != m_LastPreviewEnabled);
@@ -247,8 +232,8 @@ private:
             return;
         }
 
-        // Read the variant GUID
-        // For BDF fonts, use deterministic GUID; for TTF, use fontSize key from .data
+        // The variant GUID: deterministic for BDF fonts, from the fontSize key
+        // in .data for TTF.
         std::string variantGuid;
         {
             auto* pl = DekiEditor::AssetPipeline::Instance();
@@ -263,9 +248,8 @@ private:
                 if (ext == ".bdf")
                 {
                     variantGuid = Deki::GenerateDeterministicGuid(resolvedSource + ":bdf");
-                    // Ensure variant GUID is registered with AssetManager
                     Deki::AssetManager::Get()->RegisterGuid(variantGuid, variantGuid);
-                    // Set font.source so subsequent lookups work
+                    // Set font.source, which later lookups need.
                     if (textComp->font.source.empty())
                     {
                         textComp->font.source = resolvedSource;
@@ -284,21 +268,18 @@ private:
             textComp->font.loadAttempted = false;
         }
 
-        // Cache ALL state including preview
+        // Remember all of it, preview included.
         m_LastSource = resolvedSource;
         m_LastRenderSize = actualRenderSize;
         m_LastPreviewEnabled = textComp->previewEnabled;
         m_LastPreviewSize = textComp->previewSize;
     }
 
-    /**
-     * @brief Ensure a font size is baked to disk (saved in .data file and compiled)
-     * @param sourceGuid The source font GUID (TTF file)
-     * @param size The font size to bake
-     */
+    /// Makes sure the font `sourceGuid` (a TTF asset) is baked at `size`: the
+    /// size is saved in its .data file and compiled.
     void EnsureFontSizeBaked(const std::string& sourceGuid, int32_t size)
     {
-        // Delegate to unified baking path in FontSyncHandler
+        // FontSyncHandler has the one baking path.
         Deki2D::EnsureFontSizeBaked(sourceGuid, size);
     }
 
@@ -338,17 +319,15 @@ public:
 
         UpdateBakedFontGuid(textComp);
 
-        // Get EditorUI singleton
         auto& gui = EditorUI::Get();
 
-        // Draw properties individually, skipping fontSize (we'll draw a custom dropdown)
+        // Properties one by one; fontSize gets its own dropdown below.
         gui.PropertyField("text");
         gui.PropertyField("font");
 
-        // Get source GUID for font operations
         const std::string& sourceGuid = textComp->font.source.empty() ? textComp->font.guid : textComp->font.source;
 
-        // Detect if font is BDF (check source extension)
+        // A BDF font? (by the source's extension)
         bool isBdfFont = false;
         if (!sourceGuid.empty())
         {
@@ -375,14 +354,13 @@ public:
             gui.DragInt("##pixelScale", &textComp->pixelScale, 1.0f, 1, 8);
         }
 
-        // Draw custom fontSize dropdown with baked sizes only (skip for BDF fonts)
+        // fontSize dropdown listing only baked sizes (not for BDF fonts).
         if (!sourceGuid.empty() && !isBdfFont)
         {
             std::vector<int32_t> bakedSizes = GetBakedSizesFromData(sourceGuid);
 
             if (!bakedSizes.empty())
             {
-                // Find current selection index
                 int currentIndex = -1;
                 for (size_t i = 0; i < bakedSizes.size(); i++)
                 {
@@ -393,7 +371,6 @@ public:
                     }
                 }
 
-                // Build combo items
                 std::string previewText = (currentIndex >= 0) ? std::to_string(bakedSizes[currentIndex]) + " px"
                                                               : std::to_string(textComp->fontSize) + " px (not baked)";
 
@@ -428,7 +405,7 @@ public:
             }
             else
             {
-                // No baked sizes - show warning and current value
+                // No baked sizes: show a warning and the current value.
                 char sizeBuf[128];
                 std::snprintf(sizeBuf, sizeof(sizeBuf), "Font Size: %d px", textComp->fontSize);
                 gui.Text(sizeBuf);
@@ -439,14 +416,13 @@ public:
         }
         else
         {
-            // No font assigned - just show the value
+            // No font assigned: just show the value.
             char sizeBuf[128];
             std::snprintf(sizeBuf, sizeof(sizeBuf), "Font Size: %d px", textComp->fontSize);
             gui.Text(sizeBuf);
             gui.TextDisabled("Assign a font to see baked sizes.");
         }
 
-        // Continue with remaining properties
         gui.PropertyField("width");
         gui.PropertyField("height");
         gui.PropertyField("color");
@@ -455,7 +431,7 @@ public:
         gui.PropertyField("verticalAlign");
         gui.PropertyField("sortingOrder");
 
-        // Font Preview section - allows testing different sizes without baking (TTF only)
+        // Font Preview: try sizes without baking them (TTF only).
         if (!sourceGuid.empty() && !isBdfFont)
         {
             gui.Separator();
@@ -465,7 +441,6 @@ public:
                 gui.TextDisabled("Preview font at different sizes without baking to disk.");
                 gui.Spacing();
 
-                // Preview enable checkbox
                 bool prevPreviewEnabled = textComp->previewEnabled;
                 {
                     gui.Checkbox("Enable Preview", &textComp->previewEnabled);
@@ -473,20 +448,19 @@ public:
 
                 if (textComp->previewEnabled)
                 {
-                    // Preview size input
                     int32_t prevPreviewSize = textComp->previewSize;
                     gui.PropertyRow("Preview Size");
                     gui.InputInt("##previewSize", &textComp->previewSize);
                     textComp->previewSize = (std::max)(6, (std::min)(128, textComp->previewSize));
 
-                    // Log when preview settings change
+                    // Log when the preview settings change.
                     if (prevPreviewEnabled != textComp->previewEnabled || prevPreviewSize != textComp->previewSize)
                     {
                         DEKI_LOG_DEBUG("TextComponentEditor: Preview changed - enabled=%d, size=%d",
                                        textComp->previewEnabled, textComp->previewSize);
                     }
 
-                    // Show preview atlas
+                    // The preview atlas.
                     uint32_t atlasWidth = 0, atlasHeight = 0;
                     uint32_t textureId =
                         gui.GetFontAtlasTexture(sourceGuid, textComp->previewSize, &atlasWidth, &atlasHeight);
@@ -498,7 +472,7 @@ public:
                         std::snprintf(atlasBuf, sizeof(atlasBuf), "Preview Atlas: %u x %u", atlasWidth, atlasHeight);
                         gui.Text(atlasBuf);
 
-                        // Calculate display size (max 256px height)
+                        // Display size, at most 256px tall.
                         float maxHeight = 256.0f;
                         float scale = (atlasHeight > maxHeight) ? (maxHeight / atlasHeight) : 1.0f;
 
@@ -506,13 +480,11 @@ public:
 
                         gui.Spacing();
 
-                        // Save and Use button - saves size to .data and triggers baking
+                        // Save and Use: saves the size to .data, which bakes it.
                         if (gui.Button("Save and Use"))
                         {
-                            // Ensure the preview size is baked to disk
                             EnsureFontSizeBaked(sourceGuid, textComp->previewSize);
 
-                            // Update component
                             textComp->fontSize = textComp->previewSize;
                             textComp->previewEnabled = false;
                         }

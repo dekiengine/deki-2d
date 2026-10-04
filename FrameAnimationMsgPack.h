@@ -6,67 +6,45 @@
 namespace Deki2D
 {
 
-/**
- * @brief MessagePack-based frame animation cache format
- *
- * References sprite frames by GUID rather than pixel coordinates.
- * Supports multiple animations per file (e.g., idle, walk, run).
- *
- * The cache format is generated, not hand-written: FrameAnimationData is a
- * DEKI_SERIALIZABLE struct, so the reflection codegen emits Deki::Serialize<T> (save)
- * and DeserializeMsgPack (load). Keys are the struct field names, hashed the same
- * way as component fields, so the map is:
- *   { "spritesheetGuid": "...", "animations": [
- *       { "name": "idle", "frames": [ { "frameGuid": "...", "duration": 100 } ],
- *         "loop": true } ] }
- * To change the format, change the struct fields and re-export the .anim assets.
- */
+// The MessagePack cache format for frame animations. Frames are named by
+// sprite frame GUID, not pixel coordinates, and one file holds several
+// animations (such as idle, walk, run).
+//
+// The format comes from the struct: FrameAnimationData is DEKI_SERIALIZABLE,
+// so the reflection codegen emits Deki::Serialize<T> (save) and
+// DeserializeMsgPack (load). Keys are the struct field names, hashed the same
+// way as component fields, so the map is:
+//   { "spritesheetGuid": "...", "animations": [
+//       { "name": "idle", "frames": [ { "frameGuid": "...", "duration": 100 } ],
+//         "loop": true } ] }
+// To change the format, change the struct fields and re-export the .anim assets.
 
-// Forward declarations
 struct FrameAnimationData;
 
-/**
- * @brief File extension for frame animation files
- */
 constexpr const char* kFrameanimExtension = ".anim";
 
-/**
- * @brief Helper class for frame animation MessagePack format
- */
+/// Reads and writes frame animations in the MessagePack format.
 class FrameAnimationMsgPackHelper
 {
 public:
-    /**
-     * @brief Load frame animation from MessagePack format
-     * @param msgpackPath Path to .frameanim MessagePack file
-     * @param outData Output animation data structure
-     * @return true on success
-     */
+    /// Loads the animation file at `msgpackPath` into `outData`. Returns false
+    /// on failure.
     static bool LoadAnimation(const char* msgpackPath, FrameAnimationData* outData);
 
-    /**
-     * @brief Load frame animation from memory buffer
-     * @param data Pointer to MessagePack data
-     * @param size Size of data in bytes
-     * @param outData Output animation data structure
-     * @return true on success
-     */
+    /// Loads an animation from MessagePack bytes in memory into `outData`.
+    /// Returns false on failure.
     static bool LoadAnimationFromMemory(const uint8_t* data, size_t size, FrameAnimationData* outData);
 
 #ifdef DEKI_EDITOR
-    /**
-     * @brief Save frame animation to MessagePack format (editor only)
-     * @param msgpackPath Output path for .frameanim file
-     * @param animData Animation data to save
-     * @return true on success
-     */
+    /// Writes `animData` to `msgpackPath`. Editor only. Returns false on
+    /// failure.
     static bool SaveAnimation(const char* msgpackPath, const FrameAnimationData* animData);
 #endif
 };
 
-// Registers the "Animation" asset loader. Idempotent. Called from
-// Deki2DInitSystem (Deki2DInit.h), which is also what gets this file into a
-// firmware.
+/// Registers the "Animation" asset loader. Safe to call more than once. Called
+/// from Deki2DInitSystem (Deki2DInit.h), which is also what links this file
+/// into a firmware.
 void RegisterAnimationLoader();
 
 }  // namespace Deki2D

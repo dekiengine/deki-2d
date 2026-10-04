@@ -9,8 +9,6 @@
 namespace Deki2D
 {
 
-// ============================================================================
-
 AnimationComponent::AnimationComponent(SpriteComponent* spriteComp)
     : spriteComponent(spriteComp),
       animationData(nullptr),
@@ -41,14 +39,13 @@ void AnimationComponent::Awake()
 
 void AnimationComponent::Setup()
 {
-    // Use animation data from AssetRef if available
     if (animation.ptr && !animationData)
     {
         animationData = animation.Get();
         ownsAnimationData = false;
     }
 
-    // Auto-find spriteComponent on same object if not already set
+    // Find the sprite component on the same object when none is set
     if (!spriteComponent)
     {
         Deki::Object* owner = GetOwner();
@@ -58,7 +55,7 @@ void AnimationComponent::Setup()
         }
     }
 
-    // Auto-play first animation if set
+    // Start the first sequence
     if (animationData && spriteComponent && !animationData->animations.empty())
     {
         isPlaying = true;
@@ -104,7 +101,6 @@ bool AnimationComponent::PlayAnimation(const char* name, bool restartIfPlaying)
         return false;
     }
 
-    // Check if same animation is already playing
     if (currentSequence == index && isPlaying && !restartIfPlaying)
     {
         return true;
@@ -225,13 +221,13 @@ void AnimationComponent::UpdateAnimation(uint32_t currentTime)
         return;
     }
 
-    // Optimization: Don't update single-frame animations
+    // A single frame never changes
     if (seq->frames.size() == 1)
     {
         return;
     }
 
-    // Initialize frame start time on first update
+    // 0 means the sequence has just started: its first frame starts now
     if (frameStartTime == 0)
     {
         frameStartTime = currentTime;
@@ -325,7 +321,6 @@ void AnimationComponent::ApplyCurrentFrame()
 
     const auto& frameData = seq->frames[currentFrame];
 
-    // Look up frame coordinates from sprite using GUID
     Sprite* sprite = spriteComponent->sprite.Get();
     if (!sprite)
     {
@@ -347,8 +342,8 @@ void AnimationComponent::ApplyCurrentFrame()
     }
     if (!spriteFrame)
     {
-        // Reported once per resolve (see ResolveFrames), not once per frame
-        // advance: this runs at animation rate.
+        // ResolveFrames already reported the missing frame once; this runs
+        // at animation rate, so it stays quiet.
         (void)frameData;
         return;
     }

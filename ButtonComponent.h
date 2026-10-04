@@ -8,7 +8,6 @@
 #include <deki/reflection/Property.h>
 #include <deki/reflection/ObjectRef.h>
 
-// Forward declarations
 namespace Deki
 {
 class Object;
@@ -22,60 +21,43 @@ class InputCollider;
 namespace Deki2D
 {
 
-/**
- * @brief Button states for interaction feedback
- */
+/// What a button is doing, for visual feedback.
 enum class ButtonState : uint8_t
 {
-    Normal = 0,   // Default state
-    Hovered = 1,  // Mouse/finger hovering over button
-    Pressed = 2,  // Button is being pressed
-    Disabled = 3  // Button is disabled and cannot be interacted with
+    Normal = 0,
+    Hovered = 1,  // Mouse or finger over the button
+    Pressed = 2,
+    Disabled = 3  // Ignores input
 };
 
-/**
- * @brief Button callback function type
- */
 using ButtonCallback = std::function<void()>;
 
-/**
- * @brief Pure interaction component for clickable buttons
- *
- * ButtonComponent handles interaction logic (clicks, hover, state).
- * Requires an DekiInput::InputCollider component on the same or related object
- * to receive input events (like Unity's Collider2D requirement).
- *
- * Features:
- * - Multiple interaction states (normal, hovered, pressed, disabled)
- * - Callback system for click, press, release, hover events
- * - Configurable via ObjectRef to DekiInput::InputCollider
- *
- * Usage example:
- * @code
- * auto* entity = new Deki::Object("Button");
- * auto* collider = entity->AddComponent<DekiInput::InputCollider>();
- * collider->width = 100;
- * collider->height = 40;
- * auto* button = entity->AddComponent<ButtonComponent>();
- * button->inputCollider.Set(entity);
- *
- * button->AddOnClickCallback([]() {
- *     // Handle button click
- * });
- * @endcode
- */
+/// Button behaviour only: clicks, hover and state. Drawing is left to a style
+/// component that watches the state.
+///
+/// It gets input from a DekiInput::InputCollider, on the same object or
+/// another one, named by `inputCollider` (as a Unity button needs a
+/// Collider2D). It fires callbacks on click, press, release and hover.
+///
+/// Example:
+///
+///     auto* entity = new Deki::Object("Button");
+///     auto* collider = entity->AddComponent<DekiInput::InputCollider>();
+///     collider->width = 100;
+///     collider->height = 40;
+///     auto* button = entity->AddComponent<ButtonComponent>();
+///     button->inputCollider.Set(entity);
+///     button->AddOnClickCallback([]() { /* handle the click */ });
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Makes the object a button: tracks hover and press, and fires a click callback.")
 DEKI_FORMER_NAME("ButtonComponent")
 class ButtonComponent : public Deki::Component
 {
 public:
-    // DekiInput::InputCollider reference (required for receiving input)
     DEKI_EXPORT
     DEKI_TOOLTIP("The hit area that makes this button clickable. Without one the button has no way to notice a press.")
     Deki::ObjectRef<DekiInput::InputCollider> inputCollider;
 
-    // State management
     DEKI_EXPORT
     DEKI_TOOLTIP(
         "Normal, hovered, pressed or disabled. Set by input; a style component watches it to decide what to draw.")
@@ -85,8 +67,7 @@ public:
         "A disabled button ignores input and reports the disabled state, so it can be greyed out rather than hidden.")
     bool isEnabled;
 
-    // Callbacks (not exposed to editor - runtime only)
-    // Multiple listeners supported via Add*Callback methods
+    // Runtime-only listeners, added with the Add*Callback methods
     std::vector<ButtonCallback> onClick;
     std::vector<ButtonCallback> onPress;
     std::vector<ButtonCallback> onRelease;
@@ -101,30 +82,18 @@ public:
     // Deki::Component lifecycle
     void Start() override;
 
-    // State management
-    /**
-     * @brief Set the button state
-     * @param newState New state to set
-     */
+    /// Sets the state and fires the hover and state-changed callbacks it causes.
     void SetState(ButtonState newState);
 
-    /**
-     * @brief Get current button state
-     */
     ButtonState GetState() const { return state; }
 
-    /**
-     * @brief Enable or disable the button
-     * @param enabled true to enable, false to disable
-     */
+    /// Enables or disables the button. Disabling it also drops any press in
+    /// progress.
     void SetEnabled(bool enabled);
 
-    /**
-     * @brief Check if button is enabled
-     */
     bool IsEnabled() const { return isEnabled; }
 
-    // Callback registration (supports multiple listeners)
+    // Each adds one more listener
     void AddOnClickCallback(const ButtonCallback& callback);
     void AddOnPressCallback(const ButtonCallback& callback);
     void AddOnReleaseCallback(const ButtonCallback& callback);
@@ -132,10 +101,8 @@ public:
     void AddOnHoverExitCallback(const ButtonCallback& callback);
     void AddOnStateChangedCallback(const std::function<void(ButtonState)>& callback);
 
-    /**
-     * @brief Cancel any ongoing press (e.g., when scrolling starts)
-     * This resets the button state without triggering click callback
-     */
+    /// Cancels a press in progress, such as when scrolling starts. The button
+    /// returns to Normal and fires release but not click.
     void CancelPress();
 
 private:
@@ -143,7 +110,5 @@ private:
 
     void InvokeCallbacks(const std::vector<ButtonCallback>& callbacks);
 };
-
-// Generated property metadata (after class definition for offsetof)
 
 }  // namespace Deki2D

@@ -12,68 +12,51 @@
 namespace Deki2D
 {
 
-// Forward declarations
 class ButtonComponent;
 class SpriteComponent;
 enum class ButtonState : uint8_t;
 
-/**
- * @brief Transition mode for ButtonStyleComponent
- */
+/// How ButtonStyleComponent shows a state change.
 enum class ButtonStyleMode : uint8_t
 {
     ColorTint = 0,  // Tint the existing sprite per state
-    SpriteSwap = 1  // Swap entire sprite assets per state
+    SpriteSwap = 1  // Use a different sprite asset per state
 };
 
-/**
- * @brief CSS-like visual feedback for buttons
- *
- * ButtonStyleComponent observes a ButtonComponent via ObjectRef and modifies
- * a sibling SpriteComponent's appearance based on button state.
- *
- * Two modes:
- * - ColorTint: Changes the sprite's tint color per state
- * - SpriteSwap: Swaps the entire sprite asset per state
- *
- * Usage:
- * @code
- * auto* entity = new Deki::Object("StyledButton");
- * auto* sprite = entity->AddComponent<SpriteComponent>();
- * auto* button = entity->AddComponent<ButtonComponent>();
- * auto* style = entity->AddComponent<ButtonStyleComponent>();
- *
- * // Set button reference (required)
- * style->button.Set(entity);
- *
- * // Configure colors (ColorTint mode)
- * style->normalColor = Deki::Color::White;
- * style->pressedColor = Deki::Color(160, 160, 160);
- * @endcode
- */
+/// Visual feedback for a button. Watches the ButtonComponent named by `button`
+/// and changes the SpriteComponent named by `sprite` to match its state,
+/// either by tinting it (ColorTint) or by swapping its sprite (SpriteSwap).
+///
+/// Example:
+///
+///     auto* entity = new Deki::Object("StyledButton");
+///     auto* sprite = entity->AddComponent<SpriteComponent>();
+///     auto* button = entity->AddComponent<ButtonComponent>();
+///     auto* style = entity->AddComponent<ButtonStyleComponent>();
+///     style->button.Set(entity);  // required
+///     style->normalColor = Deki::Color::White;
+///     style->pressedColor = Deki::Color(160, 160, 160);
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Gives a button its look per state, by tinting or by swapping sprites.")
 DEKI_FORMER_NAME("ButtonStyleComponent")
 class ButtonStyleComponent : public Deki::Component
 {
 public:
-    // Button to observe (required)
+    // Required
     DEKI_EXPORT
     DEKI_TOOLTIP("The button whose state drives this styling. Usually the button on the same object.")
     Deki::ObjectRef<ButtonComponent> button;
 
-    // Sprite to modify
     DEKI_EXPORT
     DEKI_TOOLTIP("The sprite this styling changes. Usually the sprite on the same object.")
     Deki::ObjectRef<SpriteComponent> sprite;
 
-    // Transition mode
     DEKI_EXPORT
     DEKI_TOOLTIP("Whether pressing swaps the tint colour or swaps the sprite outright. Colour is cheaper; separate "
                  "sprites let the shape change.")
     ButtonStyleMode transition;
 
-    // --- ColorTint mode colors ---
+    // ColorTint mode colours
     DEKI_VISIBLE_WHEN(transition, ColorTint)
     DEKI_EXPORT
     DEKI_TOOLTIP("Tint while the button is idle.")
@@ -94,7 +77,7 @@ public:
     DEKI_TOOLTIP("Tint while the button is disabled. Usually faded or desaturated.")
     Deki::Color disabledColor;
 
-    // --- SpriteSwap mode sprites ---
+    // SpriteSwap mode sprites
     DEKI_VISIBLE_WHEN(transition, SpriteSwap)
     DEKI_EXPORT
     DEKI_TOOLTIP("Sprite while idle, in sprite-swap mode.")
@@ -122,7 +105,5 @@ public:
 private:
     void ApplyState(ButtonState state);
 };
-
-// Generated property metadata (after class definition for offsetof)
 
 }  // namespace Deki2D

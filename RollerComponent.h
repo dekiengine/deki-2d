@@ -11,7 +11,6 @@
 #include <deki/Color.h>
 #include <deki/reflection/Property.h>
 
-// Forward declarations
 namespace Deki
 {
 class Object;
@@ -30,129 +29,111 @@ class SpriteComponent;
 class ClipComponent;
 class Sprite;
 
-/**
- * @brief Callback function type for roller selection changes
- */
+/// Called with the index and text of the selected option.
 using RollerCallback = std::function<void(int32_t index, const std::string& value)>;
 
-/**
- * @brief Customizable roller/picker wheel component
- *
- * RollerComponent provides a scrollable list of text options that can be
- * selected by touch/drag input, similar to mobile picker widgets.
- *
- * Features:
- * - Configurable number of visible rows
- * - Momentum-based scrolling with snap-to-item
- * - Touch/drag input support
- * - Customizable colors and styling
- * - Selection change callback
- * - Infinite scroll option (wraps around)
- *
- * Usage example:
- * @code
- * auto* roller = entity->AddComponent<RollerComponent>();
- * roller->SetOptions({"Option 1", "Option 2", "Option 3"});
- * roller->SetVisibleRowCount(3);
- * roller->SetOnSelectionChanged([](int32_t index, const std::string& value) {
- *     // Handle selection
- * });
- * @endcode
- */
+/// Picker wheel: a list of text options the user drags through, like a phone
+/// date picker. It scrolls with momentum, snaps to an option, can wrap around
+/// at the ends, and reports selection changes through callbacks.
+///
+/// Example:
+///
+///     auto* roller = entity->AddComponent<RollerComponent>();
+///     roller->SetOptions({"Option 1", "Option 2", "Option 3"});
+///     roller->SetVisibleRowCount(3);
+///     roller->SetOnSelectionChanged([](int32_t index, const std::string& value) {
+///         // Handle selection
+///     });
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Picker wheel: spins through a list of values with momentum and snaps to one.")
 DEKI_FORMER_NAME("RollerComponent")
 class RollerComponent : public Deki::Component
 {
 public:
-    // Expose base class Update() method (RollerComponent::Update(float) has different signature)
+    // Update(float) below has a different signature, so it would hide the base Update().
     using Deki::Component::Update;
 
     // ========================================================================
     // Editor-visible properties
     // ========================================================================
 
-    // DekiInput::InputCollider reference (required for receiving input)
+    // The roller receives no input without it.
     DEKI_EXPORT
     DEKI_TOOLTIP("The hit area that catches the drag. Without one the roller cannot be spun.")
     Deki::ObjectRef<DekiInput::InputCollider> inputCollider;
 
-    /** @brief Width of the roller in meters */
+    /// Width of the roller, in meters.
     DEKI_EXPORT
     DEKI_TOOLTIP("Width of the roller in meters.")
     DEKI_UNIT(Distance)
     float width;
 
-    /** @brief Height of each item row in meters */
+    /// Height of an unselected row, in meters.
     DEKI_EXPORT
     DEKI_TOOLTIP("Height of one unselected row, in meters.")
     DEKI_UNIT(Distance)
     float itemHeight;
 
-    /** @brief Number of visible rows (should be odd for centered selection) */
+    /// Rows shown at once. Odd numbers centre the selection.
     DEKI_EXPORT
     DEKI_TOOLTIP("How many rows are shown at once, including the selected one. Odd numbers centre the selection.")
     int32_t visibleRows;
 
-    /** @brief Enable infinite scrolling (wrap around) */
+    /// Wraps from the last option to the first.
     DEKI_EXPORT
     DEKI_TOOLTIP("Wrap around from the last option to the first, so the roller spins without ends.")
     bool infiniteScroll;
 
-    /** @brief Reverse drag direction (default: drag follows touch) */
+    /// Inverts the drag direction. Off, the content follows the finger.
     DEKI_EXPORT
     DEKI_TOOLTIP("Invert the drag direction.")
     bool reverseDrag;
 
-    /** @brief List of options (editable in editor) */
     DEKI_EXPORT
     DEKI_TOOLTIP("The list of choices, in order.")
     std::vector<std::string> options;
 
-    /** @brief Currently selected index */
     DEKI_EXPORT
     DEKI_TOOLTIP("Which option is currently chosen, counting from 0.")
     int32_t selectedIndex;
 
-    // Visual properties are edited directly on child objects:
+    // Visuals are edited on the child objects:
     // - Background child: SpriteComponent (sprite, tintColor)
     // - Selection child: SpriteComponent (sprite, tintColor)
     // - TextRow children: TextComponent (font, fontSize, color)
 
-    /** @brief Physics deceleration rate (0.0-1.0, higher = slower stop) */
+    /// How quickly a flick slows, 0 to 1. Higher stops sooner.
     DEKI_EXPORT
     DEKI_TOOLTIP("How quickly a flick slows down. Higher settles sooner.")
     float deceleration;
 
-    /** @brief Snap animation speed (higher = faster) */
+    /// Speed of the snap onto the nearest option. Higher is faster.
     DEKI_EXPORT
     DEKI_TOOLTIP("How fast the roller settles onto the nearest option once it has slowed. Higher snaps harder.")
     float snapSpeed;
 
-    /** @brief Height of the selected (center) item row in meters */
+    /// Height of the selected (centre) row, in meters.
     DEKI_EXPORT
     DEKI_TOOLTIP("Height of the selected row, in meters. Making it taller than the others is what marks the selection.")
     DEKI_UNIT(Distance)
     float selectedItemHeight;
 
-    /** @brief Color for selected (center) item text */
     DEKI_EXPORT
     DEKI_TOOLTIP("Text colour of the selected row.")
     Deki::Color selectedColor;
 
-    /** @brief Color for non-selected item text */
     DEKI_EXPORT
     DEKI_TOOLTIP("Text colour of the rows either side.")
     Deki::Color normalColor;
 
 #ifdef DEKI_EDITOR
-    /** @brief Font size for selected item (editor only, for sharp text) */
+    /// Font size of the selected row in the editor, so the preview stays sharp.
     DEKI_EXPORT
     DEKI_TOOLTIP("Editor preview size for the selected row. The device draws at the font asset's baked size.")
     DEKI_EDITOR_ONLY
     int32_t selectedFontSize;
 
-    /** @brief Font size for non-selected items (editor only) */
+    /// Font size of the unselected rows in the editor.
     DEKI_EXPORT
     DEKI_TOOLTIP("Editor preview size for the unselected rows.")
     DEKI_EDITOR_ONLY
@@ -163,72 +144,38 @@ public:
     // Runtime state (not serialized)
     // ========================================================================
 
-    /**
-     * @brief Construct a roller component
-     */
     RollerComponent();
 
     virtual ~RollerComponent();
 
-    /**
-     * @brief Set the list of options
-     * @param newOptions Vector of option strings
-     */
     void SetOptions(const std::vector<std::string>& newOptions);
 
-    /**
-     * @brief Get the list of options
-     * @return Vector of option strings
-     */
     const std::vector<std::string>& GetOptions() const { return options; }
 
-    /**
-     * @brief Get the currently selected index
-     * @return Selected index (0-based)
-     */
+    /// 0-based.
     int32_t GetSelectedIndex() const { return selectedIndex; }
 
-    /**
-     * @brief Get the currently selected value
-     * @return Selected option string, or empty if no selection
-     */
+    /// The selected option's text, or an empty string when nothing is selected.
     std::string GetSelectedValue() const;
 
-    /**
-     * @brief Set the selected index
-     * @param index Index to select (0-based)
-     * @param animated Use smooth animation to scroll to selection
-     */
+    /// Selects option `index` (0-based). With `animated`, the roller scrolls
+    /// there smoothly instead of jumping.
     void SetSelectedIndex(int32_t index, bool animated = false);
 
-    /**
-     * @brief Set the number of visible rows
-     * @param rows Number of rows (should be odd for centered selection)
-     */
+    /// Sets how many rows show. Odd numbers centre the selection.
     void SetVisibleRowCount(int32_t rows);
 
-    /**
-     * @brief Set callback for selection changes
-     * @param callback Function to call when selection changes
-     */
+    /// Called whenever the selection changes, including during a drag.
     void SetOnSelectionChanged(const RollerCallback& callback);
 
-    /**
-     * @brief Set callback for when roller finishes scrolling and settles on a value
-     * Unlike OnSelectionChanged which fires during drag, this only fires once
-     * the snap animation completes.
-     */
+    /// Called once the roller has stopped and settled on a value, after the
+    /// snap animation ends.
     void SetOnValueCommitted(const RollerCallback& callback);
 
-    /**
-     * @brief Update roller physics and animation
-     * @param deltaTime Time since last frame in seconds
-     */
+    /// Advances scrolling and the snap animation by `deltaTime` seconds.
     void Update(float deltaTime);
 
-    /**
-     * @brief Get the total height of the roller visible area (meters)
-     */
+    /// Total height of the visible area, in meters.
     float GetHeight() const
     {
         return ((((static_cast<float>(visibleRows - 1)) * (itemHeight))) + (selectedItemHeight));
@@ -240,25 +187,22 @@ public:
     void RuntimeUpdate(float deltaTime) override;
 
     // ========== Editor property change handling ==========
-    /**
-     * @brief Handle property changes from editor
-     * Syncs child TextComponents when roller properties change
-     */
+    /// Updates the child TextComponents when a roller property changes.
     void OnPropertyChanged(const char* propertyName) override;
 
 public:
-    // Accessors for editor rendering (child objects)
+    // Child objects, for editor rendering.
     SpriteComponent* GetBackgroundSprite();
     SpriteComponent* GetSelectionSprite();
     TextComponent* GetTextComponent(int32_t row);
     int32_t GetTextComponentCount() const { return static_cast<int32_t>(m_TextRowObjs.size()); }
 
-    // Child object management (public for editor template creation)
+    // Public so the editor can call them when it creates the template.
     void EnsureChildObjects(Deki::Object* owner);
     void SyncChildObjects(Deki::Object* owner);
 
 private:
-    // Child object references (found by name, not owned - children of owner Deki::Object)
+    // Children of the owner, found by name. Not owned.
     Deki::Object* m_ClipObj = nullptr;
     Deki::Object* m_BackgroundObj = nullptr;
     Deki::Object* m_SelectionObj = nullptr;
@@ -267,89 +211,69 @@ private:
     size_t m_DiscoveredClipChildren = static_cast<size_t>(-1);
     bool NeedsChildDiscovery(const Deki::Object* owner) const;
 
-    // Child object management helpers
     Deki::Object* FindOrCreateChild(Deki::Object* owner, const char* name, const char* componentType);
     void UpdateTextRowCount(Deki::Object* owner);
 
-    /** @brief Selection change callback */
     RollerCallback m_OnSelectionChanged;
 
-    /** @brief Value committed callback (fires when scroll settles) */
+    /// Fires when scrolling settles.
     RollerCallback m_OnValueCommitted;
 
-    // Scroll state (float meters; matches the engine's meters-internal convention).
-    /** @brief Current scroll offset (m) */
+    // Scroll state, in meters like the rest of the engine.
     float m_ScrollOffset;
 
-    /** @brief Current scroll velocity (m/frame) */
+    /// Meters per frame.
     float m_ScrollVelocity;
 
-    /** @brief Target scroll offset for snap animation (m) */
+    /// Where the snap animation is heading (m).
     float m_TargetOffset;
 
-    /** @brief Is currently snapping to an item */
     bool m_IsSnapping;
 
-    /** @brief Programmatic change needs visual sync */
+    /// Set by a change from code; the visuals still need to catch up.
     bool m_NeedsSync = false;
 
-    /** @brief Is currently being dragged */
     bool m_IsDragging;
 
-    /** @brief Last touch Y position (m) */
+    /// Last touch Y (m).
     float m_LastTouchY;
 
-    /** @brief Touch start Y position (m) */
+    /// Touch Y when the drag began (m).
     float m_TouchStartY;
 
-    /** @brief Touch start scroll offset (m) */
+    /// Scroll offset when the drag began (m).
     float m_TouchStartOffset;
 
-    /** @brief Last synced selectedIndex (to detect external changes) */
+    /// selectedIndex at the last sync, to spot changes made from outside.
     int32_t m_LastSyncedSelectedIndex = -1;
 
-    // Sentinel "never synced" stored as a negative float so the != check
-    // catches the first sync regardless of mode. Initialized in the ctor.
+    // Start negative (set in the constructor) to mean "never synced", so the
+    // != check catches the first sync in either mode.
     float m_LastSyncedSelectedItemHeight;
     float m_LastSyncedItemHeight;
 
-    /**
-     * @brief Get scroll offset for a specific item index (m)
-     */
+    /// Scroll offset of item `index` (m).
     float GetItemOffset(int32_t index) const;
 
-    /**
-     * @brief Get the item index at the current scroll position
-     */
+    /// The item index at `offset`.
     int32_t GetIndexAtOffset(float offset) const;
 
-    /**
-     * @brief Get the raw (unwrapped) item index at the current scroll position
-     * For infinite scroll, does NOT wrap — can return negative or >= options.size()
-     */
+    /// The item index at `offset` without wrapping. With infinite scroll it
+    /// can be negative or >= options.size().
     int32_t GetRawIndexAtOffset(float offset) const;
 
-    /**
-     * @brief Clamp scroll offset to valid range
-     */
     void ClampScrollOffset();
 
-    /**
-     * @brief Start snap animation to nearest item
-     */
+    /// Starts the snap animation to the nearest item.
     void SnapToNearestItem();
 
-    /**
-     * @brief Update selection based on current scroll position
-     */
+    /// Sets the selection from the current scroll position.
     void UpdateSelection();
 
-    // Input handlers (registered on DekiInput::InputCollider in Start())
+    // Registered on the InputCollider in Start().
     void HandlePointerDown(float x, float y);
     void HandlePointerMove(float x, float y);
     void HandlePointerUp(float x, float y);
 };
-
-// Generated property metadata (after class definition for offsetof)
 
 }  // namespace Deki2D

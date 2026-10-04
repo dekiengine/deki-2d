@@ -1,12 +1,8 @@
-/**
- * @file ScrollCustomEditor.cpp
- * @brief Editor support for ScrollComponent
- *
- * Handles all edit-mode structural fixups: ensures Clip exists, and in
- * Template mode shows only the Template child (instantiated from itemScene
- * on demand) so the user sees exactly the item they are authoring. The
- * runtime-only Slot pool is stripped in edit mode and rebuilt at Play.
- */
+// Editor support for ScrollComponent. Keeps the hierarchy right in edit mode:
+// makes sure Clip exists, and in Template mode shows only the Template child
+// (instantiated from itemScene when needed), so the user sees exactly the
+// item being authored. The runtime-only Slot pool is removed in edit mode and
+// rebuilt at Play.
 
 #ifdef DEKI_EDITOR
 
@@ -110,9 +106,9 @@ void DeleteChild(Deki::Object* parent, Deki::Object* child)
     delete child;
 }
 
-// The scene identity used to compare scroll->itemScene against an existing
-// Template child. AssetRef carries both a runtime guid and an editor-facing
-// source guid; prefer source when set, fall back to guid.
+// The scene identity used to compare scroll->itemScene with an existing
+// Template child. AssetRef carries a runtime guid and an editor-side source
+// guid; the source when set, else the guid.
 const std::string& SceneIdentity(const Deki::AssetRef<Deki::Scene>& ref)
 {
     return !ref.source.empty() ? ref.source : ref.guid;
@@ -163,10 +159,10 @@ private:
 
         Deki::Object* tmpl = FindChildByName(clip, "Template");
 
-        // If the user swapped itemScene to a different (or no) scene, the
-        // existing Template is stale — rebuild it. We stamp the source scene
-        // GUID onto the Template when we instantiate so later ticks (and later
-        // editor sessions via ExpandInstance on load) can detect the mismatch.
+        // If itemScene now names another scene (or none), the Template is
+        // stale: rebuild it. The Template carries its source scene GUID from
+        // instantiation, so later ticks (and later sessions, through
+        // ExpandInstance on load) can detect the mismatch.
         if (tmpl && tmpl->GetSourceSceneGuid() != selectedGuid)
         {
             DeleteChild(clip, tmpl);
@@ -189,7 +185,7 @@ private:
         }
 
         DeleteSlotChildren(clip);
-        m_LastChildCount = -1;  // force resync if user switches back to NonTemplate
+        m_LastChildCount = -1;  // resync if the user switches back to NonTemplate
     }
 
     void SyncNonTemplate(ScrollComponent* scroll, Deki::Object* owner, Deki::Object* clip)

@@ -10,17 +10,15 @@
 namespace DekiEditor
 {
 
-/**
- * @brief Dockable editor window for visually editing 9-slice borders.
- *
- * Opens for procedural sprites (.asset with type=ProceduralSprite) and normal
- * sprites (.png with optional .png.data sidecar). Shows the sprite at a
- * comfortable zoom with 4 draggable guide lines (top/right/bottom/left).
- *
- * Edits live in-window and are committed to disk when the user clicks Save.
- * Undo/redo (Ctrl+Z / Ctrl+Y) work on the in-window edit history; Save clears
- * the history and becomes the new baseline.
- */
+/// Dockable window for editing 9-slice borders visually.
+///
+/// Opens for procedural sprites (.asset with type=ProceduralSprite) and normal
+/// sprites (.png with an optional .png.data sidecar). Shows the sprite zoomed,
+/// with four draggable guide lines (top/right/bottom/left).
+///
+/// Edits stay in the window until the user clicks Save. Undo/redo
+/// (Ctrl+Z / Ctrl+Y) work on the window's own history; Save clears it and
+/// becomes the new baseline.
 class NineSliceEditorWindow : public EditorWindow
 {
 public:
@@ -125,8 +123,8 @@ private:
     Borders m_BordersAtDragStart;
     bool m_PanningLMB = false;  // left-drag on empty canvas pans
 
-    // Numeric-field undo bookkeeping: snapshot of the values before the
-    // current field edit session began (drags span many frames)
+    // Undo for the numeric fields: the values before the current field edit
+    // began (a drag spans many frames).
     Borders m_FieldsSnapshot;
     bool m_FieldEditActive = false;
 

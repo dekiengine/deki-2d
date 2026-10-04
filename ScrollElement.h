@@ -7,15 +7,9 @@
 namespace Deki2D
 {
 
-/**
- * @brief Defines the size of a scroll item for ScrollComponent
- *
- * Add this component to each child (or the Template child) of a ScrollComponent
- * to define the item's width and height. ScrollComponent reads these values
- * to compute item_size automatically.
- *
- * Supports visual resizing via the rect tool in the editor.
- */
+/// The size of one ScrollComponent item. Put it on each item child (or on
+/// the template) so the scroll can lay the list out. The editor's rect tool
+/// can resize it.
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Declares one list item's size so its Scroll Component can lay the list out.")
 DEKI_FORMER_NAME("ScrollElement")
@@ -35,7 +29,5 @@ public:
     ScrollElement() = default;
     virtual ~ScrollElement() = default;
 };
-
-// Generated property metadata (after class definition for offsetof)
 
 }  // namespace Deki2D

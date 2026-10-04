@@ -1,23 +1,18 @@
-/**
- * @file ImageCacheHandler.cpp
- * @brief Cache handler and export encoder for source images
- *        (.png/.jpg/.jpeg/.bmp/.tga/.gif).
- *
- * Migrated from AssetPipeline.cpp::HandleImageCache so the engine has no
- * built-in knowledge of sprite-source extensions or sprite-settings shape.
- * deki-editor.dll exposes DecodeImageFile() — a thin wrapper over stb_image —
- * so this handler doesn't carry its own image-decode dependency.
- *
- * One compile serves both: the editor cache is the image stored for the
- * editor's target (the project's active platform), and an export for another
- * target runs the same compile for that one. Which format each gets is
- * ResolveTextureFormat's answer (TextureFormatResolve.h); how big, the
- * target's Max Size (TextureSettings.h).
- *
- * Registration happens via a static initializer that hooks AssetPipeline::OnStarted.
- * On package unload, ClearOnStartedCallbacks() drops the std::function before
- * FreeLibrary, so there are no dangling pointers across hot-reload.
- */
+// Cache handler and export encoder for source images
+// (.png/.jpg/.jpeg/.bmp/.tga/.gif). It lives in this package so the engine
+// knows nothing of sprite-source extensions or sprite settings. Images are
+// decoded with deki-editor.dll's DecodeImageFile() (a thin stb_image
+// wrapper), so this package needs no decoder of its own.
+//
+// One compile serves both: the editor cache is the image stored for the
+// editor's target (the project's active platform), and an export for another
+// target runs the same compile for that one. ResolveTextureFormat
+// (TextureFormatResolve.h) picks the format; the target's Max Size
+// (TextureSettings.h) the size.
+//
+// A static initializer registers through AssetPipeline::OnStarted. On package
+// unload, ClearOnStartedCallbacks() drops the std::function before
+// FreeLibrary, so nothing dangles across a hot reload.
 
 #ifdef DEKI_EDITOR
 
@@ -129,7 +124,7 @@ ImageSidecar ReadImageSidecar(const std::string& imagePath)
         out.sprite.frameHeight = sprite.value("frameHeight", 0);
     }
 
-    // Optional 9-slice borders: "nine_slice": [top, right, bottom, left]
+    // Optional 9-slice borders: "nine_slice": [top, right, bottom, left].
     const json* nineSliceNode = nullptr;
     if (d.contains("settings") && d["settings"].contains("nine_slice"))
     {
@@ -148,8 +143,8 @@ ImageSidecar ReadImageSidecar(const std::string& imagePath)
         out.sprite.nineSliceLeft = static_cast<uint16_t>((*nineSliceNode)[3].get<int>());
     }
 
-    // Per-frame 9-slice: "frame_nine_slice": { "<frame id>": [top, right, bottom, left] }
-    // (a frame's id is its position in files from before frames had ids)
+    // Per-frame 9-slice: "frame_nine_slice": { "<frame id>": [top, right, bottom, left] }.
+    // In older files without frame ids, a frame's id is its position.
     if (d.contains("settings") && d["settings"].contains("frame_nine_slice") &&
         d["settings"]["frame_nine_slice"].is_object())
     {
@@ -355,7 +350,7 @@ AssetCacheResult HandleSpriteImageCache(const AssetCacheContext& ctx)
     const ImageSidecar sidecar = ReadImageSidecar(ctx.absolutePath);
     const AssetExportTarget& editorTarget = ctx.pipeline->GetEditorTarget();
 
-    // Check for staleness if cache exists
+    // A cache exists: check whether it is stale.
     if (result)
     {
         bool needsRegen = false;
@@ -372,7 +367,7 @@ AssetCacheResult HandleSpriteImageCache(const AssetCacheContext& ctx)
         else
         {
             // Stored for another target (the active platform changed, or the
-            // image predates Automatic): store it for this one.
+            // cache was made before the Automatic format): store it for this one.
             TextureFormat cachedFormat;
             bool cachedHasAlpha = false;
             if (ReadCachedFormat(ctx.cachePath, cachedFormat, cachedHasAlpha))
@@ -412,14 +407,13 @@ AssetCacheResult HandleSpriteImageCache(const AssetCacheContext& ctx)
         }
     }
 
-    // Generate cache if not cached
     if (!result)
     {
         result = CompileImage(ctx.absolutePath, ctx.guid, sidecar, editorTarget, ctx.cachePath, ctx.pipeline);
     }
 
-    // Always register sub-assets for cached images (warm-cache path). In the
-    // image's pixels, which a shrunk cache records.
+    // Always register sub-assets for cached images (the warm-cache path), in
+    // the image's own pixels, which a shrunk cache records.
     if (result && sidecar.sprite.HasData())
     {
         int sourceW = 0, sourceH = 0;
@@ -458,11 +452,10 @@ struct ImageCacheRegistrar
                     p->RegisterExportEncoder(ext, EncodeImageForTarget);
                 }
             });
-        // Claim the Texture category for raster image extensions so the
-        // editor's UI classification (icons, browser grouping, file dialogs)
-        // can resolve `.png` etc. through the registry instead of a
-        // hardcoded list. .dtex (the compiled texture) is also Texture so
-        // the picker treats already-cached previews uniformly.
+        // Claim the Texture category for raster image extensions, so the
+        // editor's UI (icons, browser grouping, file dialogs) finds `.png` and
+        // the rest through the registry. .dtex (the compiled texture) is a
+        // Texture too, so the picker treats cached previews the same way.
         for (const char* ext : { ".png", ".jpg", ".jpeg", ".bmp", ".tga", ".gif", ".dtex" })
         {
             AssetTypeRegistry::Instance().RegisterCategory(ext, AssetCategory::Texture);

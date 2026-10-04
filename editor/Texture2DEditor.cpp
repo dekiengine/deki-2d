@@ -1,9 +1,5 @@
-/**
- * @file Texture2DEditor.cpp
- * @brief Editor-only Texture2D helpers: RGBA conversion and direct file loads
- *        for previews. Moved out of Texture2D.cpp so the runtime file stays
- *        free of editor paths.
- */
+// Editor-only Texture2D helpers: RGBA conversion and direct file loads for
+// previews. Kept out of Texture2D.cpp so the runtime file has no editor paths.
 
 #include <deki/assets/Texture2D.h>
 #include <deki/providers/Memory.h>
@@ -54,7 +50,7 @@ uint8_t* Deki::Texture2D::ConvertToRGBA(const uint8_t* srcData, int32_t width, i
                 g = static_cast<uint8_t>(((rgb565 >> 5) & 0x3F) << 2);
                 b = static_cast<uint8_t>((rgb565 & 0x1F) << 3);
 
-                // Fill low bits for better color accuracy
+                // Fill the low bits from the high ones, for accurate color.
                 r |= (r >> 5);
                 g |= (g >> 6);
                 b |= (b >> 5);
@@ -113,7 +109,6 @@ uint8_t* Deki::Texture2D::LoadAsRGBA(const char* filePath, int32_t& outWidth, in
         return nullptr;
     }
 
-    // Read header
     Header header;
     file.read(header.magic, 4);
     file.read(reinterpret_cast<char*>(&header.version), sizeof(uint32_t));
@@ -130,14 +125,12 @@ uint8_t* Deki::Texture2D::LoadAsRGBA(const char* filePath, int32_t& outWidth, in
         return nullptr;
     }
 
-    // Validate header
     if (!ValidateHeader(header))
     {
         DEKI_LOG_ERROR("Invalid texture header: %s", filePath);
         return nullptr;
     }
 
-    // Read pixel data
     uint8_t* pixelData = new uint8_t[header.dataSize];
     file.read(reinterpret_cast<char*>(pixelData), header.dataSize);
 
@@ -148,7 +141,6 @@ uint8_t* Deki::Texture2D::LoadAsRGBA(const char* filePath, int32_t& outWidth, in
         return nullptr;
     }
 
-    // Convert to RGBA
     uint8_t* rgbaData = ConvertToRGBA(pixelData, header.width, header.height, header.format);
     delete[] pixelData;
 

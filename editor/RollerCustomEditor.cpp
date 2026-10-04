@@ -1,9 +1,4 @@
-/**
- * @file RollerCustomEditor.cpp
- * @brief Editor support for RollerComponent
- *
- * Provides display size info and resize support for the editor.
- */
+// Editor support for RollerComponent: its display size, and its inspector.
 
 #ifdef DEKI_EDITOR
 
@@ -49,10 +44,9 @@ public:
         return (localX >= -halfW && localX <= halfW && localY >= -halfH && localY <= halfH);
     }
 
-    // Resize gizmo not exposed: RollerComponent.width is now float
-    // (world meters), but GetResizeTarget hands the gizmo int32_t* fields.
-    // Until the editor API gains a float variant, the roller is sized via
-    // the inspector instead.
+    // No resize gizmo: RollerComponent.width is a float (world meters), but
+    // GetResizeTarget hands the gizmo int32_t* fields. Until the editor API
+    // has a float variant, the roller is sized in the Inspector.
 
     bool WantsInspectorOverride(Deki::Component* comp) override { return true; }
 
@@ -122,7 +116,7 @@ public:
                 {
                     roller->options.push_back(fmt(m_FillStart + i));
                 }
-                // Sync child text objects
+                // Update the child text objects.
                 if (auto* owner = roller->GetOwner())
                 {
                     roller->SyncChildObjects(owner);

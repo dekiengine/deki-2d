@@ -18,7 +18,7 @@
 #include <unordered_map>
 
 #ifdef _WIN32
-// NOMINMAX: windows.h's min/max macros would otherwise break std::min/std::max in any
+// NOMINMAX: windows.h's min/max macros would break std::min/std::max in every
 // file sharing this translation unit (unity build).
 #define NOMINMAX
 #include <windows.h>
@@ -67,7 +67,6 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
 {
     auto& ui = DekiEditor::EditorUI::Get();
 
-    // Reload if asset changed
     if (m_CurrentAssetPath != assetPath)
     {
         CleanupTextures();
@@ -77,7 +76,6 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
         m_SettingsModified = false;
     }
 
-    // Header
     fs::path path(assetPath);
     {
         char buf[256];
@@ -108,7 +106,6 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
 
     bool isCached = IsCached(assetGuid);
 
-    // Toolbar
     ui.InputTextWithHint("##search", "Search (char or codepoint)...", m_SearchFilter, sizeof(m_SearchFilter));
     ui.SameLine();
     {
@@ -123,7 +120,7 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
         m_SettingsModified = true;
     }
 
-    // Rasterization settings (decoration — outline or shadow — baked into atlas)
+    // Rasterization: an outline or shadow, baked into the atlas.
     if (ui.CollapsingHeader("Rasterization", nullptr, true))
     {
         static const char* const kDecorationLabels[] = { "None", "Outline", "Shadow" };
@@ -195,7 +192,6 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
         ui.TextDisabled("Baked into atlas. Re-bake after changing.");
     }
 
-    // Apply & Bake button
     bool canBake = m_SettingsModified || !isCached;
     if (!canBake || m_SelectedChars.empty())
     {
@@ -216,7 +212,7 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
 
     ui.Separator();
 
-    // Glyph grid
+    // Glyph list, filtered by the search text.
     std::vector<int> filtered;
     filtered.reserve(m_AvailableChars.size());
 
@@ -243,7 +239,7 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
         }
     }
 
-    // Select All filtered
+    // Selects the filtered characters only.
     if (ui.Button("Select All"))
     {
         for (int idx : filtered)
@@ -266,7 +262,7 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
         return;
     }
 
-    float iconSize = 32.0f;  // Fixed display size, GL_NEAREST keeps it crisp
+    float iconSize = 32.0f;  // fixed size; GL_NEAREST keeps it crisp
     float rowHeight = iconSize + 4.0f;
 
     ui.BeginChild("GlyphList", 0, 400, true);
@@ -309,7 +305,6 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
                 m_SettingsModified = true;
             }
 
-            // Draw glyph image
             if (m_GlyphAtlasTexture != 0 && charIdx < (int)m_GlyphUVs.size())
             {
                 auto& uv = m_GlyphUVs[charIdx];
@@ -320,7 +315,6 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
                 ui.DrawImage(m_GlyphAtlasTexture, imgP0X, imgP0Y, imgP1X, imgP1Y, uv.u0, uv.v0, uv.u1, uv.v1);
             }
 
-            // Draw label
             float textPosX = rowStartX + iconSize + 10.0f;
             float textPosY = rowStartY + (rowHeight - ui.GetTextLineHeight()) * 0.5f;
             ui.DrawTextAt(0, textPosX, textPosY, DekiEditor::EditorUI::Rgba(255, 255, 255, 255),
@@ -335,7 +329,7 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
 }
 
 // ---------------------------------------------------------------------------
-// Parse BDF file to populate m_AvailableChars and build glyph atlas
+// Parses the BDF file into m_AvailableChars and builds the glyph atlas.
 // ---------------------------------------------------------------------------
 
 void BdfFileInspector::LoadBdf(const std::string& assetPath)
@@ -347,7 +341,6 @@ void BdfFileInspector::LoadBdf(const std::string& assetPath)
     m_Descent = 0;
     CleanupTextures();
 
-    // Resolve full path
     auto* pipeline = DekiEditor::AssetPipeline::Instance();
     if (!pipeline)
     {
@@ -360,7 +353,7 @@ void BdfFileInspector::LoadBdf(const std::string& assetPath)
         return;
     }
 
-    // Quick parse for glyph metadata + bitmaps
+    // A quick parse for glyph metadata and bitmaps.
     struct ParsedGlyph
     {
         int encoding = -1;
@@ -478,7 +471,6 @@ void BdfFileInspector::LoadBdf(const std::string& assetPath)
     std::sort(parsedGlyphs.begin(), parsedGlyphs.end(),
               [](const auto& a, const auto& b) { return a.encoding < b.encoding; });
 
-    // Build m_AvailableChars
     m_AvailableChars.resize(parsedGlyphs.size());
     for (int i = 0; i < (int)parsedGlyphs.size(); i++)
     {
@@ -495,7 +487,7 @@ void BdfFileInspector::LoadBdf(const std::string& assetPath)
         }
     }
 
-    // Build glyph atlas texture for display
+    // Glyph atlas texture for the list.
     int maxW = 1, maxH = 1;
     for (auto& g : parsedGlyphs)
     {
@@ -559,8 +551,8 @@ void BdfFileInspector::LoadBdf(const std::string& assetPath)
     glBindTexture(GL_TEXTURE_2D, tex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    // Unpack state is global; other GL users (e.g. ImGui glyph uploads) can leave
-    // a row stride behind, which would shear/overread this tightly packed upload.
+    // Unpack state is global, and other GL users (ImGui glyph uploads, say) can
+    // leave a row stride set that would shear or overread this tight upload.
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, atlasW, atlasH, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba.data());
@@ -572,7 +564,7 @@ void BdfFileInspector::LoadBdf(const std::string& assetPath)
 }
 
 // ---------------------------------------------------------------------------
-// Load/Save .bdf.data sidecar
+// The .bdf.data sidecar.
 // ---------------------------------------------------------------------------
 
 static FontCompiler::DecorationMode BdfDecorationFromString(const std::string& s)
@@ -618,7 +610,7 @@ void BdfFileInspector::LoadSettings(const std::string& assetPath)
 
     if (!fs::exists(dataPath))
     {
-        // No .data → select all by default
+        // No .data: everything is selected.
         for (int i = 0; i < (int)m_AvailableChars.size(); i++)
         {
             m_SelectedChars.insert(i);
@@ -644,7 +636,7 @@ void BdfFileInspector::LoadSettings(const std::string& assetPath)
 
     if (!j.contains("bdfSettings") || !j["bdfSettings"].contains("selectedChars"))
     {
-        // Settings exist but no selection → select all
+        // Settings without a selection: everything is selected.
         for (int i = 0; i < (int)m_AvailableChars.size(); i++)
         {
             m_SelectedChars.insert(i);
@@ -652,7 +644,7 @@ void BdfFileInspector::LoadSettings(const std::string& assetPath)
         return;
     }
 
-    // Build codepoint → index map
+    // Codepoint to index.
     std::unordered_map<int, int> cpToIdx;
     for (int i = 0; i < (int)m_AvailableChars.size(); i++)
     {
@@ -729,7 +721,7 @@ void BdfFileInspector::SaveSettings(const std::string& assetPath, const std::str
     std::string fullPath = (fs::path(pipeline->GetProjectPath()) / assetPath).string();
     std::string dataPath = fullPath + ".data";
 
-    // Load existing .data or create new
+    // Start from the existing .data, if any.
     json j;
     if (fs::exists(dataPath))
     {
@@ -747,7 +739,6 @@ void BdfFileInspector::SaveSettings(const std::string& assetPath, const std::str
         }
     }
 
-    // Save selected codepoints
     std::vector<int> codepoints = GetSelectedCodepoints();
     std::sort(codepoints.begin(), codepoints.end());
     j["bdfSettings"]["selectedChars"] = codepoints;
@@ -756,7 +747,6 @@ void BdfFileInspector::SaveSettings(const std::string& assetPath, const std::str
     j["bdfSettings"]["shadowDx"] = m_ShadowDx;
     j["bdfSettings"]["shadowDy"] = m_ShadowDy;
 
-    // Write
     std::ofstream outFile(dataPath);
     if (outFile.is_open())
     {
@@ -764,7 +754,7 @@ void BdfFileInspector::SaveSettings(const std::string& assetPath, const std::str
         outFile.close();
     }
 
-    // Trigger sync handler to bake
+    // The refresh makes the sync handler bake.
     pipeline->RefreshAsset(assetPath);
 
     DEKI_LOG_EDITOR("BdfInspector: Saved %d chars and triggered bake for %s", (int)codepoints.size(),
@@ -786,7 +776,7 @@ void BdfFileInspector::BakeFont(const std::string& assetPath, const std::string&
         return;
     }
 
-    // Deterministic GUIDs
+    // Derived from the asset GUID, so they stay the same across bakes.
     std::string variantGuid = Deki::GenerateDeterministicGuid(assetGuid + ":bdf");
     std::string atlasGuid = Deki::GenerateDeterministicGuid(assetGuid + ":bdf:atlas");
 
@@ -796,7 +786,6 @@ void BdfFileInspector::BakeFont(const std::string& assetPath, const std::string&
     std::string dfontPath = cacheDir + "/" + variantGuid;
     std::string atlasPath = cacheDir + "/" + atlasGuid;
 
-    // Compile
     FontCompiler::BdfCompileOptions options;
     options.selectedChars = codepoints;
     options.padding = 2;
@@ -813,7 +802,6 @@ void BdfFileInspector::BakeFont(const std::string& assetPath, const std::string&
         return;
     }
 
-    // Write atlas
     if (!DekiEditor::TextureImporter::WriteTexFile(atlasPath, result.atlasRGBA.data(), result.atlasWidth,
                                                    result.atlasHeight, DekiEditor::TextureFormat::ALPHA8))
     {
@@ -821,17 +809,15 @@ void BdfFileInspector::BakeFont(const std::string& assetPath, const std::string&
         return;
     }
 
-    // Write dfont
     if (!FontCompiler::WriteDfontFile(dfontPath, result, atlasGuid))
     {
         DEKI_LOG_WARNING("BdfInspector: Failed to write dfont %s", dfontPath.c_str());
         return;
     }
 
-    // Register GUID
     Deki::AssetManager::Get()->RegisterGuid(variantGuid, variantGuid);
 
-    // Register sub-assets so variant appears in Asset Browser
+    // As sub-assets, the variant shows in the Asset Browser.
     std::vector<DekiEditor::SubAssetInfo> subAssets;
 
     DekiEditor::SubAssetInfo fontSub;
@@ -885,7 +871,6 @@ void BdfFileInspector::CleanupTextures()
     }
 }
 
-// Registration
 static BdfFileInspector s_BdfFileInspector;
 
 void RegisterBdfFileInspector()

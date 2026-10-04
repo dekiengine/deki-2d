@@ -7,19 +7,15 @@
 namespace Deki2D
 {
 
-/**
- * @brief A frame within a spritesheet
- *
- * Each frame has its own GUID for addressable sub-assets.
- * The GUID allows individual frames to be referenced in AssetRef<Sprite>.
- */
+/// A frame of a spritesheet. Its GUID lets an AssetRef<Sprite> point at the
+/// frame on its own.
 struct SpriteFrame
 {
-    char guid[37];   // 36 chars + null terminator (UUID format)
-    int32_t x;       // X position in parent texture
-    int32_t y;       // Y position in parent texture
-    int32_t width;   // Frame width
-    int32_t height;  // Frame height
+    char guid[37];  // 36 chars + null terminator (UUID format)
+    int32_t x;      // X position in parent texture
+    int32_t y;      // Y position in parent texture
+    int32_t width;
+    int32_t height;
 
     // The frame's own 9-slice borders, measured inside the frame.
     bool hasNineSlice = false;
@@ -29,14 +25,12 @@ struct SpriteFrame
     uint16_t nineSliceBottom = 0;
 };
 
-/**
- * @brief Sprite metadata stored in .tex files
- */
+/// Sprite metadata stored in texture files.
 struct SpriteMetadata
 {
-    float pivotX;                 // Pivot point X (0.0 to 1.0)
-    float pivotY;                 // Pivot point Y (0.0 to 1.0)
-    float pixelsPerMeter;         // Pixels per world unit (for scaling)
+    float pivotX;  // Pivot point X (0.0 to 1.0)
+    float pivotY;  // Pivot point Y (0.0 to 1.0)
+    float pixelsPerMeter;
     uint8_t transparentR;         // Transparent color R (if hasTransparency)
     uint8_t transparentG;         // Transparent color G (if hasTransparency)
     uint8_t transparentB;         // Transparent color B (if hasTransparency)
@@ -49,56 +43,50 @@ struct SpriteMetadata
     uint16_t defaultFrameHeight;  // Spritesheet frame height (0 = use full height)
 };
 
-/**
- * @brief Represents a 2D sprite - a Texture2D with additional sprite metadata
- */
+/// A Texture2D with sprite metadata: pivot, scale, chroma key, 9-slice
+/// borders and spritesheet frames.
 class Sprite : public Deki::Texture2D
 {
 public:
     /// Asset type name for AssetManager::Load<T>() lookup
     static constexpr const char* kAssetTypeName = "Sprite";
 
-    // Sprite-specific properties
     float pivotX;          // Pivot point X (0.0 to 1.0, default 0.5)
     float pivotY;          // Pivot point Y (0.0 to 1.0, default 0.5)
-    float pixelsPerMeter;  // Pixels per world unit (default 16 = matches project PPM; ignored in camera Pixels mode)
-    uint8_t transparentR;  // Transparent color R
-    uint8_t transparentG;  // Transparent color G
-    uint8_t transparentB;  // Transparent color B
+    float pixelsPerMeter;  // default 16, the project default
+    uint8_t transparentR;  // chroma key colour
+    uint8_t transparentG;
+    uint8_t transparentB;
 
-    // Chroma key (1-bit transparency). When hasChromaKey is true, pixels
-    // matching (transparentR/g/b) are treated as transparent at render time.
-    // For RGB565/RGB565A8 sources the key is pre-quantized to 5/6/5 precision
-    // at load time so it matches pixels extracted from the source.
+    // Chroma key (1-bit transparency): when on, pixels of colour
+    // transparentR/G/B draw as transparent. For RGB565/RGB565A8 sources the
+    // key is quantized to 5/6/5 at load time so it matches the pixels.
     bool hasChromaKey;
-    // Per-row non-key column spans (packed pairs [start, end] per row), used
-    // by QuadBlit to fast-path chroma blits. Owned by the sprite. Layout
-    // matches alphaRowSpans. nullptr if hasChromaKey is false or the chunk
-    // didn't supply spans (legacy files).
+    // Per-row spans of non-key columns (pairs [start, end] per row), which
+    // let QuadBlit skip the per-pixel key compare. Same layout as
+    // alphaRowSpans. Empty when there is no chroma key or the file has no spans.
     Deki::Buffer<int16_t> chromaRowSpans;  // owning; see Deki::Texture2D::alphaRowSpans
 
-    // 9-slice properties (for scalable UI elements)
-    bool hasNineSlice;         // Whether this sprite has 9-slice data
+    // 9-slice, for UI elements that scale.
+    bool hasNineSlice;
     uint16_t nineSliceLeft;    // Pixels from left edge to start of center region
     uint16_t nineSliceRight;   // Pixels from right edge to start of center region
     uint16_t nineSliceTop;     // Pixels from top edge to start of center region
     uint16_t nineSliceBottom;  // Pixels from bottom edge to start of center region
 
-    // Spritesheet default frame dimensions (set by editor from .data file)
-    // If > 0, indicates this is a spritesheet with frames of this size
-    int32_t defaultFrameWidth;   // Default frame width (0 = use full width)
-    int32_t defaultFrameHeight;  // Default frame height (0 = use full height)
+    // Above 0, the sprite is a spritesheet with frames of this size.
+    int32_t defaultFrameWidth;   // 0 = use full width
+    int32_t defaultFrameHeight;  // 0 = use full height
 
-    // Frame list for spritesheets (loaded from .dtex metadata)
-    // Each frame has its own GUID for sub-asset addressing
+    // Spritesheet frames, from the .dtex metadata.
     std::vector<SpriteFrame> frames;
 
-    // The image's size when the texture was stored smaller than it (Max
-    // Size), 0 otherwise. The file's frames and nine-slice borders are in the
-    // image's pixels; the loader has already brought them, and
-    // pixelsPerMeter, to the stored pixels, so the sprite is the same size in
-    // the world. Anything else that addresses the image in its own pixels (a
-    // tileset) maps them with SourceToStoredX/Y.
+    // The image's size when the texture is stored smaller than it (Max
+    // Size), 0 otherwise. The file's frames and nine-slice borders are in
+    // image pixels; the loader converts them, and pixelsPerMeter, to stored
+    // pixels, so the sprite keeps its size in the world. Anything else that
+    // addresses the image in its own pixels (a tileset) maps them with
+    // SourceToStoredX/Y.
     int32_t sourceWidth;
     int32_t sourceHeight;
     // Stored pixels per image pixel: width / sourceWidth, 1 when not shrunk.
@@ -123,118 +111,56 @@ public:
     Sprite();
     virtual ~Sprite();
 
-    /**
-     * @brief Find a frame by its GUID
-     * @param guid The GUID to search for
-     * @return Pointer to the frame if found, nullptr otherwise
-     */
+    /// The frame with this GUID, or nullptr.
     const SpriteFrame* FindFrame(const std::string& guid) const;
 
-    /**
-     * @brief Load sprite from V-Engine texture format (.tex)
-     * @param filePath Path to the .tex file
-     * @return Pointer to loaded sprite or nullptr on failure
-     */
+    /// Loads a sprite from a texture file. Returns nullptr on failure.
     static Sprite* Load(const char* filePath);
 
-    /**
-     * @brief Load sprite from raw file data in memory (for pack file support)
-     * @param data Pointer to raw .dtex file bytes (header + pixel data + metadata)
-     * @param size Total size in bytes
-     * @return Loaded sprite or nullptr on failure
-     */
+    /// Loads a sprite from the bytes of a .dtex file (header, pixels,
+    /// metadata) already in memory, as in a pack file. Returns nullptr on failure.
     static Sprite* LoadFromFileData(const uint8_t* data, size_t size);
 
-    /**
-     * @brief Bring a texture stored smaller than its image to its stored
-     * pixels: frames, the default frame size, nine-slice borders and
-     * pixelsPerMeter. The loaders call it with the SourceSize chunk; nothing
-     * happens when the size is the stored one.
-     */
+    /// For a texture stored smaller than its image: converts the frames, the
+    /// default frame size, the nine-slice borders and pixelsPerMeter to
+    /// stored pixels. The loaders call it with the SourceSize chunk; it does
+    /// nothing when the image size is the stored size.
     void ApplySourceSize(int32_t imageWidth, int32_t imageHeight);
 
-    /**
-     * @brief Creates a solid color sprite
-     * @param width Width of the sprite
-     * @param height Height of the sprite
-     * @param r Red color value (0-255)
-     * @param g Green color value (0-255)
-     * @param b Blue color value (0-255)
-     * @return A pointer to the created Sprite
-     */
+    /// A new RGB565 sprite filled with one colour.
     static Sprite* CreateSolid(int32_t width, int32_t height, uint8_t r, uint8_t g, uint8_t b);
 
-    /**
-     * @brief Creates a solid color sprite with alpha channel
-     * @param width Width of the sprite
-     * @param height Height of the sprite
-     * @param r Red color value (0-255)
-     * @param g Green color value (0-255)
-     * @param b Blue color value (0-255)
-     * @param a Alpha value (0-255, 0=transparent, 255=opaque)
-     * @return A pointer to the created Sprite
-     */
+    /// A new RGB565A8 sprite filled with one colour and alpha (0 transparent, 255 opaque).
     static Sprite* CreateSolidRGBA(int32_t width, int32_t height, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
-    /**
-     * @brief Creates a tiled sprite from a source sprite to fill target dimensions
-     * @param source The source sprite to tile
-     * @param targetWidth Target width to fill
-     * @param targetHeight Target height to fill
-     * @return A pointer to the created tiled Sprite
-     */
+    /// A new sprite of the target size, filled by repeating `source`.
     static Sprite* CreateTiled(Sprite* source, int32_t targetWidth, int32_t targetHeight);
 
-    /**
-     * @brief Creates a scaled sprite using 9-slice/9-patch technique
-     *
-     * 9-slice (also known as 9-patch) allows scaling UI elements while preserving
-     * corner details and preventing stretching artifacts. The sprite is divided into
-     * 9 regions:
-     *
-     *   +---+-------+---+
-     *   | TL|  Top  | TR|  TL/TR/BL/BR = Corners (never scaled)
-     *   +---+-------+---+  Top/Bottom = Scaled horizontally only
-     *   |   |       |   |  Left/Right = Scaled vertically only
-     *   | L | Center| R |  Center = Scaled both directions
-     *   |   |       |   |
-     *   +---+-------+---+
-     *   | BL| Bottom| BR|
-     *   +---+-------+---+
-     *
-     * @param source The source sprite with 9-slice data (hasNineSlice must be true)
-     * @param targetWidth Target width (must be >= nineSliceLeft + nineSliceRight)
-     * @param targetHeight Target height (must be >= nineSliceTop + nineSliceBottom)
-     * @return A pointer to the scaled sprite, or nullptr on failure
-     */
+    /// A new sprite of the target size, scaled with 9-slice: the corners keep
+    /// their size and only the edges and centre stretch.
+    ///
+    ///   +---+-------+---+
+    ///   | TL|  Top  | TR|  TL/TR/BL/BR = Corners (never scaled)
+    ///   +---+-------+---+  Top/Bottom = Scaled horizontally only
+    ///   |   |       |   |  Left/Right = Scaled vertically only
+    ///   | L | Center| R |  Center = Scaled both directions
+    ///   |   |       |   |
+    ///   +---+-------+---+
+    ///   | BL| Bottom| BR|
+    ///   +---+-------+---+
+    ///
+    /// `source` must have 9-slice data, and the target must be at least the
+    /// sum of the borders. Returns nullptr otherwise.
     static Sprite* CreateNineSlice(Sprite* source, int32_t targetWidth, int32_t targetHeight);
 
-    /**
-     * @brief Tile a source sprite into a caller-owned pixel buffer.
-     *
-     * Same algorithm as CreateTiled() but writes into an externally managed
-     * buffer. Used by SpriteComponent's render-mode cache to avoid allocating
-     * a new Sprite per resize.
-     *
-     * @param dst Destination buffer of size dstW * dstH * bytesPerPixel(source->format)
-     * @param dstW Destination width
-     * @param dstH Destination height
-     * @param source Source sprite to tile (must be valid, dimensions > 0)
-     */
+    /// CreateTiled() into the caller's buffer of dstW * dstH pixels in the
+    /// source's format. SpriteComponent's render-mode cache uses it so a
+    /// resize does not allocate a new Sprite. `source` must be valid and not empty.
     static void BakeTiledInto(uint8_t* dst, int32_t dstW, int32_t dstH, const Sprite* source);
 
-    /**
-     * @brief 9-slice scale a source sprite into a caller-owned pixel buffer.
-     *
-     * Same 9-region algorithm as CreateNineSlice() but writes into an
-     * externally managed buffer. Caller must ensure source->hasNineSlice
-     * is true and dstW/dstH >= nine_slice border totals.
-     *
-     * @param dst Destination buffer of size dstW * dstH * bytesPerPixel(source->format)
-     * @param dstW Destination width
-     * @param dstH Destination height
-     * @param source Source sprite with valid 9-slice metadata
-     */
+    /// CreateNineSlice() into the caller's buffer of dstW * dstH pixels in
+    /// the source's format. The caller checks that the source has 9-slice
+    /// data and that the target is at least the sum of the borders.
     static void BakeNineSliceInto(uint8_t* dst, int32_t dstW, int32_t dstH, const Sprite* source);
 
     /// A rectangle of a sprite (a frame, or all of it) and the 9-slice
@@ -253,33 +179,15 @@ public:
     static void BakeNineSliceRegion(uint8_t* dst, int32_t dstW, int32_t dstH, const Sprite* source,
                                     const SliceRegion& region);
 
-    /**
-     * @brief Sets 9-slice borders for this sprite
-     *
-     * This enables 9-slice scaling for the sprite. Use this for sprites loaded
-     * from files that don't have 9-slice metadata, or to override existing metadata.
-     *
-     * @param left Left border in pixels
-     * @param right Right border in pixels
-     * @param top Top border in pixels
-     * @param bottom Bottom border in pixels
-     * @return true if borders are valid for this sprite's dimensions
-     */
+    /// Turns on 9-slice with these borders, in pixels, replacing any from the
+    /// file. Returns false when the borders do not fit the sprite.
     bool SetNineSliceBorders(uint16_t left, uint16_t right, uint16_t top, uint16_t bottom);
 
 protected:
-    /**
-     * @brief Load sprite data from memory buffer (includes sprite metadata)
-     * @param header Parsed texture header
-     * @param data Raw file data after header
-     * @return true on success
-     */
+    /// `data` is the pixel data after the header.
     bool LoadFromMemory(const Deki::Texture2D::Header& header, const uint8_t* data) override;
 
 private:
-    /**
-     * @brief Set default sprite properties
-     */
     void SetDefaultSpriteProperties();
 };
 

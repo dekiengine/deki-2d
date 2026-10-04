@@ -47,7 +47,6 @@ SpritesheetEditorWindow::~SpritesheetEditorWindow()
 
 void SpritesheetEditorWindow::OnOpen()
 {
-    // Get paths from EditorApplication singleton
     auto& app = EditorApplication::Get();
     m_ProjectPath = app.GetProjectPath();
     m_AssetsPath = app.GetAssetsPath();
@@ -56,7 +55,7 @@ void SpritesheetEditorWindow::OnOpen()
 
 void SpritesheetEditorWindow::OnClose()
 {
-    // Clean up texture resources (we own these, not EditorAssets)
+    // This window owns these texture resources, not EditorAssets.
     if (m_TextureData)
     {
         delete[] m_TextureData;
@@ -68,7 +67,6 @@ void SpritesheetEditorWindow::OnClose()
         m_TextureId = 0;
     }
 
-    // Reset texture state
     m_TexturePath.clear();
     m_TextureCachePath.clear();
     m_TextureGuid.clear();
@@ -76,7 +74,6 @@ void SpritesheetEditorWindow::OnClose()
     m_TextureHeight = 0;
     m_NeedsTextureUpload = false;
 
-    // Reset slicing settings
     m_FrameWidth = 0;
     m_FrameHeight = 0;
     m_AtlasFrames.clear();
@@ -84,7 +81,6 @@ void SpritesheetEditorWindow::OnClose()
     m_NextFrameId = 0;
     m_SelectedFrame = m_HoveredFrame = -1;
 
-    // Reset UI state
     m_UIMode = SlicingUIMode::Grid;
     m_Zoom = 1.0f;
     m_PanOffsetX = 0.0f;
@@ -93,7 +89,6 @@ void SpritesheetEditorWindow::OnClose()
     m_LastMousePosX = 0.0f;
     m_LastMousePosY = 0.0f;
 
-    // Reset status
     m_StatusMessage.clear();
     m_StatusIsError = false;
 }
@@ -105,7 +100,6 @@ bool SpritesheetEditorWindow::CanOpenFile(const char* extension)
         return false;
     }
 
-    // Can open PNG textures
     return strcmp(extension, ".png") == 0 || strcmp(extension, ".PNG") == 0;
 }
 
@@ -115,19 +109,17 @@ void SpritesheetEditorWindow::OpenFile(const char* filePath, const char* cachePa
     m_TextureCachePath.clear();
     m_StatusMessage.clear();
 
-    // Use provided cache path if available
+    // The given cache path, when there is one.
     if (cachePath && cachePath[0] != '\0')
     {
         m_TextureCachePath = cachePath;
     }
 
-    // Get texture GUID
     if (!m_TexturePath.empty() && !m_ProjectPath.empty())
     {
         fs::path texPath(m_TexturePath);
         fs::path relativePath = fs::relative(texPath, m_ProjectPath);
         std::string relativePathStr = relativePath.string();
-        // Normalize to forward slashes
         for (char& c : relativePathStr)
         {
             if (c == '\\')
@@ -138,7 +130,6 @@ void SpritesheetEditorWindow::OpenFile(const char* filePath, const char* cachePa
         m_TextureGuid = AssetDatabase::AssetPathToGUID(relativePathStr);
     }
 
-    // Load texture and settings
     LoadTextureData();
     LoadSliceSettings();
     OnSettingsLoaded();
@@ -261,7 +252,8 @@ void SpritesheetEditorWindow::OnSettingsLoaded()
 
 void SpritesheetEditorWindow::OnGUI()
 {
-    // Deferred GPU upload (can't happen in background thread)
+    // The GPU upload waits for this thread: it cannot happen on the
+    // background thread.
     if (m_NeedsTextureUpload)
     {
         UploadTextureToGPU();
@@ -352,7 +344,6 @@ void SpritesheetEditorWindow::OnGUI()
     }
     ui.End();
 
-    // Update open state
     SetOpen(isOpen);
 }
 
@@ -368,7 +359,7 @@ void SpritesheetEditorWindow::SaveAndReimport()
     m_StatusIsError = false;
     m_SavedFrames = m_AtlasFrames;
 
-    // Re-import so the frames are generated
+    // Re-import, which generates the frames.
     if (!m_TextureGuid.empty())
     {
         std::string relativePathStr = fs::relative(fs::path(m_TexturePath), m_ProjectPath).string();
@@ -736,7 +727,7 @@ void SpritesheetEditorWindow::DrawTexturePreview()
         }
     }
 
-    // Which frame is under the mouse
+    // The frame under the mouse.
     int underMouse = -1;
     if (hovered)
     {
@@ -916,7 +907,6 @@ void SpritesheetEditorWindow::LoadTextureData()
     m_TextureHeight = decoded.height;
     const std::vector<uint8_t>& rgba = decoded.rgba;
 
-    // Copy to member buffer
     if (m_TextureData)
     {
         delete[] m_TextureData;
@@ -935,14 +925,12 @@ void SpritesheetEditorWindow::UploadTextureToGPU()
         return;
     }
 
-    // Delete old texture
     if (m_TextureId != 0)
     {
         glDeleteTextures(1, &m_TextureId);
         m_TextureId = 0;
     }
 
-    // Create OpenGL texture
     glGenTextures(1, &m_TextureId);
     glBindTexture(GL_TEXTURE_2D, m_TextureId);
 
@@ -951,8 +939,9 @@ void SpritesheetEditorWindow::UploadTextureToGPU()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-    // Unpack state is global; other GL users (e.g. ImGui glyph uploads) can leave
-    // a row stride behind, which would shear/overread this tightly packed upload.
+    // Unpack state is global. Other GL users (e.g. ImGui glyph uploads) can
+    // leave a row stride set, which would shear or overread this tightly
+    // packed upload.
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
@@ -969,11 +958,10 @@ bool SpritesheetEditorWindow::LoadSliceSettings()
         return false;
     }
 
-    // Load from .png.data file
     std::string dataPath = m_TexturePath + ".data";
     if (!fs::exists(dataPath))
     {
-        // No settings file yet, use defaults
+        // No settings file yet: defaults.
         m_FrameWidth = 0;
         m_FrameHeight = 0;
         return true;
@@ -990,12 +978,11 @@ bool SpritesheetEditorWindow::LoadSliceSettings()
         json j;
         file >> j;
 
-        // Clear existing frames
         m_AtlasFrames.clear();
         m_FrameWidth = 0;
         m_FrameHeight = 0;
 
-        // Read from settings.sprite path
+        // Read from settings.sprite.
         if (j.contains("settings") && j["settings"].contains("sprite"))
         {
             auto& sprite = j["settings"]["sprite"];
@@ -1003,7 +990,6 @@ bool SpritesheetEditorWindow::LoadSliceSettings()
 
             if (mode == "atlas")
             {
-                // Load atlas frames
                 if (sprite.contains("frames") && sprite["frames"].is_array())
                 {
                     for (const auto& frameJson : sprite["frames"])
@@ -1021,11 +1007,11 @@ bool SpritesheetEditorWindow::LoadSliceSettings()
             }
             else
             {
-                // Load grid mode (backward compatible)
+                // Grid mode.
                 m_FrameWidth = sprite.value("frameWidth", 0);
                 m_FrameHeight = sprite.value("frameHeight", 0);
 
-                // Convert grid to atlas frames for display
+                // Shown as atlas frames.
                 if (m_FrameWidth > 0 && m_FrameHeight > 0)
                 {
                     int cols = m_TextureWidth / m_FrameWidth;
@@ -1085,9 +1071,9 @@ bool SpritesheetEditorWindow::SaveSliceSettings()
 
     std::string dataPath = m_TexturePath + ".data";
 
-    // Read existing file to preserve other settings (like GUID). One that is
-    // there but does not parse (a merge conflict) is left alone: writing over
-    // it dropped the GUID, and every reference to the texture with it.
+    // Read the existing file, to keep its other settings (like the GUID). A
+    // file that does not parse (a merge conflict) is left alone: writing over
+    // it would drop the GUID and break every reference to the texture.
     json j;
     if (fs::exists(dataPath))
     {
@@ -1106,15 +1092,15 @@ bool SpritesheetEditorWindow::SaveSliceSettings()
         }
     }
 
-    // Frame ids are written only when they say something: a sheet whose
-    // frames were never re-sliced keeps the file it always had (ids = positions).
+    // Frame ids are written only when they differ from the frames' positions,
+    // so a sheet that was never re-sliced keeps the same file.
     bool idsArePositions = m_NextFrameId <= static_cast<int32_t>(m_AtlasFrames.size());
     for (size_t i = 0; i < m_AtlasFrames.size() && idsArePositions; ++i)
     {
         idsArePositions = m_AtlasFrames[i].id == static_cast<int32_t>(i);
     }
 
-    // Intelligently choose storage format
+    // Grid or atlas form, whichever fits.
     json sprite = json::object();
     if (m_AtlasFrames.empty())
     {
@@ -1122,7 +1108,7 @@ bool SpritesheetEditorWindow::SaveSliceSettings()
     }
     else if (IsUniformGrid())
     {
-        // Save as grid mode for ESP32 optimization
+        // Grid mode, an optimization for ESP32.
         sprite["mode"] = "grid";
         sprite["frameWidth"] = m_AtlasFrames[0].width;
         sprite["frameHeight"] = m_AtlasFrames[0].height;
@@ -1138,7 +1124,6 @@ bool SpritesheetEditorWindow::SaveSliceSettings()
     }
     else
     {
-        // Save as atlas mode
         sprite["mode"] = "atlas";
         sprite["frames"] = json::array();
 
@@ -1203,8 +1188,7 @@ void SpritesheetEditorWindow::GenerateGrid()
         }
     }
     // Frames keep the ids of the saved frames they replace, so scenes keep
-    // pointing at the same picture (a frame was its position, and a new grid
-    // size moved every reference to a different frame).
+    // pointing at the same picture when the grid size changes.
     DekiEditor::TextureImporter::CarryFrameIds(m_SavedFrames, m_AtlasFrames, m_NextFrameId);
 
     m_StatusMessage.clear();
@@ -1220,7 +1204,6 @@ void SpritesheetEditorWindow::RunAutoCut()
         return;
     }
 
-    // Run auto-detect algorithm
     m_AtlasFrames = DekiEditor::TextureImporter::AutoDetectFrames(m_TextureData, m_TextureWidth, m_TextureHeight,
                                                                   10,  // alpha threshold
                                                                   1,   // min width
@@ -1247,7 +1230,7 @@ bool SpritesheetEditorWindow::IsUniformGrid() const
         return false;
     }
 
-    // Check if all frames have the same size
+    // All frames must have the same size...
     int width = m_AtlasFrames[0].width;
     int height = m_AtlasFrames[0].height;
 
@@ -1259,8 +1242,7 @@ bool SpritesheetEditorWindow::IsUniformGrid() const
         }
     }
 
-    // Check if frames are arranged in a grid pattern
-    // Calculate expected columns based on texture width
+    // ...and be laid out in a grid, with columns from the texture width.
     int cols = m_TextureWidth / width;
     if (cols == 0)
     {

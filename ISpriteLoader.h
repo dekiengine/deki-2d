@@ -4,36 +4,20 @@
 namespace Deki2D
 {
 
-/**
- * @brief Base interface for sprite loaders
- *
- * This class defines the common interface that all sprite loaders must implement.
- * Each concrete implementation should define its own format constants.
- */
+/// The interface every sprite loader implements. Each implementation defines
+/// its own format constants.
 class ISpriteLoader
 {
 public:
-    /**
-     * @brief Virtual destructor for proper cleanup
-     */
     virtual ~ISpriteLoader() = default;
 
-    /**
-     * @brief Load a sprite from a file path
-     * @param filePath Path to the sprite file
-     * @return A pointer to the created Sprite, or nullptr if loading failed
-     */
+    /// Loads a sprite from a file. Returns nullptr on failure.
     virtual Sprite* LoadFromFile(const char* filePath) = 0;
 
-    /**
-     * @brief Get the format identifier for this loader
-     * @return Format string identifier
-     */
+    /// The name of the format this loader reads.
     virtual const char* GetFormat() const = 0;
 
-    /**
-     * @brief Register this loader with the sprite system
-     */
+    /// Registers this loader with the sprite system.
     virtual void RegisterLoader() = 0;
 };
 

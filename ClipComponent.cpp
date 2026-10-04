@@ -5,9 +5,9 @@
 
 using namespace Deki2D;
 
-// Explicit registration function — called from ::Deki2DRegisterComponents()
-// to ensure interface adapters are registered even when the linker strips
-// object files with only static initializers (e.g., ESP-IDF static libs).
+// Called from ::Deki2DRegisterComponents(), so the interface adapters are
+// registered even when the linker drops object files that hold only static
+// initializers (as with ESP-IDF static libraries).
 void Deki2DRegisterClipAdapters()
 {
     static bool s_Registered = false;
@@ -25,7 +25,7 @@ void Deki2DRegisterClipAdapters()
         { return static_cast<Deki::ISortableProvider*>(static_cast<ClipComponent*>(c)); });
 }
 
-// Static init — works for DLL builds where all objects are loaded
+// Static init, for DLL builds, where every object file is loaded
 static struct ClipInterfaceRegistrar
 {
     ClipInterfaceRegistrar() { Deki2DRegisterClipAdapters(); }

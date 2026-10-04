@@ -27,7 +27,6 @@ void ButtonComponent::Start()
         return;
     }
 
-    // Register pointer callbacks on DekiInput::InputCollider
     collider->onPointerDown.push_back(
         [this](float x, float y)
         {
@@ -55,7 +54,7 @@ void ButtonComponent::Start()
             {
                 InvokeCallbacks(onRelease);
 
-                // Click = was pressed inside and released inside collider
+                // A click is a press and a release both inside the collider
                 DekiInput::InputCollider* col = inputCollider.Get();
                 if (col && col->IsPointerInside())
                 {
@@ -115,7 +114,6 @@ void ButtonComponent::SetState(ButtonState newState)
     ButtonState oldState = state;
     state = newState;
 
-    // Trigger hover callbacks
     if (oldState != ButtonState::Hovered && newState == ButtonState::Hovered)
     {
         InvokeCallbacks(onHoverEnter);
@@ -125,7 +123,6 @@ void ButtonComponent::SetState(ButtonState newState)
         InvokeCallbacks(onHoverExit);
     }
 
-    // Notify state change listeners
     for (const auto& cb : onStateChanged)
     {
         if (cb)

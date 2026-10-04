@@ -12,22 +12,18 @@
 namespace Deki2D
 {
 
-/**
- * @brief File inspector for BDF bitmap font assets (.bdf)
- *
- * Allows selecting which characters to include and bakes the result
- * into cached .dfont + .tex files via FontSyncHandler.
- *
- * .bdf.data sidecar format:
- * {
- *   "bdfSettings": {
- *     "selectedChars": [32, 33, ..., 126]
- *   },
- *   "variants": {
- *     "bdf": {"guid": "...", "atlasGuid": "..."}
- *   }
- * }
- */
+/// Inspector for BDF bitmap fonts (.bdf). Picks which characters to include
+/// and bakes them into cached .dfont and .tex files.
+///
+/// .bdf.data sidecar format:
+/// {
+///   "bdfSettings": {
+///     "selectedChars": [32, 33, ..., 126]
+///   },
+///   "variants": {
+///     "bdf": {"guid": "...", "atlasGuid": "..."}
+///   }
+/// }
 class DEKI_2D_API BdfFileInspector : public DekiEditor::FileInspector
 {
 public:
@@ -42,11 +38,9 @@ public:
     bool IsCached(const std::string& assetGuid) const override;
 
 private:
-    // Current asset being inspected
     std::string m_CurrentAssetPath;
     bool m_SettingsModified = false;
 
-    // Parsed BDF glyph info
     struct CharEntry
     {
         int codepoint;
@@ -56,18 +50,18 @@ private:
     int m_Ascent = 0;
     int m_Descent = 0;
 
-    // Selection (indices into m_AvailableChars)
+    // Indices into m_AvailableChars.
     std::set<int> m_SelectedChars;
     char m_SearchFilter[256] = "";
 
-    // Baked decoration — matches the TTF inspector; applied at bake time and
-    // stored in the .dfont v4 header so runtime renders with palette lookup.
+    // Decoration, as in the TTF inspector. Baked in and stored in the .dfont
+    // v4 header, so the runtime draws it with a palette lookup.
     FontCompiler::DecorationMode m_Decoration = FontCompiler::DecorationMode::None;
     int m_OutlineSize = 1;
     int m_ShadowDx = 1;
     int m_ShadowDy = 1;
 
-    // Glyph atlas for display
+    // Glyph atlas for the inspector's glyph list.
     uint32_t m_GlyphAtlasTexture = 0;
     int m_GlyphAtlasW = 0;
     int m_GlyphAtlasH = 0;

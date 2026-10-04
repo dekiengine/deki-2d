@@ -1,10 +1,6 @@
-/**
- * @file SpriteCustomEditor.cpp
- * @brief Editor-only rendering for SpriteComponent in the scene view
- *
- * This file is only compiled into the editor, not the runtime.
- * Uses CustomEditor with SceneView::Get() singleton for Unity-like API.
- */
+// Editor support for SpriteComponent: its display size in the Scene view and
+// its Inspector, including 9-slice editing. Compiled into the editor only,
+// not the runtime.
 
 #ifdef DEKI_EDITOR
 
@@ -30,7 +26,7 @@ using namespace Deki2D;
 namespace DekiEditor
 {
 
-// Helper function to check if an asset is a ProceduralSprite
+// Whether the asset is a ProceduralSprite.
 static bool IsProceduralSpriteAsset(const std::string& assetPath)
 {
     if (assetPath.empty())
@@ -38,13 +34,12 @@ static bool IsProceduralSpriteAsset(const std::string& assetPath)
         return false;
     }
 
-    // Check if it's a .asset file
     if (assetPath.length() < 6 || assetPath.substr(assetPath.length() - 6) != ".asset")
     {
         return false;
     }
 
-    // Read the JSON to check the type
+    // The JSON says the type.
     std::ifstream file(assetPath);
     if (!file.is_open())
     {
@@ -70,12 +65,10 @@ static bool IsProceduralSpriteAsset(const std::string& assetPath)
     return false;
 }
 
-// Bold section header matching ProceduralSpriteEditor. Field labels underneath
-// should feel subordinate — the bold font + separator achieves that.
-// Sprite-prefixed because ProceduralSpriteEditor.cpp has its own near-identical
-// copies of these four helpers, and unqualified names would collide once the two
-// files share a translation unit (unity build). The copies have drifted, so they
-// are deliberately not merged here.
+// Bold section header with a separator, as in ProceduralSpriteEditor.
+// Sprite-prefixed because ProceduralSpriteEditor.cpp has its own, slightly
+// different copies of these four helpers, and the names would collide when
+// both files share a translation unit (unity build).
 static void SpriteSectionHeader(const char* title)
 {
     auto& ui = EditorUI::Get();
@@ -86,8 +79,8 @@ static void SpriteSectionHeader(const char* title)
     ui.Separator();
 }
 
-// Group header — one level above SpriteSectionHeader, accent-coloured so the
-// subsections visibly belong to this group (pair with Indent/Unindent).
+// Group header, one level above SpriteSectionHeader. Accent-coloured, so the
+// subsections read as part of the group (pair with Indent/Unindent).
 static void SpriteGroupHeader(const char* title)
 {
     auto& ui = EditorUI::Get();
@@ -98,7 +91,7 @@ static void SpriteGroupHeader(const char* title)
     ui.Separator();
 }
 
-// Helper functions for parsing ProceduralSprite JSON
+// Readers for ProceduralSprite JSON.
 static void SpriteParseBorderWidth(const nlohmann::json& data, int32_t& top, int32_t& right, int32_t& bottom,
                                    int32_t& left)
 {
@@ -204,12 +197,13 @@ public:
             return false;
         }
 
-        // For sub-assets, source holds the frame GUID needed for UV/size lookups
+        // For a sub-asset, source holds the frame GUID used for UV and size
+        // lookups.
         const std::string& frameGuid =
             spriteComp->sprite.source.empty() ? spriteComp->sprite.guid : spriteComp->sprite.source;
 
         uint32_t texWidth = 0, texHeight = 0;
-        // Use LoadFrameTexture to handle SubAsset GUIDs (loads parent texture)
+        // LoadFrameTexture loads the parent texture for a sub-asset GUID.
         uint32_t texId = EditorAssets::Get()->LoadFrameTexture(frameGuid, &texWidth, &texHeight);
 
         if (texId == 0)
@@ -220,17 +214,16 @@ public:
         float displayWidth = static_cast<float>(texWidth);
         float displayHeight = static_cast<float>(texHeight);
 
-        // First, try to get SubAsset frame UVs (for individual sprite frames)
+        // A single frame of a sheet: its UVs.
         float u0, v0, u1, v1;
         if (EditorAssets::Get()->GetFrameUVs(frameGuid, &u0, &v0, &u1, &v1))
         {
-            // Calculate frame dimensions from UVs
             displayWidth = (u1 - u0) * static_cast<float>(texWidth);
             displayHeight = (v1 - v0) * static_cast<float>(texHeight);
         }
         else
         {
-            // Check for sprite frame settings (for spritesheets)
+            // A spritesheet's frame settings.
             int frameWidth = 0, frameHeight = 0;
             bool hasFrameSettings = EditorAssets::Get()->LoadSpriteSettings(frameGuid, &frameWidth, &frameHeight);
 
@@ -241,11 +234,10 @@ public:
             }
         }
 
-        // In Tiled/NineSlice modes the on-screen quad expands to width/height
-        // (per-axis; 0 keeps the native fallback above). Selection bounds must
-        // match the rendered quad, not the source texture. width/height are
-        // world meters; multiply by ppm to keep displayWidth in pixels like
-        // the texture/frame fallback paths above.
+        // In Tiled and NineSlice modes the drawn quad is width x height (per
+        // axis; 0 keeps the size found above), and the selection bounds must
+        // match it. width/height are world meters, so multiply by ppm to get
+        // pixels like the sizes above.
         if (spriteComp->renderMode == SpriteRenderMode::Tiled || spriteComp->renderMode == SpriteRenderMode::NineSlice)
         {
             const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
@@ -266,9 +258,9 @@ public:
 
     bool WantsInspectorOverride(Deki::Component* comp) override
     {
-        // Always override: we draw the standard properties manually so we can
-        // inject the 9-slice editing UI for both procedural (.asset) and
-        // normal (.png) sprites in addition to the auto-reflected fields.
+        // Always: the standard properties are drawn here, so the 9-slice
+        // editing UI can be added for both procedural (.asset) and normal
+        // (.png) sprites.
         return comp != nullptr;
     }
 
@@ -282,10 +274,8 @@ public:
 
         const std::string& spriteGuid = spriteComp->sprite.guid;
 
-        // Resolve GUID to absolute asset path
         std::string assetPath = AssetDatabase::GUIDToAbsolutePath(spriteGuid);
 
-        // Draw SpriteComponent properties
         EditorUI::Get().PropertyField("sprite");
         EditorUI::Get().PropertyField("tintColor");
         EditorUI::Get().PropertyField("ignore_clip");
@@ -305,18 +295,17 @@ public:
 
         if (!IsProceduralSpriteAsset(assetPath))
         {
-            // Regular sprite: expose 9-slice border editing via the .png.data sidecar.
+            // A normal sprite: 9-slice borders are edited in the .png.data sidecar.
             DrawNormalSpriteNineSliceUI(assetPath, frameIndex);
             return;
         }
 
-        // Group header — accent-coloured so the subsections below read as
-        // belonging to "Procedural Sprite" without needing an indent.
+        // Accent-coloured, so the subsections below read as part of
+        // "Procedural Sprite" without an indent.
         SpriteGroupHeader("Procedural Sprite");
 
         auto& ui = EditorUI::Get();
 
-        // Read the ProceduralSprite JSON
         std::ifstream file(assetPath);
         if (!file.is_open())
         {
@@ -500,7 +489,7 @@ public:
             modified = true;
         }
 
-        // Apply changes through command system if modified
+        // Apply changes through the command system, for undo.
         if (modified)
         {
             EditorUI::Get().ModifyAsset(assetPath, spriteGuid, originalData.dump(2), jsonData.dump(2));
@@ -508,9 +497,8 @@ public:
     }
 
 private:
-    // Reads the current 9-slice borders from the .png.data sidecar (if any) and
-    // shows a summary line + "Edit 9-Slice..." button. The window handles the
-    // actual edit + save round-trip.
+    // Shows the 9-slice borders from the .png.data sidecar (if any) and an
+    // "Edit 9-Slice..." button. The 9-slice window does the editing and saving.
     void DrawNormalSpriteNineSliceUI(const std::string& assetPath, int frameIndex)
     {
         if (assetPath.empty())

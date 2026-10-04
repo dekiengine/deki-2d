@@ -9,69 +9,60 @@
 namespace Deki2D
 {
 
-/**
- * @brief Glyph metrics for a single character
- */
+/// Where one character sits in the atlas and how to place it.
 struct GlyphInfo
 {
     uint16_t x;       // X position in atlas
     uint16_t y;       // Y position in atlas
     uint8_t width;    // Glyph width in pixels
     uint8_t height;   // Glyph height in pixels
-    int8_t offsetX;   // X offset when rendering
-    int8_t offsetY;   // Y offset when rendering (from baseline)
-    uint8_t advance;  // How much to advance cursor after this glyph
+    int8_t offsetX;   // X offset when drawing
+    int8_t offsetY;   // Y offset when drawing, from the baseline
+    uint8_t advance;  // How far the cursor moves after this glyph
 };
 
-/**
- * @brief Binary font format header (v1 - ASCII only, contiguous glyph array)
- *
- * File structure:
- * [FontHeader][GlyphInfo array][atlasPath (null-terminated string)]
- *
- * The atlas is a separate .tex file referenced by relative path.
- */
+/// .dfont header, version 1: ASCII only, one glyph per character in a
+/// contiguous range.
+///
+/// File layout: [FontHeader][GlyphInfo array][atlasPath, null-terminated]
+///
+/// The atlas is a separate .tex file named by a relative path.
 struct FontHeader
 {
-    char magic[4];          // "DFNT" (DekiRendering::Deki Font)
-    uint32_t version;       // Format version (1)
-    uint8_t firstChar;      // First ASCII character in font (usually 32 = space)
-    uint8_t lastChar;       // Last ASCII character in font (usually 126 = ~)
+    char magic[4];          // "DFNT"
+    uint32_t version;       // 1
+    uint8_t firstChar;      // First ASCII character, usually 32 (space)
+    uint8_t lastChar;       // Last ASCII character, usually 126 (~)
     uint8_t lineHeight;     // Height of a line of text
     uint8_t baseline;       // Y offset from top to baseline
-    uint16_t glyphCount;    // Number of glyphs (m_LastChar - m_FirstChar + 1)
-    uint16_t atlasPathLen;  // Length of atlas path string (including null terminator)
+    uint16_t glyphCount;    // lastChar - firstChar + 1
+    uint16_t atlasPathLen;  // Length of the atlas path, including the null terminator
 };
 
-/**
- * @brief Binary font format header (v2 - Unicode, sparse codepoint table)
- *
- * File structure:
- * [FontHeaderV2][uint32_t codepoints[m_GlyphCount]][GlyphInfo array][atlasPath]
- *
- * Glyphs are stored sparsely: each glyph has a corresponding codepoint entry.
- * Lookup requires searching the codepoint table (binary search, since sorted).
- */
+/// .dfont header, version 2: Unicode, with a sparse codepoint table.
+///
+/// File layout: [FontHeaderV2][uint32_t codepoints[glyphCount]][GlyphInfo array][atlasPath]
+///
+/// Each glyph has a matching codepoint entry. The table is sorted, so lookup
+/// is a binary search.
 struct FontHeaderV2
 {
-    char magic[4];            // "DFNT" (DekiRendering::Deki Font)
-    uint32_t version;         // Format version (2)
-    uint32_t firstCodepoint;  // First codepoint (for info/range display)
-    uint32_t lastCodepoint;   // Last codepoint (for info/range display)
+    char magic[4];            // "DFNT"
+    uint32_t version;         // 2
+    uint32_t firstCodepoint;  // First codepoint, for showing the range only
+    uint32_t lastCodepoint;   // Last codepoint, for showing the range only
     uint8_t lineHeight;       // Height of a line of text
     uint8_t baseline;         // Y offset from top to baseline
-    uint16_t glyphCount;      // Number of glyphs (sparse - only included codepoints)
-    uint16_t atlasPathLen;    // Length of atlas path string (including null terminator)
+    uint16_t glyphCount;      // Number of glyphs actually included
+    uint16_t atlasPathLen;    // Length of the atlas path, including the null terminator
     uint16_t reserved;        // Padding for alignment
 };
 
-/**
- * @brief Baked decoration kind for v4+ fonts. Matches FontCompiler::DecorationMode.
- *
- * When decoration != None the atlas stores 4-bit palette indices (in the low nibble
- * of each byte) instead of 8-bit alpha; the runtime builds a 16-entry colour palette
- * per TextComponent from textColor + decorationColor.
- */
+/// Decoration baked into a v4+ font. Matches FontCompiler::DecorationMode.
+///
+/// When it is not None, the atlas stores 4-bit palette indices (in the low
+/// nibble of each byte) instead of 8-bit alpha, and each TextComponent builds a
+/// 16-entry colour palette from textColor and decorationColor.
 enum class FontDecorationMode : uint8_t
 {
     None = 0,
@@ -79,18 +70,15 @@ enum class FontDecorationMode : uint8_t
     Shadow = 2
 };
 
-/**
- * @brief Binary font format header (v3 - adds cap-height / x-height metrics)
- *
- * File structure (contiguous ASCII):
- * [FontHeaderV3][GlyphInfo array][atlasPath]
- *
- * File structure (sparse, m_IsSparse flag via high bit of version):
- * [FontHeaderV3Sparse][uint32_t codepoints[m_GlyphCount]][GlyphInfo array][atlasPath]
- *
- * Cap-height and x-height enable optical centering that is independent of the
- * actual text content (see BitmapFont::GetCapCenterY / GetXCenterY).
- */
+/// .dfont header, version 3: adds cap-height and x-height.
+///
+/// Contiguous ASCII layout: [FontHeaderV3][GlyphInfo array][atlasPath]
+///
+/// Sparse layout (high bit of version set):
+/// [FontHeaderV3][uint32_t codepoints[glyphCount]][GlyphInfo array][atlasPath]
+///
+/// Cap-height and x-height allow vertical centring that does not depend on the
+/// text shown (see BitmapFont::GetCapCenterY / GetXCenterY).
 struct FontHeaderV3
 {
     char magic[4];     // "DFNT"
@@ -99,21 +87,18 @@ struct FontHeaderV3
     uint32_t lastCodepoint;
     uint8_t lineHeight;
     uint8_t baseline;
-    uint8_t capHeight;  // Height of capital letters from baseline (0 = unknown)
-    uint8_t xHeight;    // Height of lowercase 'x' from baseline (0 = unknown)
+    uint8_t capHeight;  // Height of capital letters above the baseline (0 = unknown)
+    uint8_t xHeight;    // Height of lowercase 'x' above the baseline (0 = unknown)
     uint16_t glyphCount;
     uint16_t atlasPathLen;
 };
 
-/**
- * @brief Binary font format header (v4 - adds NDS-style baked decoration metadata).
- *
- * Layout matches V3 plus four bytes describing the decoration baked into the atlas.
- * When `m_DecorationMode != None` the atlas bytes are 4-bit palette indices (low
- * nibble per pixel) and TextComponent switches to the palette-lookup render path.
- *
- * Sparse flag is carried in the high bit of `version` (0x80000004) just like v3.
- */
+/// .dfont header, version 4: V3 plus four bytes describing the NDS-style
+/// decoration baked into the atlas.
+///
+/// When decorationMode is not None, the atlas bytes are 4-bit palette indices
+/// (low nibble per pixel) and TextComponent draws through a palette lookup.
+/// The high bit of `version` marks a sparse font, as in v3.
 struct FontHeaderV4
 {
     char magic[4];     // "DFNT"
@@ -124,28 +109,22 @@ struct FontHeaderV4
     uint8_t baseline;
     uint8_t capHeight;
     uint8_t xHeight;
-    uint8_t decorationMode;  // FontDecorationMode enum value
-    int8_t decorationA;      // outline size (1..3) OR shadow dx (-3..+3)
-    int8_t decorationB;      // unused for outline OR shadow dy (-3..+3)
-    uint8_t reserved;        // padding for uint16 alignment
+    uint8_t decorationMode;  // FontDecorationMode value
+    int8_t decorationA;      // Outline size (1..3) or shadow dx (-3..+3)
+    int8_t decorationB;      // Shadow dy (-3..+3); unused for outline
+    uint8_t reserved;        // Padding for uint16 alignment
     uint16_t glyphCount;
     uint16_t atlasPathLen;
 };
 
-/**
- * @brief Bitmap font for text rendering
- *
- * Supports ASCII characters with glyph metrics for proper text layout.
- * Uses a texture atlas (TEX format) for glyph rendering.
- */
+/// A bitmap font: glyph metrics for text layout plus a texture atlas (.tex)
+/// holding the glyph images.
 class BitmapFont
 {
 public:
-    /**
-     * @brief Decode one UTF-8 sequence at str[i]; advances i. Returns the
-     * codepoint, or 0xFFFD (after advancing one byte) on an invalid sequence.
-     * The one decoder for text layout and measurement.
-     */
+    /// Decodes one UTF-8 sequence at str[i] and advances i past it. Returns
+    /// the codepoint, or 0xFFFD (after advancing one byte) on an invalid
+    /// sequence. Text layout and measurement both use this one decoder.
     static uint32_t DecodeUtf8(const char* str, size_t len, size_t& i);
 
     /// Asset type name for AssetManager::Load<T>() lookup
@@ -154,203 +133,119 @@ public:
     BitmapFont();
     ~BitmapFont();
 
-    /**
-     * @brief Load font from .dfont file
-     * @param filePath Path to the .dfont file
-     * @return Loaded font or nullptr on failure
-     */
+    /// Loads a font from a .dfont file. Returns nullptr on failure.
     static BitmapFont* Load(const char* filePath);
 
-    /**
-     * @brief Load font from raw file data in memory (for pack file support)
-     * @param data Pointer to raw .dfont file bytes
-     * @param size Total size in bytes
-     * @return Loaded font or nullptr on failure
-     */
+    /// Loads a font from the bytes of a .dfont file already in memory, such as
+    /// one read from a pack file. Returns nullptr on failure.
     static BitmapFont* LoadFromFileData(const uint8_t* data, size_t size);
 
-    /**
-     * @brief Create a monospace font from a grid-based atlas
-     *
-     * This is a helper for simple fonts where all glyphs are the same size
-     * and arranged in a grid pattern (like classic bitmap fonts).
-     *
-     * @param atlasPath Path to the atlas texture (.tex)
-     * @param glyphWidth Width of each glyph cell
-     * @param glyphHeight Height of each glyph cell
-     * @param m_FirstChar First character code in the atlas
-     * @param charsPerRow Number of characters per row in the atlas
-     * @param charCount Total number of characters
-     * @return Created font or nullptr on failure
-     */
+    /// Creates a monospace font from an atlas where every glyph is the same
+    /// size and the glyphs sit in a grid, `charsPerRow` to a row, starting at
+    /// `firstChar`. Returns nullptr on failure.
     static BitmapFont* CreateMonospace(const char* atlasPath, uint8_t glyphWidth, uint8_t glyphHeight,
                                        uint8_t firstChar, uint8_t charsPerRow, uint8_t charCount);
 
-    /**
-     * @brief Create a font from pre-generated glyph data and atlas
-     *
-     * Used by the editor to create fonts from TTF at runtime.
-     * Takes ownership of atlas and glyphs pointers.
-     *
-     * @param atlas Atlas texture (ownership transferred)
-     * @param glyphs Array of glyph info (ownership transferred)
-     * @param m_FirstChar First character code
-     * @param m_LastChar Last character code
-     * @param m_LineHeight Height of a line of text
-     * @param baseline Y offset from top to baseline
-     * @return Created font or nullptr on failure
-     */
+    /// Creates a font from glyph data and an atlas made at runtime, as the
+    /// editor does from a TTF. Takes ownership of `atlas` and `glyphs`.
+    /// Returns nullptr on failure.
     static BitmapFont* CreateFromMemory(Deki::Texture2D* atlas, Deki::Buffer<GlyphInfo>&& glyphs, uint8_t firstChar,
                                         uint8_t lastChar, uint8_t lineHeight, uint8_t baseline);
 
-    /**
-     * @brief Get glyph info for a character (ASCII)
-     * @param c Character to look up
-     * @return Pointer to glyph info or nullptr if character not in font
-     */
+    /// The glyph for an ASCII character, or nullptr when the font lacks it.
     const GlyphInfo* GetGlyph(char c) const;
 
-    /**
-     * @brief Get glyph info for a Unicode codepoint
-     * @param codepoint Unicode codepoint (e.g., 0x4E00 for CJK)
-     * @return Pointer to glyph info or nullptr if codepoint not in font
-     */
+    /// The glyph for a Unicode codepoint (such as 0x4E00 for CJK), or nullptr
+    /// when the font lacks it.
     const GlyphInfo* GetGlyphByCodepoint(uint32_t codepoint) const;
 
-    /**
-     * @brief Measure the width of a text string
-     * @param text Text to measure
-     * @return Width in pixels
-     */
+    /// Width of `text` in pixels.
     int32_t MeasureWidth(const char* text) const;
 
-    /**
-     * @brief Measure the width of a text string with length
-     * @param text Text to measure
-     * @param length Number of characters to measure
-     * @return Width in pixels
-     */
+    /// Width in pixels of the first `length` bytes of `text`.
     int32_t MeasureWidth(const char* text, size_t length) const;
 
-    /**
-     * @brief Get line height
-     * @return Height of a line of text in pixels
-     */
+    /// Height of a line of text in pixels.
     uint8_t GetLineHeight() const { return m_LineHeight; }
 
-    /**
-     * @brief Get baseline offset
-     * @return Y offset from top to baseline
-     */
+    /// Y offset from the top of a line to the baseline.
     uint8_t GetBaseline() const { return m_Baseline; }
 
-    /**
-     * @brief Height of capital letters from baseline.
-     *        Falls back to (baseline * 7/10) for v1/v2 fonts that don't store it.
-     */
+    /// Height of capital letters above the baseline. v1/v2 fonts do not store
+    /// it, so it falls back to baseline * 7/10.
     uint8_t GetCapHeight() const;
 
-    /**
-     * @brief Height of lowercase 'x' from baseline.
-     *        Falls back to (baseline * 5/10) for v1/v2 fonts that don't store it.
-     */
+    /// Height of lowercase 'x' above the baseline. v1/v2 fonts do not store
+    /// it, so it falls back to baseline * 5/10.
     uint8_t GetXHeight() const;
 
-    /**
-     * @brief Y offset from top-of-line to the optical cap-center.
-     *        Use this for UI labels — uppercase/mixed text sits optically centered
-     *        regardless of whether the text contains descenders.
-     */
+    /// Y offset from the top of a line to the middle of the capital letters.
+    /// Use it for UI labels: uppercase and mixed text looks centred whether or
+    /// not it has descenders.
     int32_t GetCapCenterY() const;
 
-    /**
-     * @brief Y offset from top-of-line to the optical x-center.
-     *        Use this for lowercase-heavy body text.
-     */
+    /// Y offset from the top of a line to the middle of lowercase 'x'. Use it
+    /// for mostly lowercase body text.
     int32_t GetXCenterY() const;
 
-    /**
-     * @brief Baked decoration kind.
-     *        None = atlas is 8-bit alpha (classic path).
-     *        Outline / Shadow = atlas stores 4-bit palette indices; renderer uses
-     *        a 16-entry palette built from textColor + decorationColor.
-     */
+    /// The baked decoration. With None the atlas is 8-bit alpha. With Outline
+    /// or Shadow it stores 4-bit palette indices, and the renderer uses a
+    /// 16-entry palette built from textColor and decorationColor.
     FontDecorationMode GetDecorationMode() const { return static_cast<FontDecorationMode>(m_DecorationMode); }
 
-    /** @brief Decoration parameter A: outline thickness (Outline) or shadow dx (Shadow). */
+    /// Outline thickness (Outline) or shadow dx (Shadow).
     int8_t GetDecorationA() const { return m_DecorationA; }
 
-    /** @brief Decoration parameter B: shadow dy (Shadow); unused for Outline. */
+    /// Shadow dy (Shadow); unused for Outline.
     int8_t GetDecorationB() const { return m_DecorationB; }
 
-    /**
-     * @brief Get the texture atlas (loads lazily on first call)
-     * @return Pointer to atlas texture
-     */
+    /// The atlas texture, loaded on the first call.
     Deki::Texture2D* GetAtlas() const;
 
-    /**
-     * @brief Get the resolved atlas path.
-     *
-     * For fonts loaded via `Load(filePath)` this is the absolute path to the
-     * atlas .tex file (dfont's parent dir + filename from header). For fonts
-     * loaded via `LoadFromFileData` this is the relative asset path used for
-     * pack-reader lookups. Callers that need the raw atlas bytes (e.g. the
-     * editor preview pipeline) should read from this path directly rather
-     * than re-parsing the .dfont header.
-     */
+    /// The resolved atlas path.
+    ///
+    /// For a font from `Load(filePath)` it is the absolute path of the atlas
+    /// .tex file (the .dfont's folder plus the file name in the header). For a
+    /// font from `LoadFromFileData` it is the relative asset path used for pack
+    /// lookups. Code that needs the raw atlas bytes (such as the editor
+    /// preview) should read this path rather than parse the .dfont header
+    /// again.
     const std::string& GetAtlasPath() const { return m_AtlasPath; }
 
-    /**
-     * @brief Get first character code in font
-     */
     uint32_t GetFirstChar() const { return m_FirstChar; }
 
-    /**
-     * @brief Get last character code in font
-     */
     uint32_t GetLastChar() const { return m_LastChar; }
 
-    /**
-     * @brief Get the actual visual bounds of glyphs
-     * @param minY Output: minimum Y offset (topmost pixel relative to baseline)
-     * @param maxY Output: maximum Y offset + height (bottommost pixel relative to baseline)
-     *
-     * This calculates the geometric bounds by examining all glyph offsets and heights,
-     * useful for precise vertical centering.
-     */
+    /// The vertical extent of all glyphs, relative to the baseline: `minY` is
+    /// the topmost pixel and `maxY` the bottommost. Used for exact vertical
+    /// centring.
     void GetVisualBounds(int32_t& minY, int32_t& maxY) const;
 
-    /**
-     * @brief Get the visual center Y offset
-     * @return Y offset from top of line to visual center of glyphs
-     *
-     * Calculates the geometric vertical center based on actual glyph bounds.
-     */
+    /// Y offset from the top of a line to the middle of the glyphs' actual
+    /// pixels, from GetVisualBounds.
     int32_t GetVisualCenterY() const;
 
 private:
-    mutable Deki::Texture2D* m_Atlas;  // Glyph atlas texture (lazy-loaded)
-    // Owning: the destructor used to free these, and did it with delete[]
-    // against a Deki::Memory allocation. Every loader can now bail out on
-    // any error without an unwind, which is where the mistakes were.
+    mutable Deki::Texture2D* m_Atlas;  // Glyph atlas texture, loaded lazily
+    // Owned buffers, so every loader can bail out on any error without
+    // cleanup code.
     Deki::Buffer<GlyphInfo> m_Glyphs;
-    Deki::Buffer<uint32_t> m_Codepoints;  // sorted, sparse fonts only
-    uint32_t m_FirstChar;                 // First character code (widened for v2)
-    uint32_t m_LastChar;                  // Last character code (widened for v2)
+    Deki::Buffer<uint32_t> m_Codepoints;  // Sorted; sparse fonts only
+    uint32_t m_FirstChar;                 // First character code (32-bit for v2)
+    uint32_t m_LastChar;                  // Last character code (32-bit for v2)
     uint8_t m_LineHeight;                 // Line height in pixels
     uint8_t m_Baseline;                   // Baseline offset
-    uint8_t m_CapHeight;                  // Capital letter height from baseline (0 = unknown, use fallback)
-    uint8_t m_XHeight;                    // Lowercase 'x' height from baseline (0 = unknown, use fallback)
-    uint8_t m_DecorationMode;             // v4+: FontDecorationMode (0 = None; default)
+    uint8_t m_CapHeight;                  // Capital letter height above the baseline (0 = unknown, use fallback)
+    uint8_t m_XHeight;                    // Lowercase 'x' height above the baseline (0 = unknown, use fallback)
+    uint8_t m_DecorationMode;             // v4+: FontDecorationMode (0 = None, the default)
     int8_t m_DecorationA;                 // v4+: outline size or shadow dx
     int8_t m_DecorationB;                 // v4+: shadow dy (unused for outline)
-    uint16_t m_GlyphCount;                // Number of glyphs
-    bool m_IsSparse;                      // true = v2 sparse codepoint table, false = v1 contiguous
-    std::string m_AtlasPath;              // Deferred atlas path for lazy loading
+    uint16_t m_GlyphCount;
+    bool m_IsSparse;          // True: sparse codepoint table. False: contiguous range
+    std::string m_AtlasPath;  // Atlas path, kept for lazy loading
 
-    // GetVisualBounds() scans every glyph; the glyph table never changes after
-    // load, so the answer is computed once (it used to run per text layout).
+    // GetVisualBounds() scans every glyph. The glyph table never changes after
+    // load, so the result is computed once and cached.
     mutable bool m_VisualBoundsValid = false;
     mutable int32_t m_VisualMinY = 0;
     mutable int32_t m_VisualMaxY = 0;

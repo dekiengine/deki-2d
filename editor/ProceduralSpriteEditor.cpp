@@ -1,10 +1,6 @@
-/**
- * @file ProceduralSpriteEditor.cpp
- * @brief Asset type editor for procedural sprites (rounded rectangles, circles, etc.)
- *
- * This file is only compiled into the editor, not the runtime.
- * Uses SDF-based rendering for antialiased procedural shapes.
- */
+// Asset type editor for procedural sprites (rounded rectangles, circles...).
+// Draws the shapes antialiased from signed distance fields. Compiled into the
+// editor only, not the runtime.
 
 #ifdef DEKI_EDITOR
 
@@ -71,7 +67,7 @@ static float RoundedRectSDF(float px, float py, float halfW, float halfH, float 
 static float RoundedRectSDFPerCorner(float px, float py, float halfW, float halfH, float rTL, float rTR, float rBR,
                                      float rBL)
 {
-    // Select corner radius based on quadrant
+    // The corner radius for this quadrant.
     float r;
     if (px < 0.0f && py < 0.0f)
     {
@@ -143,11 +139,12 @@ static void RenderProceduralSpriteToRGBA(uint8_t* buffer, int32_t totalW, int32_
     float innerHalfW = halfW - avgBorderH;
     float innerHalfH = halfH - avgBorderV;
 
-    // Offset inner rect center so each side gets its exact border width (CSS-like)
+    // Offset the inner rect's center so each side gets its own border width,
+    // as in CSS.
     float innerOffsetX = (fBorderLeft - fBorderRight) / 2.0f;
     float innerOffsetY = (fBorderTop - fBorderBottom) / 2.0f;
 
-    // Per-corner inner radii shrink by adjacent border widths
+    // Each inner corner radius shrinks by the wider adjacent border.
     float innerRadiusTL = (std::max)(fRadiusTL - (std::max)(fBorderTop, fBorderLeft), 0.0f);
     float innerRadiusTR = (std::max)(fRadiusTR - (std::max)(fBorderTop, fBorderRight), 0.0f);
     float innerRadiusBR = (std::max)(fRadiusBR - (std::max)(fBorderBottom, fBorderRight), 0.0f);
@@ -311,9 +308,9 @@ static void RenderProceduralSpriteToRGBA(uint8_t* buffer, int32_t totalW, int32_
 // JSON Parsing Helpers
 // ============================================================================
 
-// Bold section header, matching the grouping style used in InspectorPanel /
-// PackageManagerPanel. More prominent than SeparatorText because the label
-// uses the bold font and sits above a full-width separator line.
+// Bold section header, like the grouping in InspectorPanel and
+// PackageManagerPanel: the label is in the bold font, above a full-width
+// separator line.
 static void SectionHeader(const char* title)
 {
     auto& ui = EditorUI::Get();
@@ -324,10 +321,10 @@ static void SectionHeader(const char* title)
     ui.Separator();
 }
 
-// Group header — one level above SectionHeader. Uses the theme accent colour
-// so it's visibly distinct from the neutral white subsection titles, making
-// clear that everything that follows is part of this group (pair with
-// Indent() / Unindent() around the grouped content).
+// Group header, one level above SectionHeader. In the theme accent colour, so
+// it stands apart from the white subsection titles and everything after it
+// reads as part of the group (pair with Indent() / Unindent() around the
+// grouped content).
 static void GroupHeader(const char* title)
 {
     auto& ui = EditorUI::Get();
@@ -544,8 +541,8 @@ public:
 
             auto& ui = EditorUI::Get();
 
-            // Group header — accent-coloured so the subsections below read
-            // as belonging to "Procedural Sprite" without needing an indent.
+            // Accent-coloured, so the subsections below read as part of
+            // "Procedural Sprite" without an indent.
             GroupHeader("Procedural Sprite");
             {
                 float availW = 0.0f, availH = 0.0f;
@@ -758,7 +755,6 @@ public:
     }
 };
 
-// Auto-register
 REGISTER_EDITOR(ProceduralSpriteEditor)
 
 }  // namespace DekiEditor

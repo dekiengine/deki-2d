@@ -31,7 +31,6 @@ BitmapFont::BitmapFont()
 BitmapFont::~BitmapFont()
 {
     delete m_Atlas;
-    // glyphs and codepoints free themselves.
 }
 
 BitmapFont* BitmapFont::Load(const char* filePath)
@@ -44,7 +43,6 @@ BitmapFont* BitmapFont::Load(const char* filePath)
 
     uint32_t tStart = Deki::Time::GetTime();
 
-    // Read entire file
     Deki::IFileSystem* fs = Deki::FileSystem::GetFileSystemForPath(filePath);
     if (!fs)
     {
@@ -52,7 +50,6 @@ BitmapFont* BitmapFont::Load(const char* filePath)
         return nullptr;
     }
 
-    // Open file
     Deki::IFileSystem::FileHandle file = fs->OpenFile(filePath, Deki::IFileSystem::OpenMode::ReadBinary);
     if (!file)
     {
@@ -60,7 +57,6 @@ BitmapFont* BitmapFont::Load(const char* filePath)
         return nullptr;
     }
 
-    // Get file size
     long fileSize = fs->GetFileSize(file);
     if (fileSize <= 0)
     {
@@ -69,9 +65,7 @@ BitmapFont* BitmapFont::Load(const char* filePath)
         return nullptr;
     }
 
-    // Allocate buffer and read entire file
-    // Owning: Load has nine early exits below, and each one used to have to
-    // remember to free this. One of them did not.
+    // Owned, so the many early exits below need no cleanup.
     Deki::Buffer<uint8_t> fileBuffer(static_cast<size_t>(fileSize), Deki::Memory::External);
     uint8_t* fileData = fileBuffer.Data();
     if (!fileData)
@@ -89,25 +83,22 @@ BitmapFont* BitmapFont::Load(const char* filePath)
         return nullptr;
     }
 
-    // Validate minimum size
     if (static_cast<size_t>(fileSize) < sizeof(FontHeader))
     {
         DEKI_LOG_ERROR("BitmapFont::Load: File too small for header");
         return nullptr;
     }
 
-    // Parse header
     FontHeader header;
     memcpy(&header, fileData, sizeof(FontHeader));
 
-    // Validate magic
     if (memcmp(header.magic, "DFNT", 4) != 0)
     {
         DEKI_LOG_ERROR("BitmapFont::Load: Invalid magic (expected DFNT)");
         return nullptr;
     }
 
-    // Validate version (low 31 bits — v3/v4 encode sparse flag in high bit)
+    // Low 31 bits only: v3/v4 keep the sparse flag in the high bit
     const uint32_t versionLow = header.version & 0x7FFFFFFFu;
     if (versionLow != 1 && versionLow != 2 && versionLow != 3 && versionLow != 4)
     {
@@ -237,7 +228,7 @@ BitmapFont* BitmapFont::Load(const char* filePath)
     }
     else if (versionLow == 1)
     {
-        // V1: contiguous ASCII glyph array
+        // v1: contiguous ASCII glyph array
         uint16_t expectedGlyphCount = header.lastChar - header.firstChar + 1;
         if (header.glyphCount != expectedGlyphCount)
         {
@@ -275,7 +266,7 @@ BitmapFont* BitmapFont::Load(const char* filePath)
     }
     else  // versionLow == 2
     {
-        // V2: sparse codepoint table + glyph array
+        // v2: sparse codepoint table + glyph array
         FontHeaderV2 headerV2;
         if (static_cast<size_t>(fileSize) < sizeof(FontHeaderV2))
         {
@@ -323,7 +314,7 @@ BitmapFont* BitmapFont::Load(const char* filePath)
         atlasRelPath = (const char*)(fileData + sizeof(FontHeaderV2) + codepointsSize + glyphsSize);
     }
 
-    // Build absolute path to atlas (same directory as font file)
+    // The atlas path is relative to the font file's folder
     std::string fontPath(filePath);
     size_t lastSlash = fontPath.find_last_of("/\\");
     std::string atlasPath;
@@ -336,7 +327,7 @@ BitmapFont* BitmapFont::Load(const char* filePath)
         atlasPath = atlasRelPath;
     }
 
-    // Defer atlas loading to first GetAtlas() call for faster scene transitions
+    // The atlas loads on the first GetAtlas() call, for faster scene transitions
     font->m_AtlasPath = atlasPath;
     font->m_Atlas = nullptr;
 
@@ -567,7 +558,7 @@ BitmapFont* BitmapFont::LoadFromFileData(const uint8_t* data, size_t size)
         atlasRelPath = (const char*)(data + sizeof(FontHeaderV2) + codepointsSize + glyphsSize);
     }
 
-    // Font loaded from pack — atlas path is relative, store as-is.
+    // From a pack: the atlas path is a relative asset path, kept as it is
     font->m_AtlasPath = std::string(atlasRelPath);
     font->m_Atlas = nullptr;
 
@@ -585,7 +576,6 @@ BitmapFont* BitmapFont::CreateMonospace(const char* atlasPath, uint8_t glyphWidt
         return nullptr;
     }
 
-    // Load atlas
     Sprite* atlas = Sprite::Load(atlasPath);
     if (!atlas)
     {
@@ -593,7 +583,6 @@ BitmapFont* BitmapFont::CreateMonospace(const char* atlasPath, uint8_t glyphWidt
         return nullptr;
     }
 
-    // Create font
     BitmapFont* font = new BitmapFont();
     font->m_Atlas = atlas;
     font->m_FirstChar = firstChar;
@@ -602,7 +591,6 @@ BitmapFont* BitmapFont::CreateMonospace(const char* atlasPath, uint8_t glyphWidt
     font->m_Baseline = glyphHeight;  // Baseline at bottom for simple fonts
     font->m_GlyphCount = charCount;
 
-    // Generate glyph data
     font->m_Glyphs.Allocate(charCount, Deki::Memory::Internal);
     if (!font->m_Glyphs)
     {
@@ -701,7 +689,7 @@ const GlyphInfo* BitmapFont::GetGlyphByCodepoint(uint32_t codepoint) const
 
     if (m_IsSparse && m_Codepoints)
     {
-        // Binary search in sorted codepoint table
+        // Binary search in the sorted codepoint table
         int lo = 0, hi = static_cast<int>(m_GlyphCount) - 1;
         while (lo <= hi)
         {
@@ -723,7 +711,7 @@ const GlyphInfo* BitmapFont::GetGlyphByCodepoint(uint32_t codepoint) const
     }
     else
     {
-        // V1 contiguous: direct index
+        // Contiguous range: direct index
         if (codepoint < m_FirstChar || codepoint > m_LastChar)
         {
             return nullptr;
@@ -751,14 +739,14 @@ int32_t BitmapFont::MeasureWidth(const char* text, size_t length) const
     int32_t width = 0;
     if (m_IsSparse)
     {
-        // UTF-8 decode for sparse (v2) fonts
+        // Sparse fonts are Unicode, so decode UTF-8
         size_t i = 0;
         while (i < length)
         {
             const uint32_t cp = DecodeUtf8(text, length, i);
             if (cp == 0xFFFD)
             {
-                continue;  // invalid byte: skipped, as before
+                continue;  // invalid byte: skipped
             }
 
             const GlyphInfo* glyph = GetGlyphByCodepoint(cp);
@@ -770,7 +758,7 @@ int32_t BitmapFont::MeasureWidth(const char* text, size_t length) const
     }
     else
     {
-        // V1 ASCII: direct byte lookup
+        // Contiguous ASCII: one byte per character
         for (size_t i = 0; i < length; i++)
         {
             const GlyphInfo* glyph = GetGlyph(text[i]);
@@ -798,7 +786,6 @@ void BitmapFont::GetVisualBounds(int32_t& minY, int32_t& maxY) const
         return;
     }
 
-    // Find the actual bounds by examining all glyphs
     minY = INT32_MAX;
     maxY = INT32_MIN;
 
@@ -810,7 +797,7 @@ void BitmapFont::GetVisualBounds(int32_t& minY, int32_t& maxY) const
             continue;
         }
 
-        // offsetY is relative to baseline, positive means below baseline
+        // offsetY is relative to the baseline; positive is below it
         int32_t glyphTop = g.offsetY;
         int32_t glyphBottom = g.offsetY + g.height;
 
@@ -824,7 +811,7 @@ void BitmapFont::GetVisualBounds(int32_t& minY, int32_t& maxY) const
         }
     }
 
-    // If no valid glyphs found, use defaults
+    // No glyph has pixels: use the whole line
     if (minY == INT32_MAX)
     {
         minY = 0;
@@ -840,14 +827,14 @@ int32_t BitmapFont::GetVisualCenterY() const
     int32_t minY, maxY;
     GetVisualBounds(minY, maxY);
 
-    // Visual center is midpoint between top and bottom of glyph bounds
-    // Return as offset from top of line (where textY starts)
+    // Midpoint of the glyph bounds, as an offset from the top of the line
+    // (where textY starts)
     return (minY + maxY) / 2;
 }
 
 uint8_t BitmapFont::GetCapHeight() const
 {
-    // v1/v2 fonts set m_CapHeight to 0; fall back to typographic approximation.
+    // v1/v2 fonts leave m_CapHeight at 0; use the usual typographic ratio.
     if (m_CapHeight != 0)
     {
         return m_CapHeight;
@@ -866,8 +853,8 @@ uint8_t BitmapFont::GetXHeight() const
 
 int32_t BitmapFont::GetCapCenterY() const
 {
-    // Baseline measured from top-of-line; cap-height extends upward from baseline.
-    // Optical cap center sits half a cap-height above the baseline.
+    // The baseline is measured from the top of the line and cap-height goes up
+    // from it, so the cap centre is half a cap-height above the baseline.
     return static_cast<int32_t>(m_Baseline) - static_cast<int32_t>(GetCapHeight()) / 2;
 }
 
@@ -876,7 +863,7 @@ int32_t BitmapFont::GetXCenterY() const
     return static_cast<int32_t>(m_Baseline) - static_cast<int32_t>(GetXHeight()) / 2;
 }
 
-// Self-register font loader with AssetManager
+// Registers the font loader with the AssetManager at startup
 namespace
 {
 struct FontLoaderReg
@@ -890,13 +877,13 @@ struct FontLoaderReg
                 auto* f = BitmapFont::Load(p);
                 if (f)
                 {
-                    Deki::Time::Delay(1);  // Yield for watchdog on embedded
+                    Deki::Time::Delay(1);  // Yield so the watchdog on a device is fed
                 }
                 return f;
             },
             [](void* a) { delete static_cast<BitmapFont*>(a); },
             [](const uint8_t* d, size_t s) -> void* { return BitmapFont::LoadFromFileData(d, s); });
-        // Also register as "Font" (alias)
+        // "Font" is an alias
         Deki::AssetManager::RegisterLoader(
             "Font",
             [](const char* p) -> void*

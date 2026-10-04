@@ -41,7 +41,7 @@ FrameAnimationEditorWindow::~FrameAnimationEditorWindow()
         m_TextureData = nullptr;
     }
 
-    // Don't delete m_SpritesheetTextureId - it's owned by EditorAssets
+    // Not deleted here: EditorAssets owns the texture.
     m_SpritesheetTextureId = 0;
 }
 
@@ -61,12 +61,11 @@ void FrameAnimationEditorWindow::OnClose()
         m_TextureData = nullptr;
     }
 
-    // Don't delete m_SpritesheetTextureId - it's owned by EditorAssets
+    // Not deleted here: EditorAssets owns the texture.
     m_SpritesheetTextureId = 0;
     m_SpritesheetWidth = 0;
     m_SpritesheetHeight = 0;
 
-    // Clear all animation data
     m_AnimationPath.clear();
     m_SpritesheetGuid.clear();
     m_Animations.clear();
@@ -75,17 +74,14 @@ void FrameAnimationEditorWindow::OnClose()
     m_SelectedTimelineIndex = -1;
     m_IsDirty = false;
 
-    // Reset preview state
     m_PreviewFrame = 0;
     m_IsPlaying = false;
     m_PreviewTimer = 0.0f;
     m_LastPreviewTime = 0;
 
-    // Reset status
     m_StatusMessage.clear();
     m_StatusIsError = false;
 
-    // Reset spritesheet picker
     m_SpritesheetAssets.clear();
     m_SpritesheetSearchBuffer[0] = '\0';
     m_SpritesheetPickerNeedsRefresh = true;
@@ -126,7 +122,7 @@ void FrameAnimationEditorWindow::CreateNewAnimation()
     m_IsPlaying = false;
     m_CurrentAnimationIndex = 0;
 
-    // Create a default animation sequence
+    // Start with one empty animation.
     AnimationSequence defaultAnim;
     defaultAnim.name = "idle";
     defaultAnim.loop = true;
@@ -154,7 +150,7 @@ bool FrameAnimationEditorWindow::LoadAnimation(const std::string& path)
         m_Animations.clear();
         m_CurrentAnimationIndex = 0;
 
-        // New format: animations array
+        // Current format: an "animations" array.
         if (j.contains("animations") && j["animations"].is_array())
         {
             for (const auto& animObj : j["animations"])
@@ -177,7 +173,7 @@ bool FrameAnimationEditorWindow::LoadAnimation(const std::string& path)
                 m_Animations.push_back(seq);
             }
         }
-        // Legacy format: single animation at root level
+        // Older files: a single animation at the root.
         else if (j.contains("frames") && j["frames"].is_array())
         {
             AnimationSequence seq;
@@ -195,7 +191,7 @@ bool FrameAnimationEditorWindow::LoadAnimation(const std::string& path)
             m_Animations.push_back(seq);
         }
 
-        // Ensure at least one animation exists
+        // Always at least one animation.
         if (m_Animations.empty())
         {
             AnimationSequence defaultAnim;
@@ -204,7 +200,6 @@ bool FrameAnimationEditorWindow::LoadAnimation(const std::string& path)
             m_Animations.push_back(defaultAnim);
         }
 
-        // Load spritesheet frames if we have a spritesheet
         if (!m_SpritesheetGuid.empty())
         {
             LoadSpritesheetFrames();
@@ -241,7 +236,6 @@ bool FrameAnimationEditorWindow::SaveAnimationAs(const std::string& path)
         json j;
         j["spritesheetGuid"] = m_SpritesheetGuid;
 
-        // Save all animations
         json animsArr = json::array();
         for (const auto& anim : m_Animations)
         {
@@ -275,7 +269,7 @@ bool FrameAnimationEditorWindow::SaveAnimationAs(const std::string& path)
         m_AnimationPath = path;
         m_IsDirty = false;
 
-        // Trigger reimport to update cache
+        // Reimport, to update the cache.
         fs::path fsPath(path);
         fs::path relativePath = fs::relative(fsPath, m_ProjectPath);
         std::string relativePathStr = relativePath.string();
@@ -309,7 +303,7 @@ void FrameAnimationEditorWindow::LoadSpritesheetFrames()
         return;
     }
 
-    // Get sub-assets (frames) for this spritesheet
+    // The spritesheet's sub-assets are its frames.
     const auto* subAssets = AssetDatabase::GetSubAssets(m_SpritesheetGuid);
 
     if (!subAssets || subAssets->empty())
@@ -319,26 +313,23 @@ void FrameAnimationEditorWindow::LoadSpritesheetFrames()
         return;
     }
 
-    // Load texture for preview
+    // The texture, for the preview.
     auto* assets = EditorAssets::Get();
     m_SpritesheetTextureId = assets->LoadTexture(m_SpritesheetGuid, reinterpret_cast<uint32_t*>(&m_SpritesheetWidth),
                                                  reinterpret_cast<uint32_t*>(&m_SpritesheetHeight));
 
-    // Get frame info for each sub-asset
     for (const auto& subAsset : *subAssets)
     {
         AvailableFrame frame;
         frame.guid = subAsset.guid;
         frame.index = subAsset.subAssetIndex;
 
-        // Get UV coordinates
         if (assets->GetFrameUVs(subAsset.guid, &frame.u0, &frame.v0, &frame.u1, &frame.v1))
         {
             m_AvailableFrames.push_back(frame);
         }
     }
 
-    // Sort by index
     std::sort(m_AvailableFrames.begin(), m_AvailableFrames.end(),
               [](const AvailableFrame& a, const AvailableFrame& b) { return a.index < b.index; });
 }
@@ -358,13 +349,14 @@ void FrameAnimationEditorWindow::OnGUI()
 
     bool isOpen = IsOpen();
 
-    // Build window title with dirty indicator, but use ### to keep stable ID
+    // The title shows unsaved changes; the ### suffix keeps the window id
+    // stable.
     std::string windowTitle = GetTitle();
     if (m_IsDirty)
     {
         windowTitle += " *";
     }
-    windowTitle += "###AnimationEditor";  // Stable ID regardless of title changes
+    windowTitle += "###AnimationEditor";
 
     const float dpi = ui.GetDpiScale();
     ui.SetNextWindowSize(980.0f * dpi, 600.0f * dpi, true);
@@ -451,7 +443,7 @@ void FrameAnimationEditorWindow::DrawSpritesheetPicker()
 {
     auto& ui = EditorUI::Get();
 
-    // Resolve GUID to display name
+    // The spritesheet's display name.
     std::string displayName = "None";
     if (!m_SpritesheetGuid.empty())
     {
@@ -483,7 +475,6 @@ void FrameAnimationEditorWindow::DrawSpritesheetPicker()
     ui.PopStyleVar();
     ui.PopStyleColor(3);
 
-    // Spritesheet picker popup
     if (ui.BeginPopup("SelectSpritesheetPopup"))
     {
         if (m_SpritesheetPickerNeedsRefresh)
@@ -509,7 +500,7 @@ void FrameAnimationEditorWindow::DrawSpritesheetPicker()
         {
             m_SpritesheetGuid.clear();
             m_AvailableFrames.clear();
-            // Clear all animation frames when spritesheet is cleared
+            // Clearing the spritesheet clears every animation's frames.
             for (auto& anim : m_Animations)
             {
                 anim.frames.clear();
@@ -584,7 +575,7 @@ void FrameAnimationEditorWindow::DrawAnimationList()
             m_IsPlaying = false;
         }
 
-        // Context menu for animation operations
+        // Context menu for the animation.
         if (ui.BeginPopupContextItem())
         {
             if (ui.MenuItem("Duplicate"))
@@ -706,7 +697,7 @@ void FrameAnimationEditorWindow::DrawFramePalette()
         if (ui.ImageButton("##frame", m_SpritesheetTextureId, thumbWidth, thumbHeight, frame.u0, frame.v0, frame.u1,
                            frame.v1))
         {
-            // Add frame to current animation's timeline
+            // Add the frame to the current animation's timeline.
             if (m_CurrentAnimationIndex >= 0 && m_CurrentAnimationIndex < static_cast<int>(m_Animations.size()))
             {
                 TimelineFrame newFrame;
@@ -770,7 +761,7 @@ void FrameAnimationEditorWindow::DrawTimeline()
         const auto& tlFrame = timelineFrames[i];
         ui.PushID(static_cast<int>(i));
 
-        // Find the frame in available frames to get UVs
+        // The frame's UVs, from the available frames.
         float u0 = 0, v0 = 0, u1 = 1, v1 = 1;
         int frameIndex = -1;
         for (const auto& af : m_AvailableFrames)
@@ -840,7 +831,7 @@ void FrameAnimationEditorWindow::DrawTimeline()
             ui.TextDisabled(frameInfoBuf);
         }
 
-        // Context menu for frame operations
+        // Context menu for the frame.
         if (ui.BeginPopupContextItem("frame_ctx"))
         {
             if (ui.MenuItem("Remove"))
@@ -1112,7 +1103,6 @@ void FrameAnimationEditorWindow::DrawPreview()
 
 using DekiEditor::FrameAnimationEditorWindow;
 
-// Register the Animation Editor window
 REGISTER_EDITOR_WINDOW(FrameAnimationEditorWindow, "Animation Editor", "2D/Animation Editor")
 
 #endif  // DEKI_EDITOR

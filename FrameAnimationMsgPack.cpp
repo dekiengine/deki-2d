@@ -18,15 +18,14 @@ namespace Deki2D
 {
 
 #ifdef DEKI_EDITOR
-// Editor-only: save serializes through the generated reflection serializer.
+// Editor only: saving goes through the generated reflection serializer.
 using json = nlohmann::json;
 #endif
 
-// FrameAnimationData is a DEKI_SERIALIZABLE struct, so the reflection codegen
-// generates both the editor JSON Deki::Serialize<T> and the all-platforms
-// DeserializeMsgPack (declared via generated/FrameAnimationData.gen.h, included
-// by FrameAnimationData.h). Load and save go through those generated functions,
-// so there is no hand-written per-field parsing here, on desktop or on device.
+// FrameAnimationData is DEKI_SERIALIZABLE, so the reflection codegen
+// generates the editor's JSON Deki::Serialize<T> and DeserializeMsgPack for
+// every platform (declared in generated/FrameAnimationData.gen.h, which
+// FrameAnimationData.h includes). Load and save both use them.
 
 bool FrameAnimationMsgPackHelper::LoadAnimation(const char* msgpackPath, FrameAnimationData* outData)
 {
@@ -36,9 +35,9 @@ bool FrameAnimationMsgPackHelper::LoadAnimation(const char* msgpackPath, FrameAn
         return false;
     }
 
-    // Read through the filesystem provider, like Sprite and BitmapFont: a raw
-    // ifstream cannot resolve a mounted prefix such as "S:/", so on a device
-    // (and in the desktop simulator) every animation failed to open.
+    // Through the filesystem provider, like Sprite and BitmapFont: on a device
+    // and in the desktop simulator the path starts with a mount such as "S:/",
+    // which a plain ifstream cannot resolve.
     Deki::IFileSystem* fs = Deki::FileSystem::GetFileSystemForPath(msgpackPath);
     if (!fs)
     {
@@ -80,8 +79,8 @@ bool FrameAnimationMsgPackHelper::LoadAnimationFromMemory(const uint8_t* data, s
     outData->spritesheetGuid.clear();
     outData->animations.clear();
 
-    // Generated, reflection-driven MessagePack deserialize (full field-name keys).
-    // Identical path on desktop and embedded via SceneMsgPackParser.
+    // The generated deserializer, keyed by full field names. Desktop and
+    // device both read through SceneMsgPackParser.
     Deki::SceneFormat::SceneMsgPackParser parser(data, size);
     uint32_t mapSize = 0;
     if (!parser.ReadMapSize(mapSize))
@@ -118,8 +117,8 @@ bool FrameAnimationMsgPackHelper::SaveAnimation(const char* msgpackPath, const F
 
     try
     {
-        // Generated reflection serialize (full field-name keys) -> MessagePack.
-        // Mirrors the load path; nested sequences/frames are handled recursively.
+        // The generated serializer, keyed by full field names, then MessagePack.
+        // Mirrors the load path; nested sequences and frames are included.
         json j = Deki::Serialize<FrameAnimationData>(*animData);
         std::vector<uint8_t> msgpackData = json::to_msgpack(j);
 
@@ -152,13 +151,12 @@ bool FrameAnimationMsgPackHelper::SaveAnimation(const char* msgpackPath, const F
 }
 #endif
 
-// Registers the animation loader with AssetManager. The memLoader lets packed
-// animations load straight from a .dpack on device (previously missing, so packed
-// animations could only load as loose cache files).
+// Registers the animation loader with AssetManager. memLoader lets a device
+// load packed animations straight from a .dpack.
 //
-// Called, not a static registrar: a firmware links the game from an archive,
-// and the linker drops an object nothing references, registrar and all. That
-// is how animations went unloadable on the device.
+// Must be called, not a static registrar: a firmware links the game from an
+// archive, and the linker drops an object nothing references, registrar and
+// all, which leaves animations unloadable on the device.
 namespace
 {
 bool s_AnimLoaderRegistered = false;
