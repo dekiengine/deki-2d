@@ -150,7 +150,6 @@ bool FrameAnimationEditorWindow::LoadAnimation(const std::string& path)
         m_Animations.clear();
         m_CurrentAnimationIndex = 0;
 
-        // Current format: an "animations" array.
         if (j.contains("animations") && j["animations"].is_array())
         {
             for (const auto& animObj : j["animations"])
@@ -172,23 +171,6 @@ bool FrameAnimationEditorWindow::LoadAnimation(const std::string& path)
 
                 m_Animations.push_back(seq);
             }
-        }
-        // Older files: a single animation at the root.
-        else if (j.contains("frames") && j["frames"].is_array())
-        {
-            AnimationSequence seq;
-            seq.name = j.value("name", "Unnamed");
-            seq.loop = j.value("loop", true);
-
-            for (const auto& frameObj : j["frames"])
-            {
-                TimelineFrame frame;
-                frame.frameGuid = frameObj.value("frameGuid", "");
-                frame.duration = frameObj.value("duration", 100);
-                seq.frames.push_back(frame);
-            }
-
-            m_Animations.push_back(seq);
         }
 
         // Always at least one animation.

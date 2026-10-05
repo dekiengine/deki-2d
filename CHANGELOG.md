@@ -10,6 +10,11 @@ alongside one that has them.
 
 ## Unreleased
 
+### Added
+- CLI and MCP tools for 2D art: `sprite_sheet_grid` slices an image into a
+  grid of frames, and `animation_set_sequence` adds or replaces a named
+  sequence in a frame animation.
+
 ### Changed
 - **Names follow the code style** (deki-engine/docs/codestyle): types, functions and enum values are PascalCase, constants kPascalCase, members m_PascalCase, locals and parameters camelCase. The code is formatted with clang-format 22.
 - The functions the editor finds by name are PascalCase: Deki2DRegisterComponents, Deki2DGetAutoComponentCount, Deki2DEnsureRegistered and the rest. Built against engine ABI 21; a build of this package from before does not load and is rebuilt.
@@ -28,6 +33,9 @@ alongside one that has them.
 ### Removed
 - Reading sprite and nine-slice settings from the top level of an image's
   `.data` file. They are read from `settings`.
+- Reading a frame animation with one sequence at the top level. A new
+  animation is created with an `animations` list; it used to be created in
+  the old form.
 - The former names from before 0.16.0 (bare class names, and deki-gpio's
   `DekiEsp32::ESP32PinSetup`). A scene that old is upgraded with 0.17 first.
 

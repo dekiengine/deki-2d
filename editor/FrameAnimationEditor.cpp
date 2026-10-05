@@ -84,10 +84,8 @@ public:
     const char* GetDefaultContent() const override
     {
         return R"({
-  "name": "New Animation",
   "spritesheetGuid": "",
-  "loop": true,
-  "frames": []
+  "animations": []
 })";
     }
 
