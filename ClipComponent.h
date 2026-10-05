@@ -19,7 +19,6 @@ namespace Deki2D
 /// Clips can be nested: a child clip is intersected with its parent's.
 DEKI_CATEGORY("Core")
 DEKI_DESCRIPTION("Clips its children's rendering to a rectangle.")
-DEKI_FORMER_NAME("ClipComponent")
 class ClipComponent : public Deki::Component, public Deki::IClipProvider, public Deki::ISortableProvider
 {
 public:

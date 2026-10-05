@@ -46,7 +46,6 @@ using RollerCallback = std::function<void(int32_t index, const std::string& valu
 ///     });
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Picker wheel: spins through a list of values with momentum and snaps to one.")
-DEKI_FORMER_NAME("RollerComponent")
 class RollerComponent : public Deki::Component
 {
 public:

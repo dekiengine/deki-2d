@@ -12,7 +12,6 @@ namespace Deki2D
 /// can resize it.
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Declares one list item's size so its Scroll Component can lay the list out.")
-DEKI_FORMER_NAME("ScrollElement")
 class ScrollElement : public Deki::Component
 {
 public:

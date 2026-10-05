@@ -37,7 +37,6 @@ enum class TextVerticalAlign : uint8_t
 /// Draws text with a BitmapFont, with colour, alignment and word wrap.
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Draws text with a bitmap font, alignment and word wrap.")
-DEKI_FORMER_NAME("TextComponent")
 class TextComponent : public DekiRendering::RendererComponent
 {
 public:

@@ -25,6 +25,12 @@ alongside one that has them.
 - Gradient: the Dither Scale tooltip describes what it does, the size of the
   dither pattern in art pixels.
 
+### Removed
+- Reading sprite and nine-slice settings from the top level of an image's
+  `.data` file. They are read from `settings`.
+- The former names from before 0.16.0 (bare class names, and deki-gpio's
+  `DekiEsp32::ESP32PinSetup`). A scene that old is upgraded with 0.17 first.
+
 ## 0.17.0
 
 ### Fixed

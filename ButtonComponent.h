@@ -50,7 +50,6 @@ using ButtonCallback = std::function<void()>;
 ///     button->AddOnClickCallback([]() { /* handle the click */ });
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Makes the object a button: tracks hover and press, and fires a click callback.")
-DEKI_FORMER_NAME("ButtonComponent")
 class ButtonComponent : public Deki::Component
 {
 public:

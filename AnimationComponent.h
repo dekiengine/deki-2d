@@ -16,7 +16,6 @@ namespace Deki2D
 /// spritesheet frames by GUID.
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Plays a frame animation asset on the object's sprite.")
-DEKI_FORMER_NAME("AnimationComponent")
 class AnimationComponent : public Deki::Component
 {
 public:

@@ -17,7 +17,6 @@ namespace Deki2D
 ///     // Children with sortingOrder 0 render behind children with sortingOrder 5
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Makes its children sort together as one unit against the rest of the scene.")
-DEKI_FORMER_NAME("SortingGroupComponent")
 class SortingGroupComponent : public Deki::Component, public Deki::ISortableProvider
 {
 public:

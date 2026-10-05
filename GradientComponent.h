@@ -59,7 +59,6 @@ struct GradientStop
 /// baked into a pixel buffer and re-baked only when an input changes.
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Draws a procedural gradient: linear, radial or conical.")
-DEKI_FORMER_NAME("GradientComponent")
 class GradientComponent : public DekiRendering::RendererComponent
 {
 public:

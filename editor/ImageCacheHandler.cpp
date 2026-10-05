@@ -116,23 +116,12 @@ ImageSidecar ReadImageSidecar(const std::string& imagePath)
             }
         }
     }
-    else if (d.contains("sprite"))
-    {
-        const auto& sprite = d["sprite"];
-        out.sprite.mode = SpriteSlicingMode::Grid;
-        out.sprite.frameWidth = sprite.value("frameWidth", 0);
-        out.sprite.frameHeight = sprite.value("frameHeight", 0);
-    }
 
     // Optional 9-slice borders: "nine_slice": [top, right, bottom, left].
     const json* nineSliceNode = nullptr;
     if (d.contains("settings") && d["settings"].contains("nine_slice"))
     {
         nineSliceNode = &d["settings"]["nine_slice"];
-    }
-    else if (d.contains("nine_slice"))
-    {
-        nineSliceNode = &d["nine_slice"];
     }
     if (nineSliceNode && nineSliceNode->is_array() && nineSliceNode->size() >= 4)
     {

@@ -15,8 +15,6 @@ using namespace Deki2D;
 obj->AddComponent<SomeComponent>();
 ```
 
-Scenes saved before 0.16.0 used bare names and still load; saving writes the current one.
-
 ## Install
 
 Package Manager in the Deki Editor, or `DekiEditor --packages-add deki-2d <project>`.

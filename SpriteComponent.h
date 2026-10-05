@@ -29,7 +29,6 @@ enum class SpriteRenderMode : uint8_t
 /// Draws a sprite, with tint, flip, and tiled or 9-slice modes.
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Draws a sprite, with tint, flip, and tiled or 9-slice modes.")
-DEKI_FORMER_NAME("SpriteComponent")
 class SpriteComponent : public DekiRendering::RendererComponent
 {
 public:

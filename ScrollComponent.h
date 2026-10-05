@@ -56,7 +56,6 @@ using ScrollItemCallback = std::function<void(Deki::Object* slot, int32_t itemIn
 ///   slot is given a different item.
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Scrolls its children by dragging, with momentum.")
-DEKI_FORMER_NAME("ScrollComponent")
 class ScrollComponent : public Deki::Component
 {
 public:
