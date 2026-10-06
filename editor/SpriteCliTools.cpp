@@ -130,6 +130,78 @@ public:
     }
 };
 
+class SpriteNineSliceTool : public CliTool
+{
+public:
+    const char* GetToolName() const override { return "sprite_nine_slice"; }
+    const char* GetToolDescription() const override
+    {
+        return "Set an image's 9-slice borders in pixels, as the 9-Slice editor does: the corners keep their size "
+               "and the edges stretch, for a sprite drawn with renderMode NineSlice. All zero removes them.";
+    }
+    const char* GetInputSchema() const override
+    {
+        return R"json({"type":"object","required":["image","top","right","bottom","left"],"properties":{
+            "image":{"type":"string","description":"The image, project-relative (e.g. assets/sprites/button.png)"},
+            "top":{"type":"integer"},"right":{"type":"integer"},"bottom":{"type":"integer"},"left":{"type":"integer"}}})json";
+    }
+
+    bool Run(const CliToolContext& context, const std::string& argsJson, std::string& resultJson,
+             std::string& error) override
+    {
+        json args;
+        if (!ParseArgs(argsJson, args, error))
+        {
+            return false;
+        }
+        if (context.projectPath.empty())
+        {
+            error = "no project is open";
+            return false;
+        }
+        const std::string image = args.value("image", std::string());
+        const int borders[4] = { args.value("top", -1), args.value("right", -1), args.value("bottom", -1),
+                                 args.value("left", -1) };
+        for (int border : borders)
+        {
+            if (border < 0)
+            {
+                error = "top, right, bottom and left are pixel counts of 0 or more";
+                return false;
+            }
+        }
+
+        const std::string dataPath = GetAssetDataPath((fs::path(context.projectPath) / image).string());
+        AssetData data;
+        if (AssetDatabase::AssetPathToGUID(image).empty() || !LoadAssetData(dataPath, data))
+        {
+            error = "'" + image + "' is not an imported image";
+            return false;
+        }
+        if (borders[0] + borders[1] + borders[2] + borders[3] == 0)
+        {
+            data.settings["settings"].erase("nine_slice");
+        }
+        else
+        {
+            data.settings["settings"]["nine_slice"] = json::array({ borders[0], borders[1], borders[2], borders[3] });
+        }
+        if (!SaveAssetData(dataPath, data))
+        {
+            error = "could not write '" + image + ".data'";
+            return false;
+        }
+        if (context.refreshAsset)
+        {
+            context.refreshAsset(image);
+        }
+        resultJson = json{
+            { "image", image }, { "borders", json::array({ borders[0], borders[1], borders[2], borders[3] }) }
+        }.dump();
+        return true;
+    }
+};
+
 class AnimationSetSequenceTool : public CliTool
 {
 public:
@@ -262,6 +334,7 @@ public:
 
 REGISTER_EDITOR(SpriteSheetGridTool)
 REGISTER_EDITOR(AnimationSetSequenceTool)
+REGISTER_EDITOR(SpriteNineSliceTool)
 
 }  // namespace DekiEditor
 

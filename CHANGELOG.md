@@ -8,6 +8,11 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
+## Unreleased
+
+### Added
+- `sprite_nine_slice` CLI and MCP tool: sets an image's 9-slice borders.
+
 ## 0.18.0
 
 ### Added
