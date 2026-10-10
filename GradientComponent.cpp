@@ -424,7 +424,7 @@ void GradientComponent::RenderPixel(int32_t x, int32_t y, uint16_t color, uint8_
 }
 
 void GradientComponent::RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t outH, int32_t artW, int32_t artH,
-                                       int32_t ditherCell)
+                                       int32_t ditherArt)
 {
     if (!buffer || stopCount == 0)
     {
@@ -439,9 +439,9 @@ void GradientComponent::RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t ou
     {
         return;
     }
-    if (ditherCell < 1)
+    if (ditherArt < 1)
     {
-        ditherCell = 1;
+        ditherArt = 1;
     }
 
     // The inspector edits the stopN properties
@@ -463,7 +463,7 @@ void GradientComponent::RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t ou
         // The art row this output row covers (the same row for every output
         // row of a whole-number upscale).
         const int32_t y = static_cast<int32_t>((static_cast<int64_t>(oy) * renderHeight) / outH);
-        const int32_t cellY = oy / ditherCell;
+        const int32_t cellY = y / ditherArt;
         for (int32_t ox = 0; ox < outW; ox++)
         {
             const int32_t x = static_cast<int32_t>((static_cast<int64_t>(ox) * renderWidth) / outW);
@@ -524,10 +524,10 @@ void GradientComponent::RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t ou
             else
             {
                 // Stipple dither: pick one of the two stops around the position
-                // by a Bayer threshold. The pattern is laid out in output
-                // pixels, each Bayer cell ditherCell wide, so it stays regular
-                // at any scale.
-                float threshold = SampleBayerThreshold(ox / ditherCell, cellY);
+                // by a Bayer threshold, read on the art grid like the colour
+                // (see RenderToBuffer in the header): zooming magnifies the
+                // device's pattern instead of laying out a new one.
+                float threshold = SampleBayerThreshold(x / ditherArt, cellY);
                 PickStopByThreshold(gradPos, threshold, &r, &g, &b);
             }
 
@@ -574,8 +574,7 @@ bool GradientComponent::RenderContent(const Deki::Object* owner, QuadBlit::Sourc
     const int32_t widthPx = std::max<int32_t>(1, static_cast<int32_t>(std::lround(width * bakePPM)));
     const int32_t heightPx = std::max<int32_t>(1, static_cast<int32_t>(std::lround(height * bakePPM)));
 
-    // A Bayer cell covers ditherScale art pixels (a power of two, 1..16),
-    // rounded to whole output pixels so every cell is the same size.
+    // A Bayer cell covers ditherScale art pixels (a power of two, 1..16).
     int32_t ditherArt = 1;
     if (ditherScale >= 16)
     {
@@ -593,7 +592,6 @@ bool GradientComponent::RenderContent(const Deki::Object* owner, QuadBlit::Sourc
     {
         ditherArt = 2;
     }
-    const int32_t ditherCell = std::max<int32_t>(1, static_cast<int32_t>(std::lround(ditherArt * bakePPM / artPPM)));
 
     // The inspector edits the stopN properties
     SyncStopsFromProperties();
@@ -603,7 +601,7 @@ bool GradientComponent::RenderContent(const Deki::Object* owner, QuadBlit::Sourc
     uint64_t key = ComputeBakeKey(widthPx, heightPx);
     key = (key ^ static_cast<uint64_t>(artW)) * 1099511628211ull;
     key = (key ^ static_cast<uint64_t>(artH)) * 1099511628211ull;
-    key = (key ^ static_cast<uint64_t>(ditherCell)) * 1099511628211ull;
+    key = (key ^ static_cast<uint64_t>(ditherArt)) * 1099511628211ull;
     const size_t need = static_cast<size_t>(widthPx) * static_cast<size_t>(heightPx) * 2;  // RGB565
     // A size already refused is not attempted again.
     if (m_BakeFailedSize == need)
@@ -627,7 +625,7 @@ bool GradientComponent::RenderContent(const Deki::Object* owner, QuadBlit::Sourc
         }
         m_BakeFailedSize = 0;
 
-        RenderToBuffer(m_Baked.Data(), widthPx, heightPx, artW, artH, ditherCell);
+        RenderToBuffer(m_Baked.Data(), widthPx, heightPx, artW, artH, ditherArt);
         m_BakeKey = key;
     }
 

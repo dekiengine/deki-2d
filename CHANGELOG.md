@@ -13,6 +13,14 @@ alongside one that has them.
 ### Added
 - `sprite_nine_slice` CLI and MCP tool: sets an image's 9-slice borders.
 
+### Fixed
+- A dithered gradient kept its pattern only at whole-number zoom: in the
+  editor's scene view its Bayer cells were laid out in screen pixels, rounded
+  to whole ones, and drifted against the gradient's own pixels, so each zoom
+  showed a different, uneven stipple. The pattern is now laid out on the art
+  grid like the colour, and zooming only magnifies it. On the device, and at
+  any whole-number zoom, the picture is unchanged.
+
 ## 0.18.0
 
 ### Added
