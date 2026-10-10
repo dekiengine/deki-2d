@@ -458,12 +458,20 @@ void GradientComponent::RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t ou
     int32_t actualTileWidth = tileWPx > 0 ? tileWPx : renderWidth;
     int32_t actualTileHeight = tileHPx > 0 ? tileHPx : renderHeight;
 
+    // The Bayer pattern is laid out on the art grid, cells ditherArt art
+    // pixels wide, unless the bake is smaller than the art: then it is on the
+    // output grid, cells ditherArt art pixels in whole output pixels, so it
+    // stays a regular stipple instead of art pixels dropped unevenly.
+    const bool ditherOnArt = outW >= widthPx && outH >= heightPx;
+    const int32_t outCell = std::max<int32_t>(
+        1, static_cast<int32_t>(std::lround(static_cast<double>(ditherArt) * outW / widthPx)));
+
     for (int32_t oy = 0; oy < outH; oy++)
     {
         // The art row this output row covers (the same row for every output
         // row of a whole-number upscale).
         const int32_t y = static_cast<int32_t>((static_cast<int64_t>(oy) * renderHeight) / outH);
-        const int32_t cellY = y / ditherArt;
+        const int32_t cellY = ditherOnArt ? y / ditherArt : oy / outCell;
         for (int32_t ox = 0; ox < outW; ox++)
         {
             const int32_t x = static_cast<int32_t>((static_cast<int64_t>(ox) * renderWidth) / outW);
@@ -527,7 +535,8 @@ void GradientComponent::RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t ou
                 // by a Bayer threshold, read on the art grid like the colour
                 // (see RenderToBuffer in the header): zooming magnifies the
                 // device's pattern instead of laying out a new one.
-                float threshold = SampleBayerThreshold(x / ditherArt, cellY);
+                const int32_t cellX = ditherOnArt ? x / ditherArt : ox / outCell;
+                float threshold = SampleBayerThreshold(cellX, cellY);
                 PickStopByThreshold(gradPos, threshold, &r, &g, &b);
             }
 
@@ -546,8 +555,7 @@ bool GradientComponent::RenderContent(const Deki::Object* owner, QuadBlit::Sourc
     }
 
     // width/height are world meters. The layout is on the art grid (the
-    // project's pixels per meter); the bake is at the density the view draws
-    // it at, so it lands 1:1 on the screen (see RenderToBuffer).
+    // project's pixels per meter); see RenderToBuffer.
     const float artPPM = Deki::EngineSettings::Global().pixelsPerMeter;
     const int32_t artW = static_cast<int32_t>(width * artPPM);
     const int32_t artH = static_cast<int32_t>(height * artPPM);
@@ -556,23 +564,31 @@ bool GradientComponent::RenderContent(const Deki::Object* owner, QuadBlit::Sourc
         return false;
     }
 
-    float bakePPM = artPPM;
+    // Drawn at its own size or larger, it is baked on the art grid: every art
+    // pixel is one colour, so a bigger bake would only repeat pixels, and
+    // QuadBlit magnifies it evenly (each art pixel the same whole number of
+    // screen pixels, give or take one) without a re-bake on every zoom.
+    // Drawn smaller (a camera showing more art than the screen has pixels, the
+    // editor zoomed out), it is baked at the view's density, 1:1 on the
+    // screen, so no art pixel is dropped unevenly as it is drawn.
+    int32_t widthPx = artW;
+    int32_t heightPx = artH;
     const DekiRendering::DrawView& view = DekiRendering::CurrentDrawView();
-    if (view.pixelsPerMeter > 0.0f)
+    if (view.pixelsPerMeter > 0.0f && view.pixelsPerMeter < artPPM)
     {
-        bakePPM = view.pixelsPerMeter;
-        // At most twice the view's own area: zoomed far in (the editor's
-        // scene view), a big gradient would otherwise ask for a bake many
-        // screens wide. Past that it is scaled up a little as it is drawn.
+        float bakePPM = view.pixelsPerMeter;
+        // At most twice the view's own area: a big gradient mostly off the
+        // view would otherwise ask for a bake many screens wide. Past that it
+        // is scaled up a little as it is drawn.
         const double viewArea = static_cast<double>(view.width) * view.height;
         const double bakeArea = static_cast<double>(width) * bakePPM * height * bakePPM;
         if (viewArea > 0.0 && bakeArea > viewArea * 2.0)
         {
             bakePPM *= static_cast<float>(std::sqrt(viewArea * 2.0 / bakeArea));
         }
+        widthPx = std::max<int32_t>(1, static_cast<int32_t>(std::lround(width * bakePPM)));
+        heightPx = std::max<int32_t>(1, static_cast<int32_t>(std::lround(height * bakePPM)));
     }
-    const int32_t widthPx = std::max<int32_t>(1, static_cast<int32_t>(std::lround(width * bakePPM)));
-    const int32_t heightPx = std::max<int32_t>(1, static_cast<int32_t>(std::lround(height * bakePPM)));
 
     // A Bayer cell covers ditherScale art pixels (a power of two, 1..16).
     int32_t ditherArt = 1;

@@ -18,8 +18,13 @@ alongside one that has them.
   editor's scene view its Bayer cells were laid out in screen pixels, rounded
   to whole ones, and drifted against the gradient's own pixels, so each zoom
   showed a different, uneven stipple. The pattern is now laid out on the art
-  grid like the colour, and zooming only magnifies it. On the device, and at
-  any whole-number zoom, the picture is unchanged.
+  grid like the colour, and zooming in only magnifies it. Zoomed far in, the
+  bake was also capped below the screen's density and scaled twice, which
+  made some cells twice as wide as others: drawn at its own size or larger
+  it is now baked at art size and magnified once, so every cell is the same
+  size and zooming no longer re-bakes it. Drawn smaller than its own size,
+  the pattern stays a regular stipple in screen pixels, as in 0.17. On the
+  device at 1:1 the picture is unchanged.
 
 ## 0.18.0
 

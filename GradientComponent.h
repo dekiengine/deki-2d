@@ -200,13 +200,17 @@ public:
     /// project's pixels per meter); each output pixel takes the art pixel it
     /// covers, colour and dither alike: the Bayer pattern is laid out on the
     /// art grid too, in cells `ditherArt` art pixels wide. Every art pixel is
-    /// one colour, so at any zoom the bake is the device's picture magnified -
-    /// the pattern never changes as the editor zooms, it only grows. (Laid out
-    /// in output pixels instead, its cells were rounded to whole output pixels
-    /// while the art pixels were not, and the two grids drifted apart at every
-    /// zoom between whole numbers.) Baked at the density it is drawn at, so it
-    /// lands 1:1 on the screen; at a whole-number scale it is exactly the
-    /// art-grid bake, scaled.
+    /// one colour, so a bake as big as the art or bigger is the device's
+    /// picture magnified, and RenderContent bakes it at art size and lets
+    /// QuadBlit magnify it: the pattern never changes as the editor zooms in,
+    /// it only grows. (Laid out in output pixels instead, its cells were
+    /// rounded to whole output pixels while the art pixels were not, and the
+    /// two grids drifted apart at every zoom between whole numbers.)
+    ///
+    /// A bake smaller than the art (drawn shrunk) cannot show every art
+    /// pixel, so the pattern is laid out on the output grid instead, in cells
+    /// `ditherArt` art pixels wide rounded to whole output pixels: a regular
+    /// stipple rather than art pixels dropped unevenly.
     void RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t outH, int32_t artW, int32_t artH, int32_t ditherArt);
 
     // Drawn through QuadBlit.
