@@ -13,6 +13,13 @@ alongside one that has them.
 ### Added
 - `sprite_nine_slice` CLI and MCP tool: sets an image's 9-slice borders.
 
+### Changed
+- A 9-slice or tiled sprite in RGB565 or RGB565A8 without a chroma key has
+  its tint baked into the image it keeps of itself, baked again when the tint
+  changes, and is drawn untinted: a copy of its opaque runs instead of a tint
+  on every pixel, every frame. Tinted panels were most of the time in the
+  T-Deck demo's GPS and LoRa screens, which went from 55 to 63 fps.
+
 ### Fixed
 - A dithered gradient kept its pattern only at whole-number zoom: in the
   editor's scene view its Bayer cells were laid out in screen pixels, rounded

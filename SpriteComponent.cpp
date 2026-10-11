@@ -18,6 +18,57 @@ namespace Deki2D
 
 namespace
 {
+// Tints an RGB565 or RGB565A8 bake in place, with the blit's arithmetic
+// (Div255 of the 8-bit channel by the tint), so the blit can draw it untinted:
+// a tinted blit runs per pixel, an untinted one copies its opaque runs.
+void TintBake(uint8_t* data, size_t pixels, int32_t bytesPerPixel, uint8_t tintR, uint8_t tintG, uint8_t tintB)
+{
+    uint8_t r[32], g[64], b[32];
+    for (uint32_t i = 0; i < 32; i++)
+    {
+        r[i] = static_cast<uint8_t>(DekiPixel::Div255((i << 3) * tintR) >> 3);
+        b[i] = static_cast<uint8_t>(DekiPixel::Div255((i << 3) * tintB) >> 3);
+    }
+    for (uint32_t i = 0; i < 64; i++)
+    {
+        g[i] = static_cast<uint8_t>(DekiPixel::Div255((i << 2) * tintG) >> 2);
+    }
+    for (size_t i = 0; i < pixels; i++, data += bytesPerPixel)
+    {
+        const uint32_t v = static_cast<uint32_t>(data[0]) | (static_cast<uint32_t>(data[1]) << 8);
+        const uint32_t t = (static_cast<uint32_t>(r[v >> 11]) << 11) | (static_cast<uint32_t>(g[(v >> 5) & 0x3F]) << 5) |
+                           b[v & 0x1F];
+        data[0] = static_cast<uint8_t>(t & 0xFF);
+        data[1] = static_cast<uint8_t>(t >> 8);
+    }
+}
+
+// Each row's run of fully opaque pixels in an RGB565A8 bake: the first one and
+// the run from it, as QuadBlit's alphaRowSpans. A row with none gets [0, 0).
+void FindOpaqueRuns(const uint8_t* data, int32_t width, int32_t height, int16_t* spans)
+{
+    for (int32_t y = 0; y < height; y++)
+    {
+        const uint8_t* row = data + static_cast<size_t>(y) * width * 3;
+        int32_t start = 0;
+        while (start < width && row[start * 3 + 2] != 255)
+        {
+            start++;
+        }
+        int32_t end = start;
+        while (end < width && row[end * 3 + 2] == 255)
+        {
+            end++;
+        }
+        if (start >= width)
+        {
+            start = end = 0;
+        }
+        spans[y * 2] = static_cast<int16_t>(start);
+        spans[y * 2 + 1] = static_cast<int16_t>(end);
+    }
+}
+
 // Fills the chroma-key fields of a QuadBlit::Source from a Sprite. For
 // RGB565-family sources the key is quantized to 5/6/5 so it matches the
 // pixels. attachRowSpans is false when the blit is not the whole sprite (a
@@ -333,13 +384,24 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
             }
         }
 
-        // Bake again when the source, size, mode or region changed.
+        // The tint goes into the bake for the RGB565 formats; a chroma key is
+        // compared against the untinted colour, so a keyed sprite keeps it for
+        // the blit.
+        const bool tintInBake = (spr->format == Deki::Texture2D::TextureFormat::RGB565 ||
+                                 spr->format == Deki::Texture2D::TextureFormat::RGB565A8) &&
+                                !spr->hasChromaKey;
+        const Deki::Color bakeTint =
+            tintInBake ? Deki::Color(tintColor.r, tintColor.g, tintColor.b, 255) : Deki::Color(255, 255, 255, 255);
+        const bool tintChanged = bakeTint.r != m_CachedRenderTint.r || bakeTint.g != m_CachedRenderTint.g ||
+                                 bakeTint.b != m_CachedRenderTint.b;
+
+        // Bake again when the source, size, mode, region or baked tint changed.
         const Sprite::SliceRegion& was = m_CachedRenderRegion;
         const bool regionChanged = was.x != region.x || was.y != region.y || was.width != region.width ||
                                    was.height != region.height || was.left != region.left ||
                                    was.right != region.right || was.top != region.top || was.bottom != region.bottom;
         if (m_CachedRenderSrc != spr || m_CachedRenderW != targetW || m_CachedRenderH != targetH ||
-            m_CachedRenderMode != renderMode || regionChanged)
+            m_CachedRenderMode != renderMode || regionChanged || tintChanged)
         {
             size_t need = (size_t)targetW * (size_t)targetH * (size_t)bytesPerPixel;
             // Allocate() leaves an unchanged size alone, so reuse costs
@@ -361,6 +423,22 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
                 Sprite::BakeTiledRegion(m_CachedRenderBuffer.Data(), targetW, targetH, spr, region);
             }
 
+            if (bakeTint.r != 255 || bakeTint.g != 255 || bakeTint.b != 255)
+            {
+                TintBake(m_CachedRenderBuffer.Data(), (size_t)targetW * (size_t)targetH, bytesPerPixel, bakeTint.r,
+                         bakeTint.g, bakeTint.b);
+            }
+            const bool spans = spr->format == Deki::Texture2D::TextureFormat::RGB565A8 && spr->hasAlpha;
+            if (spans && m_CachedRowSpans.Allocate((size_t)targetH * 2, Deki::Memory::Internal))
+            {
+                FindOpaqueRuns(m_CachedRenderBuffer.Data(), targetW, targetH, m_CachedRowSpans.Data());
+            }
+            else
+            {
+                m_CachedRowSpans.Reset();
+            }
+
+            m_CachedRenderTint = bakeTint;
             m_CachedRenderRegion = region;
             m_CachedRenderSrc = spr;
             m_CachedRenderW = targetW;
@@ -370,8 +448,15 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
 
         outSource = QuadBlit::MakeSource(m_CachedRenderBuffer.Data(), targetW, targetH,
                                          QuadBlit::PixelLayout::FromTexture(spr->format, spr->hasAlpha),
-                                         false  // ownsPixels = false - component owns this buffer
-        );
+                                         false,  // ownsPixels = false - component owns this buffer
+                                         m_CachedRowSpans ? m_CachedRowSpans.Data() : nullptr);
+        if (tintInBake)
+        {
+            // Already in the pixels; the alpha tint stays the blit's.
+            outTintR = 255;
+            outTintG = 255;
+            outTintB = 255;
+        }
         // The bake has other dimensions than the sprite, so its chromaRowSpans do not apply.
         ApplyChromaKey(outSource, spr, /*attachRowSpans=*/false);
         outSource.pixelsPerMeter = spr->pixelsPerMeter;
