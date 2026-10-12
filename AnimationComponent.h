@@ -35,7 +35,13 @@ public:
     DEKI_EXPORT
     DEKI_TOOLTIP("Frame within the current sequence. Set it to scrub; it is also useful to read while debugging.")
     int32_t currentFrame;     // Index within the current sequence
-    uint32_t frameStartTime;  // When the current frame started, in ms
+    uint32_t frameStartTime;  // When the current frame started, in ms, on clockMs
+
+    // This animation's own clock, in ms: the sum of the engine's frame deltas
+    // (Deki::Time::GetDeltaTimeF), like every other per-frame update. The wall
+    // clock kept running through pauses and fixed-step frames (the editor's
+    // frame capture), so frames raced ahead of the movement they belong to.
+    float clockMs = 0.0f;
 
     // Frame GUID -> SpriteFrame, resolved once per (sprite, animation data)
     // pair so a frame change does not search the sheet by string. Rebuilt

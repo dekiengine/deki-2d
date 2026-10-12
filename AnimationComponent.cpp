@@ -68,7 +68,9 @@ void AnimationComponent::Setup()
 
 void AnimationComponent::Update()
 {
-    UpdateAnimation(Deki::Time::GetTime());
+    clockMs += Deki::Time::GetDeltaTimeF();
+    // +1 so the clock is never 0, which frameStartTime uses for "not started".
+    UpdateAnimation(static_cast<uint32_t>(clockMs) + 1);
 }
 
 void AnimationComponent::Play(bool restartIfPlaying)
