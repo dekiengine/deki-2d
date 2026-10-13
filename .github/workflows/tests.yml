@@ -1,0 +1,23 @@
+# This package's tests, on every push and pull request. The build and the
+# caches are shared by every package: see deki-editor's
+# .github/workflows/package-tests.yml.
+name: Tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    uses: dekiengine/deki-editor/.github/workflows/package-tests.yml@master
+    with:
+      package: deki-2d
