@@ -8,6 +8,13 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
+## Unreleased
+
+### Changed
+- A sliced or tiled sprite's tint bake reads and writes each pixel with one
+  16-bit access on the ESP32's Xtensa cores (`DekiPixel::LoadU16` and
+  `StoreU16`). Needs the deki-rendering released with it.
+
 ## 0.18.2
 
 ### Added
