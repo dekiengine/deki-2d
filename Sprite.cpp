@@ -1,5 +1,6 @@
 #include "Sprite.h"
 #include "SpriteRowSpans.h"
+#include "PixelFormat.h"
 #include <deki/assets/Texture2D.h>
 
 #include <cstdlib>
@@ -56,6 +57,24 @@ void ReadFrameNineSlices(std::vector<SpriteFrame>& frames, const uint8_t* chunk,
         f.nineSliceTop = v[3];
         f.nineSliceBottom = v[4];
     }
+}
+
+// A .dtex keeps RGB565 low byte first; a big-endian board draws from it in
+// its own order, so the pixels are swapped once here.
+void PixelsToMemoryOrder(const Deki::Texture2D::Header& header, uint8_t* pixels)
+{
+    using Format = Deki::Texture2D::TextureFormat;
+    if (header.format != Format::RGB565 && header.format != Format::RGB565A8)
+    {
+        return;
+    }
+    const size_t bpp = header.format == Format::RGB565 ? 2 : 3;
+    const uint64_t count = uint64_t(header.width) * uint64_t(header.height);
+    if (count * bpp > header.dataSize)
+    {
+        return;  // LoadFromMemory's checks report a short image
+    }
+    DekiPixel::FileToMemory565(pixels, static_cast<size_t>(count), bpp);
 }
 }  // namespace
 
@@ -245,6 +264,7 @@ Sprite* Sprite::Load(const char* filePath)
 
     fs->CloseFile(file);
 
+    PixelsToMemoryOrder(header, pixelData);
     Sprite* sprite = new Sprite();
     if (!sprite->LoadFromMemory(header, pixelData))
     {
@@ -479,6 +499,7 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
     }
     memcpy(pixelData, src, header.dataSize);
     src += header.dataSize;
+    PixelsToMemoryOrder(header, pixelData);
 
     Sprite* sprite = new Sprite();
     if (!sprite->LoadFromMemory(header, pixelData))
@@ -682,6 +703,7 @@ Sprite* Sprite::CreateSolid(int32_t width, int32_t height, uint8_t r, uint8_t g,
     DEKI_LOG_INTERNAL("Sprite::CreateSolid - Allocating %zu bytes for RGB565 data", dataSize);
 
     sprite->data = (uint8_t*)Deki::Memory::Allocate(dataSize, Deki::Memory::External);
+    sprite->allocatedWithBackend = true;  // freed with Deki::Memory, as the loaders' are
 
     if (!sprite->data)
     {
@@ -692,11 +714,9 @@ Sprite* Sprite::CreateSolid(int32_t width, int32_t height, uint8_t r, uint8_t g,
 
     DEKI_LOG_INTERNAL("Sprite::CreateSolid - Memory allocated, filling with color...");
 
-    // Convert RGB888 to RGB565
-    uint16_t r5 = (r * 31) / 255;  // 5 bits for red
-    uint16_t g6 = (g * 63) / 255;  // 6 bits for green
-    uint16_t b5 = (b * 31) / 255;  // 5 bits for blue
-    uint16_t rgb565 = (r5 << 11) | (g6 << 5) | b5;
+    // Packed as everywhere else, so a solid sprite unpacks to the colour a
+    // blend or chroma key quantises to; in memory's byte order.
+    const uint16_t rgb565 = DekiPixel::ToMemory565(DekiPixel::PackRGB565(r, g, b));
 
     uint16_t* data16 = (uint16_t*)sprite->data;
     for (int32_t i = 0; i < width * height; i++)
@@ -725,6 +745,7 @@ Sprite* Sprite::CreateSolidRGBA(int32_t width, int32_t height, uint8_t r, uint8_
     size_t dataSize = width * height * 3;  // RGB565A8 format (2 bytes RGB565 + 1 byte alpha)
 
     sprite->data = (uint8_t*)Deki::Memory::Allocate(dataSize, Deki::Memory::External);
+    sprite->allocatedWithBackend = true;  // freed with Deki::Memory, as the loaders' are
 
     if (!sprite->data)
     {
@@ -732,17 +753,13 @@ Sprite* Sprite::CreateSolidRGBA(int32_t width, int32_t height, uint8_t r, uint8_
         return nullptr;
     }
 
-    // Convert RGB888 to RGB565
-    uint16_t r5 = (r * 31) / 255;  // 5 bits for red
-    uint16_t g6 = (g * 63) / 255;  // 6 bits for green
-    uint16_t b5 = (b * 31) / 255;  // 5 bits for blue
-    uint16_t rgb565 = (r5 << 11) | (g6 << 5) | b5;
+    const uint16_t rgb565 = DekiPixel::PackRGB565(r, g, b);
 
     for (int32_t i = 0; i < width * height; i++)
     {
         size_t byteIndex = i * 3;
-        *(uint16_t*)(sprite->data + byteIndex) = rgb565;  // RGB565
-        sprite->data[byteIndex + 2] = a;                  // Alpha
+        DekiPixel::Store565(sprite->data + byteIndex, rgb565);  // RGB565
+        sprite->data[byteIndex + 2] = a;                        // Alpha
     }
 
     return sprite;
@@ -806,6 +823,7 @@ Sprite* Sprite::CreateTiled(Sprite* source, int32_t targetWidth, int32_t targetH
     uint32_t bytesPerPixel = Deki::Texture2D::GetBytesPerPixel(source->format);
     size_t tiledDataSize = targetWidth * targetHeight * bytesPerPixel;
     tiled->data = (uint8_t*)Deki::Memory::Allocate(tiledDataSize, Deki::Memory::External);
+    tiled->allocatedWithBackend = true;  // freed with Deki::Memory, as the loaders' are
 
     if (!tiled->data)
     {
@@ -1020,6 +1038,7 @@ Sprite* Sprite::CreateNineSlice(Sprite* source, int32_t targetWidth, int32_t tar
     uint32_t bytesPerPixel = Deki::Texture2D::GetBytesPerPixel(source->format);
     size_t resultDataSize = targetWidth * targetHeight * bytesPerPixel;
     result->data = (uint8_t*)Deki::Memory::Allocate(resultDataSize, Deki::Memory::External);
+    result->allocatedWithBackend = true;  // freed with Deki::Memory, as the loaders' are
 
     if (!result->data)
     {

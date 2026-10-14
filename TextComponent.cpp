@@ -452,8 +452,9 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
     float centerY = heightPx * 0.5f;
 
     // Everything up to the glyph loop depends only on the font and the
-    // component colours, so it is computed once per layout.
-    uint16_t textRgb565 = ((color.r >> 3) << 11) | ((color.g >> 2) << 5) | (color.b >> 3);
+    // component colours, so it is computed once per layout. The packed colours
+    // are in memory's byte order, ready to store.
+    const uint16_t textRgb565 = DekiPixel::ToMemory565(DekiPixel::PackRGB565(color.r, color.g, color.b));
 
     // Decoration palette, for v4 palette-indexed fonts. Entries:
     //   idx 0     = transparent (skipped)
@@ -467,7 +468,7 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
     if (isPalette)
     {
         const uint16_t decoRgb =
-            ((decorationColor.r >> 3) << 11) | ((decorationColor.g >> 2) << 5) | (decorationColor.b >> 3);
+            DekiPixel::ToMemory565(DekiPixel::PackRGB565(decorationColor.r, decorationColor.g, decorationColor.b));
         palRgb[0] = 0;
         palA[0] = 0;
         palRgb[1] = decoRgb;
@@ -486,7 +487,9 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
                 int mixR = (decorationColor.r * (10 - t) + color.r * t) / 10;
                 int mixG = (decorationColor.g * (10 - t) + color.g * t) / 10;
                 int mixB = (decorationColor.b * (10 - t) + color.b * t) / 10;
-                palRgb[i] = ((mixR >> 3) << 11) | ((mixG >> 2) << 5) | (mixB >> 3);
+                palRgb[i] = DekiPixel::ToMemory565(DekiPixel::PackRGB565(static_cast<uint8_t>(mixR),
+                                                                         static_cast<uint8_t>(mixG),
+                                                                         static_cast<uint8_t>(mixB)));
                 palA[i] = 255;
             }
         }
@@ -615,7 +618,7 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
                         continue;
                     }
                     size_t bufOffset = (bufRow + bufX) * 3;
-                    *(uint16_t*)(m_CachedBuffer.Data() + bufOffset) = palRgb[idx];
+                    DekiPixel::StoreU16(m_CachedBuffer.Data() + bufOffset, palRgb[idx]);
                     m_CachedBuffer[bufOffset + 2] = palA[idx];
                     continue;
                 }
@@ -629,10 +632,8 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
                 {
                     // RGB565 atlas with a chroma key. Each font's key colour
                     // comes from its atlas Sprite.
-                    uint16_t pixel = *((const uint16_t*)(atlasData + atlasOff));
-                    uint8_t r = ((pixel >> 11) & 0x1F) << 3;
-                    uint8_t g = ((pixel >> 5) & 0x3F) << 2;
-                    uint8_t b = (pixel & 0x1F) << 3;
+                    uint8_t r, g, b;
+                    DekiPixel::UnpackRGB565(DekiPixel::Load565(atlasData + atlasOff), r, g, b);
                     alpha = (r == keyR && g == keyG && b == keyB) ? 0 : 255;
                 }
                 else
@@ -647,7 +648,7 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
 
                 // RGB565A8: 2 bytes RGB565 + 1 byte alpha.
                 size_t bufOffset = (bufRow + bufX) * 3;
-                *(uint16_t*)(m_CachedBuffer.Data() + bufOffset) = textRgb565;
+                DekiPixel::StoreU16(m_CachedBuffer.Data() + bufOffset, textRgb565);
                 m_CachedBuffer[bufOffset + 2] = alpha;
             }
         }

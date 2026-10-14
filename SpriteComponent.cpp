@@ -35,10 +35,10 @@ void TintBake(uint8_t* data, size_t pixels, int32_t bytesPerPixel, uint8_t tintR
     }
     for (size_t i = 0; i < pixels; i++, data += bytesPerPixel)
     {
-        const uint32_t v = DekiPixel::LoadU16(data);
+        const uint32_t v = DekiPixel::Load565(data);
         const uint32_t t = (static_cast<uint32_t>(r[v >> 11]) << 11) | (static_cast<uint32_t>(g[(v >> 5) & 0x3F]) << 5) |
                            b[v & 0x1F];
-        DekiPixel::StoreU16(data, static_cast<uint16_t>(t));
+        DekiPixel::Store565(data, static_cast<uint16_t>(t));
     }
 }
 

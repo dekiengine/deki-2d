@@ -10,10 +10,25 @@ alongside one that has them.
 
 ## Unreleased
 
+### Added
+- Big-endian RGB565 (`DEKI_RGB565_BIG_ENDIAN`): a sprite's RGB565 and RGB565A8 pixels
+  are swapped into memory's byte order once, when it loads; so are the text
+  cache's colours, gradients and solid sprites. On such a board, code that
+  reads a sprite's `data` bytes directly must use `DekiPixel::Load565`.
+
 ### Changed
 - A sliced or tiled sprite's tint bake reads and writes each pixel with one
   16-bit access on the ESP32's Xtensa cores (`DekiPixel::LoadU16` and
   `StoreU16`). Needs the deki-rendering released with it.
+- `Sprite::CreateSolid` and `CreateSolidRGBA` pack the colour like the rest of
+  the engine (`PackRGB565`, the top bits), not by `* 31 / 255`, so a solid
+  sprite compares equal to the same colour after a blend or a chroma key. Some
+  colours change by one step of 565.
+
+### Fixed
+- In the editor, a sprite made by `CreateSolid`, `CreateSolidRGBA`,
+  `CreateTiled` or `CreateNineSlice` freed its pixels with `free()`, though
+  they came from `Deki::Memory`, and crashed when it was deleted.
 
 ## 0.18.2
 

@@ -1,4 +1,5 @@
 #include "GradientComponent.h"
+#include "PixelFormat.h"
 #include <cstring>
 #include <deki/Object.h>
 #include <deki/Engine.h>
@@ -540,7 +541,7 @@ void GradientComponent::RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t ou
                 PickStopByThreshold(gradPos, threshold, &r, &g, &b);
             }
 
-            buffer16[oy * outW + ox] = ConvertToRGB565(r, g, b);
+            buffer16[oy * outW + ox] = DekiPixel::ToMemory565(ConvertToRGB565(r, g, b));
         }
     }
 }
