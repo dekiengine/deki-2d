@@ -703,7 +703,9 @@ Sprite* Sprite::CreateSolid(int32_t width, int32_t height, uint8_t r, uint8_t g,
     DEKI_LOG_INTERNAL("Sprite::CreateSolid - Allocating %zu bytes for RGB565 data", dataSize);
 
     sprite->data = (uint8_t*)Deki::Memory::Allocate(dataSize, Deki::Memory::External);
+#ifdef DEKI_EDITOR
     sprite->allocatedWithBackend = true;  // freed with Deki::Memory, as the loaders' are
+#endif
 
     if (!sprite->data)
     {
@@ -745,7 +747,9 @@ Sprite* Sprite::CreateSolidRGBA(int32_t width, int32_t height, uint8_t r, uint8_
     size_t dataSize = width * height * 3;  // RGB565A8 format (2 bytes RGB565 + 1 byte alpha)
 
     sprite->data = (uint8_t*)Deki::Memory::Allocate(dataSize, Deki::Memory::External);
+#ifdef DEKI_EDITOR
     sprite->allocatedWithBackend = true;  // freed with Deki::Memory, as the loaders' are
+#endif
 
     if (!sprite->data)
     {
@@ -823,7 +827,9 @@ Sprite* Sprite::CreateTiled(Sprite* source, int32_t targetWidth, int32_t targetH
     uint32_t bytesPerPixel = Deki::Texture2D::GetBytesPerPixel(source->format);
     size_t tiledDataSize = targetWidth * targetHeight * bytesPerPixel;
     tiled->data = (uint8_t*)Deki::Memory::Allocate(tiledDataSize, Deki::Memory::External);
+#ifdef DEKI_EDITOR
     tiled->allocatedWithBackend = true;  // freed with Deki::Memory, as the loaders' are
+#endif
 
     if (!tiled->data)
     {
@@ -1038,7 +1044,9 @@ Sprite* Sprite::CreateNineSlice(Sprite* source, int32_t targetWidth, int32_t tar
     uint32_t bytesPerPixel = Deki::Texture2D::GetBytesPerPixel(source->format);
     size_t resultDataSize = targetWidth * targetHeight * bytesPerPixel;
     result->data = (uint8_t*)Deki::Memory::Allocate(resultDataSize, Deki::Memory::External);
+#ifdef DEKI_EDITOR
     result->allocatedWithBackend = true;  // freed with Deki::Memory, as the loaders' are
+#endif
 
     if (!result->data)
     {
