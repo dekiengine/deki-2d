@@ -29,6 +29,14 @@ alongside one that has them.
 - In the editor, a sprite made by `CreateSolid`, `CreateSolidRGBA`,
   `CreateTiled` or `CreateNineSlice` freed its pixels with `free()`, though
   they came from `Deki::Memory`, and crashed when it was deleted.
+- The T-Deck demo's meadow scene rebooted the board as it loaded: its
+  sprites' row spans and its fonts' glyph tables went to internal RAM, used
+  up the part ESP-IDF keeps for internal-only allocations, and the next
+  FreeRTOS lock (a file's) could not be made, which aborts. Row spans (a
+  sprite's, and a tiled or 9-slice bake's) and glyph tables now go to
+  external RAM where the board has it, beside the pixels they describe.
+  Frame times are unchanged; meadow runs at 62 fps with 22 KB of internal
+  RAM to spare.
 
 ## 0.18.2
 

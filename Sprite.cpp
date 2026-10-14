@@ -374,7 +374,7 @@ Sprite* Sprite::Load(const char* filePath)
                 const bool spansFit = chunkSize >= 8 && spansCount <= (chunkSize - 8) / sizeof(int16_t);
                 if (enabled && spansCount > 0 && spansFit)
                 {
-                    sprite->chromaRowSpans.Allocate(spansCount, Deki::Memory::Internal);
+                    sprite->chromaRowSpans.Allocate(spansCount, Deki::Memory::External);
                     if (sprite->chromaRowSpans)
                     {
                         memcpy(sprite->chromaRowSpans.Data(), p + 8, spansCount * sizeof(int16_t));
@@ -442,7 +442,11 @@ Sprite* Sprite::Load(const char* filePath)
             else
             {
                 // Opaque spans per row let the blitter copy those runs straight.
-                sprite->alphaRowSpans.Allocate(static_cast<size_t>(h) * 2, Deki::Memory::Internal);
+                // They sit with the pixels, in external RAM: four bytes a row,
+                // read once per row drawn, and a scene of sprites must not
+                // spend the internal RAM FreeRTOS and DMA buffers cannot do
+                // without (it ran out loading the demo's meadow and aborted).
+                sprite->alphaRowSpans.Allocate(static_cast<size_t>(h) * 2, Deki::Memory::External);
                 if (sprite->alphaRowSpans)
                 {
                     BuildOpaqueRowSpans(pixelData, w, h, sprite->alphaRowSpans.Data());
@@ -596,7 +600,7 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
                     const bool spansFit = chunkSize >= 8 && spansCount <= (chunkSize - 8) / sizeof(int16_t);
                     if (enabled && spansCount > 0 && spansFit)
                     {
-                        sprite->chromaRowSpans.Allocate(spansCount, Deki::Memory::Internal);
+                        sprite->chromaRowSpans.Allocate(spansCount, Deki::Memory::External);
                         if (sprite->chromaRowSpans)
                         {
                             memcpy(sprite->chromaRowSpans.Data(), p + 8, spansCount * sizeof(int16_t));
@@ -653,7 +657,7 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
             }
             else
             {
-                sprite->alphaRowSpans.Allocate(static_cast<size_t>(h) * 2, Deki::Memory::Internal);
+                sprite->alphaRowSpans.Allocate(static_cast<size_t>(h) * 2, Deki::Memory::External);
                 if (sprite->alphaRowSpans)
                 {
                     BuildOpaqueRowSpans(pixelData, w, h, sprite->alphaRowSpans.Data());

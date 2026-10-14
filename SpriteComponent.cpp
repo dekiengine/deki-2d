@@ -428,7 +428,7 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
                          bakeTint.g, bakeTint.b);
             }
             const bool spans = spr->format == Deki::Texture2D::TextureFormat::RGB565A8 && spr->hasAlpha;
-            if (spans && m_CachedRowSpans.Allocate((size_t)targetH * 2, Deki::Memory::Internal))
+            if (spans && m_CachedRowSpans.Allocate((size_t)targetH * 2, Deki::Memory::External))
             {
                 FindOpaqueRuns(m_CachedRenderBuffer.Data(), targetW, targetH, m_CachedRowSpans.Data());
             }
