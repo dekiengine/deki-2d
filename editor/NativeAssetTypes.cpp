@@ -12,6 +12,7 @@
 #include <deki-editor/EditorExtension.h>
 #include <deki-editor/EditorRegistry.h>
 #include <deki-editor/AssetTypeRegistry.h>
+#include <deki-editor/Localization.h>
 
 namespace DekiEditor
 {
@@ -20,7 +21,7 @@ class SpriteAssetType : public AssetTypeEditor
 {
 public:
     const char* GetTypeName() const override { return "Sprite"; }
-    const char* GetDisplayName() const override { return "Sprite"; }
+    const char* GetDisplayName() const override { return TrMark("Sprite"); }
     std::vector<std::string> GetExtensions() const override
     {
         return { ".png", ".jpg", ".jpeg", ".bmp", ".tga", ".gif", ".dtex" };
@@ -31,7 +32,7 @@ class BitmapFontAssetType : public AssetTypeEditor
 {
 public:
     const char* GetTypeName() const override { return "BitmapFont"; }
-    const char* GetDisplayName() const override { return "Bitmap Font"; }
+    const char* GetDisplayName() const override { return TrMark("Bitmap Font"); }
     std::vector<std::string> GetExtensions() const override { return { ".ttf", ".otf", ".dfont", ".bdf" }; }
 };
 

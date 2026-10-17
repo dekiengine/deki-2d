@@ -6,6 +6,7 @@
 #include <deki-editor/EditorAssets.h>
 #include <deki-editor/AssetDatabase.h>
 #include <deki-editor/EditorUI.h>
+#include <deki-editor/Localization.h>
 #include <deki-editor/SubAsset.h>
 #include <deki-editor/TextureImporter.h>
 #include <deki-editor/FileIO.h>
@@ -152,7 +153,9 @@ void NineSliceEditorWindow::OpenFile(const char* filePath, const char* cachePath
                     m_FrameGuid = sub.guid;
                     m_FrameW = rect->width;
                     m_FrameH = rect->height;
-                    m_DisplayName += "  >  " + (sub.name.empty() ? "Frame " + std::to_string(frame) : sub.name);
+                    char frameName[64];
+                    std::snprintf(frameName, sizeof(frameName), Tr("Frame %d"), frame);
+                    m_DisplayName += "  >  " + (sub.name.empty() ? std::string(frameName) : sub.name);
                     break;
                 }
             }
@@ -504,7 +507,7 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
     auto& ui = EditorUI::Get();
     if (m_AssetGuid.empty())
     {
-        ui.TextDisabled("(No asset GUID resolved)");
+        ui.TextDisabled(Tr("(No asset GUID resolved)"));
         return false;
     }
 
@@ -512,7 +515,7 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
     uint32_t texId = EditorAssets::Get()->LoadFrameTexture(m_AssetGuid, &texW, &texH);
     if (texId == 0 || texW == 0 || texH == 0)
     {
-        ui.TextDisabled("(Sprite preview unavailable — asset not cached)");
+        ui.TextDisabled(Tr("(Sprite preview unavailable — asset not cached)"));
         return false;
     }
     // A frame: show just it, and measure the borders in its pixels.
@@ -521,7 +524,7 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
     {
         if (!EditorAssets::Get()->GetFrameUVs(m_FrameGuid, &u0, &v0, &u1, &v1))
         {
-            ui.TextDisabled("(Frame preview unavailable)");
+            ui.TextDisabled(Tr("(Frame preview unavailable)"));
             return false;
         }
         texW = static_cast<uint32_t>(m_FrameW);
@@ -955,7 +958,7 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
     // Usage hint at the canvas bottom-left.
     ui.DrawTextAt(0.0f, canvasOriginX + 8.0f, canvasOriginY + availY - ui.GetTextLineHeight() - 6.0f,
                   EditorUI::Rgba(120, 120, 116, 200),
-                  "Drag guides or corners   |   Scroll: zoom   |   Drag empty space: pan   |   Double-click: fit");
+                  Tr("Drag guides or corners   |   Scroll: zoom   |   Drag empty space: pan   |   Double-click: fit"));
 
     ui.PopClipRect();
     return m_ActiveDrag != DragHandle::None || m_PanningLMB;
@@ -970,7 +973,7 @@ void NineSliceEditorWindow::DrawSavePromptModalIfNeeded()
     auto& ui = EditorUI::Get();
     if (m_OpenSavePromptNextFrame)
     {
-        ui.OpenPopup("Save changes?##nineslice_close");
+        ui.OpenPopup(TrLabel("Save changes?##nineslice_close"));
         m_OpenSavePromptNextFrame = false;
     }
 
@@ -984,9 +987,9 @@ void NineSliceEditorWindow::DrawSavePromptModalIfNeeded()
     ui.SetNextWindowSize(em * 28.0f, 0.0f);
     ui.PushStyleVar(EditorUI::StyleVar::WindowPadding, em * 1.4f, em * 1.25f);
 
-    if (ui.BeginPopupModal("Save changes?##nineslice_close", nullptr, EditorUI::WinNoSavedSettings))
+    if (ui.BeginPopupModal(TrLabel("Save changes?##nineslice_close"), nullptr, EditorUI::WinNoSavedSettings))
     {
-        ui.Text("You have unsaved 9-slice changes.");
+        ui.Text(Tr("You have unsaved 9-slice changes."));
         ui.Spacing();
         ui.Spacing();
 
@@ -996,12 +999,12 @@ void NineSliceEditorWindow::DrawSavePromptModalIfNeeded()
         const float btnW = (availW - gap * 2.0f) / 3.0f;
 
         ui.PushButtonTextAlign(0.5f, 0.5f);
-        if (ui.Button("Cancel", btnW))
+        if (ui.Button(TrLabel("Cancel"), btnW))
         {
             ui.CloseCurrentPopup();
         }
         ui.SameLine(0.0f, gap);
-        if (ui.Button("Discard", btnW))
+        if (ui.Button(TrLabel("Discard"), btnW))
         {
             m_Current = m_Saved;
             m_UndoStack.clear();
@@ -1014,7 +1017,7 @@ void NineSliceEditorWindow::DrawSavePromptModalIfNeeded()
         ui.PushStyleColor(EditorUI::Col::Button, WithAlpha(accent, 102));
         ui.PushStyleColor(EditorUI::Col::ButtonHovered, accent);
         ui.PushStyleColor(EditorUI::Col::ButtonActive, accent);
-        if (ui.Button("Save", btnW))
+        if (ui.Button(TrLabel("Save"), btnW))
         {
             SaveToDisk();
             m_IsOpen = false;
@@ -1038,7 +1041,7 @@ void NineSliceEditorWindow::OnGUI()
     const float dpi = ui.GetDpiScale();
     ui.SetNextWindowSize(640.0f * dpi, 560.0f * dpi, true);
     ui.SetNextWindowSizeConstraints(420.0f * dpi, 320.0f * dpi, 100000.0f, 100000.0f);
-    bool visible = ui.Begin(GetTitle(), &wantOpen, EditorUI::WinNoSavedSettings);
+    bool visible = ui.Begin(TrLabel(GetTitle()), &wantOpen, EditorUI::WinNoSavedSettings);
 
     // Closing with the X while there are unsaved changes opens the prompt
     // instead.
@@ -1056,19 +1059,19 @@ void NineSliceEditorWindow::OnGUI()
 
         // ── Toolbar (console-style full-bleed strip) ────────────────────────
         ui.BeginToolbar();
-        if (ui.ToolbarButton(dirty ? "Save*" : "Save", hasSprite && dirty))
+        if (ui.ToolbarButton(dirty ? Tr("Save*") : Tr("Save"), hasSprite && dirty))
         {
             SaveToDisk();
         }
-        if (ui.ToolbarButton("Undo", !m_UndoStack.empty()))
+        if (ui.ToolbarButton(Tr("Undo"), !m_UndoStack.empty()))
         {
             Undo();
         }
-        if (ui.ToolbarButton("Redo", !m_RedoStack.empty()))
+        if (ui.ToolbarButton(Tr("Redo"), !m_RedoStack.empty()))
         {
             Redo();
         }
-        if (ui.ToolbarButton("Fit View", hasSprite))
+        if (ui.ToolbarButton(Tr("Fit View"), hasSprite))
         {
             m_FitViewPending = true;
         }
@@ -1082,7 +1085,7 @@ void NineSliceEditorWindow::OnGUI()
         {
             ui.Dummy(0.0f, pad);
             ui.Indent(pad);
-            ui.TextDisabled("No sprite open. Use 'Edit 9-Slice...' from a Sprite inspector or the Asset Browser.");
+            ui.TextDisabled(Tr("No sprite open. Use 'Edit 9-Slice...' from a Sprite inspector or the Asset Browser."));
             ui.Unindent(pad);
         }
         else
@@ -1119,10 +1122,11 @@ void NineSliceEditorWindow::OnGUI()
             const float colW = (availW - pad - colGap * 3.0f) / 4.0f;
             auto borderField = [&](const char* label, int32_t* v)
             {
+                const char* shown = Tr(label);
                 float labelW = 0.0f;
-                ui.MeasureText(label, &labelW, nullptr);
+                ui.MeasureText(shown, &labelW, nullptr);
                 ui.AlignTextToFramePadding();
-                ui.TextDisabled(label);
+                ui.TextDisabled(shown);
                 ui.SameLine(0.0f, 6.0f * dpi);
                 ui.SetNextItemWidth(std::max(colW - labelW - 6.0f * dpi, 24.0f * dpi));
                 char id[24];
@@ -1131,13 +1135,13 @@ void NineSliceEditorWindow::OnGUI()
                 anyActive |= ui.IsItemActive();
                 anyCommitted |= ui.IsItemDeactivatedAfterEdit();
             };
-            borderField("Left", &m_Current.left);
+            borderField(TrMark("Left"), &m_Current.left);
             ui.SameLine(0.0f, colGap);
-            borderField("Top", &m_Current.top);
+            borderField(TrMark("Top"), &m_Current.top);
             ui.SameLine(0.0f, colGap);
-            borderField("Right", &m_Current.right);
+            borderField(TrMark("Right"), &m_Current.right);
             ui.SameLine(0.0f, colGap);
-            borderField("Bottom", &m_Current.bottom);
+            borderField(TrMark("Bottom"), &m_Current.bottom);
 
             if (anyCommitted)
             {
