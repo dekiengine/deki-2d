@@ -444,5 +444,17 @@
     "Save and Use": "저장 후 사용",
     "(Saves to font config and bakes)": "(폰트 설정에 저장하고 베이크합니다)",
     "Enable preview to test different font sizes.": "미리 보기를 켜면 다른 폰트 크기를 시험해 볼 수 있습니다.",
-    "Text": "텍스트"
+    "Text": "텍스트",
+    "Clips its children's rendering to a rectangle.": "자식의 렌더링을 사각형 영역으로 잘라냅니다.",
+    "Core": "코어",
+    "Declares one list item's size so its Scroll Component can lay the list out.": "목록 항목 하나의 크기를 지정하여 스크롤 컴포넌트가 목록을 배치할 수 있게 합니다.",
+    "Draws a procedural gradient: linear, radial or conical.": "선형, 방사형 또는 원뿔형 절차적 그라디언트를 그립니다.",
+    "Draws a sprite, with tint, flip, and tiled or 9-slice modes.": "스프라이트를 그립니다. 틴트, 뒤집기, 타일 및 9-슬라이스 모드를 지원합니다.",
+    "Draws text with a bitmap font, alignment and word wrap.": "비트맵 폰트로 텍스트를 그립니다. 정렬과 단어 단위 줄 바꿈을 지원합니다.",
+    "Gives a button its look per state, by tinting or by swapping sprites.": "틴트 또는 스프라이트 교체로 버튼의 상태별 모양을 정합니다.",
+    "Makes its children sort together as one unit against the rest of the scene.": "자식들을 하나의 단위로 묶어 씬의 나머지 부분과 함께 정렬되게 합니다.",
+    "Makes the object a button: tracks hover and press, and fires a click callback.": "오브젝트를 버튼으로 만듭니다. 호버와 누름을 추적하고 클릭 콜백을 호출합니다.",
+    "Picker wheel: spins through a list of values with momentum and snaps to one.": "선택 휠입니다. 관성으로 값 목록을 돌다가 하나에 맞춰 멈춥니다.",
+    "Plays a frame animation asset on the object's sprite.": "오브젝트의 스프라이트에서 프레임 애니메이션 에셋을 재생합니다.",
+    "Scrolls its children by dragging, with momentum.": "드래그로 자식을 스크롤합니다. 관성이 적용됩니다."
 }

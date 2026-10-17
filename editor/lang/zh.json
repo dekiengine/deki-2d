@@ -444,5 +444,17 @@
     "Save and Use": "保存并使用",
     "(Saves to font config and bakes)": "（保存到字体配置并烘焙）",
     "Enable preview to test different font sizes.": "启用预览以测试不同字号。",
-    "Text": "文本"
+    "Text": "文本",
+    "Clips its children's rendering to a rectangle.": "将子对象的渲染裁剪到一个矩形内。",
+    "Core": "核心",
+    "Declares one list item's size so its Scroll Component can lay the list out.": "声明一个列表项的大小，以便其滚动组件排布列表。",
+    "Draws a procedural gradient: linear, radial or conical.": "绘制程序化渐变：线性、径向或锥形。",
+    "Draws a sprite, with tint, flip, and tiled or 9-slice modes.": "绘制精灵，支持着色、翻转以及平铺或九宫格模式。",
+    "Draws text with a bitmap font, alignment and word wrap.": "使用位图字体绘制文本，支持对齐和自动换行。",
+    "Gives a button its look per state, by tinting or by swapping sprites.": "为按钮的每种状态设置外观，可通过着色或替换精灵实现。",
+    "Makes its children sort together as one unit against the rest of the scene.": "让子对象作为一个整体，与场景中的其余部分一起排序。",
+    "Makes the object a button: tracks hover and press, and fires a click callback.": "使对象成为按钮：跟踪悬停和按下，并触发点击回调。",
+    "Picker wheel: spins through a list of values with momentum and snaps to one.": "滚轮选择器：带惯性地滚过一列值，并停靠在其中一个上。",
+    "Plays a frame animation asset on the object's sprite.": "在对象的精灵上播放帧动画资源。",
+    "Scrolls its children by dragging, with momentum.": "通过拖动滚动子对象，带有惯性。"
 }

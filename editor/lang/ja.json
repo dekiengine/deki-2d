@@ -444,5 +444,17 @@
     "Save and Use": "保存して使用",
     "(Saves to font config and bakes)": "(フォント設定に保存してベイクします)",
     "Enable preview to test different font sizes.": "プレビューを有効にすると、ほかのフォントサイズを試せます。",
-    "Text": "テキスト"
+    "Text": "テキスト",
+    "Clips its children's rendering to a rectangle.": "子の描画を矩形の範囲で切り取ります。",
+    "Core": "コア",
+    "Declares one list item's size so its Scroll Component can lay the list out.": "リストの 1 項目のサイズを示し、スクロールコンポーネントがリストを並べられるようにします。",
+    "Draws a procedural gradient: linear, radial or conical.": "プロシージャルなグラデーションを描きます。リニア、放射状、円錐状から選べます。",
+    "Draws a sprite, with tint, flip, and tiled or 9-slice modes.": "スプライトを描きます。色合い、反転、タイルと 9 スライスのモードに対応します。",
+    "Draws text with a bitmap font, alignment and word wrap.": "ビットマップフォントでテキストを描きます。揃えと折り返しに対応します。",
+    "Gives a button its look per state, by tinting or by swapping sprites.": "ボタンの見た目を状態ごとに決めます。色合いを変えるか、スプライトを差し替えます。",
+    "Makes its children sort together as one unit against the rest of the scene.": "子をひとまとまりにして、シーンのほかの部分に対する描画順をまとめて決めます。",
+    "Makes the object a button: tracks hover and press, and fires a click callback.": "オブジェクトをボタンにします。ホバーと押下を追跡し、クリックのコールバックを呼び出します。",
+    "Picker wheel: spins through a list of values with momentum and snaps to one.": "ピッカーホイールです。値のリストを慣性で回し、1 つの値で止まります。",
+    "Plays a frame animation asset on the object's sprite.": "オブジェクトのスプライトでフレームアニメーションのアセットを再生します。",
+    "Scrolls its children by dragging, with momentum.": "ドラッグで子をスクロールします。慣性にも対応します。"
 }
