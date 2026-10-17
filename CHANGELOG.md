@@ -8,7 +8,10 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
-## Unreleased
+## 0.19.0
+
+### Changed
+- `minEngine` 0.19.0: built against engine 0.19.0, whose component metadata records the package each class is in. A build of this package from before does not load and is rebuilt.
 
 ### Added
 - Japanese, Simplified Chinese and Korean: `editor/lang/ja.json`, `zh.json`
