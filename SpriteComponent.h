@@ -142,6 +142,9 @@ private:
     // row's opaque run, [start, end) per row, for the blit's fast path.
     Deki::Color m_CachedRenderTint = Deki::Color(255, 255, 255, 255);
     Deki::Buffer<int16_t> m_CachedRowSpans;
+    // Each bake row's longest run of fully transparent pixels
+    // (QuadBlit::Source::clearRowSpans): the inside of an outline or frame.
+    Deki::Buffer<int16_t> m_CachedClearSpans;
 
     // What Tiled and NineSlice stretch: the shown frame, or the whole sprite
     // when none is, with that frame's (or the sprite's) 9-slice borders.

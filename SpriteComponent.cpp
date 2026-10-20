@@ -68,6 +68,37 @@ void FindOpaqueRuns(const uint8_t* data, int32_t width, int32_t height, int16_t*
     }
 }
 
+// Each row's longest run of fully transparent pixels in an RGB565A8 bake, as
+// QuadBlit's clearRowSpans. A row with none gets [0, 0).
+void FindClearRuns(const uint8_t* data, int32_t width, int32_t height, int16_t* spans)
+{
+    for (int32_t y = 0; y < height; y++)
+    {
+        const uint8_t* row = data + static_cast<size_t>(y) * width * 3;
+        int32_t bestStart = 0, bestEnd = 0;
+        for (int32_t x = 0; x < width;)
+        {
+            if (row[x * 3 + 2] != 0)
+            {
+                x++;
+                continue;
+            }
+            const int32_t start = x;
+            while (x < width && row[x * 3 + 2] == 0)
+            {
+                x++;
+            }
+            if (x - start > bestEnd - bestStart)
+            {
+                bestStart = start;
+                bestEnd = x;
+            }
+        }
+        spans[y * 2] = static_cast<int16_t>(bestStart);
+        spans[y * 2 + 1] = static_cast<int16_t>(bestEnd);
+    }
+}
+
 // Fills the chroma-key fields of a QuadBlit::Source from a Sprite. For
 // RGB565-family sources the key is quantized to 5/6/5 so it matches the
 // pixels. attachRowSpans is false when the blit is not the whole sprite (a
@@ -436,6 +467,14 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
             {
                 m_CachedRowSpans.Reset();
             }
+            if (spans && m_CachedClearSpans.Allocate((size_t)targetH * 2, Deki::Memory::External))
+            {
+                FindClearRuns(m_CachedRenderBuffer.Data(), targetW, targetH, m_CachedClearSpans.Data());
+            }
+            else
+            {
+                m_CachedClearSpans.Reset();
+            }
 
             m_CachedRenderTint = bakeTint;
             m_CachedRenderRegion = region;
@@ -449,6 +488,7 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
                                          QuadBlit::PixelLayout::FromTexture(spr->format, spr->hasAlpha),
                                          false,  // ownsPixels = false - component owns this buffer
                                          m_CachedRowSpans ? m_CachedRowSpans.Data() : nullptr);
+        outSource.clearRowSpans = m_CachedClearSpans ? m_CachedClearSpans.Data() : nullptr;
         if (tintInBake)
         {
             // Already in the pixels; the alpha tint stays the blit's.
