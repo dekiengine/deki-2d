@@ -8,6 +8,7 @@
 #include <deki-editor/EditorAssets.h>
 #include <deki-editor/CustomEditor.h>
 #include <deki-editor/EditorUI.h>
+#include <deki-editor/Localization.h>
 #include <deki-editor/AssetDatabase.h>
 #include <deki-editor/SubAsset.h>
 #include "NineSliceEditorWindow.h"
@@ -302,14 +303,14 @@ public:
 
         // Accent-coloured, so the subsections below read as part of
         // "Procedural Sprite" without an indent.
-        SpriteGroupHeader("Procedural Sprite");
+        SpriteGroupHeader(Tr("Procedural Sprite"));
 
         auto& ui = EditorUI::Get();
 
         std::ifstream file(assetPath);
         if (!file.is_open())
         {
-            ui.TextColored(EditorUI::Rgba(255, 102, 102, 255), "Failed to open asset file");
+            ui.TextColored(EditorUI::Rgba(255, 102, 102, 255), Tr("Failed to open asset file"));
             return;
         }
 
@@ -321,7 +322,7 @@ public:
         catch (const std::exception& e)
         {
             char errBuf[512];
-            std::snprintf(errBuf, sizeof(errBuf), "Failed to parse JSON: %s", e.what());
+            std::snprintf(errBuf, sizeof(errBuf), Tr("Failed to parse JSON: %s"), e.what());
             ui.TextColored(EditorUI::Rgba(255, 102, 102, 255), errBuf);
             file.close();
             return;
@@ -333,7 +334,7 @@ public:
         bool modified = false;
 
         // ── Dimensions ───────────────────────────────────────────────────
-        SpriteSectionHeader("Dimensions");
+        SpriteSectionHeader(Tr("Dimensions"));
         int width = jsonData.value("width", 64);
         int height = jsonData.value("height", 64);
         ui.PropertyRow("Width");
@@ -350,7 +351,7 @@ public:
         }
 
         // ── Background ───────────────────────────────────────────────────
-        SpriteSectionHeader("Background");
+        SpriteSectionHeader(Tr("Background"));
         float bgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
         if (jsonData.contains("background_color") && jsonData["background_color"].is_array() &&
             jsonData["background_color"].size() >= 4)
@@ -369,7 +370,7 @@ public:
         }
 
         // ── Border Width ─────────────────────────────────────────────────
-        SpriteSectionHeader("Border Width");
+        SpriteSectionHeader(Tr("Border Width"));
         int32_t bwTop = 0, bwRight = 0, bwBottom = 0, bwLeft = 0;
         SpriteParseBorderWidth(jsonData, bwTop, bwRight, bwBottom, bwLeft);
 
@@ -402,7 +403,7 @@ public:
         }
 
         // ── Border Color ─────────────────────────────────────────────────
-        SpriteSectionHeader("Border Color");
+        SpriteSectionHeader(Tr("Border Color"));
         float borderColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
         if (jsonData.contains("border_color") && jsonData["border_color"].is_array() &&
             jsonData["border_color"].size() >= 4)
@@ -426,7 +427,7 @@ public:
         }
 
         // ── Border Radius ────────────────────────────────────────────────
-        SpriteSectionHeader("Border Radius");
+        SpriteSectionHeader(Tr("Border Radius"));
         int32_t brTL = 0, brTR = 0, brBR = 0, brBL = 0;
         SpriteParseBorderRadius(jsonData, brTL, brTR, brBR, brBL);
 
@@ -459,7 +460,7 @@ public:
         }
 
         // ── 9-Slice ──────────────────────────────────────────────────────
-        SpriteSectionHeader("9-Slice");
+        SpriteSectionHeader(Tr("9-Slice"));
         {
             int32_t nsTop = 0, nsRight = 0, nsBottom = 0, nsLeft = 0;
             if (jsonData.contains("nine_slice") && jsonData["nine_slice"].is_array() &&
@@ -471,19 +472,19 @@ public:
                 nsLeft = jsonData["nine_slice"][3].get<int32_t>();
             }
             char nsBuf[128];
-            std::snprintf(nsBuf, sizeof(nsBuf), "L:%d  R:%d  T:%d  B:%d", nsLeft, nsRight, nsTop, nsBottom);
+            std::snprintf(nsBuf, sizeof(nsBuf), Tr("L:%d  R:%d  T:%d  B:%d"), nsLeft, nsRight, nsTop, nsBottom);
             ui.Text(nsBuf);
             ui.SameLine();
-            if (ui.Button("Edit 9-Slice..."))
+            if (ui.Button(TrLabel("Edit 9-Slice...")))
             {
                 EditorApplication::Get().RequestOpenTool(assetPath, /*cachePath*/ "", "9-Slice Editor");
             }
         }
 
         // ── Misc ─────────────────────────────────────────────────────────
-        SpriteSectionHeader("Misc");
+        SpriteSectionHeader(Tr("Misc"));
         bool antialiased = jsonData.value("antialiased", false);
-        if (ui.Checkbox("Antialiased", &antialiased))
+        if (ui.Checkbox(TrMark("Antialiased"), &antialiased))
         {
             jsonData["antialiased"] = antialiased;
             modified = true;
@@ -553,10 +554,10 @@ private:
         }
 
         char nsBuf[128];
-        std::snprintf(nsBuf, sizeof(nsBuf), "9-slice  L:%d  R:%d  T:%d  B:%d", nsLeft, nsRight, nsTop, nsBottom);
+        std::snprintf(nsBuf, sizeof(nsBuf), Tr("9-slice  L:%d  R:%d  T:%d  B:%d"), nsLeft, nsRight, nsTop, nsBottom);
         ui.Text(nsBuf);
         ui.SameLine();
-        if (ui.Button("Edit 9-Slice..."))
+        if (ui.Button(TrLabel("Edit 9-Slice...")))
         {
             NineSliceEditorWindow::SetNextFrame(frameIndex);
             EditorApplication::Get().RequestOpenTool(assetPath, /*cachePath*/ "", "9-Slice Editor");

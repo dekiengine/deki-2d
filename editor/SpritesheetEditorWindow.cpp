@@ -5,6 +5,7 @@
 #include <deki/assets/Texture2D.h>
 #include <deki-editor/EditorUI.h>
 #include <deki-editor/EditorTheme.h>
+#include <deki-editor/Localization.h>
 #include <deki-editor/IconsTabler.h>
 #include <deki-editor/EditorApplication.h>
 #include <cctype>
@@ -268,7 +269,7 @@ void SpritesheetEditorWindow::OnGUI()
     ui.SetNextWindowSize(900.0f * dpi, 580.0f * dpi, true);
     ui.SetNextWindowSizeConstraints(600.0f * dpi, 380.0f * dpi, FLT_MAX, FLT_MAX);
 
-    std::string title = "Sprite Slicer";
+    std::string title = Tr(GetTitle());
     if (IsDirty())
     {
         title += " *";
@@ -294,16 +295,16 @@ void SpritesheetEditorWindow::OnGUI()
 
         // ── Toolbar ─────────────────────────────────────────────────────────
         ui.BeginToolbar();
-        if (ui.ToolbarButton(dirty ? "Save*" : "Save", dirty))
+        if (ui.ToolbarButton(dirty ? Tr("Save*") : Tr("Save"), dirty))
         {
             SaveAndReimport();
         }
-        if (ui.ToolbarButton("Revert", dirty))
+        if (ui.ToolbarButton(Tr("Revert"), dirty))
         {
             LoadSliceSettings();
             OnSettingsLoaded();
         }
-        if (ui.ToolbarButton("Open Selected", canOpenSelected && !dirty))
+        if (ui.ToolbarButton(Tr("Open Selected"), canOpenSelected && !dirty))
         {
             OpenFile(selectedFull.c_str(), "");
             OnSettingsLoaded();
@@ -351,7 +352,7 @@ void SpritesheetEditorWindow::SaveAndReimport()
 {
     if (!SaveSliceSettings())
     {
-        m_StatusMessage = "Could not save the slice settings.";
+        m_StatusMessage = TrMark("Could not save the slice settings.");
         m_StatusIsError = true;
         return;
     }
@@ -394,9 +395,9 @@ void SpritesheetEditorWindow::DrawSlicingControls()
 
         const ImVec2 avail = ImGui::GetContentRegionAvail();
         const ImVec2 origin = ImGui::GetCursorScreenPos();
-        const std::string titleStr = canOpen ? fs::path(selected).filename().string() : "No image open";
-        const char* line = canOpen ? "Cut it into frames for sprites and animations."
-                                   : "Select an image in the Asset Browser, then come back here.";
+        const std::string titleStr = canOpen ? fs::path(selected).filename().string() : Tr("No image open");
+        const char* line = canOpen ? Tr("Cut it into frames for sprites and animations.")
+                                   : Tr("Select an image in the Asset Browser, then come back here.");
         const float lineH = ImGui::GetTextLineHeight();
         const float iconSize = 28.0f * dpi;
         const float blockH =
@@ -421,7 +422,7 @@ void SpritesheetEditorWindow::DrawSlicingControls()
             const float bw = 150.0f * dpi;
             ImGui::SetCursorScreenPos(ImVec2(origin.x + (avail.x - bw) * 0.5f, y));
             ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.5f, 0.5f));
-            const bool open = ui.Button("Open Image", bw);
+            const bool open = ui.Button(TrLabel("Open Image"), bw);
             ImGui::PopStyleVar();
             if (open)
             {
@@ -460,11 +461,11 @@ void SpritesheetEditorWindow::DrawSlicingControls()
 
     // ── How it is cut: Grid or Detect, as tabs ───────────────────────────
     ui.BeginTabLinks();
-    if (ui.TabLink("Grid", m_UIMode == SlicingUIMode::Grid))
+    if (ui.TabLink(Tr("Grid"), m_UIMode == SlicingUIMode::Grid))
     {
         m_UIMode = SlicingUIMode::Grid;
     }
-    if (ui.TabLink("Detect", m_UIMode == SlicingUIMode::Free))
+    if (ui.TabLink(Tr("Detect"), m_UIMode == SlicingUIMode::Free))
     {
         m_UIMode = SlicingUIMode::Free;
     }
@@ -511,7 +512,8 @@ void SpritesheetEditorWindow::DrawSlicingControls()
             std::snprintf(buf, sizeof(buf), "%d \xc3\x97 %d", cols, rows);
             ImGui::TextUnformatted(buf);
             ImGui::SameLine(0.0f, 8.0f * dpi);
-            ImGui::TextColored(DekiEditor::Palette::Dim, "%d frame%s", cols * rows, cols * rows == 1 ? "" : "s");
+            ImGui::TextColored(DekiEditor::Palette::Dim, cols * rows == 1 ? Tr("%d frame") : Tr("%d frames"),
+                               cols * rows);
             // Pixels the grid does not cover are dropped; say so (and the
             // canvas tints them).
             const int restX = m_TextureWidth - cols * m_FrameWidth;
@@ -521,16 +523,16 @@ void SpritesheetEditorWindow::DrawSlicingControls()
                 ui.PropertyRow("");
                 if (restX > 0 && restY > 0)
                 {
-                    std::snprintf(buf, sizeof(buf), "%d px on the right and %d px at the bottom are left out.", restX,
-                                  restY);
+                    std::snprintf(buf, sizeof(buf), Tr("%d px on the right and %d px at the bottom are left out."),
+                                  restX, restY);
                 }
                 else if (restX > 0)
                 {
-                    std::snprintf(buf, sizeof(buf), "%d px on the right are left out.", restX);
+                    std::snprintf(buf, sizeof(buf), Tr("%d px on the right are left out."), restX);
                 }
                 else
                 {
-                    std::snprintf(buf, sizeof(buf), "%d px at the bottom are left out.", restY);
+                    std::snprintf(buf, sizeof(buf), Tr("%d px at the bottom are left out."), restY);
                 }
                 ImGui::PushStyleColor(ImGuiCol_Text, DekiEditor::Palette::Amber);
                 ImGui::TextUnformatted(ICON_TI_ALERT_TRIANGLE);
@@ -543,17 +545,17 @@ void SpritesheetEditorWindow::DrawSlicingControls()
         }
         else
         {
-            ImGui::TextColored(DekiEditor::Palette::Dim, "Set the size of one frame.");
+            ImGui::TextColored(DekiEditor::Palette::Dim, "%s", Tr("Set the size of one frame."));
         }
     }
     else
     {
         ui.PropertyRow("");
         ImGui::PushStyleColor(ImGuiCol_Text, DekiEditor::Palette::Dim);
-        ui.TextWrapped("Finds each sprite by the transparent space around it.");
+        ui.TextWrapped(Tr("Finds each sprite by the transparent space around it."));
         ImGui::PopStyleColor();
         ui.PropertyRow("");
-        if (ui.Button(ICON_TI_SCAN "  Detect Sprites", -FLT_MIN))
+        if (ui.Button(TrLabel(ICON_TI_SCAN "  Detect Sprites"), -FLT_MIN))
         {
             m_SelectedFrame = -1;
             RunAutoCut();
@@ -563,20 +565,22 @@ void SpritesheetEditorWindow::DrawSlicingControls()
     {
         ui.PropertyRow("");
         ImGui::PushStyleColor(ImGuiCol_Text, DekiEditor::Palette::Red);
-        ui.TextWrapped(m_StatusMessage.c_str());
+        ui.TextWrapped(Tr(m_StatusMessage.c_str()));
         ImGui::PopStyleColor();
     }
     DekiEditor::EndPropertyContext();
     ImGui::Dummy(ImVec2(0.0f, 8.0f * dpi));
 
     // ── Frames: thumbnails, tied to the canvas ───────────────────────────
-    std::snprintf(buf, sizeof(buf), "Frames (%zu)###frames", m_AtlasFrames.size());
+    char framesTitle[96];
+    std::snprintf(framesTitle, sizeof(framesTitle), Tr("Frames (%zu)"), m_AtlasFrames.size());
+    std::snprintf(buf, sizeof(buf), "%s###frames", framesTitle);
     if (ui.SectionHeader(buf))
     {
         if (m_AtlasFrames.empty())
         {
             DekiEditor::BeginPropertyContext();
-            ImGui::TextColored(DekiEditor::Palette::Dim, "None yet.");
+            ImGui::TextColored(DekiEditor::Palette::Dim, "%s", Tr("None yet."));
             DekiEditor::EndPropertyContext();
         }
         const float rowH = 40.0f * dpi;
@@ -628,8 +632,8 @@ void SpritesheetEditorWindow::DrawSlicingControls()
             const float tx = rowMin.x + pad + thumb + 10.0f * dpi;
             const float ty = rowMin.y + (rowH - lineH * 2.0f) * 0.5f;
             char name[32], where[48];
-            std::snprintf(name, sizeof(name), "Frame %zu", i);
-            std::snprintf(where, sizeof(where), "%d \xc3\x97 %d  at %d, %d", frame.width, frame.height, frame.x,
+            std::snprintf(name, sizeof(name), Tr("Frame %zu"), i);
+            std::snprintf(where, sizeof(where), Tr("%d \xc3\x97 %d  at %d, %d"), frame.width, frame.height, frame.x,
                           frame.y);
             dl->AddText(ImVec2(tx, ty), selected ? AccentWithAlpha(1.0f) : ImGui::GetColorU32(ImGuiCol_Text), name);
             dl->AddText(ImVec2(tx, ty + lineH), PaletteU32(DekiEditor::Palette::Dim), where);
@@ -660,7 +664,7 @@ void SpritesheetEditorWindow::DrawTexturePreview()
     dl->AddRectFilled(origin, canvasMax, IM_COL32(17, 18, 20, 255));
     if (m_TextureId == 0)
     {
-        DrawPill(dl, ImVec2(origin.x + 12.0f * dpi, origin.y + 12.0f * dpi), "Loading the image...",
+        DrawPill(dl, ImVec2(origin.x + 12.0f * dpi, origin.y + 12.0f * dpi), Tr("Loading the image..."),
                  PaletteU32(DekiEditor::Palette::Dim), false, dpi);
         ImGui::Dummy(avail);
         return;
@@ -783,21 +787,23 @@ void SpritesheetEditorWindow::DrawTexturePreview()
     if (m_SelectedFrame >= 0 && m_SelectedFrame < static_cast<int>(m_AtlasFrames.size()))
     {
         const auto& f = m_AtlasFrames[m_SelectedFrame];
-        std::snprintf(info, sizeof(info), "Frame %d   %d \xc3\x97 %d at %d, %d", m_SelectedFrame, f.width, f.height,
+        std::snprintf(info, sizeof(info), Tr("Frame %d   %d \xc3\x97 %d at %d, %d"), m_SelectedFrame, f.width, f.height,
                       f.x, f.y);
         DrawPill(dl, ImVec2(origin.x + 12.0f * dpi, origin.y + 12.0f * dpi), info, AccentWithAlpha(1.0f), false, dpi);
     }
     else if (m_AtlasFrames.empty())
     {
         DrawPill(dl, ImVec2(origin.x + 12.0f * dpi, origin.y + 12.0f * dpi),
-                 m_UIMode == SlicingUIMode::Grid ? "Set a frame size to cut the image"
-                                                 : "Detect the sprites to cut the image",
+                 m_UIMode == SlicingUIMode::Grid ? Tr("Set a frame size to cut the image")
+                                                 : Tr("Detect the sprites to cut the image"),
                  PaletteU32(DekiEditor::Palette::Dim), false, dpi);
     }
     else
     {
-        std::snprintf(info, sizeof(info), "%zu frame%s   click one to inspect it", m_AtlasFrames.size(),
-                      m_AtlasFrames.size() == 1 ? "" : "s");
+        std::snprintf(info, sizeof(info),
+                      m_AtlasFrames.size() == 1 ? Tr("%zu frame   click one to inspect it")
+                                                : Tr("%zu frames   click one to inspect it"),
+                      m_AtlasFrames.size());
         DrawPill(dl, ImVec2(origin.x + 12.0f * dpi, origin.y + 12.0f * dpi), info, PaletteU32(DekiEditor::Palette::Dim),
                  false, dpi);
     }
@@ -898,7 +904,7 @@ void SpritesheetEditorWindow::LoadTextureData()
     DecodedImage decoded;
     if (!DecodeImageFile(m_TexturePath, decoded))
     {
-        m_StatusMessage = "Failed to load the image";
+        m_StatusMessage = TrMark("Failed to load the image");
         m_StatusIsError = true;
         return;
     }
@@ -1165,7 +1171,7 @@ void SpritesheetEditorWindow::GenerateGrid()
 {
     if (m_FrameWidth <= 0 || m_FrameHeight <= 0)
     {
-        m_StatusMessage = "Invalid frame dimensions";
+        m_StatusMessage = TrMark("Invalid frame dimensions");
         m_StatusIsError = true;
         return;
     }
@@ -1199,7 +1205,7 @@ void SpritesheetEditorWindow::RunAutoCut()
 {
     if (!m_TextureData || m_TextureWidth == 0 || m_TextureHeight == 0)
     {
-        m_StatusMessage = "No texture data available";
+        m_StatusMessage = TrMark("No texture data available");
         m_StatusIsError = true;
         return;
     }
@@ -1213,7 +1219,7 @@ void SpritesheetEditorWindow::RunAutoCut()
 
     if (m_AtlasFrames.empty())
     {
-        m_StatusMessage = "No sprites found: the image has no transparent space between them.";
+        m_StatusMessage = TrMark("No sprites found: the image has no transparent space between them.");
         m_StatusIsError = true;
     }
     else

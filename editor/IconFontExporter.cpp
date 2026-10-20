@@ -7,6 +7,7 @@
 #include <deki-editor/EditorHttpUtils.h>
 #include <deki-editor/EditorPaths.h>
 #include <deki-editor/EditorUI.h>
+#include <deki-editor/Localization.h>
 #include <SDL3/SDL_opengl.h>
 #include <SDL3/SDL.h>
 #include <ft2build.h>
@@ -563,7 +564,7 @@ void IconFontExporter::StartNpmDownload(const std::string& packageName)
     m_DownloadState = (int)DownloadState::Downloading;
     {
         std::lock_guard<std::mutex> lock(m_DownloadMutex);
-        m_DownloadStatus = "Fetching package info...";
+        m_DownloadStatus = TrMark("Fetching package info...");
         m_DownloadError.clear();
     }
 
@@ -583,7 +584,7 @@ void IconFontExporter::StartNpmDownload(const std::string& packageName)
                 if (pkgInfoJson.empty())
                 {
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                    m_DownloadError = "Failed to fetch package info from jsDelivr";
+                    m_DownloadError = TrMark("Failed to fetch package info from jsDelivr");
                     m_DownloadState = (int)DownloadState::Error;
                     return;
                 }
@@ -602,14 +603,16 @@ void IconFontExporter::StartNpmDownload(const std::string& packageName)
                 if (version.empty())
                 {
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                    m_DownloadError = "Could not resolve latest version for " + packageName;
+                    m_DownloadError = TrMark("Could not resolve latest version for %s");
+                    m_DownloadErrorArg = packageName;
                     m_DownloadState = (int)DownloadState::Error;
                     return;
                 }
 
                 {
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                    m_DownloadStatus = "Found version " + version + ", scanning files...";
+                    m_DownloadStatus = TrMark("Found version %s, scanning files...");
+                    m_DownloadStatusArg = version;
                 }
 
                 // 2. Fetch file listing for that specific version
@@ -623,7 +626,8 @@ void IconFontExporter::StartNpmDownload(const std::string& packageName)
                 if (listJson.empty())
                 {
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                    m_DownloadError = "Failed to fetch file listing for " + packageName + "@" + version;
+                    m_DownloadError = TrMark("Failed to fetch file listing for %s");
+                    m_DownloadErrorArg = packageName + "@" + version;
                     m_DownloadState = (int)DownloadState::Error;
                     return;
                 }
@@ -688,14 +692,14 @@ void IconFontExporter::StartNpmDownload(const std::string& packageName)
                 if (ttfFile.empty())
                 {
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                    m_DownloadError = "No TTF file found in package";
+                    m_DownloadError = TrMark("No TTF file found in package");
                     m_DownloadState = (int)DownloadState::Error;
                     return;
                 }
                 if (cssFile.empty())
                 {
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                    m_DownloadError = "No CSS file found in package";
+                    m_DownloadError = TrMark("No CSS file found in package");
                     m_DownloadState = (int)DownloadState::Error;
                     return;
                 }
@@ -717,7 +721,7 @@ void IconFontExporter::StartNpmDownload(const std::string& packageName)
                 // 4. Download TTF
                 {
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                    m_DownloadStatus = "Downloading TTF...";
+                    m_DownloadStatus = TrMark("Downloading TTF...");
                 }
 
                 std::string cdnBase = "https://cdn.jsdelivr.net/npm/" + packageName + "@" + version + "/";
@@ -729,7 +733,7 @@ void IconFontExporter::StartNpmDownload(const std::string& packageName)
                 if (!EditorHttpUtils::DownloadFile(ttfUrl, ttfDest, &m_CancelDownload))
                 {
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                    m_DownloadError = "Failed to download TTF";
+                    m_DownloadError = TrMark("Failed to download TTF");
                     m_DownloadState = (int)DownloadState::Error;
                     return;
                 }
@@ -742,7 +746,7 @@ void IconFontExporter::StartNpmDownload(const std::string& packageName)
                 // 5. Fetch CSS
                 {
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                    m_DownloadStatus = "Fetching CSS...";
+                    m_DownloadStatus = TrMark("Fetching CSS...");
                 }
 
                 std::string cssUrl = cdnBase + cssFile;
@@ -751,7 +755,7 @@ void IconFontExporter::StartNpmDownload(const std::string& packageName)
                 if (cssContent.empty())
                 {
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                    m_DownloadError = "Failed to fetch CSS";
+                    m_DownloadError = TrMark("Failed to fetch CSS");
                     m_DownloadState = (int)DownloadState::Error;
                     return;
                 }
@@ -759,7 +763,7 @@ void IconFontExporter::StartNpmDownload(const std::string& packageName)
                 // 6. Parse icons
                 {
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                    m_DownloadStatus = "Parsing icons...";
+                    m_DownloadStatus = TrMark("Parsing icons...");
                 }
                 m_DownloadState = (int)DownloadState::Parsing;
 
@@ -767,7 +771,7 @@ void IconFontExporter::StartNpmDownload(const std::string& packageName)
                 if (icons.empty())
                 {
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                    m_DownloadError = "No icons found in CSS";
+                    m_DownloadError = TrMark("No icons found in CSS");
                     m_DownloadState = (int)DownloadState::Error;
                     return;
                 }
@@ -784,14 +788,15 @@ void IconFontExporter::StartNpmDownload(const std::string& packageName)
                 {
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
                     m_DownloadResult = std::move(result);
-                    m_DownloadStatus = "Done!";
+                    m_DownloadStatus = TrMark("Done!");
                 }
                 m_DownloadState = (int)DownloadState::Done;
             }
             catch (const std::exception& e)
             {
                 std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                m_DownloadError = std::string("Error: ") + e.what();
+                m_DownloadError = TrMark("Error: %s");
+                m_DownloadErrorArg = e.what();
                 m_DownloadState = (int)DownloadState::Error;
             }
         });
@@ -809,7 +814,7 @@ void IconFontExporter::StartDirectDownload(const std::string& ttfUrl, const std:
     m_DownloadState = (int)DownloadState::Downloading;
     {
         std::lock_guard<std::mutex> lock(m_DownloadMutex);
-        m_DownloadStatus = "Downloading TTF...";
+        m_DownloadStatus = TrMark("Downloading TTF...");
         m_DownloadError.clear();
     }
 
@@ -824,7 +829,7 @@ void IconFontExporter::StartDirectDownload(const std::string& ttfUrl, const std:
                 if (!EditorHttpUtils::DownloadFile(ttfUrl, ttfDest, &m_CancelDownload))
                 {
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                    m_DownloadError = "Failed to download TTF";
+                    m_DownloadError = TrMark("Failed to download TTF");
                     m_DownloadState = (int)DownloadState::Error;
                     return;
                 }
@@ -836,14 +841,14 @@ void IconFontExporter::StartDirectDownload(const std::string& ttfUrl, const std:
 
                 {
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                    m_DownloadStatus = "Fetching CSS...";
+                    m_DownloadStatus = TrMark("Fetching CSS...");
                 }
 
                 std::string cssContent = EditorHttpUtils::FetchUrl(cssUrl);
                 if (cssContent.empty())
                 {
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                    m_DownloadError = "Failed to fetch CSS";
+                    m_DownloadError = TrMark("Failed to fetch CSS");
                     m_DownloadState = (int)DownloadState::Error;
                     return;
                 }
@@ -866,7 +871,8 @@ void IconFontExporter::StartDirectDownload(const std::string& ttfUrl, const std:
             catch (const std::exception& e)
             {
                 std::lock_guard<std::mutex> lock(m_DownloadMutex);
-                m_DownloadError = std::string("Error: ") + e.what();
+                m_DownloadError = TrMark("Error: %s");
+                m_DownloadErrorArg = e.what();
                 m_DownloadState = (int)DownloadState::Error;
             }
         });
@@ -1203,11 +1209,11 @@ void IconFontExporter::OnGUI()
     const float dpi = ui.GetDpiScale();
     ui.SetNextWindowSize(560.0f * dpi, 520.0f * dpi, true);
     ui.SetNextWindowSizeConstraints(420.0f * dpi, 300.0f * dpi, 100000.0f, 100000.0f);
-    ui.Begin(GetTitle(), &m_IsOpen);
+    ui.Begin(TrLabel(GetTitle()), &m_IsOpen);
 
     if (!m_FtLibrary)
     {
-        ui.TextColored(1, 0.3f, 0.3f, 1, "Failed to initialize FreeType");
+        ui.TextColored(1, 0.3f, 0.3f, 1, Tr("Failed to initialize FreeType"));
         ui.End();
         return;
     }
@@ -1229,7 +1235,7 @@ void IconFontExporter::OnGUI()
     }
     else if (m_Fonts.empty())
     {
-        ui.TextDisabled("No icon fonts loaded. Click '+ Add Font' to download one.");
+        ui.TextDisabled(Tr("No icon fonts loaded. Click '+ Add Font' to download one."));
     }
 
     ui.End();
@@ -1239,7 +1245,8 @@ void IconFontExporter::DrawFontSelector()
 {
     // Font dropdown
     auto& ui = EditorUI::Get();
-    const char* currentName = (m_CurrentFontIndex >= 0) ? m_Fonts[m_CurrentFontIndex].name.c_str() : "No font loaded";
+    const char* currentName =
+        (m_CurrentFontIndex >= 0) ? m_Fonts[m_CurrentFontIndex].name.c_str() : Tr("No font loaded");
 
     ui.SetNextItemWidth(250);
     if (ui.BeginCombo("##font", currentName))
@@ -1262,7 +1269,7 @@ void IconFontExporter::DrawFontSelector()
     }
 
     ui.SameLine();
-    if (ui.Button("+ Add Font"))
+    if (ui.Button(TrLabel("+ Add Font")))
     {
         m_ShowAddFont = !m_ShowAddFont;
     }
@@ -1270,7 +1277,7 @@ void IconFontExporter::DrawFontSelector()
     if (m_CurrentFontIndex >= 0)
     {
         ui.SameLine();
-        if (ui.Button("Remove"))
+        if (ui.Button(TrLabel("Remove")))
         {
             RemoveCurrentFont();
         }
@@ -1290,7 +1297,7 @@ void IconFontExporter::DrawDownloadSection()
     // Tab bar for npm vs direct URL
     if (ui.BeginTabBar("##addfonttabs"))
     {
-        if (ui.BeginTabItem("npm Package"))
+        if (ui.BeginTabItem(TrLabel("npm Package")))
         {
             m_AddFontTab = 0;
             ui.SetNextItemWidth(300);
@@ -1303,7 +1310,7 @@ void IconFontExporter::DrawDownloadSection()
             {
                 ui.BeginDisabled();
             }
-            if (ui.Button("Download##npm"))
+            if (ui.Button(TrLabel("Download##npm")))
             {
                 if (m_NpmPackageInput[0] != '\0')
                 {
@@ -1318,7 +1325,7 @@ void IconFontExporter::DrawDownloadSection()
             ui.EndTabItem();
         }
 
-        if (ui.BeginTabItem("Direct URL"))
+        if (ui.BeginTabItem(TrLabel("Direct URL")))
         {
             m_AddFontTab = 1;
             ui.SetNextItemWidth(400);
@@ -1326,7 +1333,7 @@ void IconFontExporter::DrawDownloadSection()
             ui.SetNextItemWidth(400);
             ui.InputTextWithHint("CSS URL", "https://...", m_CssUrlInput, sizeof(m_CssUrlInput));
             ui.SetNextItemWidth(200);
-            ui.InputTextWithHint("Font Name", "my-icons", m_FontNameInput, sizeof(m_FontNameInput));
+            ui.InputTextWithHint(TrLabel("Font Name"), "my-icons", m_FontNameInput, sizeof(m_FontNameInput));
 
             bool downloading = m_DownloadState.load() != (int)DownloadState::Idle;
 
@@ -1334,7 +1341,7 @@ void IconFontExporter::DrawDownloadSection()
             {
                 ui.BeginDisabled();
             }
-            if (ui.Button("Download##direct"))
+            if (ui.Button(TrLabel("Download##direct")))
             {
                 if (m_TtfUrlInput[0] != '\0' && m_CssUrlInput[0] != '\0' && m_FontNameInput[0] != '\0')
                 {
@@ -1356,27 +1363,27 @@ void IconFontExporter::DrawDownloadSection()
     int state = m_DownloadState.load();
     if (state == (int)DownloadState::Downloading || state == (int)DownloadState::Parsing)
     {
-        std::string status;
+        char status[1024];
         {
             std::lock_guard<std::mutex> lock(m_DownloadMutex);
-            status = m_DownloadStatus;
+            std::snprintf(status, sizeof(status), Tr(m_DownloadStatus.c_str()), m_DownloadStatusArg.c_str());
         }
-        ui.TextColored(0.5f, 0.8f, 1.0f, 1.0f, status.c_str());
+        ui.TextColored(0.5f, 0.8f, 1.0f, 1.0f, status);
 
         ui.SameLine();
-        if (ui.Button("Cancel"))
+        if (ui.Button(TrLabel("Cancel")))
         {
             m_CancelDownload = true;
         }
     }
     else if (state == (int)DownloadState::Error)
     {
-        std::string error;
+        char error[1024];
         {
             std::lock_guard<std::mutex> lock(m_DownloadMutex);
-            error = m_DownloadError;
+            std::snprintf(error, sizeof(error), Tr(m_DownloadError.c_str()), m_DownloadErrorArg.c_str());
         }
-        ui.TextColored(1, 0.3f, 0.3f, 1, error.c_str());
+        ui.TextColored(1, 0.3f, 0.3f, 1, error);
     }
 
     ui.Separator();
@@ -1385,15 +1392,15 @@ void IconFontExporter::DrawDownloadSection()
 void IconFontExporter::DrawToolbar()
 {
     auto& ui = EditorUI::Get();
-    ui.InputTextWithHint("##search", "Search icons...", m_SearchFilter, sizeof(m_SearchFilter));
+    ui.InputTextWithHint("##search", Tr("Search icons..."), m_SearchFilter, sizeof(m_SearchFilter));
 
     ui.SameLine();
     char buf[256];
-    std::snprintf(buf, sizeof(buf), "%d selected", (int)m_SelectedIcons.size());
+    std::snprintf(buf, sizeof(buf), Tr("%d selected"), (int)m_SelectedIcons.size());
     ui.Text(buf);
 
     ui.SameLine();
-    if (ui.Button("Clear"))
+    if (ui.Button(TrLabel("Clear")))
     {
         m_SelectedIcons.clear();
     }
@@ -1402,18 +1409,18 @@ void IconFontExporter::DrawToolbar()
 void IconFontExporter::DrawExportSettings()
 {
     auto& ui = EditorUI::Get();
-    if (!ui.CollapsingHeader("Export Settings"))
+    if (!ui.CollapsingHeader(TrLabel("Export Settings")))
     {
         return;
     }
 
     ui.SetNextItemWidth(120);
-    ui.SliderInt("Export Size (px)", &m_ExportSize, 8, 256);
+    ui.SliderInt(TrLabel("Export Size (px)"), &m_ExportSize, 8, 256);
 
     // Output folder with picker popup
     if (m_OutputPath.empty())
     {
-        ui.TextDisabled("No output folder selected");
+        ui.TextDisabled(Tr("No output folder selected"));
     }
     else
     {
@@ -1427,13 +1434,13 @@ void IconFontExporter::DrawExportSettings()
                 rel = rel.substr(1);
             }
             char buf[1024];
-            std::snprintf(buf, sizeof(buf), "Output: assets/%s", rel.c_str());
+            std::snprintf(buf, sizeof(buf), Tr("Output: assets/%s"), rel.c_str());
             ui.Text(buf);
         }
         else
         {
             char buf[1024];
-            std::snprintf(buf, sizeof(buf), "Output: %s", m_OutputPath.c_str());
+            std::snprintf(buf, sizeof(buf), Tr("Output: %s"), m_OutputPath.c_str());
             ui.TextWrapped(buf);
         }
     }
@@ -1444,12 +1451,12 @@ void IconFontExporter::DrawExportSettings()
         ui.BeginDisabled();
     }
 
-    if (ui.Button("Select Folder..."))
+    if (ui.Button(TrLabel("Select Folder...")))
     {
         m_FolderPickerSelected = m_OutputPath.empty() ? EditorApplication::Get().GetAssetsPath() : m_OutputPath;
         m_NewFolderName[0] = '\0';
         m_ShowFolderPicker = true;
-        ui.OpenPopup("Select Export Folder");
+        ui.OpenPopup(TrLabel("Select Export Folder"));
     }
 
     if (!hasProject)
@@ -1460,12 +1467,12 @@ void IconFontExporter::DrawExportSettings()
     DrawFolderPickerPopup();
 
     int exportMode = m_ExportAsAtlas ? 1 : 0;
-    if (ui.RadioButton("Individual PNGs", exportMode == 0))
+    if (ui.RadioButton(TrLabel("Individual PNGs"), exportMode == 0))
     {
         m_ExportAsAtlas = false;
     }
     ui.SameLine();
-    if (ui.RadioButton("Atlas Spritesheet", exportMode == 1))
+    if (ui.RadioButton(TrLabel("Atlas Spritesheet"), exportMode == 1))
     {
         m_ExportAsAtlas = true;
     }
@@ -1482,7 +1489,7 @@ void IconFontExporter::DrawExportSettings()
         ui.BeginDisabled();
     }
 
-    if (ui.Button("Export"))
+    if (ui.Button(TrLabel("Export")))
     {
         if (m_ExportAsAtlas)
         {
@@ -1498,7 +1505,7 @@ void IconFontExporter::DrawExportSettings()
     {
         ui.EndDisabled();
         ui.SameLine();
-        ui.TextDisabled("Select icons first");
+        ui.TextDisabled(Tr("Select icons first"));
     }
     if (!hasOutput)
     {
@@ -1506,7 +1513,7 @@ void IconFontExporter::DrawExportSettings()
         if (hasSelection)
         {
             ui.SameLine();
-            ui.TextDisabled("Select output folder first");
+            ui.TextDisabled(Tr("Select output folder first"));
         }
     }
 }
@@ -1519,14 +1526,14 @@ void IconFontExporter::DrawFolderPickerPopup()
     ui.SetNextWindowPos(vx + vw * 0.5f, vy + vh * 0.5f, 0.5f, 0.5f);
     ui.SetNextWindowSize(400, 500);
 
-    if (!ui.BeginPopupModal("Select Export Folder", &m_ShowFolderPicker, EditorUI::WinNoScrollbar))
+    if (!ui.BeginPopupModal(TrLabel("Select Export Folder"), &m_ShowFolderPicker, EditorUI::WinNoScrollbar))
     {
         return;
     }
 
     auto& assetsPath = EditorApplication::Get().GetAssetsPath();
 
-    ui.Text("Select a folder inside your project assets:");
+    ui.Text(Tr("Select a folder inside your project assets:"));
     ui.Separator();
 
     ui.BeginChild("FolderTree", 0, -ui.GetFrameHeightWithSpacing() * 3, true);
@@ -1555,14 +1562,14 @@ void IconFontExporter::DrawFolderPickerPopup()
 
     // New folder creation
     ui.SetNextItemWidth(200);
-    ui.InputTextWithHint("##newfolder", "New folder name...", m_NewFolderName, sizeof(m_NewFolderName));
+    ui.InputTextWithHint("##newfolder", Tr("New folder name..."), m_NewFolderName, sizeof(m_NewFolderName));
     ui.SameLine();
     bool canCreate = m_NewFolderName[0] != '\0' && !m_FolderPickerSelected.empty();
     if (!canCreate)
     {
         ui.BeginDisabled();
     }
-    if (ui.Button("Create Folder"))
+    if (ui.Button(TrLabel("Create Folder")))
     {
         std::string newPath = (std::filesystem::path(m_FolderPickerSelected) / m_NewFolderName).string();
         std::filesystem::create_directories(newPath);
@@ -1580,7 +1587,7 @@ void IconFontExporter::DrawFolderPickerPopup()
     {
         ui.BeginDisabled();
     }
-    if (ui.Button("Select"))
+    if (ui.Button(TrLabel("Select")))
     {
         m_OutputPath = m_FolderPickerSelected;
 
@@ -1615,7 +1622,7 @@ void IconFontExporter::DrawFolderPickerPopup()
     }
 
     ui.SameLine();
-    if (ui.Button("Cancel"))
+    if (ui.Button(TrLabel("Cancel")))
     {
         m_ShowFolderPicker = false;
         ui.CloseCurrentPopup();
@@ -1730,7 +1737,7 @@ void IconFontExporter::DrawIconGrid()
 
     // Select All button
     ui.SameLine();
-    if (ui.Button("Select All"))
+    if (ui.Button(TrLabel("Select All")))
     {
         for (int idx : filtered)
         {
@@ -1739,7 +1746,7 @@ void IconFontExporter::DrawIconGrid()
     }
 
     char shownBuf[128];
-    std::snprintf(shownBuf, sizeof(shownBuf), "%d icons shown", (int)filtered.size());
+    std::snprintf(shownBuf, sizeof(shownBuf), Tr("%d icons shown"), (int)filtered.size());
     ui.Text(shownBuf);
 
     if (filtered.empty())

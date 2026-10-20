@@ -7,6 +7,7 @@
 #include <deki-editor/SubAsset.h>
 #include <deki-editor/EditorApplication.h>
 #include <deki-editor/EditorUI.h>
+#include <deki-editor/Localization.h>
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <sstream>
@@ -79,7 +80,7 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
     fs::path path(assetPath);
     {
         char buf[256];
-        std::snprintf(buf, sizeof(buf), "BDF Font: %s", path.filename().string().c_str());
+        std::snprintf(buf, sizeof(buf), DekiEditor::Tr("BDF Font: %s"), path.filename().string().c_str());
         ui.Text(buf);
     }
     if (!assetGuid.empty())
@@ -91,14 +92,14 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
 
     if (m_AvailableChars.empty())
     {
-        ui.TextColored(1.0f, 0.3f, 0.3f, 1.0f, "No glyphs found (codepoints 0-255)");
+        ui.TextColored(1.0f, 0.3f, 0.3f, 1.0f, DekiEditor::Tr("No glyphs found (codepoints 0-255)"));
         return;
     }
 
     {
         char buf[128];
-        std::snprintf(buf, sizeof(buf), "Ascent: %d  |  Descent: %d  |  Available: %d glyphs", m_Ascent, m_Descent,
-                      (int)m_AvailableChars.size());
+        std::snprintf(buf, sizeof(buf), DekiEditor::Tr("Ascent: %d  |  Descent: %d  |  Available: %d glyphs"), m_Ascent,
+                      m_Descent, (int)m_AvailableChars.size());
         ui.Text(buf);
     }
 
@@ -106,24 +107,26 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
 
     bool isCached = IsCached(assetGuid);
 
-    ui.InputTextWithHint("##search", "Search (char or codepoint)...", m_SearchFilter, sizeof(m_SearchFilter));
+    ui.InputTextWithHint("##search", DekiEditor::Tr("Search (char or codepoint)..."), m_SearchFilter,
+                         sizeof(m_SearchFilter));
     ui.SameLine();
     {
         char buf[64];
-        std::snprintf(buf, sizeof(buf), "%d selected", (int)m_SelectedChars.size());
+        std::snprintf(buf, sizeof(buf), DekiEditor::Tr("%d selected"), (int)m_SelectedChars.size());
         ui.Text(buf);
     }
     ui.SameLine();
-    if (ui.Button("Clear"))
+    if (ui.Button(DekiEditor::TrLabel("Clear")))
     {
         m_SelectedChars.clear();
         m_SettingsModified = true;
     }
 
     // Rasterization: an outline or shadow, baked into the atlas.
-    if (ui.CollapsingHeader("Rasterization", nullptr, true))
+    if (ui.CollapsingHeader(DekiEditor::TrLabel("Rasterization"), nullptr, true))
     {
-        static const char* const kDecorationLabels[] = { "None", "Outline", "Shadow" };
+        static const char* const kDecorationLabels[] = { DekiEditor::TrMark("None"), DekiEditor::TrMark("Outline"),
+                                                         DekiEditor::TrMark("Shadow") };
         static const FontCompiler::DecorationMode kDecorationValues[] = {
             FontCompiler::DecorationMode::None,
             FontCompiler::DecorationMode::Outline,
@@ -139,7 +142,7 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
             }
         }
         ui.SetNextItemWidth(220);
-        if (ui.Combo("Decoration", &decorationIndex, kDecorationLabels, 3))
+        if (ui.Combo(DekiEditor::TrLabel("Decoration"), &decorationIndex, kDecorationLabels, 3))
         {
             m_Decoration = kDecorationValues[decorationIndex];
             m_SettingsModified = true;
@@ -147,7 +150,7 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
         if (m_Decoration == FontCompiler::DecorationMode::Outline)
         {
             ui.SetNextItemWidth(100);
-            if (ui.InputInt("Outline Size (px)", &m_OutlineSize))
+            if (ui.InputInt(DekiEditor::TrLabel("Outline Size (px)"), &m_OutlineSize))
             {
                 if (m_OutlineSize < 1)
                 {
@@ -163,7 +166,7 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
         else if (m_Decoration == FontCompiler::DecorationMode::Shadow)
         {
             ui.SetNextItemWidth(100);
-            if (ui.InputInt("Shadow dX", &m_ShadowDx))
+            if (ui.InputInt(DekiEditor::TrLabel("Shadow dX"), &m_ShadowDx))
             {
                 if (m_ShadowDx < -3)
                 {
@@ -176,7 +179,7 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
                 m_SettingsModified = true;
             }
             ui.SetNextItemWidth(100);
-            if (ui.InputInt("Shadow dY", &m_ShadowDy))
+            if (ui.InputInt(DekiEditor::TrLabel("Shadow dY"), &m_ShadowDy))
             {
                 if (m_ShadowDy < -3)
                 {
@@ -189,7 +192,7 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
                 m_SettingsModified = true;
             }
         }
-        ui.TextDisabled("Baked into atlas. Re-bake after changing.");
+        ui.TextDisabled(DekiEditor::Tr("Baked into atlas. Re-bake after changing."));
     }
 
     bool canBake = m_SettingsModified || !isCached;
@@ -198,7 +201,7 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
         ui.BeginDisabled();
     }
 
-    if (ui.Button("Apply & Bake"))
+    if (ui.Button(DekiEditor::TrLabel("Apply & Bake")))
     {
         SaveSettings(assetPath, assetGuid);
         BakeFont(assetPath, assetGuid);
@@ -240,7 +243,7 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
     }
 
     // Selects the filtered characters only.
-    if (ui.Button("Select All"))
+    if (ui.Button(DekiEditor::TrLabel("Select All")))
     {
         for (int idx : filtered)
         {
@@ -253,7 +256,7 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
 
     {
         char buf[64];
-        std::snprintf(buf, sizeof(buf), "%d glyphs shown", (int)filtered.size());
+        std::snprintf(buf, sizeof(buf), DekiEditor::Tr("%d glyphs shown"), (int)filtered.size());
         ui.Text(buf);
     }
 

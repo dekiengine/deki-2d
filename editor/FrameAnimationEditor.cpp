@@ -7,6 +7,7 @@
 #include <deki-editor/EditorRegistry.h>
 #include <deki-editor/AssetPipeline.h>
 #include <deki-editor/AssetTypeRegistry.h>
+#include <deki-editor/Localization.h>
 #include "../FrameAnimationData.h"
 #include "../FrameAnimationMsgPack.h"
 #include <deki/reflection/Serialization.h>
@@ -78,7 +79,7 @@ public:
     // runtime AssetManager loader in FrameAnimationMsgPack.cpp, so editor and
     // runtime lookups agree.
     const char* GetTypeName() const override { return "Animation"; }
-    const char* GetDisplayName() const override { return "Animation"; }
+    const char* GetDisplayName() const override { return TrMark("Animation"); }
     const char* GetExtension() const override { return ".anim"; }
 
     const char* GetDefaultContent() const override

@@ -7,6 +7,7 @@
 #include <deki-editor/CustomEditor.h>
 #include <deki-editor/EditorUI.h>
 #include <deki-editor/EditorApplication.h>
+#include <deki-editor/Localization.h>
 #include "ClipComponent.h"
 #include <deki/Engine.h>  // for DekiEngineSettings::Global()
 
@@ -34,7 +35,7 @@ public:
         ui.DrawDefaultInspector();
 
         ui.Spacing();
-        if (ui.Button("Edit Rect"))
+        if (ui.Button(TrLabel("Edit Rect")))
         {
             // EditorApp carries out the request. The clip is already selected
             // (it is the one being inspected), so its handles show at once.

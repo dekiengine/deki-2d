@@ -3,6 +3,7 @@
 #ifdef DEKI_EDITOR
 
 #include <deki-editor/EditorWindow.h>
+#include <deki-editor/Localization.h>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -22,7 +23,7 @@ namespace DekiEditor
 class NineSliceEditorWindow : public EditorWindow
 {
 public:
-    const char* GetTitle() override { return "9-Slice Editor"; }
+    const char* GetTitle() override { return TrMark("9-Slice Editor"); }
     const char* GetMenuPath() override { return "2D/9-Slice Editor"; }
 
     bool CanOpenFile(const char* extension) override;

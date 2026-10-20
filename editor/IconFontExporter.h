@@ -1,6 +1,7 @@
 #pragma once
 
 #include <deki-editor/EditorWindow.h>
+#include <deki-editor/Localization.h>
 #include <string>
 #include <vector>
 #include <set>
@@ -44,7 +45,7 @@ public:
     IconFontExporter();
     ~IconFontExporter() override;
 
-    const char* GetTitle() override { return "Icon Font Exporter"; }
+    const char* GetTitle() override { return TrMark("Icon Font Exporter"); }
     const char* GetMenuPath() override { return "Icon Font Exporter"; }
 
     void OnOpen() override;
@@ -108,8 +109,12 @@ private:
     };
     std::atomic<int> m_DownloadState{ (int)DownloadState::Idle };
     std::mutex m_DownloadMutex;
+    // English, with an optional %s filled by the matching Arg; translated
+    // when drawn, since the download thread must not call Tr.
     std::string m_DownloadStatus;
+    std::string m_DownloadStatusArg;
     std::string m_DownloadError;
+    std::string m_DownloadErrorArg;
     IconFont m_DownloadResult;
     std::thread m_DownloadThread;
     std::atomic<bool> m_CancelDownload{ false };

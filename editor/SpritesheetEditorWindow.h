@@ -1,6 +1,7 @@
 #pragma once
 
 #include <deki-editor/EditorWindow.h>
+#include <deki-editor/Localization.h>
 #include <deki-editor/TextureImporter.h>
 #include <string>
 #include <cstdint>
@@ -31,7 +32,7 @@ public:
     // EditorWindow interface
     // ========================================================================
 
-    const char* GetTitle() override { return "Sprite Slicer"; }
+    const char* GetTitle() override { return TrMark("Sprite Slicer"); }
     const char* GetMenuPath() override { return "2D/Sprite Slicer"; }
 
     void OnOpen() override;

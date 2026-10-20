@@ -8,6 +8,7 @@
 #include <deki-editor/EditorRegistry.h>
 #include <deki-editor/EditorApplication.h>
 #include <deki-editor/EditorUI.h>
+#include <deki-editor/Localization.h>
 #include <nlohmann/json.hpp>
 #include <vector>
 #include <algorithm>
@@ -446,7 +447,7 @@ class ProceduralSpriteEditor : public AssetTypeEditor
 {
 public:
     const char* GetTypeName() const override { return "ProceduralSprite"; }
-    const char* GetDisplayName() const override { return "Procedural Sprite"; }
+    const char* GetDisplayName() const override { return TrMark("Procedural Sprite"); }
     const char* GetExtension() const override { return ".asset"; }
 
     const char* GetDefaultContent() const override
@@ -543,18 +544,18 @@ public:
 
             // Accent-coloured, so the subsections below read as part of
             // "Procedural Sprite" without an indent.
-            GroupHeader("Procedural Sprite");
+            GroupHeader(Tr("Procedural Sprite"));
             {
                 float availW = 0.0f, availH = 0.0f;
                 ui.GetContentRegionAvail(&availW, &availH);
                 float lw = availW * 0.4f;
 
                 // ── Dimensions ───────────────────────────────────────────
-                SectionHeader("Dimensions");
+                SectionHeader(Tr("Dimensions"));
                 int width = data.value("width", 64);
                 int height = data.value("height", 64);
                 ui.AlignTextToFramePadding();
-                ui.Text("Width");
+                ui.Text(Tr("Width"));
                 ui.SameLine(lw);
                 ui.SetNextItemWidth(-1);
                 if (ui.DragInt("##Width", &width, 1.0f, 1, 1024))
@@ -563,7 +564,7 @@ public:
                     modified = true;
                 }
                 ui.AlignTextToFramePadding();
-                ui.Text("Height");
+                ui.Text(Tr("Height"));
                 ui.SameLine(lw);
                 ui.SetNextItemWidth(-1);
                 if (ui.DragInt("##Height", &height, 1.0f, 1, 1024))
@@ -573,7 +574,7 @@ public:
                 }
 
                 // ── Background ───────────────────────────────────────────
-                SectionHeader("Background");
+                SectionHeader(Tr("Background"));
                 float bgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
                 if (data.contains("background_color") && data["background_color"].is_array() &&
                     data["background_color"].size() >= 4)
@@ -584,7 +585,7 @@ public:
                     bgColor[3] = data["background_color"][3].get<int>() / 255.0f;
                 }
                 ui.AlignTextToFramePadding();
-                ui.Text("Color");
+                ui.Text(Tr("Color"));
                 ui.SameLine(lw);
                 ui.SetNextItemWidth(-1);
                 if (ui.ColorEdit4("##bgColor", bgColor))
@@ -596,13 +597,13 @@ public:
                 }
 
                 // ── Border Width ─────────────────────────────────────────
-                SectionHeader("Border Width");
+                SectionHeader(Tr("Border Width"));
                 int32_t bwTop = 0, bwRight = 0, bwBottom = 0, bwLeft = 0;
                 ParseBorderWidth(data, bwTop, bwRight, bwBottom, bwLeft);
 
                 bool bwChanged = false;
                 ui.AlignTextToFramePadding();
-                ui.Text("Top");
+                ui.Text(Tr("Top"));
                 ui.SameLine(lw);
                 ui.SetNextItemWidth(-1);
                 if (ui.DragInt("##bwTop", &bwTop, 1.0f, 0, 100))
@@ -610,7 +611,7 @@ public:
                     bwChanged = true;
                 }
                 ui.AlignTextToFramePadding();
-                ui.Text("Right");
+                ui.Text(Tr("Right"));
                 ui.SameLine(lw);
                 ui.SetNextItemWidth(-1);
                 if (ui.DragInt("##bwRight", &bwRight, 1.0f, 0, 100))
@@ -618,7 +619,7 @@ public:
                     bwChanged = true;
                 }
                 ui.AlignTextToFramePadding();
-                ui.Text("Bottom");
+                ui.Text(Tr("Bottom"));
                 ui.SameLine(lw);
                 ui.SetNextItemWidth(-1);
                 if (ui.DragInt("##bwBottom", &bwBottom, 1.0f, 0, 100))
@@ -626,7 +627,7 @@ public:
                     bwChanged = true;
                 }
                 ui.AlignTextToFramePadding();
-                ui.Text("Left");
+                ui.Text(Tr("Left"));
                 ui.SameLine(lw);
                 ui.SetNextItemWidth(-1);
                 if (ui.DragInt("##bwLeft", &bwLeft, 1.0f, 0, 100))
@@ -641,7 +642,7 @@ public:
                 }
 
                 // ── Border Color ─────────────────────────────────────────
-                SectionHeader("Border Color");
+                SectionHeader(Tr("Border Color"));
                 float borderColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
                 if (data.contains("border_color") && data["border_color"].is_array() &&
                     data["border_color"].size() >= 4)
@@ -652,7 +653,7 @@ public:
                     borderColor[3] = data["border_color"][3].get<int>() / 255.0f;
                 }
                 ui.AlignTextToFramePadding();
-                ui.Text("Color");
+                ui.Text(Tr("Color"));
                 ui.SameLine(lw);
                 ui.SetNextItemWidth(-1);
                 if (ui.ColorEdit4("##borderColor", borderColor))
@@ -669,13 +670,13 @@ public:
                 }
 
                 // ── Border Radius ────────────────────────────────────────
-                SectionHeader("Border Radius");
+                SectionHeader(Tr("Border Radius"));
                 int32_t brTL = 0, brTR = 0, brBR = 0, brBL = 0;
                 ParseBorderRadius(data, brTL, brTR, brBR, brBL);
 
                 bool brChanged = false;
                 ui.AlignTextToFramePadding();
-                ui.Text("Top Left");
+                ui.Text(Tr("Top Left"));
                 ui.SameLine(lw);
                 ui.SetNextItemWidth(-1);
                 if (ui.DragInt("##brTL", &brTL, 1.0f, 0, 200))
@@ -683,7 +684,7 @@ public:
                     brChanged = true;
                 }
                 ui.AlignTextToFramePadding();
-                ui.Text("Top Right");
+                ui.Text(Tr("Top Right"));
                 ui.SameLine(lw);
                 ui.SetNextItemWidth(-1);
                 if (ui.DragInt("##brTR", &brTR, 1.0f, 0, 200))
@@ -691,7 +692,7 @@ public:
                     brChanged = true;
                 }
                 ui.AlignTextToFramePadding();
-                ui.Text("Bottom Right");
+                ui.Text(Tr("Bottom Right"));
                 ui.SameLine(lw);
                 ui.SetNextItemWidth(-1);
                 if (ui.DragInt("##brBR", &brBR, 1.0f, 0, 200))
@@ -699,7 +700,7 @@ public:
                     brChanged = true;
                 }
                 ui.AlignTextToFramePadding();
-                ui.Text("Bottom Left");
+                ui.Text(Tr("Bottom Left"));
                 ui.SameLine(lw);
                 ui.SetNextItemWidth(-1);
                 if (ui.DragInt("##brBL", &brBL, 1.0f, 0, 200))
@@ -714,25 +715,25 @@ public:
                 }
 
                 // ── 9-Slice ──────────────────────────────────────────────
-                SectionHeader("9-Slice");
+                SectionHeader(Tr("9-Slice"));
                 {
                     int32_t nsTop = 0, nsRight = 0, nsBottom = 0, nsLeft = 0;
                     ParseNineSlice(data, nsTop, nsRight, nsBottom, nsLeft);
                     char nsBuf[128];
-                    std::snprintf(nsBuf, sizeof(nsBuf), "L:%d  R:%d  T:%d  B:%d", nsLeft, nsRight, nsTop, nsBottom);
+                    std::snprintf(nsBuf, sizeof(nsBuf), Tr("L:%d  R:%d  T:%d  B:%d"), nsLeft, nsRight, nsTop, nsBottom);
                     ui.Text(nsBuf);
                     ui.SameLine();
-                    if (ui.Button("Edit 9-Slice..."))
+                    if (ui.Button(TrLabel("Edit 9-Slice...")))
                     {
                         EditorApplication::Get().RequestOpenTool(assetPath, /*cachePath*/ "", "9-Slice Editor");
                     }
                 }
 
                 // ── Misc ─────────────────────────────────────────────────
-                SectionHeader("Misc");
+                SectionHeader(Tr("Misc"));
                 bool antialiased = data.value("antialiased", false);
                 ui.AlignTextToFramePadding();
-                ui.Text("Antialiased");
+                ui.Text(Tr("Antialiased"));
                 ui.SameLine(lw);
                 if (ui.Checkbox("##antialiased", &antialiased))
                 {

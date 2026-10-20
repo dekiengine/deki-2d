@@ -1,6 +1,7 @@
 #pragma once
 
 #include <deki-editor/EditorWindow.h>
+#include <deki-editor/Localization.h>
 #include <string>
 #include <cstdint>
 #include <vector>
@@ -24,7 +25,7 @@ public:
     // EditorWindow interface
     // ========================================================================
 
-    const char* GetTitle() override { return "Animation Editor"; }
+    const char* GetTitle() override { return TrMark("Animation Editor"); }
     const char* GetMenuPath() override { return "2D/Animation Editor"; }
 
     void OnOpen() override;
