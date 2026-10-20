@@ -546,6 +546,33 @@ void GradientComponent::RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t ou
     }
 }
 
+void GradientComponent::CheckBakeUniformity(int32_t widthPx, int32_t heightPx)
+{
+    // Read off the pixels rather than the angle: cos(pi/2) is not exactly 0
+    // in float, so a "vertical" gradient could still differ along a row, and
+    // a dithered one does. Each check stops at the first difference.
+    const uint16_t* px = reinterpret_cast<const uint16_t*>(m_Baked.Data());
+    const size_t w = static_cast<size_t>(widthPx);
+    m_UniformRows = true;
+    for (int32_t y = 0; y < heightPx && m_UniformRows; ++y)
+    {
+        const uint16_t* row = px + static_cast<size_t>(y) * w;
+        for (size_t x = 1; x < w; ++x)
+        {
+            if (row[x] != row[0])
+            {
+                m_UniformRows = false;
+                break;
+            }
+        }
+    }
+    m_UniformColumns = !m_UniformRows;
+    for (int32_t y = 1; y < heightPx && m_UniformColumns; ++y)
+    {
+        m_UniformColumns = std::memcmp(px + static_cast<size_t>(y) * w, px, w * sizeof(uint16_t)) == 0;
+    }
+}
+
 bool GradientComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& outSource, float& outPivotX,
                                       float& outPivotY, uint8_t& outTintR, uint8_t& outTintG, uint8_t& outTintB,
                                       uint8_t& outTintA)
@@ -643,12 +670,15 @@ bool GradientComponent::RenderContent(const Deki::Object* owner, QuadBlit::Sourc
         m_BakeFailedSize = 0;
 
         RenderToBuffer(m_Baked.Data(), widthPx, heightPx, artW, artH, ditherArt);
+        CheckBakeUniformity(widthPx, heightPx);
         m_BakeKey = key;
     }
 
     outSource = QuadBlit::MakeSource(m_Baked.Data(), widthPx, heightPx, QuadBlit::PixelLayout::RGB565(),
                                      false  // ownsPixels: the component owns its bake
     );
+    outSource.uniformRows = m_UniformRows;
+    outSource.uniformColumns = m_UniformColumns;
     // The bake's own density: the renderer then scales it by the object's
     // scale alone, 1:1 for an unscaled object.
     outSource.pixelsPerMeter = static_cast<float>(widthPx) / width;

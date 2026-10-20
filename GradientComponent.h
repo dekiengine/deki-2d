@@ -263,6 +263,14 @@ private:
     size_t m_BakeFailedSize = 0;
     uint64_t ComputeBakeKey(int32_t widthPx, int32_t heightPx) const;
 
+    // What the bake turned out to be, checked on its pixels after each bake:
+    // every row one colour (a vertical gradient), or every row the same (a
+    // horizontal one). QuadBlit then fills or repeats rows instead of reading
+    // the whole bake out of PSRAM every frame.
+    bool m_UniformRows = false;
+    bool m_UniformColumns = false;
+    void CheckBakeUniformity(int32_t widthPx, int32_t heightPx);
+
     // Linear-gradient trig, computed once per bake instead of once per pixel.
     float m_CosAngle = 1.0f;
     float m_SinAngle = 0.0f;
