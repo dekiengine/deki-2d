@@ -8,6 +8,7 @@
 #include <deki-editor/CustomEditor.h>
 #include <deki-editor/SceneView.h>
 #include <deki-editor/EditorUI.h>
+#include <deki-editor/Localization.h>
 #include <deki-editor/AssetPipeline.h>
 #include <deki-editor/AssetData.h>
 #include "editor/FontSyncHandler.h"
@@ -371,11 +372,18 @@ public:
                     }
                 }
 
-                std::string previewText = (currentIndex >= 0) ? std::to_string(bakedSizes[currentIndex]) + " px"
-                                                              : std::to_string(textComp->fontSize) + " px (not baked)";
+                char previewText[64];
+                if (currentIndex >= 0)
+                {
+                    std::snprintf(previewText, sizeof(previewText), "%d px", bakedSizes[currentIndex]);
+                }
+                else
+                {
+                    std::snprintf(previewText, sizeof(previewText), Tr("%d px (not baked)"), textComp->fontSize);
+                }
 
                 gui.PropertyRow("Font Size");
-                if (gui.BeginCombo("##fontSize", previewText.c_str()))
+                if (gui.BeginCombo("##fontSize", previewText))
                 {
                     for (size_t i = 0; i < bakedSizes.size(); i++)
                     {
@@ -398,7 +406,8 @@ public:
                     {
                         char tipBuf[256];
                         std::snprintf(tipBuf, sizeof(tipBuf),
-                                      "Current size %d is not baked. Use Font Preview to bake it.", textComp->fontSize);
+                                      Tr("Current size %d is not baked. Use Font Preview to bake it."),
+                                      textComp->fontSize);
                         gui.SetTooltip(tipBuf);
                     }
                 }
@@ -407,20 +416,20 @@ public:
             {
                 // No baked sizes: show a warning and the current value.
                 char sizeBuf[128];
-                std::snprintf(sizeBuf, sizeof(sizeBuf), "Font Size: %d px", textComp->fontSize);
+                std::snprintf(sizeBuf, sizeof(sizeBuf), Tr("Font Size: %d px"), textComp->fontSize);
                 gui.Text(sizeBuf);
                 gui.SameLine();
-                gui.TextColored(EditorUI::Rgba(255, 128, 0, 255), "(no baked sizes)");
-                gui.TextDisabled("Use Font Preview below to bake a size.");
+                gui.TextColored(EditorUI::Rgba(255, 128, 0, 255), Tr("(no baked sizes)"));
+                gui.TextDisabled(Tr("Use Font Preview below to bake a size."));
             }
         }
         else
         {
             // No font assigned: just show the value.
             char sizeBuf[128];
-            std::snprintf(sizeBuf, sizeof(sizeBuf), "Font Size: %d px", textComp->fontSize);
+            std::snprintf(sizeBuf, sizeof(sizeBuf), Tr("Font Size: %d px"), textComp->fontSize);
             gui.Text(sizeBuf);
-            gui.TextDisabled("Assign a font to see baked sizes.");
+            gui.TextDisabled(Tr("Assign a font to see baked sizes."));
         }
 
         gui.PropertyField("width");
@@ -436,14 +445,14 @@ public:
         {
             gui.Separator();
 
-            if (gui.SectionHeader("Font Preview"))
+            if (gui.SectionHeader(TrMark("Font Preview")))
             {
-                gui.TextDisabled("Preview font at different sizes without baking to disk.");
+                gui.TextDisabled(Tr("Preview font at different sizes without baking to disk."));
                 gui.Spacing();
 
                 bool prevPreviewEnabled = textComp->previewEnabled;
                 {
-                    gui.Checkbox("Enable Preview", &textComp->previewEnabled);
+                    gui.Checkbox(TrMark("Enable Preview"), &textComp->previewEnabled);
                 }
 
                 if (textComp->previewEnabled)
@@ -469,7 +478,8 @@ public:
                     {
                         gui.Spacing();
                         char atlasBuf[128];
-                        std::snprintf(atlasBuf, sizeof(atlasBuf), "Preview Atlas: %u x %u", atlasWidth, atlasHeight);
+                        std::snprintf(atlasBuf, sizeof(atlasBuf), Tr("Preview Atlas: %u x %u"), atlasWidth,
+                                      atlasHeight);
                         gui.Text(atlasBuf);
 
                         // Display size, at most 256px tall.
@@ -481,7 +491,7 @@ public:
                         gui.Spacing();
 
                         // Save and Use: saves the size to .data, which bakes it.
-                        if (gui.Button("Save and Use"))
+                        if (gui.Button(TrLabel("Save and Use")))
                         {
                             EnsureFontSizeBaked(sourceGuid, textComp->previewSize);
 
@@ -489,12 +499,12 @@ public:
                             textComp->previewEnabled = false;
                         }
                         gui.SameLine();
-                        gui.TextDisabled("(Saves to font config and bakes)");
+                        gui.TextDisabled(Tr("(Saves to font config and bakes)"));
                     }
                 }
                 else
                 {
-                    gui.TextDisabled("Enable preview to test different font sizes.");
+                    gui.TextDisabled(Tr("Enable preview to test different font sizes."));
                 }
             }
         }

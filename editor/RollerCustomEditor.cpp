@@ -5,6 +5,7 @@
 #include <deki-editor/EditorRegistry.h>
 #include <deki-editor/CustomEditor.h>
 #include <deki-editor/EditorUI.h>
+#include <deki-editor/Localization.h>
 #include "RollerComponent.h"
 #include <deki/Engine.h>
 #include <string>
@@ -63,7 +64,7 @@ public:
         ui.DrawDefaultInspector();
 
         ui.Separator();
-        if (ui.Button("Fill Options...", -1.0f))
+        if (ui.Button(TrLabel("Fill Options..."), -1.0f))
         {
             ui.OpenPopup("FillRollerOptions");
             m_FillCount = 10;
@@ -73,11 +74,11 @@ public:
 
         if (ui.BeginPopup("FillRollerOptions"))
         {
-            ui.Text("Fill Options Numerically");
+            ui.Text(Tr("Fill Options Numerically"));
             ui.Separator();
 
-            ui.InputInt("Start", &m_FillStart);
-            ui.InputInt("Count", &m_FillCount);
+            ui.InputInt(TrLabel("Start"), &m_FillStart);
+            ui.InputInt(TrLabel("Count"), &m_FillCount);
             if (m_FillCount < 1)
             {
                 m_FillCount = 1;
@@ -86,7 +87,7 @@ public:
             {
                 m_FillCount = 9999;
             }
-            ui.Checkbox("Leading zeros", &m_FillLeadingZeros);
+            ui.Checkbox(TrMark("Leading zeros"), &m_FillLeadingZeros);
 
             // Preview
             int lastVal = m_FillStart + m_FillCount - 1;
@@ -104,12 +105,12 @@ public:
                 return s;
             };
             char previewBuf[256];
-            std::snprintf(previewBuf, sizeof(previewBuf), "Preview: %s, %s, ... %s", fmt(m_FillStart).c_str(),
+            std::snprintf(previewBuf, sizeof(previewBuf), Tr("Preview: %s, %s, ... %s"), fmt(m_FillStart).c_str(),
                           fmt(m_FillStart + 1).c_str(), fmt(lastVal).c_str());
             ui.TextDisabled(previewBuf);
 
             ui.Separator();
-            if (ui.Button("Fill", 120, 0))
+            if (ui.Button(TrLabel("Fill"), 120, 0))
             {
                 roller->options.clear();
                 for (int i = 0; i < m_FillCount; ++i)
@@ -124,7 +125,7 @@ public:
                 ui.CloseCurrentPopup();
             }
             ui.SameLine();
-            if (ui.Button("Cancel", 120, 0))
+            if (ui.Button(TrLabel("Cancel"), 120, 0))
             {
                 ui.CloseCurrentPopup();
             }
