@@ -751,8 +751,15 @@ void ScrollComponent::HandlePointerMove(float x, float y)
         }
     }
 
+    // The content follows the finger. World Y is up and items stack downward
+    // from the top, so a finger moving up raises the offset; items stack
+    // rightward from the left, so a finger moving right lowers it.
     float delta = ((touchPos) - (m_LastTouchPos));
-    float scrollDelta = reverseDrag ? ((0.0f) - (delta)) : delta;
+    float scrollDelta = (direction == ScrollDirection::Vertical) ? delta : ((0.0f) - (delta));
+    if (reverseDrag)
+    {
+        scrollDelta = ((0.0f) - (scrollDelta));
+    }
 
     if (enableBounce)
     {

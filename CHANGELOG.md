@@ -24,6 +24,10 @@ alongside one that has them.
   the engine (`PackRGB565`, the top bits), not by `* 31 / 255`, so a solid
   sprite compares equal to the same colour after a blend or a chroma key. Some
   colours change by one step of 565.
+- A horizontal `ScrollComponent` moves its items with the finger, as a
+  vertical one always has; it moved them the opposite way, and so did a
+  flick's momentum. A project that set `reverseDrag` on a horizontal scroll to
+  make up for it should clear it, or its list now moves against the finger.
 
 ### Fixed
 - In the editor, a sprite made by `CreateSolid`, `CreateSolidRGBA`,
