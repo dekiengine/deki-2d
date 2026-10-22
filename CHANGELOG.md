@@ -30,6 +30,10 @@ alongside one that has them.
   make up for it should clear it, or its list now moves against the finger.
 
 ### Fixed
+- A `ScrollComponent` jumped at the start of every swipe: the distance the
+  finger moved before the drag was recognised (10-14 px on a T-Display S3
+  AMOLED) was applied in one frame. The list now follows the finger from the
+  point the drag starts.
 - In the editor, a sprite made by `CreateSolid`, `CreateSolidRGBA`,
   `CreateTiled` or `CreateNineSlice` freed its pixels with `free()`, though
   they came from `Deki::Memory`, and crashed when it was deleted.

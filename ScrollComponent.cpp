@@ -749,6 +749,11 @@ void ScrollComponent::HandlePointerMove(float x, float y)
         {
             CancelChildInput(m_ClipObj);
         }
+
+        // The content follows the finger from here. Applying the distance
+        // moved under the threshold would jump the list by it in one frame.
+        m_LastTouchPos = touchPos;
+        return;
     }
 
     // The content follows the finger. World Y is up and items stack downward

@@ -6,6 +6,10 @@
 // stacks them rightward at +centre), so one drag sign for both moved a
 // horizontal list against the finger. Momentum is built from the same drag
 // deltas, so a flick that goes the wrong way is the same bug.
+//
+// The list starts to follow only once the finger has moved past the drag
+// threshold, and from where it is then: the distance before that is touch
+// slop, and applying it made every swipe start with a jump.
 
 #include <gtest/gtest.h>
 
@@ -28,6 +32,9 @@ namespace
 constexpr float kViewport = 10.0f;  // a 10 m square viewport and hit box
 constexpr float kItem = 4.0f;       // five 4 m items: 20 m of content, 10 m of travel
 constexpr float kTolerance = 1e-4f;
+// Drag()'s first step confirms the drag (the threshold is 0.625 m) and is not
+// applied, so a drag moves the list this much less than the finger.
+constexpr float kSlop = 1.0f;
 
 class ScrollDrag : public ::testing::Test
 {
@@ -93,7 +100,8 @@ struct Scroll
         collider->ProcessInput(x, y, down, move, up);
     }
 
-    // Presses at `from`, moves to `to` in 1 m steps and lifts there.
+    // Presses at `from`, moves to `to` in 1 m steps and lifts there. The
+    // first step is the slop.
     void Drag(float from, float to)
     {
         Pointer(from, true, false, false);
@@ -114,10 +122,11 @@ TEST_F(ScrollDrag, AHorizontalListFollowsTheFinger)
     const float start = s.ItemPos();
 
     s.Drag(3.0f, -1.0f);  // 4 m left
-    EXPECT_NEAR(s.ItemPos(), start - 4.0f, kTolerance);
+    const float afterLeft = start - (4.0f - kSlop);
+    EXPECT_NEAR(s.ItemPos(), afterLeft, kTolerance);
 
     s.Drag(-1.0f, 1.0f);  // 2 m back right
-    EXPECT_NEAR(s.ItemPos(), start - 2.0f, kTolerance);
+    EXPECT_NEAR(s.ItemPos(), afterLeft + (2.0f - kSlop), kTolerance);
 }
 
 TEST_F(ScrollDrag, AVerticalListFollowsTheFinger)
@@ -126,10 +135,11 @@ TEST_F(ScrollDrag, AVerticalListFollowsTheFinger)
     const float start = s.ItemPos();
 
     s.Drag(-3.0f, 1.0f);  // 4 m up
-    EXPECT_NEAR(s.ItemPos(), start + 4.0f, kTolerance);
+    const float afterUp = start + (4.0f - kSlop);
+    EXPECT_NEAR(s.ItemPos(), afterUp, kTolerance);
 
     s.Drag(1.0f, -1.0f);  // 2 m back down
-    EXPECT_NEAR(s.ItemPos(), start + 2.0f, kTolerance);
+    EXPECT_NEAR(s.ItemPos(), afterUp - (2.0f - kSlop), kTolerance);
 }
 
 // From the middle of the range, so neither end's spring can move the list and
@@ -156,10 +166,38 @@ TEST_F(ScrollDrag, ReverseDragMovesTheListAgainstTheFinger)
     Scroll h(ScrollDirection::Horizontal, true);
     const float hStart = h.ItemPos();
     h.Drag(-3.0f, 1.0f);  // 4 m right
-    EXPECT_NEAR(h.ItemPos(), hStart - 4.0f, kTolerance);
+    EXPECT_NEAR(h.ItemPos(), hStart - (4.0f - kSlop), kTolerance);
 
     Scroll v(ScrollDirection::Vertical, true);
     const float vStart = v.ItemPos();
     v.Drag(3.0f, -1.0f);  // 4 m down
-    EXPECT_NEAR(v.ItemPos(), vStart + 4.0f, kTolerance);
+    EXPECT_NEAR(v.ItemPos(), vStart + (4.0f - kSlop), kTolerance);
+}
+
+// On the device a swipe moved 10-14 px under the threshold before it
+// confirmed, and the list jumped by all of it in one frame.
+TEST_F(ScrollDrag, TheSlopBeforeTheDragConfirmsIsNotApplied)
+{
+    for (ScrollDirection direction : { ScrollDirection::Horizontal, ScrollDirection::Vertical })
+    {
+        Scroll s(direction);
+        s.scroll->ScrollTo(5.0f, false);
+        const float start = s.ItemPos();
+        // The finger goes left, or up.
+        const float along = s.Horizontal() ? -1.0f : 1.0f;
+
+        s.Pointer(0.0f, true, false, false);
+        for (float at : { 0.2f, 0.4f, 0.6f })  // under the 0.625 m threshold
+        {
+            s.Pointer(at * along, false, true, false);
+            EXPECT_NEAR(s.ItemPos(), start, kTolerance);
+        }
+
+        s.Pointer(1.5f * along, false, true, false);  // confirms
+        EXPECT_NEAR(s.ItemPos(), start, kTolerance);
+
+        s.Pointer(2.5f * along, false, true, false);  // only this metre applies
+        EXPECT_NEAR(s.ItemPos(), start + along, kTolerance);
+        s.Pointer(2.5f * along, false, false, true);
+    }
 }
