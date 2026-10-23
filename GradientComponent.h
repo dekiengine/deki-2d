@@ -269,7 +269,12 @@ private:
     // the whole bake out of PSRAM every frame.
     bool m_UniformRows = false;
     bool m_UniformColumns = false;
+    // With uniform rows, each row's colour in internal memory
+    // (QuadBlit::Source::rowColors), when there is room for it.
+    Deki::Buffer<uint16_t> m_RowColors;
     void CheckBakeUniformity(int32_t widthPx, int32_t heightPx);
+    // Drops QuadBlit's scaled copies of the bake, before it changes or goes.
+    void ForgetBake();
 
     // Linear-gradient trig, computed once per bake instead of once per pixel.
     float m_CosAngle = 1.0f;

@@ -80,11 +80,20 @@ float CropPivot(int32_t full, int32_t first, int32_t crop)
 
 QuadBlit::Source TextComponent::CroppedSource(int32_t bakeWidth) const
 {
-    QuadBlit::Source source =
-        QuadBlit::MakeSource(m_CachedBuffer.Data() + (m_CropFirstRow * bakeWidth + m_CropFirstCol) * 3, m_CropWidth,
-                             m_CropHeight, QuadBlit::PixelLayout::RGB565A8(), false);
-    source.stride = bakeWidth * 3;
+    const int32_t bpp = m_CachedAlphaOnly ? 1 : 3;
+    QuadBlit::Source source = QuadBlit::MakeSource(
+        m_CachedBuffer.Data() + (m_CropFirstRow * bakeWidth + m_CropFirstCol) * bpp, m_CropWidth, m_CropHeight,
+        m_CachedAlphaOnly ? QuadBlit::PixelLayout::Alpha8() : QuadBlit::PixelLayout::RGB565A8(), false);
+    source.stride = bakeWidth * bpp;
     return source;
+}
+
+void TextComponent::BakeTint(uint8_t& r, uint8_t& g, uint8_t& b, uint8_t& a) const
+{
+    r = m_CachedAlphaOnly ? static_cast<uint8_t>(m_CachedColor.r & 0xF8) : 255;
+    g = m_CachedAlphaOnly ? static_cast<uint8_t>(m_CachedColor.g & 0xFC) : 255;
+    b = m_CachedAlphaOnly ? static_cast<uint8_t>(m_CachedColor.b & 0xF8) : 255;
+    a = 255;
 }
 
 void TextComponent::SetText(const char* newText)
@@ -449,15 +458,15 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
         outSource.pixelsPerMeter = ppm;
         outPivotX = m_CropPivotX;
         outPivotY = m_CropPivotY;
-        outTintR = 255;
-        outTintG = 255;
-        outTintB = 255;
-        outTintA = 255;
+        BakeTint(outTintR, outTintG, outTintB, outTintA);
         return true;
     }
 
-    // RGB565A8, 3 bytes per pixel: blits faster than RGBA8888.
-    size_t bufferSize = widthPx * heightPx * 3;
+    // One colour: each pixel's alpha alone, a byte, tinted as it is drawn. A
+    // decorated font's two colours: RGB565A8, 3 bytes.
+    const bool alphaOnly = fontPtr->GetDecorationMode() == FontDecorationMode::None;
+    const size_t bpp = alphaOnly ? 1 : 3;
+    size_t bufferSize = widthPx * heightPx * bpp;
 
     // Allocate() leaves an unchanged size alone, so reuse costs nothing. The
     // size is the object's pixels times three, which a device may not have
@@ -673,6 +682,11 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
                     continue;
                 }
 
+                if (alphaOnly)
+                {
+                    m_CachedBuffer[bufRow + bufX] = alpha;
+                    continue;
+                }
                 // RGB565A8: 2 bytes RGB565 + 1 byte alpha.
                 size_t bufOffset = (bufRow + bufX) * 3;
                 DekiPixel::StoreU16(m_CachedBuffer.Data() + bufOffset, textRgb565);
@@ -690,6 +704,7 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
     m_CachedVerticalAlign = verticalAlign;
     m_CachedFont = fontPtr;
     m_CachedPixelScale = pixelScale;
+    m_CachedAlphaOnly = alphaOnly;
 
     // Crop to the rows and columns that hold a pixel: a line of text in a
     // wide box is mostly empty columns, which every blit would read. Only
@@ -701,9 +716,10 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
     const int32_t scanEnd = (std::min)(heightPx, touchedLastRow + 1);
     for (int32_t row = (std::max)(int32_t{ 0 }, touchedFirstRow); row < scanEnd; row++)
     {
-        const uint8_t* rowPtr = m_CachedBuffer.Data() + row * widthPx * 3;
+        // The alpha byte: the only one, or the third.
+        const uint8_t* alphaPtr = m_CachedBuffer.Data() + row * widthPx * bpp + (bpp - 1);
         int32_t col = 0;
-        while (col < widthPx && rowPtr[col * 3 + 2] == 0)  // alpha byte
+        while (col < widthPx && alphaPtr[col * bpp] == 0)
         {
             col++;
         }
@@ -712,7 +728,7 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
             continue;
         }
         int32_t last = widthPx - 1;
-        while (rowPtr[last * 3 + 2] == 0)
+        while (alphaPtr[last * bpp] == 0)
         {
             last--;
         }
@@ -740,16 +756,12 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
     m_CropPivotX = CropPivot(widthPx, m_CropFirstCol, m_CropWidth);
     m_CropPivotY = CropPivot(heightPx, m_CropFirstRow, m_CropHeight);
 
-    // RGB565A8. The component keeps the buffer; the caller does not own it.
+    // The component keeps the buffer; the caller does not own it.
     outSource = CroppedSource(widthPx);
     outSource.pixelsPerMeter = ppm;
     outPivotX = m_CropPivotX;
     outPivotY = m_CropPivotY;
-    // The text colour is baked in, so no tint.
-    outTintR = 255;
-    outTintG = 255;
-    outTintB = 255;
-    outTintA = 255;
+    BakeTint(outTintR, outTintG, outTintB, outTintA);
     return true;
 }
 

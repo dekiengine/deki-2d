@@ -242,8 +242,17 @@ private:
     float m_CropPivotX = 0.5f;
     float m_CropPivotY = 0.5f;
 
+    // The bake holds only each pixel's alpha (1 byte) when the text is one
+    // colour, which the blit then tints it with; a decorated font's two
+    // colours take RGB565A8 (3 bytes).
+    bool m_CachedAlphaOnly = false;
+
     // The crop of the bake as a blit source; `bakeWidth` is the whole bake's.
     QuadBlit::Source CroppedSource(int32_t bakeWidth) const;
+    // The tint the bake is drawn with: the text colour for an alpha-only bake,
+    // as RGB565 holds it (so the pixels are what a bake in that colour gives),
+    // and none for one in colour.
+    void BakeTint(uint8_t& r, uint8_t& g, uint8_t& b, uint8_t& a) const;
 };
 
 }  // namespace Deki2D

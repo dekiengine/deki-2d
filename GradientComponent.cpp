@@ -5,6 +5,7 @@
 #include <deki/Engine.h>
 #include <deki/LogSystem.h>
 #include "deki-rendering/CameraComponent.h"
+#include "deki-rendering/QuadBlit.h"
 // In every build: the bake is allocated through Deki::Memory, so the editor
 // takes the same failure path as the device.
 #include <deki/providers/Memory.h>
@@ -77,6 +78,17 @@ GradientComponent::GradientComponent(float w, float h)
 
 GradientComponent::~GradientComponent()
 {
+    // Copies QuadBlit scaled from the bake (cacheScaled) go with it, so a
+    // new buffer at the same address is never mistaken for this one.
+    ForgetBake();
+}
+
+void GradientComponent::ForgetBake()
+{
+    if (m_Baked)
+    {
+        QuadBlit::ForgetScaled(m_Baked.Data(), m_Baked.Bytes());
+    }
 }
 
 void GradientComponent::WriteStopsToProperties()
@@ -464,8 +476,8 @@ void GradientComponent::RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t ou
     // output grid, cells ditherArt art pixels in whole output pixels, so it
     // stays a regular stipple instead of art pixels dropped unevenly.
     const bool ditherOnArt = outW >= widthPx && outH >= heightPx;
-    const int32_t outCell = std::max<int32_t>(
-        1, static_cast<int32_t>(std::lround(static_cast<double>(ditherArt) * outW / widthPx)));
+    const int32_t outCell =
+        std::max<int32_t>(1, static_cast<int32_t>(std::lround(static_cast<double>(ditherArt) * outW / widthPx)));
 
     for (int32_t oy = 0; oy < outH; oy++)
     {
@@ -571,6 +583,17 @@ void GradientComponent::CheckBakeUniformity(int32_t widthPx, int32_t heightPx)
     {
         m_UniformColumns = std::memcmp(px + static_cast<size_t>(y) * w, px, w * sizeof(uint16_t)) == 0;
     }
+    if (m_UniformRows && m_RowColors.Allocate(static_cast<size_t>(heightPx), Deki::Memory::Internal))
+    {
+        for (int32_t y = 0; y < heightPx; ++y)
+        {
+            m_RowColors[y] = px[static_cast<size_t>(y) * w];
+        }
+    }
+    else
+    {
+        m_RowColors.Reset();
+    }
 }
 
 bool GradientComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& outSource, float& outPivotX,
@@ -655,6 +678,7 @@ bool GradientComponent::RenderContent(const Deki::Object* owner, QuadBlit::Sourc
 
     if (!m_Baked || m_Baked.Bytes() != need || m_BakeKey != key)
     {
+        ForgetBake();
         // Allocate() leaves an unchanged size alone, so the common path costs
         // nothing. The bake is the object's size in pixels times two: 150 KB
         // for a full-screen gradient at 320x240, more on a bigger panel, and a
@@ -679,6 +703,11 @@ bool GradientComponent::RenderContent(const Deki::Object* owner, QuadBlit::Sourc
     );
     outSource.uniformRows = m_UniformRows;
     outSource.uniformColumns = m_UniformColumns;
+    // Drawn bigger than its art (a camera closer than the art's density), it
+    // is magnified on every blit; QuadBlit keeps a copy at the drawn size
+    // instead. The bake stays as it is until ForgetBake.
+    outSource.cacheScaled = true;
+    outSource.rowColors = m_UniformRows && m_RowColors ? m_RowColors.Data() : nullptr;
     // The bake's own density: the renderer then scales it by the object's
     // scale alone, 1:1 for an unscaled object.
     outSource.pixelsPerMeter = static_cast<float>(widthPx) / width;
