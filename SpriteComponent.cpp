@@ -521,6 +521,9 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
         // Same rows as the sprite, so its spans apply.
         ApplyChromaKey(outSource, spr, /*attachRowSpans=*/true);
         outSource.pixelsPerMeter = spr->pixelsPerMeter;
+        // The sprite's pixels stay as they are while it lives (~Sprite
+        // forgets the copies), so a scaled draw may be cached.
+        outSource.cacheScaled = true;
         outPivotX = spr->pivotX;
         outPivotY = spr->pivotY;
     }
@@ -555,6 +558,7 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
                                          false  // ownsPixels = false - sprite owns its data
         );
         outSource.stride = spr->width * bytesPerPixel;
+        outSource.cacheScaled = true;  // the sprite's own pixels, as above
         // The frame's rows do not match the sprite's chromaRowSpans (other y
         // origin and width), so frames use the per-pixel chroma compare.
         ApplyChromaKey(outSource, spr, /*attachRowSpans=*/false);

@@ -1,6 +1,7 @@
 #include "Sprite.h"
 #include "SpriteRowSpans.h"
 #include "PixelFormat.h"
+#include "QuadBlit.h"  // ForgetScaled
 #include <deki/assets/Texture2D.h>
 
 #include <cstdlib>
@@ -23,7 +24,15 @@ Sprite::Sprite()
 
 Sprite::~Sprite()
 {
-    // The base class frees the pixels; chromaRowSpans frees itself.
+    // The base class frees the pixels; chromaRowSpans frees itself. Scaled
+    // copies QuadBlit made of them go first (SpriteComponent marks them
+    // cacheScaled), so new pixels at the same address are never mistaken
+    // for these.
+    if (data)
+    {
+        QuadBlit::ForgetScaled(data, static_cast<size_t>(width) * static_cast<size_t>(height) *
+                                         static_cast<size_t>(Deki::Texture2D::GetBytesPerPixel(format)));
+    }
 }
 
 namespace
