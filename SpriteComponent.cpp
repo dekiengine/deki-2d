@@ -36,8 +36,8 @@ void TintBake(uint8_t* data, size_t pixels, int32_t bytesPerPixel, uint8_t tintR
     for (size_t i = 0; i < pixels; i++, data += bytesPerPixel)
     {
         const uint32_t v = DekiPixel::Load565(data);
-        const uint32_t t = (static_cast<uint32_t>(r[v >> 11]) << 11) | (static_cast<uint32_t>(g[(v >> 5) & 0x3F]) << 5) |
-                           b[v & 0x1F];
+        const uint32_t t =
+            (static_cast<uint32_t>(r[v >> 11]) << 11) | (static_cast<uint32_t>(g[(v >> 5) & 0x3F]) << 5) | b[v & 0x1F];
         DekiPixel::Store565(data, static_cast<uint16_t>(t));
     }
 }
@@ -475,6 +475,15 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
             {
                 m_CachedClearSpans.Reset();
             }
+            if (spans && m_CachedUniformRuns.Allocate((size_t)targetH, Deki::Memory::External))
+            {
+                QuadBlit::FindUniformRuns(m_CachedRenderBuffer.Data(), targetW, targetH, targetW * 3,
+                                          m_CachedUniformRuns.Data());
+            }
+            else
+            {
+                m_CachedUniformRuns.Reset();
+            }
 
             m_CachedRenderTint = bakeTint;
             m_CachedRenderRegion = region;
@@ -489,6 +498,7 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
                                          false,  // ownsPixels = false - component owns this buffer
                                          m_CachedRowSpans ? m_CachedRowSpans.Data() : nullptr);
         outSource.clearRowSpans = m_CachedClearSpans ? m_CachedClearSpans.Data() : nullptr;
+        outSource.uniformRuns = m_CachedUniformRuns ? m_CachedUniformRuns.Data() : nullptr;
         if (tintInBake)
         {
             // Already in the pixels; the alpha tint stays the blit's.

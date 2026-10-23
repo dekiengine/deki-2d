@@ -145,6 +145,9 @@ private:
     // Each bake row's longest run of fully transparent pixels
     // (QuadBlit::Source::clearRowSpans): the inside of an outline or frame.
     Deki::Buffer<int16_t> m_CachedClearSpans;
+    // Each bake row's run of one opaque colour (QuadBlit::Source::uniformRuns):
+    // a flat panel's middle, filled without reading the bake.
+    Deki::Buffer<QuadBlit::UniformRun> m_CachedUniformRuns;
 
     // What Tiled and NineSlice stretch: the shown frame, or the whole sprite
     // when none is, with that frame's (or the sprite's) 9-slice borders.

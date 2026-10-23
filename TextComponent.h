@@ -233,10 +233,17 @@ private:
     BitmapFont* m_CachedFont = nullptr;
     int32_t m_CachedPixelScale = 1;
 
-    // The rows of the bake that hold glyph pixels.
+    // The rows and columns of the bake that hold glyph pixels, and the pivot
+    // that keeps them where the whole bake was.
     int32_t m_CropFirstRow = 0;
     int32_t m_CropHeight = 0;
+    int32_t m_CropFirstCol = 0;
+    int32_t m_CropWidth = 0;
+    float m_CropPivotX = 0.5f;
     float m_CropPivotY = 0.5f;
+
+    // The crop of the bake as a blit source; `bakeWidth` is the whole bake's.
+    QuadBlit::Source CroppedSource(int32_t bakeWidth) const;
 };
 
 }  // namespace Deki2D

@@ -8,6 +8,7 @@
 #include "deki-rendering/QuadBlit.h"
 #include <deki/profiling/Profiler.h>
 #include "Sprite.h"  // for reading chroma-key fields off the font atlas
+#include <cmath>
 #include <cstring>
 #include <vector>
 #include <iomanip>
@@ -56,6 +57,34 @@ void TextComponent::UnloadAssets()
 void TextComponent::InvalidateRenderCache()
 {
     m_CachedBuffer.Reset();
+}
+
+namespace
+{
+// The pivot that keeps a crop of a bake where the whole bake was. The whole
+// one pivots on its centre, and Blit puts a source floor(size * pivot) pixels
+// before its anchor, so the crop's pivot must give floor(crop * pivot) ==
+// floor(full / 2) - first. Divided out, it can land just under that whole
+// number, so it is nudged up until it does not.
+float CropPivot(int32_t full, int32_t first, int32_t crop)
+{
+    const int32_t want = full / 2 - first;
+    float pivot = (0.5f * static_cast<float>(full) - static_cast<float>(first)) / static_cast<float>(crop);
+    while (static_cast<int32_t>(std::floor(static_cast<float>(crop) * pivot)) < want)
+    {
+        pivot = std::nextafter(pivot, 2.0f);
+    }
+    return pivot;
+}
+}  // namespace
+
+QuadBlit::Source TextComponent::CroppedSource(int32_t bakeWidth) const
+{
+    QuadBlit::Source source =
+        QuadBlit::MakeSource(m_CachedBuffer.Data() + (m_CropFirstRow * bakeWidth + m_CropFirstCol) * 3, m_CropWidth,
+                             m_CropHeight, QuadBlit::PixelLayout::RGB565A8(), false);
+    source.stride = bakeWidth * 3;
+    return source;
 }
 
 void TextComponent::SetText(const char* newText)
@@ -416,10 +445,9 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
 
     if (cacheValid)
     {
-        outSource = QuadBlit::MakeSource(m_CachedBuffer.Data() + m_CropFirstRow * widthPx * 3, widthPx, m_CropHeight,
-                                         QuadBlit::PixelLayout::RGB565A8(), false);
+        outSource = CroppedSource(widthPx);
         outSource.pixelsPerMeter = ppm;
-        outPivotX = 0.5f;
+        outPivotX = m_CropPivotX;
         outPivotY = m_CropPivotY;
         outTintR = 255;
         outTintG = 255;
@@ -487,9 +515,8 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
                 int mixR = (decorationColor.r * (10 - t) + color.r * t) / 10;
                 int mixG = (decorationColor.g * (10 - t) + color.g * t) / 10;
                 int mixB = (decorationColor.b * (10 - t) + color.b * t) / 10;
-                palRgb[i] = DekiPixel::ToMemory565(DekiPixel::PackRGB565(static_cast<uint8_t>(mixR),
-                                                                         static_cast<uint8_t>(mixG),
-                                                                         static_cast<uint8_t>(mixB)));
+                palRgb[i] = DekiPixel::ToMemory565(DekiPixel::PackRGB565(
+                    static_cast<uint8_t>(mixR), static_cast<uint8_t>(mixG), static_cast<uint8_t>(mixB)));
                 palA[i] = 255;
             }
         }
@@ -664,26 +691,35 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
     m_CachedFont = fontPtr;
     m_CachedPixelScale = pixelScale;
 
-    // Crop to the first and last rows that hold a pixel. Only rows a glyph
-    // wrote to can, so only those are scanned.
+    // Crop to the rows and columns that hold a pixel: a line of text in a
+    // wide box is mostly empty columns, which every blit would read. Only
+    // rows a glyph wrote to can hold one, so only those are scanned.
     int32_t firstRow = heightPx;
     int32_t lastRow = -1;
+    int32_t firstCol = widthPx;
+    int32_t lastCol = -1;
     const int32_t scanEnd = (std::min)(heightPx, touchedLastRow + 1);
     for (int32_t row = (std::max)(int32_t{ 0 }, touchedFirstRow); row < scanEnd; row++)
     {
         const uint8_t* rowPtr = m_CachedBuffer.Data() + row * widthPx * 3;
-        for (int32_t col = 0; col < widthPx; col++)
+        int32_t col = 0;
+        while (col < widthPx && rowPtr[col * 3 + 2] == 0)  // alpha byte
         {
-            if (rowPtr[col * 3 + 2] != 0)  // alpha byte
-            {
-                if (row < firstRow)
-                {
-                    firstRow = row;
-                }
-                lastRow = row;
-                break;
-            }
+            col++;
         }
+        if (col == widthPx)
+        {
+            continue;
+        }
+        int32_t last = widthPx - 1;
+        while (rowPtr[last * 3 + 2] == 0)
+        {
+            last--;
+        }
+        firstRow = (std::min)(firstRow, row);
+        lastRow = row;
+        firstCol = (std::min)(firstCol, col);
+        lastCol = (std::max)(lastCol, last);
     }
 
     if (lastRow < firstRow)
@@ -691,21 +727,23 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
         // Nothing drawn: use the whole buffer.
         firstRow = 0;
         lastRow = heightPx - 1;
+        firstCol = 0;
+        lastCol = widthPx - 1;
     }
 
     m_CropFirstRow = firstRow;
     m_CropHeight = lastRow - firstRow + 1;
+    m_CropFirstCol = firstCol;
+    m_CropWidth = lastCol - firstCol + 1;
 
-    // Move the pivot so the cropped rows stay where they were in the world.
-    // Pivot 0.5 is the centre of the full buffer, so pivotY must satisfy
-    // cropFirstRow + pivotY * cropHeight == 0.5 * heightPx.
-    m_CropPivotY = (0.5f * heightPx - static_cast<float>(m_CropFirstRow)) / static_cast<float>(m_CropHeight);
+    // Move the pivot so the crop stays where it was in the world.
+    m_CropPivotX = CropPivot(widthPx, m_CropFirstCol, m_CropWidth);
+    m_CropPivotY = CropPivot(heightPx, m_CropFirstRow, m_CropHeight);
 
     // RGB565A8. The component keeps the buffer; the caller does not own it.
-    outSource = QuadBlit::MakeSource(m_CachedBuffer.Data() + m_CropFirstRow * widthPx * 3, widthPx, m_CropHeight,
-                                     QuadBlit::PixelLayout::RGB565A8(), false);
+    outSource = CroppedSource(widthPx);
     outSource.pixelsPerMeter = ppm;
-    outPivotX = 0.5f;
+    outPivotX = m_CropPivotX;
     outPivotY = m_CropPivotY;
     // The text colour is baked in, so no tint.
     outTintR = 255;
