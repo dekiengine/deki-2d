@@ -8,7 +8,7 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
-## Unreleased
+## 0.20.0
 
 ### Added
 - Big-endian RGB565 (`DEKI_RGB565_BIG_ENDIAN`): a sprite's RGB565 and RGB565A8 pixels
@@ -17,6 +17,7 @@ alongside one that has them.
   reads a sprite's `data` bytes directly must use `DekiPixel::Load565`.
 
 ### Changed
+- `minEngine` 0.20.0: built against engine 0.20.0. A build of this package from before does not load and is rebuilt.
 - A sliced or tiled sprite's tint bake reads and writes each pixel with one
   16-bit access on the ESP32's Xtensa cores (`DekiPixel::LoadU16` and
   `StoreU16`). Needs the deki-rendering released with it.
