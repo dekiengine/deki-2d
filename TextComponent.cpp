@@ -8,6 +8,7 @@
 #include "deki-rendering/QuadBlit.h"
 #include <deki/profiling/Profiler.h>
 #include "Sprite.h"  // for reading chroma-key fields off the font atlas
+#include "TextCrop.h"
 #include <cmath>
 #include <cstring>
 #include <vector>
@@ -58,25 +59,6 @@ void TextComponent::InvalidateRenderCache()
 {
     m_CachedBuffer.Reset();
 }
-
-namespace
-{
-// The pivot that keeps a crop of a bake where the whole bake was. The whole
-// one pivots on its centre, and Blit puts a source floor(size * pivot) pixels
-// before its anchor, so the crop's pivot must give floor(crop * pivot) ==
-// floor(full / 2) - first. Divided out, it can land just under that whole
-// number, so it is nudged up until it does not.
-float CropPivot(int32_t full, int32_t first, int32_t crop)
-{
-    const int32_t want = full / 2 - first;
-    float pivot = (0.5f * static_cast<float>(full) - static_cast<float>(first)) / static_cast<float>(crop);
-    while (static_cast<int32_t>(std::floor(static_cast<float>(crop) * pivot)) < want)
-    {
-        pivot = std::nextafter(pivot, 2.0f);
-    }
-    return pivot;
-}
-}  // namespace
 
 QuadBlit::Source TextComponent::CroppedSource(int32_t bakeWidth) const
 {
@@ -745,6 +727,15 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
         lastRow = heightPx - 1;
         firstCol = 0;
         lastCol = widthPx - 1;
+    }
+    else
+    {
+        // Keep an empty column each side. A scaled blit rounds its edges
+        // apart from where it samples, and with the crop flush to the glyphs
+        // that rounding fell on them: the first column grew a pixel and the
+        // last lost one.
+        firstCol = (std::max)(int32_t{ 0 }, firstCol - 1);
+        lastCol = (std::min)(widthPx - 1, lastCol + 1);
     }
 
     m_CropFirstRow = firstRow;

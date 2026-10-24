@@ -8,6 +8,15 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
+## 0.20.1
+
+### Fixed
+- A short line of text at the start of a wide `TextComponent` hung the game:
+  finding where to draw its crop never finished. Left-aligned labels were the
+  usual case.
+- Text drawn scaled, as on a desktop window, lost a pixel at its right edge
+  and gained one at its left. It draws as it did in 0.19 again.
+
 ## 0.20.0
 
 ### Added
