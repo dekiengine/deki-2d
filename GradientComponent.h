@@ -211,7 +211,17 @@ public:
     /// pixel, so the pattern is laid out on the output grid instead, in cells
     /// `ditherArt` art pixels wide rounded to whole output pixels: a regular
     /// stipple rather than art pixels dropped unevenly.
-    void RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t outH, int32_t artW, int32_t artH, int32_t ditherArt);
+    ///
+    /// Returns false, with nothing drawn, when there is nothing to draw or no
+    /// room for its table of columns (one float per art column).
+    bool RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t outH, int32_t artW, int32_t artH, int32_t ditherArt);
+
+    /// Whether every art row of an artW x artH bake is one colour
+    /// (`sameAcross`) or every art column is (`sameDown`). Worked out from
+    /// the positions, not the angle, so it holds pixel for pixel; only an
+    /// undithered linear gradient can be either. RenderContent then bakes one
+    /// column or one row and lets QuadBlit stretch it.
+    void FindStraightAxes(int32_t artW, int32_t artH, bool& sameAcross, bool& sameDown);
 
     // Drawn through QuadBlit.
     // Culling extents in meters: the box the content is baked into.
@@ -257,11 +267,25 @@ private:
     // (with trig per pixel) only when something changed.
     Deki::Buffer<uint8_t> m_Baked;
     uint64_t m_BakeKey = 0;
-    // A bake size the device could not allocate. Retrying it every frame
-    // achieves nothing and floods the log, so it is attempted once and
-    // only reconsidered when the required size changes.
-    size_t m_BakeFailedSize = 0;
+    // The bake's size in pixels: the drawn size, or 1 across or down for a
+    // gradient that changes along one axis only (FindStraightAxes).
+    int32_t m_BakeWidth = 0;
+    int32_t m_BakeHeight = 0;
+    // A bake the device could not make. Retrying it every frame achieves
+    // nothing and floods the log, so it is attempted once and only
+    // reconsidered when an input changes.
+    bool m_BakeFailed = false;
+    uint64_t m_BakeFailedKey = 0;
     uint64_t ComputeBakeKey(int32_t widthPx, int32_t heightPx) const;
+
+    // Sets up what a bake reads: the stops from their properties, the angle's
+    // cos/sin and the linear projection's range.
+    void PrepareBake();
+    // A tile's size in art pixels, or the art's when the tile size is 0.
+    void TileSizes(int32_t artW, int32_t artH, int32_t& tileW, int32_t& tileH) const;
+    // Where art column or row `i` sits across the gradient, 0 to 1, tiles
+    // included (`full` art pixels in all, `tile` to a tile).
+    float NormAlong(int32_t i, int32_t full, int32_t tile, bool tiled) const;
 
     // What the bake turned out to be, checked on its pixels after each bake:
     // every row one colour (a vertical gradient), or every row the same (a
@@ -276,9 +300,15 @@ private:
     // Drops QuadBlit's scaled copies of the bake, before it changes or goes.
     void ForgetBake();
 
-    // Linear-gradient trig, computed once per bake instead of once per pixel.
+    // Linear-gradient trig, computed once per bake instead of once per pixel,
+    // and where the projection on the angle runs over the unit square: from
+    // m_LinearLow, m_LinearRange long. m_LinearInverse is 1 / m_LinearRange
+    // when that is exact (the range a power of two), else 0.
     float m_CosAngle = 1.0f;
     float m_SinAngle = 0.0f;
+    float m_LinearLow = 0.0f;
+    float m_LinearRange = 1.0f;
+    float m_LinearInverse = 1.0f;
 
     // Copies stops[] back into the stopN properties after a change from code,
     // so SyncStopsFromProperties(), which runs before every bake, does not

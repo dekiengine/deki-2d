@@ -1,6 +1,7 @@
 #include "BitmapFont.h"
 #include <deki/providers/Memory.h>
 #include "Sprite.h"
+#include "LoadYield.h"
 #include <deki/providers/FileSystem.h>
 #include <deki/LogSystem.h>
 #include <deki/Time.h>
@@ -876,11 +877,9 @@ struct FontLoaderReg
             "BitmapFont",
             [](const char* p) -> void*
             {
+                const uint32_t start = Deki::Time::GetTime();
                 auto* f = BitmapFont::Load(p);
-                if (f)
-                {
-                    Deki::Time::Delay(1);  // Yield so the watchdog on a device is fed
-                }
+                YieldDuringLoads(start);
                 return f;
             },
             [](void* a) { delete static_cast<BitmapFont*>(a); },
@@ -890,11 +889,9 @@ struct FontLoaderReg
             "Font",
             [](const char* p) -> void*
             {
+                const uint32_t start = Deki::Time::GetTime();
                 auto* f = BitmapFont::Load(p);
-                if (f)
-                {
-                    Deki::Time::Delay(1);
-                }
+                YieldDuringLoads(start);
                 return f;
             },
             [](void* a) { delete static_cast<BitmapFont*>(a); },

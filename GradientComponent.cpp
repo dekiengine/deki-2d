@@ -19,6 +19,10 @@ namespace Deki2D
 #define M_PI 3.14159265358979323846
 #endif
 
+// How far from 0 an angle's cos or sin may be and still count as 0: float
+// pi/2 and pi are off by under 1e-7.
+constexpr float kStraightEpsilon = 1e-6f;
+
 // Bayer matrices for ordered dithering
 static const uint8_t kBayer2x2[4] = { 0, 2, 3, 1 };
 
@@ -263,15 +267,14 @@ DEKI_FAST_ATTR float GradientComponent::CalculateGradientPosition(float normX, f
     {
         case GradientType::Linear:
         {
-            // cos/sin of the angle are computed once per bake in
-            // RenderToBuffer, not per pixel.
-            const float cos_a = m_CosAngle;
-            const float sin_a = m_SinAngle;
-            float projection = normX * cos_a + normY * sin_a;
-            // Over the unit square the projection runs from min_proj to max_proj
-            float min_proj = std::min(0.0f, cos_a) + std::min(0.0f, sin_a);
-            float max_proj = std::max(0.0f, cos_a) + std::max(0.0f, sin_a);
-            return std::clamp((projection - min_proj) / (max_proj - min_proj), 0.0f, 1.0f);
+            // The angle's cos/sin and the projection's range over the unit
+            // square are worked out once per bake in RenderToBuffer.
+            const float projection = normX * m_CosAngle + normY * m_SinAngle;
+            const float along = projection - m_LinearLow;
+            // A range that is a power of two (any gradient along an axis)
+            // scales exactly by its inverse; division is done in software on
+            // an ESP32 and was most of a bake.
+            return std::clamp(m_LinearInverse > 0.0f ? along * m_LinearInverse : along / m_LinearRange, 0.0f, 1.0f);
         }
 
         case GradientType::Radial:
@@ -436,40 +439,162 @@ void GradientComponent::RenderPixel(int32_t x, int32_t y, uint16_t color, uint8_
     buffer16[y * screenWidth + x] = color;
 }
 
-void GradientComponent::RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t outH, int32_t artW, int32_t artH,
+void GradientComponent::PrepareBake()
+{
+    // The inspector edits the stopN properties
+    SyncStopsFromProperties();
+    m_CosAngle = cosf(angle);
+    m_SinAngle = sinf(angle);
+    // Straight along an axis when the angle is a whole number of right
+    // angles: cos(pi/2) is -4.4e-8 in float, which tilted a vertical gradient
+    // by a hair, and where a row met a colour's edge one pixel of it turned.
+    if (std::fabs(m_CosAngle) < kStraightEpsilon)
+    {
+        m_CosAngle = 0.0f;
+        m_SinAngle = m_SinAngle < 0.0f ? -1.0f : 1.0f;
+    }
+    else if (std::fabs(m_SinAngle) < kStraightEpsilon)
+    {
+        m_SinAngle = 0.0f;
+        m_CosAngle = m_CosAngle < 0.0f ? -1.0f : 1.0f;
+    }
+    // Over the unit square a linear gradient's projection runs from
+    // m_LinearLow to m_LinearLow + m_LinearRange.
+    m_LinearLow = std::min(0.0f, m_CosAngle) + std::min(0.0f, m_SinAngle);
+    m_LinearRange = (std::max(0.0f, m_CosAngle) + std::max(0.0f, m_SinAngle)) - m_LinearLow;
+    int exponent = 0;
+    m_LinearInverse = std::frexp(m_LinearRange, &exponent) == 0.5f ? 1.0f / m_LinearRange : 0.0f;
+}
+
+void GradientComponent::TileSizes(int32_t artW, int32_t artH, int32_t& tileW, int32_t& tileH) const
+{
+    const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
+    const int32_t tileWPx = static_cast<int32_t>(tileWidth * ppm);
+    const int32_t tileHPx = static_cast<int32_t>(tileHeight * ppm);
+    tileW = tileWPx > 0 ? tileWPx : artW;
+    tileH = tileHPx > 0 ? tileHPx : artH;
+}
+
+float GradientComponent::NormAlong(int32_t i, int32_t full, int32_t tile, bool tiled) const
+{
+    if (tileMode == GradientTileMode::Mirror)
+    {
+        const int32_t t = i % (tile * 2);
+        return t < tile ? (float)t / tile : 1.0f - (float)(t - tile) / tile;
+    }
+    return tiled ? (float)(i % tile) / tile : (float)i / full;
+}
+
+void GradientComponent::FindStraightAxes(int32_t artW, int32_t artH, bool& sameAcross, bool& sameDown)
+{
+    sameAcross = false;
+    sameDown = false;
+    // A dither's pattern changes along both axes, and a radial or conical
+    // gradient's position does.
+    if (stopCount == 0 || ditherMode != GradientDitherMode::None || gradientType != GradientType::Linear || artW <= 0 ||
+        artH <= 0)
+    {
+        return;
+    }
+    PrepareBake();
+    int32_t tileW = 0;
+    int32_t tileH = 0;
+    TileSizes(artW, artH, tileW, tileH);
+    const bool mirror = tileMode == GradientTileMode::Mirror;
+    const bool tileAcross = tileMode == GradientTileMode::Horizontal || tileMode == GradientTileMode::Both;
+    const bool tileDown = tileMode == GradientTileMode::Vertical || tileMode == GradientTileMode::Both;
+    // The spans the position moves one way along (see RenderToBuffer): the
+    // whole width, or a tile, or half a mirrored one.
+    const int32_t spanX = (tileAcross || mirror) ? tileW : artW;
+    const int32_t spanY = (tileDown || mirror) ? tileH : artH;
+
+    // One colour along a line: the position only moves one way within a span,
+    // so every position on the line lies between the spans' ends. Between two
+    // stops each channel only moves one way with it too, so when the ends are
+    // the same colour and no stop lies inside their range, every pixel
+    // between is that colour. (Compared by colour, not position: cos(pi/2) is
+    // not 0 in float, so a vertical gradient's positions differ along a row
+    // by a hair that no pixel shows.)
+    auto pixelAt = [this](float position) -> uint16_t
+    {
+        uint8_t r, g, b;
+        InterpolateColor(position, &r, &g, &b);
+        return ConvertToRGB565(r, g, b);
+    };
+    auto sameAlong = [this, &pixelAt](int32_t count, int32_t span, auto&& at) -> bool
+    {
+        const float first = at(0);
+        const uint16_t colour = pixelAt(first);
+        float low = first;
+        float high = first;
+        for (int32_t start = 0; start < count; start += span)
+        {
+            const int32_t last = std::min(start + span, count) - 1;
+            for (const float p : { at(start), at(last) })
+            {
+                if (p != p || pixelAt(p) != colour)
+                {
+                    return false;
+                }
+                low = std::min(low, p);
+                high = std::max(high, p);
+            }
+        }
+        for (int i = 0; i < stopCount; i++)
+        {
+            if (stops[i].position > low && stops[i].position < high)
+            {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    sameAcross = true;
+    for (int32_t y = 0; y < artH && sameAcross; y++)
+    {
+        const float normY = NormAlong(y, artH, tileH, tileDown);
+        sameAcross = sameAlong(artW, spanX, [&](int32_t x)
+                               { return CalculateGradientPosition(NormAlong(x, artW, tileW, tileAcross), normY); });
+    }
+    sameDown = true;
+    for (int32_t x = 0; x < artW && sameDown; x++)
+    {
+        const float normX = NormAlong(x, artW, tileW, tileAcross);
+        sameDown = sameAlong(artH, spanY, [&](int32_t y)
+                             { return CalculateGradientPosition(normX, NormAlong(y, artH, tileH, tileDown)); });
+    }
+}
+
+bool GradientComponent::RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t outH, int32_t artW, int32_t artH,
                                        int32_t ditherArt)
 {
     if (!buffer || stopCount == 0)
     {
-        return;
+        return false;
     }
 
     // width/height are world meters; the layout runs on the art grid.
-    const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
     const int32_t widthPx = artW;
     const int32_t heightPx = artH;
     if (widthPx <= 0 || heightPx <= 0 || outW <= 0 || outH <= 0)
     {
-        return;
+        return false;
     }
     if (ditherArt < 1)
     {
         ditherArt = 1;
     }
 
-    // The inspector edits the stopN properties
-    SyncStopsFromProperties();
-    m_CosAngle = cosf(angle);
-    m_SinAngle = sinf(angle);
+    PrepareBake();
 
     uint16_t* buffer16 = reinterpret_cast<uint16_t*>(buffer);
     int32_t renderWidth = widthPx;
     int32_t renderHeight = heightPx;
 
-    int32_t tileWPx = static_cast<int32_t>(tileWidth * ppm);
-    int32_t tileHPx = static_cast<int32_t>(tileHeight * ppm);
-    int32_t actualTileWidth = tileWPx > 0 ? tileWPx : renderWidth;
-    int32_t actualTileHeight = tileHPx > 0 ? tileHPx : renderHeight;
+    int32_t actualTileWidth = 0;
+    int32_t actualTileHeight = 0;
+    TileSizes(renderWidth, renderHeight, actualTileWidth, actualTileHeight);
 
     // The Bayer pattern is laid out on the art grid, cells ditherArt art
     // pixels wide, unless the bake is smaller than the art: then it is on the
@@ -479,83 +604,183 @@ void GradientComponent::RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t ou
     const int32_t outCell =
         std::max<int32_t>(1, static_cast<int32_t>(std::lround(static_cast<double>(ditherArt) * outW / widthPx)));
 
-    for (int32_t oy = 0; oy < outH; oy++)
+    const bool tileAcross = tileMode == GradientTileMode::Horizontal || tileMode == GradientTileMode::Both;
+    const bool tileDown = tileMode == GradientTileMode::Vertical || tileMode == GradientTileMode::Both;
+
+    // Per art column: its place across (worked out once, not on every row),
+    // then the current art row's gradient position, and its pixel when the
+    // gradient is not dithered.
+    Deki::Buffer<uint8_t> table;
+    const size_t tableColumns = static_cast<size_t>(renderWidth);
+    if (!table.Allocate(tableColumns * (2 * sizeof(float) + sizeof(uint16_t)), Deki::Memory::External))
     {
-        // The art row this output row covers (the same row for every output
-        // row of a whole-number upscale).
-        const int32_t y = static_cast<int32_t>((static_cast<int64_t>(oy) * renderHeight) / outH);
-        const int32_t cellY = ditherOnArt ? y / ditherArt : oy / outCell;
-        for (int32_t ox = 0; ox < outW; ox++)
+        DEKI_LOG_WARNING("GradientComponent: no room for the %d columns of a bake; not drawing it", (int)renderWidth);
+        return false;
+    }
+    float* columns = reinterpret_cast<float*>(table.Data());
+    float* positions = columns + tableColumns;
+    uint16_t* artPixels = reinterpret_cast<uint16_t*>(positions + tableColumns);
+    for (int32_t x = 0; x < renderWidth; x++)
+    {
+        columns[x] = NormAlong(x, renderWidth, actualTileWidth, tileAcross);
+    }
+
+    // Along a row, a linear gradient's position only ever moves one way while
+    // the columns do: across the whole width, or one tile (half a mirrored
+    // one) at a time. Two columns at the same position then have every column
+    // between them at it too, so runs of one position are found by galloping
+    // out from their first column and filled, instead of worked out column by
+    // column. A gradient along an axis is a run or two a row.
+    const bool monotonic = gradientType == GradientType::Linear;
+    int32_t span = renderWidth;
+    if (tileAcross || tileMode == GradientTileMode::Mirror)
+    {
+        span = actualTileWidth;
+    }
+    const bool dithered = ditherMode != GradientDitherMode::None;
+
+    // Neighbouring pixels mostly land on the same colour, so the last one is
+    // kept. The bake used to work every pixel out from scratch, and a
+    // full-screen background took 0.7 s on an ESP32-S3, the first frame of
+    // every scene that has one.
+    bool haveLast = false;
+    float lastPos = 0.0f;
+    float lastThreshold = 0.0f;
+    uint16_t lastPixel = 0;
+    auto pixelAt = [&](float gradPos, float threshold) -> uint16_t
+    {
+        if (!haveLast || gradPos != lastPos || threshold != lastThreshold)
         {
-            const int32_t x = static_cast<int32_t>((static_cast<int64_t>(ox) * renderWidth) / outW);
-            float normX = 0.0f, normY = 0.0f;
-
-            switch (tileMode)
-            {
-                case GradientTileMode::None:
-                    normX = (float)x / renderWidth;
-                    normY = (float)y / renderHeight;
-                    break;
-
-                case GradientTileMode::Horizontal:
-                {
-                    int32_t tileX = x % actualTileWidth;
-                    normX = (float)tileX / actualTileWidth;
-                    normY = (float)y / renderHeight;
-                    break;
-                }
-
-                case GradientTileMode::Vertical:
-                {
-                    int32_t tileY = y % actualTileHeight;
-                    normX = (float)x / renderWidth;
-                    normY = (float)tileY / actualTileHeight;
-                    break;
-                }
-
-                case GradientTileMode::Both:
-                {
-                    int32_t tileX = x % actualTileWidth;
-                    int32_t tileY = y % actualTileHeight;
-                    normX = (float)tileX / actualTileWidth;
-                    normY = (float)tileY / actualTileHeight;
-                    break;
-                }
-
-                case GradientTileMode::Mirror:
-                {
-                    int32_t tileX = x % (actualTileWidth * 2);
-                    int32_t tileY = y % (actualTileHeight * 2);
-                    normX = tileX < actualTileWidth ? (float)tileX / actualTileWidth
-                                                    : 1.0f - (float)(tileX - actualTileWidth) / actualTileWidth;
-                    normY = tileY < actualTileHeight ? (float)tileY / actualTileHeight
-                                                     : 1.0f - (float)(tileY - actualTileHeight) / actualTileHeight;
-                    break;
-                }
-            }
-
-            float gradPos = CalculateGradientPosition(normX, normY);
-
             uint8_t r, g, b;
-            if (ditherMode == GradientDitherMode::None)
+            if (!dithered)
             {
                 // No dither: blend smoothly between stops
                 InterpolateColor(gradPos, &r, &g, &b);
             }
             else
             {
-                // Stipple dither: pick one of the two stops around the position
-                // by a Bayer threshold, read on the art grid like the colour
-                // (see RenderToBuffer in the header): zooming magnifies the
-                // device's pattern instead of laying out a new one.
-                const int32_t cellX = ditherOnArt ? x / ditherArt : ox / outCell;
-                float threshold = SampleBayerThreshold(cellX, cellY);
                 PickStopByThreshold(gradPos, threshold, &r, &g, &b);
             }
+            lastPixel = DekiPixel::ToMemory565(ConvertToRGB565(r, g, b));
+            lastPos = gradPos;
+            lastThreshold = threshold;
+            haveLast = true;
+        }
+        return lastPixel;
+    };
 
-            buffer16[oy * outW + ox] = DekiPixel::ToMemory565(ConvertToRGB565(r, g, b));
+    // Art columns first to last at one position. Undithered, that is one
+    // pixel for all of them.
+    auto fill = [&](int32_t first, int32_t last, float gradPos)
+    {
+        if (dithered)
+        {
+            std::fill(positions + first, positions + last + 1, gradPos);
+        }
+        else
+        {
+            std::fill(artPixels + first, artPixels + last + 1, pixelAt(gradPos, 0.0f));
+        }
+    };
+
+    for (int32_t oy = 0; oy < outH; oy++)
+    {
+        // The art row this output row covers (the same row for every output
+        // row of a whole-number upscale).
+        const int32_t y = static_cast<int32_t>((static_cast<int64_t>(oy) * renderHeight) / outH);
+        const int32_t cellY = ditherOnArt ? y / ditherArt : oy / outCell;
+        uint16_t* row = buffer16 + static_cast<size_t>(oy) * outW;
+
+        // An output row on the same art row as the one above has its columns.
+        if (oy == 0 || y != static_cast<int32_t>((static_cast<int64_t>(oy - 1) * renderHeight) / outH))
+        {
+            const float normY = NormAlong(y, renderHeight, actualTileHeight, tileDown);
+            if (!monotonic)
+            {
+                for (int32_t x = 0; x < renderWidth; x++)
+                {
+                    fill(x, x, CalculateGradientPosition(columns[x], normY));
+                }
+            }
+            for (int32_t start = 0; monotonic && start < renderWidth; start += span)
+            {
+                const int32_t end = std::min(start + span, renderWidth);
+                int32_t x = start;
+                float at = CalculateGradientPosition(columns[x], normY);
+                while (x < end)
+                {
+                    // The run reaches `last` and stops before `beyond`, where
+                    // the position is `beyondAt` (unless `beyond` is the end).
+                    int32_t last = x;
+                    int32_t beyond = end;
+                    float beyondAt = 0.0f;
+                    for (int32_t step = 1; last + step < end; step *= 2)
+                    {
+                        const float p = CalculateGradientPosition(columns[last + step], normY);
+                        if (p != at)
+                        {
+                            beyond = last + step;
+                            beyondAt = p;
+                            break;
+                        }
+                        last += step;
+                    }
+                    while (beyond - last > 1)
+                    {
+                        const int32_t mid = last + (beyond - last) / 2;
+                        const float p = CalculateGradientPosition(columns[mid], normY);
+                        if (p == at)
+                        {
+                            last = mid;
+                        }
+                        else
+                        {
+                            beyond = mid;
+                            beyondAt = p;
+                        }
+                    }
+                    fill(x, last, at);
+                    x = beyond;
+                    at = beyondAt;
+                }
+            }
+        }
+
+        if (!dithered && outW == renderWidth)
+        {
+            std::memcpy(row, artPixels, static_cast<size_t>(outW) * sizeof(uint16_t));
+            continue;
+        }
+
+        // The art column under output column ox is ox * renderWidth / outW,
+        // stepped along with its remainder instead of divided out per pixel.
+        int32_t x = 0;
+        int32_t xRemainder = 0;
+        for (int32_t ox = 0; ox < outW; ox++)
+        {
+            if (dithered)
+            {
+                // Stipple dither picks one of the two stops around the
+                // position by a Bayer threshold, read on the art grid like the
+                // colour (see RenderToBuffer in the header): zooming magnifies
+                // the device's pattern instead of laying out a new one.
+                const int32_t cellX = ditherOnArt ? x / ditherArt : ox / outCell;
+                row[ox] = pixelAt(positions[x], SampleBayerThreshold(cellX, cellY));
+            }
+            else
+            {
+                row[ox] = artPixels[x];
+            }
+
+            xRemainder += renderWidth;
+            if (xRemainder >= outW)
+            {
+                x += xRemainder / outW;
+                xRemainder %= outW;
+            }
         }
     }
+    return true;
 }
 
 void GradientComponent::CheckBakeUniformity(int32_t widthPx, int32_t heightPx)
@@ -583,7 +808,8 @@ void GradientComponent::CheckBakeUniformity(int32_t widthPx, int32_t heightPx)
     {
         m_UniformColumns = std::memcmp(px + static_cast<size_t>(y) * w, px, w * sizeof(uint16_t)) == 0;
     }
-    if (m_UniformRows && m_RowColors.Allocate(static_cast<size_t>(heightPx), Deki::Memory::Internal))
+    // A one-column bake is its own row colours.
+    if (m_UniformRows && widthPx > 1 && m_RowColors.Allocate(static_cast<size_t>(heightPx), Deki::Memory::Internal))
     {
         for (int32_t y = 0; y < heightPx; ++y)
         {
@@ -669,46 +895,67 @@ bool GradientComponent::RenderContent(const Deki::Object* owner, QuadBlit::Sourc
     key = (key ^ static_cast<uint64_t>(artW)) * 1099511628211ull;
     key = (key ^ static_cast<uint64_t>(artH)) * 1099511628211ull;
     key = (key ^ static_cast<uint64_t>(ditherArt)) * 1099511628211ull;
-    const size_t need = static_cast<size_t>(widthPx) * static_cast<size_t>(heightPx) * 2;  // RGB565
-    // A size already refused is not attempted again.
-    if (m_BakeFailedSize == need)
+    // A bake already refused is not attempted again until an input changes.
+    if (m_BakeFailed && m_BakeFailedKey == key)
     {
         return false;
     }
 
-    if (!m_Baked || m_Baked.Bytes() != need || m_BakeKey != key)
+    if (!m_Baked || m_BakeKey != key)
     {
         ForgetBake();
+        // A gradient that changes along one axis only is baked as one column
+        // or one row, stretched over its rectangle as it is drawn: a
+        // full-screen background is a few hundred pixels instead of a
+        // screenful.
+        bool sameAcross = false;
+        bool sameDown = false;
+        FindStraightAxes(artW, artH, sameAcross, sameDown);
+        const int32_t bakeW = sameAcross ? 1 : widthPx;
+        const int32_t bakeH = sameDown ? 1 : heightPx;
+        const size_t need = static_cast<size_t>(bakeW) * static_cast<size_t>(bakeH) * 2;  // RGB565
         // Allocate() leaves an unchanged size alone, so the common path costs
-        // nothing. The bake is the object's size in pixels times two: 150 KB
-        // for a full-screen gradient at 320x240, more on a bigger panel, and a
+        // nothing. A full bake is the object's size in pixels times two: 150
+        // KB for a full-screen one at 320x240, more on a bigger panel, and a
         // device without PSRAM can simply refuse it.
         if (!m_Baked.Allocate(need, Deki::Memory::External))
         {
             DEKI_LOG_WARNING("GradientComponent: no room for a %dx%d bake (%u bytes); "
                              "not drawing it",
-                             (int)widthPx, (int)heightPx, (unsigned)need);
-            m_BakeFailedSize = need;
+                             (int)bakeW, (int)bakeH, (unsigned)need);
+            m_BakeFailed = true;
+            m_BakeFailedKey = key;
             return false;
         }
-        m_BakeFailedSize = 0;
 
-        RenderToBuffer(m_Baked.Data(), widthPx, heightPx, artW, artH, ditherArt);
-        CheckBakeUniformity(widthPx, heightPx);
+        if (!RenderToBuffer(m_Baked.Data(), bakeW, bakeH, artW, artH, ditherArt))
+        {
+            m_Baked.Reset();
+            m_BakeFailed = true;
+            m_BakeFailedKey = key;
+            return false;
+        }
+        m_BakeFailed = false;
+        m_BakeWidth = bakeW;
+        m_BakeHeight = bakeH;
+        CheckBakeUniformity(bakeW, bakeH);
         m_BakeKey = key;
     }
 
-    outSource = QuadBlit::MakeSource(m_Baked.Data(), widthPx, heightPx, QuadBlit::PixelLayout::RGB565(),
+    outSource = QuadBlit::MakeSource(m_Baked.Data(), m_BakeWidth, m_BakeHeight, QuadBlit::PixelLayout::RGB565(),
                                      false  // ownsPixels: the component owns its bake
     );
+    outSource.stretchWidth = m_BakeWidth != widthPx ? widthPx : 0;
+    outSource.stretchHeight = m_BakeHeight != heightPx ? heightPx : 0;
     outSource.uniformRows = m_UniformRows;
     outSource.uniformColumns = m_UniformColumns;
-    // Drawn bigger than its art (a camera closer than the art's density), it
-    // is magnified on every blit; QuadBlit keeps a copy at the drawn size
-    // instead. The bake stays as it is until ForgetBake.
-    outSource.cacheScaled = true;
+    // Drawn bigger than its art (a camera closer than the art's density), a
+    // full bake is magnified on every blit; QuadBlit keeps a copy at the drawn
+    // size instead. The bake stays as it is until ForgetBake. A strip is
+    // filled as it is drawn and needs none.
+    outSource.cacheScaled = outSource.stretchWidth == 0 && outSource.stretchHeight == 0;
     outSource.rowColors = m_UniformRows && m_RowColors ? m_RowColors.Data() : nullptr;
-    // The bake's own density: the renderer then scales it by the object's
+    // The full bake's density: the renderer then scales it by the object's
     // scale alone, 1:1 for an unscaled object.
     outSource.pixelsPerMeter = static_cast<float>(widthPx) / width;
 

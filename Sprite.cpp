@@ -1,5 +1,6 @@
 #include "Sprite.h"
 #include "SpriteRowSpans.h"
+#include "LoadYield.h"
 #include "PixelFormat.h"
 #include "QuadBlit.h"  // ForgetScaled
 #include <deki/assets/Texture2D.h>
@@ -1087,11 +1088,9 @@ struct SpriteLoaderReg
             "Sprite",
             [](const char* p) -> void*
             {
+                const uint32_t start = Deki::Time::GetTime();
                 auto* s = Sprite::Load(p);
-                if (s)
-                {
-                    Deki::Time::Delay(1);  // yields, so the watchdog on a device does not fire
-                }
+                YieldDuringLoads(start);
                 return s;
             },
             [](void* a) { delete static_cast<Sprite*>(a); },
@@ -1101,11 +1100,9 @@ struct SpriteLoaderReg
             "Texture",
             [](const char* p) -> void*
             {
+                const uint32_t start = Deki::Time::GetTime();
                 auto* s = Sprite::Load(p);
-                if (s)
-                {
-                    Deki::Time::Delay(1);
-                }
+                YieldDuringLoads(start);
                 return s;
             },
             [](void* a) { delete static_cast<Sprite*>(a); },

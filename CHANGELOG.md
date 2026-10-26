@@ -8,6 +8,25 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
+## Unreleased
+
+### Changed
+- Sprites and fonts loaded one after another give the device's other tasks a
+  turn after every 50 ms of loading, not after every load: a few milliseconds
+  off opening a scene with many sprites.
+- **Scenes open faster.** A `GradientComponent` worked out every pixel of its
+  bake from scratch on the first frame of every scene: a full-screen
+  background took 0.7 s on an ESP32-S3. The bake now fills runs of one colour,
+  and a gradient that changes along one axis only (straight down or across,
+  undithered) is baked as one column or one row that QuadBlit stretches: a few
+  hundred bytes instead of a screenful, and well under a millisecond. Needs
+  deki-rendering with `Source::stretchWidth`.
+
+### Fixed
+- A gradient at a whole number of right angles is exactly straight. `cos(pi/2)`
+  is not 0 in float, which tilted it by a hair, and where a row met a colour's
+  edge one pixel of it turned.
+
 ## 0.20.1
 
 ### Fixed
