@@ -103,6 +103,13 @@ public:
     /// of staying in the old texture's pixels.
     void SetFrame(const SpriteFrame& frame);
 
+    /// Changes whenever the resized or tinted bake is filled again in place.
+    bool GetContentVersion(uint32_t& outVersion) const override
+    {
+        outVersion = m_BakeVersion;
+        return true;
+    }
+
     // Hands QuadBlit the sprite's pixels.
     bool RenderContent(const Deki::Object* owner, QuadBlit::Source& outSource, float& outPivotX, float& outPivotY,
                        uint8_t& outTintR, uint8_t& outTintG, uint8_t& outTintB, uint8_t& outTintA) override;
@@ -126,6 +133,7 @@ private:
     // Animation frames need no buffer: they point QuadBlit at the sub-rect of
     // the sprite's own pixels via Source::stride.
     Deki::Buffer<uint8_t> m_CachedRenderBuffer;
+    uint32_t m_BakeVersion = 0;  // GetContentVersion: one more each bake
     int32_t m_CachedRenderW = 0;
     int32_t m_CachedRenderH = 0;
     // The frame SetFrame showed, by GUID ("" after SetFrameRect), and the

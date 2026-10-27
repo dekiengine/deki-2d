@@ -86,6 +86,66 @@ void PixelsToMemoryOrder(const Deki::Texture2D::Header& header, uint8_t* pixels)
     }
     DekiPixel::FileToMemory565(pixels, static_cast<size_t>(count), bpp);
 }
+
+// The runs QuadBlit uses to draw an RGB565A8 sprite with soft edges at its own
+// size: each row's opaque run, copied straight; its transparent run, skipped
+// unread; its run of one colour, filled without reading the pixels (a tinted
+// or faded icon's flat middle). They sit with the pixels, in external RAM: a
+// few bytes a row, read once per row drawn, and a scene of sprites must not
+// spend the internal RAM FreeRTOS and DMA buffers cannot do without (it ran
+// out loading the demo's meadow and aborted). Any that do not fit are left
+// out, and the blit goes pixel by pixel there instead.
+void BuildRowRuns(Sprite& sprite)
+{
+    const int32_t w = sprite.width;
+    const int32_t h = sprite.height;
+    sprite.alphaRowSpans.Allocate(static_cast<size_t>(h) * 2, Deki::Memory::External);
+    if (sprite.alphaRowSpans)
+    {
+        BuildOpaqueRowSpans(sprite.data, w, h, sprite.alphaRowSpans.Data());
+    }
+    else
+    {
+        DEKI_LOG_WARNING("Sprite: no room for %d alpha spans; the slower "
+                         "per-pixel path will be used",
+                         h * 2);
+    }
+    if (sprite.clearRowSpans.Allocate(static_cast<size_t>(h) * 2, Deki::Memory::External))
+    {
+        BuildClearRowSpans(sprite.data, w, h, w * 3, sprite.clearRowSpans.Data());
+    }
+    if (sprite.uniformRuns.Allocate(static_cast<size_t>(h), Deki::Memory::External))
+    {
+        QuadBlit::FindUniformRuns(sprite.data, w, h, w * 3, sprite.uniformRuns.Data());
+    }
+}
+
+// A loaded RGB565A8 sprite made ready to draw: alpha that is opaque
+// everywhere dropped, so its rows are copied rather than blended, and the row
+// runs of the rest found.
+void FinishPixels(Sprite& sprite, uint32_t headerFlags)
+{
+    if (!sprite.hasAlpha || sprite.format != Deki::Texture2D::TextureFormat::RGB565A8)
+    {
+        return;
+    }
+    // The exporter may have checked already.
+    if (headerFlags & DTEX_FLAG_ALL_OPAQUE)
+    {
+        sprite.hasAlpha = false;
+        return;
+    }
+    const size_t count = static_cast<size_t>(sprite.width) * static_cast<size_t>(sprite.height);
+    for (size_t i = 0; i < count; i++)
+    {
+        if (sprite.data[i * 3 + 2] != 255)
+        {
+            BuildRowRuns(sprite);
+            return;
+        }
+    }
+    sprite.hasAlpha = false;
+}
 }  // namespace
 
 const SpriteFrame* Sprite::FindFrame(const std::string& guid) const
@@ -112,6 +172,8 @@ void Sprite::SetDefaultSpriteProperties()
     transparentB = 255;
     hasChromaKey = false;
     chromaRowSpans.Reset();
+    clearRowSpans.Reset();
+    uniformRuns.Reset();
 
     hasNineSlice = false;
     nineSliceLeft = 0;
@@ -421,55 +483,7 @@ Sprite* Sprite::Load(const char* filePath)
     sprite->allocatedWithBackend = true;  // Allocated with Deki::Memory in play mode
 #endif
 
-    // An RGB565A8 sprite whose pixels are all opaque drops hasAlpha, so
-    // QuadBlit copies rows with memcpy instead of blending each pixel.
-    if (sprite->hasAlpha && sprite->format == Deki::Texture2D::TextureFormat::RGB565A8)
-    {
-        // The exporter may have checked already.
-        if (header.flags & DTEX_FLAG_ALL_OPAQUE)
-        {
-            sprite->hasAlpha = false;
-        }
-        else
-        {
-            bool allOpaque = true;
-            int32_t w = sprite->width;
-            int32_t h = sprite->height;
-
-            for (int32_t i = 0; i < w * h; i++)
-            {
-                if (pixelData[i * 3 + 2] != 255)
-                {
-                    allOpaque = false;
-                    break;
-                }
-            }
-
-            if (allOpaque)
-            {
-                sprite->hasAlpha = false;
-            }
-            else
-            {
-                // Opaque spans per row let the blitter copy those runs straight.
-                // They sit with the pixels, in external RAM: four bytes a row,
-                // read once per row drawn, and a scene of sprites must not
-                // spend the internal RAM FreeRTOS and DMA buffers cannot do
-                // without (it ran out loading the demo's meadow and aborted).
-                sprite->alphaRowSpans.Allocate(static_cast<size_t>(h) * 2, Deki::Memory::External);
-                if (sprite->alphaRowSpans)
-                {
-                    BuildOpaqueRowSpans(pixelData, w, h, sprite->alphaRowSpans.Data());
-                }
-                else
-                {
-                    DEKI_LOG_WARNING("Sprite: no room for %d alpha spans; the slower "
-                                     "per-pixel path will be used",
-                                     h * 2);
-                }
-            }
-        }
-    }
+    FinishPixels(*sprite, header.flags);
 
     DEKI_LOG_INTERNAL("Loaded sprite: %s (%dx%d, %s, pivot: %.2f,%.2f)", filePath, sprite->width, sprite->height,
                       Deki::Texture2D::GetFormatName(sprite->format), sprite->pivotX, sprite->pivotY);
@@ -639,48 +653,7 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
     sprite->allocatedWithBackend = true;
 #endif
 
-    // Alpha scan, as in Load.
-    if (sprite->hasAlpha && sprite->format == Deki::Texture2D::TextureFormat::RGB565A8)
-    {
-        if (header.flags & DTEX_FLAG_ALL_OPAQUE)
-        {
-            sprite->hasAlpha = false;
-        }
-        else
-        {
-            bool allOpaque = true;
-            int32_t w = sprite->width;
-            int32_t h = sprite->height;
-
-            for (int32_t i = 0; i < w * h; i++)
-            {
-                if (pixelData[i * 3 + 2] != 255)
-                {
-                    allOpaque = false;
-                    break;
-                }
-            }
-
-            if (allOpaque)
-            {
-                sprite->hasAlpha = false;
-            }
-            else
-            {
-                sprite->alphaRowSpans.Allocate(static_cast<size_t>(h) * 2, Deki::Memory::External);
-                if (sprite->alphaRowSpans)
-                {
-                    BuildOpaqueRowSpans(pixelData, w, h, sprite->alphaRowSpans.Data());
-                }
-                else
-                {
-                    DEKI_LOG_WARNING("Sprite: no room for %d alpha spans; the slower "
-                                     "per-pixel path will be used",
-                                     h * 2);
-                }
-            }
-        }
-    }
+    FinishPixels(*sprite, header.flags);
 
     return sprite;
 }

@@ -11,6 +11,14 @@ alongside one that has them.
 ## Unreleased
 
 ### Changed
+- **Plain sprites fill their solid middles.** A sprite with soft edges drawn
+  at its own size gets each row's transparent run and its run of one colour
+  at load (`Sprite::clearRowSpans`, `uniformRuns`), as resized and 9-slice
+  sprites had: the first is skipped unread, the second filled.
+- Sprites, text and gradients say when their pixels change in place
+  (`GetContentVersion`), for deki-rendering's redraw-only-what-changed.
+- A gradient's check for a new bake costs a third less: its settings are
+  fingerprinted a word at a time.
 - Sprites and fonts loaded one after another give the device's other tasks a
   turn after every 50 ms of loading, not after every load: a few milliseconds
   off opening a scene with many sprites.

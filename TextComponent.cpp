@@ -461,6 +461,7 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
         return false;
     }
     memset(m_CachedBuffer.Data(), 0, bufferSize);  // Clear to transparent
+    ++m_BakeVersion;
 
     std::vector<GlyphLayout> glyphLayouts;
     CalculateGlyphLayout(fontPtr, glyphLayouts);

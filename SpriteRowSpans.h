@@ -59,4 +59,37 @@ inline void BuildOpaqueRowSpans(const uint8_t* pixelData, int32_t w, int32_t h, 
     BuildOpaqueRowSpans(pixelData, w, h, w * 3, spans);
 }
 
+// Per-row clear spans for RGB565A8 pixels (QuadBlit::Source::clearRowSpans):
+// [start, end) of the longest run of fully transparent pixels in each row,
+// which a 1:1 blit skips without reading. A row with none gets [0, 0).
+// Arguments as for BuildOpaqueRowSpans.
+inline void BuildClearRowSpans(const uint8_t* pixelData, int32_t w, int32_t h, int32_t stride, int16_t* spans)
+{
+    for (int32_t y = 0; y < h; y++)
+    {
+        const uint8_t* row = pixelData + y * stride;
+        int32_t bestStart = 0, bestEnd = 0;
+        for (int32_t x = 0; x < w;)
+        {
+            if (row[x * 3 + 2] != 0)
+            {
+                x++;
+                continue;
+            }
+            const int32_t start = x;
+            while (x < w && row[x * 3 + 2] == 0)
+            {
+                x++;
+            }
+            if (x - start > bestEnd - bestStart)
+            {
+                bestStart = start;
+                bestEnd = x;
+            }
+        }
+        spans[y * 2] = static_cast<int16_t>(bestStart);
+        spans[y * 2 + 1] = static_cast<int16_t>(bestEnd);
+    }
+}
+
 }  // namespace Deki2D

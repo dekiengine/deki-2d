@@ -236,6 +236,13 @@ public:
         return true;
     }
 
+    /// Changes whenever the bake is filled again in place.
+    bool GetContentVersion(uint32_t& outVersion) const override
+    {
+        outVersion = m_BakeVersion;
+        return true;
+    }
+
     bool RenderContent(const Deki::Object* owner, QuadBlit::Source& outSource, float& outPivotX, float& outPivotY,
                        uint8_t& outTintR, uint8_t& outTintG, uint8_t& outTintB, uint8_t& outTintA) override;
 
@@ -266,6 +273,7 @@ private:
     // QuadBlit. Keyed by a hash of every input, so the gradient is rasterised
     // (with trig per pixel) only when something changed.
     Deki::Buffer<uint8_t> m_Baked;
+    uint32_t m_BakeVersion = 0;  // GetContentVersion: one more each bake
     uint64_t m_BakeKey = 0;
     // The bake's size in pixels: the drawn size, or 1 across or down for a
     // gradient that changes along one axis only (FindStraightAxes).

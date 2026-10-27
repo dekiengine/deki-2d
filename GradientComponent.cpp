@@ -5,6 +5,7 @@
 #include <deki/Engine.h>
 #include <deki/LogSystem.h>
 #include "deki-rendering/CameraComponent.h"
+#include "deki-rendering/Fingerprint.h"
 #include "deki-rendering/QuadBlit.h"
 // In every build: the bake is allocated through Deki::Memory, so the editor
 // takes the same failure path as the device.
@@ -121,44 +122,27 @@ void GradientComponent::WriteStopsToProperties()
 
 uint64_t GradientComponent::ComputeBakeKey(int32_t widthPx, int32_t heightPx) const
 {
-    // FNV-1a over a byte snapshot of everything RenderToBuffer reads.
-    uint64_t h = 1469598103934665603ull;
-    auto mix = [&h](const void* data, size_t size)
-    {
-        const uint8_t* p = static_cast<const uint8_t*>(data);
-        for (size_t i = 0; i < size; ++i)
-        {
-            h = (h ^ p[i]) * 1099511628211ull;
-        }
-    };
-    auto mixf = [&mix](float f)
-    {
-        uint32_t bits;
-        std::memcpy(&bits, &f, sizeof(bits));
-        mix(&bits, sizeof(bits));
-    };
-    const uint8_t type = static_cast<uint8_t>(gradientType);
-    const uint8_t tile = static_cast<uint8_t>(tileMode);
-    const uint8_t dither = static_cast<uint8_t>(ditherMode);
-    mix(&type, 1);
-    mix(&tile, 1);
-    mix(&dither, 1);
-    mix(&ditherScale, 1);
-    mix(&widthPx, sizeof(widthPx));
-    mix(&heightPx, sizeof(heightPx));
-    mixf(angle);
-    mixf(centerX);
-    mixf(centerY);
-    mixf(radius);
-    mixf(tileWidth);
-    mixf(tileHeight);
-    mix(&stopCount, 1);
+    // Everything RenderToBuffer reads, a word at a time.
+    DekiRendering::Fingerprint f;
+    f.Add(static_cast<uint32_t>(gradientType) | (static_cast<uint32_t>(tileMode) << 8) |
+          (static_cast<uint32_t>(ditherMode) << 16) | (static_cast<uint32_t>(ditherScale) << 24));
+    f.Add(widthPx);
+    f.Add(heightPx);
+    f.Add(angle);
+    f.Add(centerX);
+    f.Add(centerY);
+    f.Add(radius);
+    f.Add(tileWidth);
+    f.Add(tileHeight);
+    f.Add(static_cast<uint32_t>(stopCount));
     for (int i = 0; i < stopCount && i < kMaxStops; ++i)
     {
-        mixf(stops[i].position);
-        mix(&stops[i].color, sizeof(stops[i].color));
+        const Deki::Color& c = stops[i].color;
+        f.Add(stops[i].position);
+        f.Add(static_cast<uint32_t>(c.r) | (static_cast<uint32_t>(c.g) << 8) | (static_cast<uint32_t>(c.b) << 16) |
+              (static_cast<uint32_t>(c.a) << 24));
     }
-    return h;
+    return f.Value();
 }
 
 void GradientComponent::SetGradientType(GradientType type)
@@ -940,6 +924,7 @@ bool GradientComponent::RenderContent(const Deki::Object* owner, QuadBlit::Sourc
         m_BakeHeight = bakeH;
         CheckBakeUniformity(bakeW, bakeH);
         m_BakeKey = key;
+        ++m_BakeVersion;
     }
 
     outSource = QuadBlit::MakeSource(m_Baked.Data(), m_BakeWidth, m_BakeHeight, QuadBlit::PixelLayout::RGB565(),

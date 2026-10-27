@@ -1,4 +1,5 @@
 #include "SpriteComponent.h"
+#include "SpriteRowSpans.h"
 #include <deki/providers/Memory.h>
 #include "PixelFormat.h"
 #include <deki/Object.h>
@@ -65,37 +66,6 @@ void FindOpaqueRuns(const uint8_t* data, int32_t width, int32_t height, int16_t*
         }
         spans[y * 2] = static_cast<int16_t>(start);
         spans[y * 2 + 1] = static_cast<int16_t>(end);
-    }
-}
-
-// Each row's longest run of fully transparent pixels in an RGB565A8 bake, as
-// QuadBlit's clearRowSpans. A row with none gets [0, 0).
-void FindClearRuns(const uint8_t* data, int32_t width, int32_t height, int16_t* spans)
-{
-    for (int32_t y = 0; y < height; y++)
-    {
-        const uint8_t* row = data + static_cast<size_t>(y) * width * 3;
-        int32_t bestStart = 0, bestEnd = 0;
-        for (int32_t x = 0; x < width;)
-        {
-            if (row[x * 3 + 2] != 0)
-            {
-                x++;
-                continue;
-            }
-            const int32_t start = x;
-            while (x < width && row[x * 3 + 2] == 0)
-            {
-                x++;
-            }
-            if (x - start > bestEnd - bestStart)
-            {
-                bestStart = start;
-                bestEnd = x;
-            }
-        }
-        spans[y * 2] = static_cast<int16_t>(bestStart);
-        spans[y * 2 + 1] = static_cast<int16_t>(bestEnd);
     }
 }
 
@@ -469,7 +439,8 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
             }
             if (spans && m_CachedClearSpans.Allocate((size_t)targetH * 2, Deki::Memory::External))
             {
-                FindClearRuns(m_CachedRenderBuffer.Data(), targetW, targetH, m_CachedClearSpans.Data());
+                BuildClearRowSpans(m_CachedRenderBuffer.Data(), targetW, targetH, targetW * 3,
+                                   m_CachedClearSpans.Data());
             }
             else
             {
@@ -486,6 +457,7 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
             }
 
             m_CachedRenderTint = bakeTint;
+            ++m_BakeVersion;
             m_CachedRenderRegion = region;
             m_CachedRenderSrc = spr;
             m_CachedRenderW = targetW;
@@ -528,7 +500,9 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
                                          QuadBlit::PixelLayout::FromTexture(spr->format, spr->hasAlpha),
                                          false,  // ownsPixels = false - sprite owns its data
                                          spr->alphaRowSpans.Data());
-        // Same rows as the sprite, so its spans apply.
+        // Same rows as the sprite, so its spans and runs apply.
+        outSource.clearRowSpans = spr->clearRowSpans.Data();
+        outSource.uniformRuns = spr->uniformRuns.Data();
         ApplyChromaKey(outSource, spr, /*attachRowSpans=*/true);
         outSource.pixelsPerMeter = spr->pixelsPerMeter;
         // The sprite's pixels stay as they are while it lives (~Sprite

@@ -150,6 +150,13 @@ public:
         return true;
     }
 
+    /// Changes whenever the bake of the text is filled again in place.
+    bool GetContentVersion(uint32_t& outVersion) const override
+    {
+        outVersion = m_BakeVersion;
+        return true;
+    }
+
     bool RenderContent(const Deki::Object* owner, QuadBlit::Source& outSource, float& outPivotX, float& outPivotY,
                        uint8_t& outTintR, uint8_t& outTintG, uint8_t& outTintB, uint8_t& outTintA) override;
 
@@ -223,6 +230,7 @@ private:
 
     // The baked text, RGB565A8. Owning, and it knows its own size.
     Deki::Buffer<uint8_t> m_CachedBuffer;
+    uint32_t m_BakeVersion = 0;  // GetContentVersion: one more each bake
     std::string m_CachedText;
     int32_t m_CachedWidth = 0;
     int32_t m_CachedHeight = 0;

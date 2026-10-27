@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <deki/assets/Texture2D.h>
+#include "deki-rendering/QuadBlit.h"  // UniformRun
 
 namespace Deki2D
 {
@@ -66,6 +67,13 @@ public:
     // let QuadBlit skip the per-pixel key compare. Same layout as
     // alphaRowSpans. Empty when there is no chroma key or the file has no spans.
     Deki::Buffer<int16_t> chromaRowSpans;  // owning; see Deki::Texture2D::alphaRowSpans
+
+    // An RGB565A8 sprite with soft edges: each row's run of transparent
+    // pixels and its run of one opaque colour (QuadBlit::Source::clearRowSpans
+    // and uniformRuns), made at load. Empty for other sprites, or when there
+    // was no room for them.
+    Deki::Buffer<int16_t> clearRowSpans;
+    Deki::Buffer<QuadBlit::UniformRun> uniformRuns;
 
     // 9-slice, for UI elements that scale.
     bool hasNineSlice;
