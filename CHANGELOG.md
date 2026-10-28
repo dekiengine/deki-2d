@@ -8,9 +8,11 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
-## Unreleased
+## 0.21.0
 
 ### Changed
+- `minEngine` 0.21.0: built against engine 0.21.0. A build of this package
+  from before does not load and is rebuilt.
 - **Plain sprites fill their solid middles.** A sprite with soft edges drawn
   at its own size gets each row's transparent run and its run of one colour
   at load (`Sprite::clearRowSpans`, `uniformRuns`), as resized and 9-slice
