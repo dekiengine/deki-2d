@@ -57,7 +57,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">deki-2d<span id="projectnumber">&#160;0.20.2</span>
+   <div id="projectname">deki-2d<span id="projectnumber">&#160;0.21.0</span>
    </div>
    <div id="projectbrief">Deki 包参考</div>
   </td>
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 <img src="deki-2d.png" alt=""/>
 </div>
     <p>2D 内容组件：精灵、文本（BitmapFont + TTF 烘焙）、动画、渐变、按钮、滚动、裁剪和滚轮选择器。</p>
-<p>仓库：<a href="https://github.com/dekiengine/deki-2d">github.com/dekiengine/deki-2d</a> · 最新版本：0.20.0 · 需要引擎 0.20.0 或更高版本 · 依赖：<a href="https://dekiengine.github.io/deki-rendering/zh/">deki-rendering</a>, <a href="https://dekiengine.github.io/deki-input/zh/">deki-input</a></p>
+<p>仓库：<a href="https://github.com/dekiengine/deki-2d">github.com/dekiengine/deki-2d</a> · 最新版本：0.21.0 · 需要引擎 0.21.0 或更高版本 · 依赖：<a href="https://dekiengine.github.io/deki-rendering/zh/">deki-rendering</a>, <a href="https://dekiengine.github.io/deki-input/zh/">deki-input</a></p>
 <p>使用 <span class="tt">DekiEditor --packages-add deki-2d &lt;project&gt;</span> 或通过包管理器安装。引擎自身的组件和 C++ API 见 <a href="https://dekiengine.github.io/docs/zh/">Deki 文档</a>。</p>
 <p>在编辑器中显示为 **2D**。</p>
 <h1 class="doxsection"><a class="anchor" id="components"></a>
@@ -454,43 +454,33 @@ TextComponent</h2>
 更新日志</h1>
 <p>更新日志为英文。</p>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md0"></a>
-0.20.0</h2>
+0.21.0</h2>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md1"></a>
-Added</h2>
+Changed</h2>
 <ul>
-<li>Big-endian RGB565 (<span class="tt">DEKI_RGB565_BIG_ENDIAN</span>): a sprite's RGB565 and RGB565A8 pixels are swapped into memory's byte order once, when it loads; so are the text cache's colours, gradients and solid sprites. On such a board, code that reads a sprite's <span class="tt">data</span> bytes directly must use <span class="tt">DekiPixel::Load565</span>.</li>
+<li><span class="tt">minEngine</span> 0.21.0: built against engine 0.21.0. A build of this package from before does not load and is rebuilt.</li>
+<li><b>Plain sprites fill their solid middles.</b> A sprite with soft edges drawn at its own size gets each row's transparent run and its run of one colour at load (<span class="tt">Sprite::clearRowSpans</span>, <span class="tt">uniformRuns</span>), as resized and 9-slice sprites had: the first is skipped unread, the second filled.</li>
+<li>Sprites, text and gradients say when their pixels change in place (<span class="tt">GetContentVersion</span>), for deki-rendering's redraw-only-what-changed.</li>
+<li>A gradient's check for a new bake costs a third less: its settings are fingerprinted a word at a time.</li>
+<li>Sprites and fonts loaded one after another give the device's other tasks a turn after every 50 ms of loading, not after every load: a few milliseconds off opening a scene with many sprites.</li>
+<li><b>Scenes open faster.</b> A <span class="tt">GradientComponent</span> worked out every pixel of its bake from scratch on the first frame of every scene: a full-screen background took 0.7 s on an ESP32-S3. The bake now fills runs of one colour, and a gradient that changes along one axis only (straight down or across, undithered) is baked as one column or one row that QuadBlit stretches: a few hundred bytes instead of a screenful, and well under a millisecond. Needs deki-rendering with <span class="tt">Source::stretchWidth</span>.</li>
 </ul>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
-Changed</h2>
-<ul>
-<li><span class="tt">minEngine</span> 0.20.0: built against engine 0.20.0. A build of this package from before does not load and is rebuilt.</li>
-<li>A sliced or tiled sprite's tint bake reads and writes each pixel with one 16-bit access on the ESP32's Xtensa cores (<span class="tt">DekiPixel::LoadU16</span> and <span class="tt">StoreU16</span>). Needs the deki-rendering released with it.</li>
-<li><span class="tt">Sprite::CreateSolid</span> and <span class="tt">CreateSolidRGBA</span> pack the colour like the rest of the engine (<span class="tt">PackRGB565</span>, the top bits), not by <span class="tt">* 31 / 255</span>, so a solid sprite compares equal to the same colour after a blend or a chroma key. Some colours change by one step of 565.</li>
-<li>A horizontal <span class="tt">ScrollComponent</span> moves its items with the finger, as a vertical one always has; it moved them the opposite way, and so did a flick's momentum. A project that set <span class="tt">reverseDrag</span> on a horizontal scroll to make up for it should clear it, or its list now moves against the finger.</li>
-</ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
 Fixed</h2>
 <ul>
-<li>A <span class="tt">ScrollComponent</span> jumped at the start of every swipe: the distance the finger moved before the drag was recognised (10-14 px on a T-Display S3 AMOLED) was applied in one frame. The list now follows the finger from the point the drag starts.</li>
-<li>In the editor, a sprite made by <span class="tt">CreateSolid</span>, <span class="tt">CreateSolidRGBA</span>, <span class="tt">CreateTiled</span> or <span class="tt">CreateNineSlice</span> freed its pixels with <span class="tt">free()</span>, though they came from <span class="tt">Deki::Memory</span>, and crashed when it was deleted.</li>
-<li>The T-Deck demo's meadow scene rebooted the board as it loaded: its sprites' row spans and its fonts' glyph tables went to internal RAM, used up the part ESP-IDF keeps for internal-only allocations, and the next FreeRTOS lock (a file's) could not be made, which aborts. Row spans (a sprite's, and a tiled or 9-slice bake's) and glyph tables now go to external RAM where the board has it, beside the pixels they describe. Frame times are unchanged; meadow runs at 62 fps with 22 KB of internal RAM to spare.</li>
+<li>A gradient at a whole number of right angles is exactly straight. <span class="tt">cos(pi/2)</span> is not 0 in float, which tilted it by a hair, and where a row met a colour's edge one pixel of it turned.</li>
 </ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
+0.20.1</h2>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
-0.19.0</h2>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
-Changed</h2>
+Fixed</h2>
 <ul>
-<li><span class="tt">minEngine</span> 0.19.0: built against engine 0.19.0, whose component metadata records the package each class is in. A build of this package from before does not load and is rebuilt.</li>
-</ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md6"></a>
-Added</h2>
-<ul>
-<li>Japanese, Simplified Chinese and Korean: <span class="tt">editor/lang/ja.json</span>, <span class="tt">zh.json</span> and <span class="tt">ko.json</span> translate the names, tooltips and enum values this package's components show in the Inspector.</li>
-<li>The package's editor text goes through the editor's translation (<span class="tt">Tr</span>), so it shows in the editor's language. Needs the editor release that adds <span class="tt">Localization.h</span>; raise <span class="tt">minEngine</span> to it when releasing.</li>
+<li>A short line of text at the start of a wide <span class="tt">TextComponent</span> hung the game: finding where to draw its crop never finished. Left-aligned labels were the usual case.</li>
+<li>Text drawn scaled, as on a desktop window, lost a pixel at its right edge and gained one at its left. It draws as it did in 0.19 again.</li>
 </ul>
 <p>更早的版本：<a href="https://github.com/dekiengine/deki-2d/blob/master/CHANGELOG.md">CHANGELOG.md</a></p>
 <hr  />
-<p>由包的反射数据生成（引擎 0.20.2）。属性名就是场景文件中使用的键。重命名后会保留别名（<a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">兼容性</a>）。 </p>
+<p>由包的反射数据生成（引擎 0.21.0）。属性名就是场景文件中使用的键。重命名后会保留别名（<a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">兼容性</a>）。 </p>
 </div></div><!-- PageDoc -->
 <a href="doxygen_crawl.html"></a>
 </div><!-- contents -->
