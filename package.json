@@ -93,6 +93,78 @@
       "componentTypes": [
         "SortingGroupComponent"
       ]
+    },
+    {
+      "id": "shape",
+      "displayName": "Shapes",
+      "buildDefine": "DEKI_FEATURE_SHAPE",
+      "defaultEnabled": true,
+      "componentTypes": [
+        "ShapeComponent"
+      ]
+    },
+    {
+      "id": "bar",
+      "displayName": "Bars",
+      "buildDefine": "DEKI_FEATURE_BAR",
+      "defaultEnabled": true,
+      "componentTypes": [
+        "BarComponent"
+      ]
+    },
+    {
+      "id": "slider",
+      "displayName": "Sliders",
+      "buildDefine": "DEKI_FEATURE_SLIDER",
+      "defaultEnabled": true,
+      "componentTypes": [
+        "SliderComponent"
+      ]
+    },
+    {
+      "id": "switch",
+      "displayName": "Switches",
+      "buildDefine": "DEKI_FEATURE_SWITCH",
+      "defaultEnabled": true,
+      "componentTypes": [
+        "SwitchComponent"
+      ]
+    },
+    {
+      "id": "checkbox",
+      "displayName": "Checkboxes",
+      "buildDefine": "DEKI_FEATURE_CHECKBOX",
+      "defaultEnabled": true,
+      "componentTypes": [
+        "CheckboxComponent"
+      ]
+    },
+    {
+      "id": "led",
+      "displayName": "LEDs",
+      "buildDefine": "DEKI_FEATURE_LED",
+      "defaultEnabled": true,
+      "componentTypes": [
+        "LedComponent"
+      ]
+    },
+    {
+      "id": "arc",
+      "displayName": "Arcs",
+      "buildDefine": "DEKI_FEATURE_ARC",
+      "defaultEnabled": true,
+      "componentTypes": [
+        "ArcComponent"
+      ]
+    },
+    {
+      "id": "spinner",
+      "displayName": "Spinners",
+      "buildDefine": "DEKI_FEATURE_SPINNER",
+      "defaultEnabled": true,
+      "componentTypes": [
+        "SpinnerComponent"
+      ]
     }
   ]
 }

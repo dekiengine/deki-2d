@@ -1,5 +1,7 @@
 #include "ButtonComponent.h"
 #include "deki-input/InputCollider.h"
+#include "deki-input/Keys.h"
+#include "WidgetParts.h"
 #include <deki/Object.h>
 #include <deki/LogSystem.h>
 
@@ -15,10 +17,13 @@ ButtonComponent::ButtonComponent()
 
 ButtonComponent::~ButtonComponent()
 {
+    FocusSystem::Unregister(this);
 }
 
 void ButtonComponent::Start()
 {
+    FocusSystem::Register(this);
+
     DekiInput::InputCollider* collider = inputCollider.Get();
     if (!collider)
     {
@@ -184,6 +189,58 @@ void ButtonComponent::CancelPress()
         SetState(ButtonState::Normal);
         InvokeCallbacks(onRelease);
     }
+}
+
+void ButtonComponent::Click()
+{
+    if (!isEnabled)
+    {
+        return;
+    }
+    const ButtonState rest = state == ButtonState::Hovered ? ButtonState::Hovered : ButtonState::Normal;
+    SetState(ButtonState::Pressed);
+    InvokeCallbacks(onPress);
+    InvokeCallbacks(onRelease);
+    SetState(rest);
+    InvokeCallbacks(onClick);
+}
+
+void ButtonComponent::GetFocusSize(float& w, float& h) const
+{
+    // The hit area is what the user sees as the button.
+    const DekiInput::InputCollider* collider = inputCollider.Get();
+    w = collider ? collider->width : 0.0f;
+    h = collider ? collider->height : 0.0f;
+}
+
+void ButtonComponent::OnFocusChanged(bool focused)
+{
+    // Focus looks like hover, so a style made for the mouse shows it too. A
+    // "Focus" child, when the button has one, shows as well.
+    WidgetParts::ShowFocus(GetOwner(), focused);
+    if (!isEnabled)
+    {
+        return;
+    }
+    if (focused && state == ButtonState::Normal)
+    {
+        SetState(ButtonState::Hovered);
+    }
+    else if (!focused && state == ButtonState::Hovered)
+    {
+        SetState(ButtonState::Normal);
+    }
+}
+
+bool ButtonComponent::OnFocusKey(uint32_t key, uint32_t character)
+{
+    (void)character;
+    if (key == DekiInput::Keys::Enter || key == DekiInput::Keys::Space)
+    {
+        Click();
+        return true;
+    }
+    return false;
 }
 
 void ButtonComponent::InvokeCallbacks(const std::vector<ButtonCallback>& callbacks)

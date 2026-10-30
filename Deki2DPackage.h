@@ -1,8 +1,8 @@
 #pragma once
 
 // The one header for the 2D package: sprites and textures, animation,
-// gradients, and UI components (buttons, scrolling, rollers). Its contents are
-// included only when DEKI_PACKAGE_2D is defined.
+// gradients, shapes, and UI widgets (buttons, scrolling, rollers, sliders and
+// the rest). Its contents are included only when DEKI_PACKAGE_2D is defined.
 
 #ifdef _WIN32
 #if defined(DEKI_2D_EXPORTS) || defined(DEKI_PLUGIN_EXPORTS)
@@ -26,6 +26,14 @@
 #define DEKI_FEATURE_BUTTON
 #define DEKI_FEATURE_SCROLL
 #define DEKI_FEATURE_ROLLER
+#define DEKI_FEATURE_SHAPE
+#define DEKI_FEATURE_BAR
+#define DEKI_FEATURE_SLIDER
+#define DEKI_FEATURE_SWITCH
+#define DEKI_FEATURE_CHECKBOX
+#define DEKI_FEATURE_LED
+#define DEKI_FEATURE_ARC
+#define DEKI_FEATURE_SPINNER
 #endif
 
 // Always included
@@ -61,6 +69,30 @@
 #endif
 #ifdef DEKI_FEATURE_TEXT
 #include "TextComponent.h"
+#endif
+#ifdef DEKI_FEATURE_SHAPE
+#include "ShapeComponent.h"
+#endif
+#ifdef DEKI_FEATURE_BAR
+#include "BarComponent.h"
+#endif
+#ifdef DEKI_FEATURE_SLIDER
+#include "SliderComponent.h"
+#endif
+#ifdef DEKI_FEATURE_SWITCH
+#include "SwitchComponent.h"
+#endif
+#ifdef DEKI_FEATURE_CHECKBOX
+#include "CheckboxComponent.h"
+#endif
+#ifdef DEKI_FEATURE_LED
+#include "LedComponent.h"
+#endif
+#ifdef DEKI_FEATURE_ARC
+#include "ArcComponent.h"
+#endif
+#ifdef DEKI_FEATURE_SPINNER
+#include "SpinnerComponent.h"
 #endif
 #endif  // !defined(DEKI_EDITOR) || !defined(DEKI_ENGINE_EXPORTS)
 

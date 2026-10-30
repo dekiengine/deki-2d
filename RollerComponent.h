@@ -10,6 +10,7 @@
 #include <deki/reflection/ObjectRef.h>
 #include <deki/Color.h>
 #include <deki/reflection/Property.h>
+#include "FocusSystem.h"
 
 namespace Deki
 {
@@ -44,9 +45,12 @@ using RollerCallback = std::function<void(int32_t index, const std::string& valu
 ///     roller->SetOnSelectionChanged([](int32_t index, const std::string& value) {
 ///         // Handle selection
 ///     });
+///
+/// With keyboard focus (FocusSystem), Up and Down move the selection; past
+/// either end of a list that does not wrap they move the focus on instead.
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Picker wheel: spins through a list of values with momentum and snaps to one.")
-class RollerComponent : public Deki::Component
+class RollerComponent : public Deki::Component, public IFocusable
 {
 public:
     // Update(float) below has a different signature, so it would hide the base Update().
@@ -188,6 +192,17 @@ public:
     // ========== Editor property change handling ==========
     /// Updates the child TextComponents when a roller property changes.
     void OnPropertyChanged(const char* propertyName) override;
+
+    // ========== Keyboard focus ==========
+    Deki::Object* GetFocusObject() const override { return GetOwner(); }
+    bool CanFocus() const override { return !options.empty(); }
+    void GetFocusSize(float& w, float& h) const override
+    {
+        w = width;
+        h = GetHeight();
+    }
+    void OnFocusChanged(bool focused) override;
+    bool OnFocusKey(uint32_t key, uint32_t character) override;
 
 public:
     // Child objects, for editor rendering.

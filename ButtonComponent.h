@@ -7,6 +7,7 @@
 #include <deki/Component.h>
 #include <deki/reflection/Property.h>
 #include <deki/reflection/ObjectRef.h>
+#include "FocusSystem.h"
 
 namespace Deki
 {
@@ -39,6 +40,9 @@ using ButtonCallback = std::function<void()>;
 /// another one, named by `inputCollider` (as a Unity button needs a
 /// Collider2D). It fires callbacks on click, press, release and hover.
 ///
+/// The arrow keys and a trackball reach it through FocusSystem: while it has
+/// keyboard focus it shows the Hovered state, and Enter or Space clicks it.
+///
 /// Example:
 ///
 ///     auto* entity = new Deki::Object("Button");
@@ -50,7 +54,7 @@ using ButtonCallback = std::function<void()>;
 ///     button->AddOnClickCallback([]() { /* handle the click */ });
 DEKI_CATEGORY("2D")
 DEKI_DESCRIPTION("Makes the object a button: tracks hover and press, and fires a click callback.")
-class ButtonComponent : public Deki::Component
+class ButtonComponent : public Deki::Component, public IFocusable
 {
 public:
     DEKI_EXPORT
@@ -103,6 +107,16 @@ public:
     /// Cancels a press in progress, such as when scrolling starts. The button
     /// returns to Normal and fires release but not click.
     void CancelPress();
+
+    /// Clicks it as a tap would: press, release and click, in that order.
+    void Click();
+
+    // IFocusable
+    Deki::Object* GetFocusObject() const override { return GetOwner(); }
+    bool CanFocus() const override { return isEnabled; }
+    void GetFocusSize(float& w, float& h) const override;
+    void OnFocusChanged(bool focused) override;
+    bool OnFocusKey(uint32_t key, uint32_t character) override;
 
 private:
     bool m_WasPressedInside = false;

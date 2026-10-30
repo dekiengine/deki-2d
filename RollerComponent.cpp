@@ -1,6 +1,8 @@
 #include "RollerComponent.h"
 #include <cstdlib>
 #include "deki-input/InputCollider.h"
+#include "deki-input/Keys.h"
+#include "WidgetParts.h"
 #include "TextComponent.h"
 #include "SpriteComponent.h"
 #include <deki/Object.h>
@@ -64,6 +66,7 @@ RollerComponent::RollerComponent()
 
 RollerComponent::~RollerComponent()
 {
+    FocusSystem::Unregister(this);
     // The owner Object owns the children; only drop the references.
     m_ClipObj = nullptr;
     m_BackgroundObj = nullptr;
@@ -902,6 +905,7 @@ void RollerComponent::Start()
     {
         SyncChildObjects(GetOwner());
     }
+    FocusSystem::Register(this);
 
     DekiInput::InputCollider* collider = inputCollider.Get();
     if (!collider)
@@ -916,6 +920,29 @@ void RollerComponent::Start()
     collider->onPointerMove.push_back([this](float x, float y) { HandlePointerMove(x, y); });
 
     collider->onPointerUp.push_back([this](float x, float y) { HandlePointerUp(x, y); });
+}
+
+void RollerComponent::OnFocusChanged(bool focused)
+{
+    // A "Focus" child, when the roller has one, shows while it has focus.
+    WidgetParts::ShowFocus(GetOwner(), focused);
+}
+
+bool RollerComponent::OnFocusKey(uint32_t key, uint32_t character)
+{
+    (void)character;
+    if ((key != DekiInput::Keys::Up && key != DekiInput::Keys::Down) || options.empty())
+    {
+        return false;
+    }
+    // Down shows the next option, as a drag upward does.
+    const int32_t next = selectedIndex + (key == DekiInput::Keys::Down ? 1 : -1);
+    if (!infiniteScroll && (next < 0 || next >= static_cast<int32_t>(options.size())))
+    {
+        return false;  // past the end: the focus moves on
+    }
+    SetSelectedIndex(next, true);
+    return true;
 }
 
 bool RollerComponent::NeedsRuntimeUpdate() const
