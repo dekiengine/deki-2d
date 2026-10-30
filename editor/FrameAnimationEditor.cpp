@@ -49,7 +49,7 @@ AssetCacheResult HandleFrameAnimCache(const AssetCacheContext& ctx)
             std::filesystem::create_directories(parentDir);
         }
 
-        if (FrameAnimationMsgPackHelper::SaveAnimation(ctx.cachePath.c_str(), &engineData))
+        if (Deki2D::FrameAnimationMsgPackHelper::SaveAnimation(ctx.cachePath.c_str(), &engineData))
         {
             return AssetCacheResult::Cached;
         }
@@ -110,7 +110,7 @@ public:
         nlohmann::json j = nlohmann::json::parse(jsonData);
         Deki2D::FrameAnimationData engineData = Deki::Deserialize<Deki2D::FrameAnimationData>(j);
 
-        return FrameAnimationMsgPackHelper::SaveAnimation(cachePath.c_str(), &engineData);
+        return Deki2D::FrameAnimationMsgPackHelper::SaveAnimation(cachePath.c_str(), &engineData);
     }
 
     bool OnInspectorGUI(std::string& jsonData, const std::string& assetPath, const std::string& assetGuid) override
