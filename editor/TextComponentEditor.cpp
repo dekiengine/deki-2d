@@ -414,22 +414,22 @@ public:
             }
             else
             {
-                // No baked sizes: show a warning and the current value.
-                char sizeBuf[128];
-                std::snprintf(sizeBuf, sizeof(sizeBuf), Tr("Font Size: %d px"), textComp->fontSize);
-                gui.Text(sizeBuf);
-                gui.SameLine();
-                gui.TextColored(EditorUI::Rgba(255, 128, 0, 255), Tr("(no baked sizes)"));
-                gui.TextDisabled(Tr("Use Font Preview below to bake a size."));
+                // No baked sizes: the current value, and where to bake one.
+                char sizeBuf[32];
+                std::snprintf(sizeBuf, sizeof(sizeBuf), "%d px", textComp->fontSize);
+                gui.PropertyRow("Font Size");
+                gui.ValueText(sizeBuf);
+                gui.Hint(Tr("Use Font Preview below to bake a size."));
             }
         }
         else
         {
             // No font assigned: just show the value.
-            char sizeBuf[128];
-            std::snprintf(sizeBuf, sizeof(sizeBuf), Tr("Font Size: %d px"), textComp->fontSize);
-            gui.Text(sizeBuf);
-            gui.TextDisabled(Tr("Assign a font to see baked sizes."));
+            char sizeBuf[32];
+            std::snprintf(sizeBuf, sizeof(sizeBuf), "%d px", textComp->fontSize);
+            gui.PropertyRow("Font Size");
+            gui.ValueText(sizeBuf);
+            gui.Hint(Tr("Assign a font to see baked sizes."));
         }
 
         gui.PropertyField("width");
@@ -443,12 +443,9 @@ public:
         // Font Preview: try sizes without baking them (TTF only).
         if (!sourceGuid.empty() && !isBdfFont)
         {
-            gui.Separator();
-
             if (gui.SectionHeader(TrMark("Font Preview")))
             {
-                gui.TextDisabled(Tr("Preview font at different sizes without baking to disk."));
-                gui.Spacing();
+                gui.Hint(Tr("Preview font at different sizes without baking to disk."));
 
                 bool prevPreviewEnabled = textComp->previewEnabled;
                 {
@@ -459,7 +456,7 @@ public:
                 {
                     int32_t prevPreviewSize = textComp->previewSize;
                     gui.PropertyRow("Preview Size");
-                    gui.InputInt("##previewSize", &textComp->previewSize);
+                    gui.DragInt("##previewSize", &textComp->previewSize, 0.2f, 6, 128);
                     textComp->previewSize = (std::max)(6, (std::min)(128, textComp->previewSize));
 
                     // Log when the preview settings change.
@@ -476,11 +473,10 @@ public:
 
                     if (textureId != 0 && atlasWidth > 0 && atlasHeight > 0)
                     {
-                        gui.Spacing();
-                        char atlasBuf[128];
-                        std::snprintf(atlasBuf, sizeof(atlasBuf), Tr("Preview Atlas: %u x %u"), atlasWidth,
-                                      atlasHeight);
-                        gui.Text(atlasBuf);
+                        char atlasBuf[64];
+                        std::snprintf(atlasBuf, sizeof(atlasBuf), "%u x %u", atlasWidth, atlasHeight);
+                        gui.PropertyRow("Preview Atlas");
+                        gui.ValueText(atlasBuf);
 
                         // Display size, at most 256px tall.
                         float maxHeight = 256.0f;
@@ -491,20 +487,19 @@ public:
                         gui.Spacing();
 
                         // Save and Use: saves the size to .data, which bakes it.
-                        if (gui.Button(TrLabel("Save and Use")))
+                        if (gui.ActionButton(TrLabel("Save and Use")))
                         {
                             EnsureFontSizeBaked(sourceGuid, textComp->previewSize);
 
                             textComp->fontSize = textComp->previewSize;
                             textComp->previewEnabled = false;
                         }
-                        gui.SameLine();
-                        gui.TextDisabled(Tr("(Saves to font config and bakes)"));
+                        gui.Hint(Tr("Bakes this size into the font and uses it."));
                     }
                 }
                 else
                 {
-                    gui.TextDisabled(Tr("Enable preview to test different font sizes."));
+                    gui.Hint(Tr("Enable preview to test different font sizes."));
                 }
             }
         }

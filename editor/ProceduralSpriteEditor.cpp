@@ -721,9 +721,9 @@ public:
                     ParseNineSlice(data, nsTop, nsRight, nsBottom, nsLeft);
                     char nsBuf[128];
                     std::snprintf(nsBuf, sizeof(nsBuf), Tr("L:%d  R:%d  T:%d  B:%d"), nsLeft, nsRight, nsTop, nsBottom);
-                    ui.Text(nsBuf);
-                    ui.SameLine();
-                    if (ui.Button(TrLabel("Edit 9-Slice...")))
+                    ui.AlignTextToFramePadding();
+                    ui.TextDisabled(nsBuf);
+                    if (ui.ActionButton(TrLabel("Edit 9-Slice...")))
                     {
                         EditorApplication::Get().RequestOpenTool(assetPath, /*cachePath*/ "", "9-Slice Editor");
                     }

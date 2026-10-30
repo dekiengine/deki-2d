@@ -63,8 +63,8 @@ public:
 
         ui.DrawDefaultInspector();
 
-        ui.Separator();
-        if (ui.Button(TrLabel("Fill Options..."), -1.0f))
+        ui.Spacing();
+        if (ui.ActionButton(TrLabel("Fill Options...")))
         {
             ui.OpenPopup("FillRollerOptions");
             m_FillCount = 10;

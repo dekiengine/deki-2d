@@ -11,6 +11,13 @@ alongside one that has them.
 ## Unreleased
 
 ### Changed
+- Inspector rows line up with the rest: the sprite's 9-slice borders are a
+  row with an Edit 9-Slice button, Clip's Edit Rect and Roller's Fill Options
+  use the editor's action button, and the Text component's font size and
+  preview rows are rows and hints.
+- The font asset inspector is sections of rows, like the other asset
+  inspectors: character range, rasterization, sizes (each with whether it is
+  baked), bake and preview.
 - The editor's previews (fonts, BDF fonts, icon fonts, spritesheets) make
   their textures with `EditorTexture` instead of OpenGL, which the editor no
   longer uses. Needs editor 0.22.

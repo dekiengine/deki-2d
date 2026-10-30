@@ -35,7 +35,7 @@ public:
         ui.DrawDefaultInspector();
 
         ui.Spacing();
-        if (ui.Button(TrLabel("Edit Rect")))
+        if (ui.ActionButton(TrLabel("Edit Rect")))
         {
             // EditorApp carries out the request. The clip is already selected
             // (it is the one being inspected), so its handles show at once.

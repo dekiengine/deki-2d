@@ -473,9 +473,9 @@ public:
             }
             char nsBuf[128];
             std::snprintf(nsBuf, sizeof(nsBuf), Tr("L:%d  R:%d  T:%d  B:%d"), nsLeft, nsRight, nsTop, nsBottom);
-            ui.Text(nsBuf);
-            ui.SameLine();
-            if (ui.Button(TrLabel("Edit 9-Slice...")))
+            ui.PropertyRow("Borders");
+            ui.ValueText(nsBuf);
+            if (ui.ActionButton(TrLabel("Edit 9-Slice...")))
             {
                 EditorApplication::Get().RequestOpenTool(assetPath, /*cachePath*/ "", "9-Slice Editor");
             }
@@ -498,8 +498,9 @@ public:
     }
 
 private:
-    // Shows the 9-slice borders from the .png.data sidecar (if any) and an
-    // "Edit 9-Slice..." button. The 9-slice window does the editing and saving.
+    // Shows the 9-slice borders from the .png.data sidecar (if any) as a row,
+    // and an "Edit 9-Slice..." button. The 9-slice window does the editing and
+    // saving.
     void DrawNormalSpriteNineSliceUI(const std::string& assetPath, int frameIndex)
     {
         if (assetPath.empty())
@@ -508,7 +509,6 @@ private:
         }
 
         auto& ui = EditorUI::Get();
-        ui.Separator();
 
         int32_t nsTop = 0, nsRight = 0, nsBottom = 0, nsLeft = 0;
         std::string dataPath = assetPath + ".data";
@@ -554,10 +554,10 @@ private:
         }
 
         char nsBuf[128];
-        std::snprintf(nsBuf, sizeof(nsBuf), Tr("9-slice  L:%d  R:%d  T:%d  B:%d"), nsLeft, nsRight, nsTop, nsBottom);
-        ui.Text(nsBuf);
-        ui.SameLine();
-        if (ui.Button(TrLabel("Edit 9-Slice...")))
+        std::snprintf(nsBuf, sizeof(nsBuf), Tr("L:%d  R:%d  T:%d  B:%d"), nsLeft, nsRight, nsTop, nsBottom);
+        ui.PropertyRow("9-Slice");
+        ui.ValueText(nsBuf);
+        if (ui.ActionButton(TrLabel("Edit 9-Slice...")))
         {
             NineSliceEditorWindow::SetNextFrame(frameIndex);
             EditorApplication::Get().RequestOpenTool(assetPath, /*cachePath*/ "", "9-Slice Editor");

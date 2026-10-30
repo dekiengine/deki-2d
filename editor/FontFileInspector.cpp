@@ -9,6 +9,7 @@
 #include <deki-editor/AssetData.h>
 #include <deki-editor/EditorApplication.h>
 #include <deki-editor/EditorUI.h>
+#include <deki-editor/IconsTabler.h>
 #include <deki-editor/Localization.h>
 #include <nlohmann/json.hpp>
 #include <cstdio>
@@ -111,61 +112,41 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
         m_VariantCacheDirty = true;
     }
 
-    fs::path path(assetPath);
+    // Sections of property rows, as every other inspector: a label column
+    // and a value column, hints lined up with the labels, and the actions as
+    // centred outlined buttons.
+    if (ui.SectionHeader(DekiEditor::Tr("Character Range")))
     {
-        char buf[256];
-        std::snprintf(buf, sizeof(buf), DekiEditor::Tr("Font: %s"), path.filename().string().c_str());
-        ui.Text(buf);
-    }
-
-    if (!assetGuid.empty())
-    {
-        char buf[256];
-        std::snprintf(buf, sizeof(buf), "GUID: %s", assetGuid.c_str());
-        ui.TextDisabled(buf);
-    }
-
-    ui.Separator();
-
-    if (ui.CollapsingHeader(DekiEditor::TrLabel("Character Range"), nullptr, true))
-    {
-        ui.SetNextItemWidth(100);
-        if (ui.InputInt(DekiEditor::TrLabel("First Character"), &m_FirstChar))
+        ui.PropertyRow("First Character");
+        if (ui.DragInt("##firstChar", &m_FirstChar, 0.2f, 0, 255))
         {
             m_FirstChar = (std::max)(0, (std::min)(255, m_FirstChar));
             m_SettingsModified = true;
         }
-        ui.SameLine();
-        if (m_FirstChar >= 32 && m_FirstChar <= 126)
-        {
-            char buf[64];
-            std::snprintf(buf, sizeof(buf), "('%c')", static_cast<char>(m_FirstChar));
-            ui.Text(buf);
-        }
-
-        ui.SetNextItemWidth(100);
-        if (ui.InputInt(DekiEditor::TrLabel("Last Character"), &m_LastChar))
+        ui.PropertyRow("Last Character");
+        if (ui.DragInt("##lastChar", &m_LastChar, 0.2f, 0, 255))
         {
             m_LastChar = (std::max)(m_FirstChar, (std::min)(255, m_LastChar));
             m_SettingsModified = true;
         }
-        ui.SameLine();
-        if (m_LastChar >= 32 && m_LastChar <= 126)
-        {
-            char buf[64];
-            std::snprintf(buf, sizeof(buf), "('%c')", static_cast<char>(m_LastChar));
-            ui.Text(buf);
-        }
 
-        int charCount = m_LastChar - m_FirstChar + 1;
+        // How many, and the first and last as characters when printable.
+        char buf[64];
+        const int charCount = m_LastChar - m_FirstChar + 1;
+        if (m_FirstChar >= 32 && m_FirstChar <= 126 && m_LastChar >= 32 && m_LastChar <= 126)
         {
-            char buf[64];
-            std::snprintf(buf, sizeof(buf), DekiEditor::Tr("Total: %d characters"), charCount);
-            ui.TextDisabled(buf);
+            std::snprintf(buf, sizeof(buf), "%d  '%c' - '%c'", charCount, static_cast<char>(m_FirstChar),
+                          static_cast<char>(m_LastChar));
         }
+        else
+        {
+            std::snprintf(buf, sizeof(buf), "%d", charCount);
+        }
+        ui.PropertyRow("Characters");
+        ui.ValueText(buf);
     }
 
-    if (ui.CollapsingHeader(DekiEditor::TrLabel("Rasterization"), nullptr, true))
+    if (ui.SectionHeader(DekiEditor::Tr("Rasterization")))
     {
         static const char* const kHintingLabels[] = { DekiEditor::TrMark("None (unhinted AA)"),
                                                       DekiEditor::TrMark("Light (smoother AA)"),
@@ -186,8 +167,8 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
                 break;
             }
         }
-        ui.SetNextItemWidth(220);
-        if (ui.Combo(DekiEditor::TrLabel("Hinting Mode"), &currentIndex, kHintingLabels, 4))
+        ui.PropertyRow("Hinting Mode");
+        if (ui.Combo("##hinting", &currentIndex, kHintingLabels, 4))
         {
             m_Hinting = kHintingValues[currentIndex];
             m_SettingsModified = true;
@@ -195,32 +176,21 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
 
         // Oversampling is off with Mono hinting: a 1-bit source gains nothing.
         static const char* const kOversampleLabels[] = { DekiEditor::TrMark("1x (off)"), "2x", "3x", "4x" };
-        int oversampleIndex = m_Oversample - 1;
-        if (oversampleIndex < 0)
-        {
-            oversampleIndex = 0;
-        }
-        if (oversampleIndex > 3)
-        {
-            oversampleIndex = 3;
-        }
+        int oversampleIndex = (std::max)(0, (std::min)(3, m_Oversample - 1));
         const bool oversampleDisabled = (m_Hinting == FontCompiler::HintingMode::Mono);
         if (oversampleDisabled)
         {
             m_Oversample = 1;
             oversampleIndex = 0;
-            ui.BeginDisabled();
         }
-        ui.SetNextItemWidth(220);
-        if (ui.Combo(DekiEditor::TrLabel("Oversample"), &oversampleIndex, kOversampleLabels, 4))
+        ui.BeginDisabled(oversampleDisabled);
+        ui.PropertyRow("Oversample");
+        if (ui.Combo("##oversample", &oversampleIndex, kOversampleLabels, 4))
         {
             m_Oversample = oversampleIndex + 1;
             m_SettingsModified = true;
         }
-        if (oversampleDisabled)
-        {
-            ui.EndDisabled();
-        }
+        ui.EndDisabled();
 
         // Decoration: a baked outline or drop shadow, as on the Nintendo DS.
         static const char* const kDecorationLabels[] = { DekiEditor::TrMark("None"), DekiEditor::TrMark("Outline"),
@@ -239,128 +209,38 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
                 break;
             }
         }
-        ui.SetNextItemWidth(220);
-        if (ui.Combo(DekiEditor::TrLabel("Decoration"), &decorationIndex, kDecorationLabels, 3))
+        ui.PropertyRow("Decoration");
+        if (ui.Combo("##decoration", &decorationIndex, kDecorationLabels, 3))
         {
             m_Decoration = kDecorationValues[decorationIndex];
             m_SettingsModified = true;
         }
         if (m_Decoration == FontCompiler::DecorationMode::Outline)
         {
-            ui.SetNextItemWidth(100);
-            if (ui.InputInt(DekiEditor::TrLabel("Outline Size (px)"), &m_OutlineSize))
+            ui.PropertyRow("Outline Size (px)");
+            if (ui.DragInt("##outlineSize", &m_OutlineSize, 0.05f, 1, 3))
             {
-                if (m_OutlineSize < 1)
-                {
-                    m_OutlineSize = 1;
-                }
-                if (m_OutlineSize > 3)
-                {
-                    m_OutlineSize = 3;
-                }
+                m_OutlineSize = (std::max)(1, (std::min)(3, m_OutlineSize));
                 m_SettingsModified = true;
             }
         }
         else if (m_Decoration == FontCompiler::DecorationMode::Shadow)
         {
-            ui.SetNextItemWidth(100);
-            if (ui.InputInt(DekiEditor::TrLabel("Shadow dX"), &m_ShadowDx))
+            ui.PropertyRow("Shadow dX");
+            if (ui.DragInt("##shadowDx", &m_ShadowDx, 0.05f, -3, 3))
             {
-                if (m_ShadowDx < -3)
-                {
-                    m_ShadowDx = -3;
-                }
-                if (m_ShadowDx > 3)
-                {
-                    m_ShadowDx = 3;
-                }
+                m_ShadowDx = (std::max)(-3, (std::min)(3, m_ShadowDx));
                 m_SettingsModified = true;
             }
-            ui.SetNextItemWidth(100);
-            if (ui.InputInt(DekiEditor::TrLabel("Shadow dY"), &m_ShadowDy))
+            ui.PropertyRow("Shadow dY");
+            if (ui.DragInt("##shadowDy", &m_ShadowDy, 0.05f, -3, 3))
             {
-                if (m_ShadowDy < -3)
-                {
-                    m_ShadowDy = -3;
-                }
-                if (m_ShadowDy > 3)
-                {
-                    m_ShadowDy = 3;
-                }
+                m_ShadowDy = (std::max)(-3, (std::min)(3, m_ShadowDy));
                 m_SettingsModified = true;
             }
         }
 
-        ui.TextDisabled(DekiEditor::Tr("Affects edge smoothness. Re-bake variants after changing."));
-    }
-
-    if (ui.CollapsingHeader(DekiEditor::TrLabel("Size Variants"), nullptr, true))
-    {
-        ui.TextDisabled(DekiEditor::Tr("Configure which sizes to bake for this font."));
-        ui.Spacing();
-
-        int indexToRemove = -1;
-        for (size_t i = 0; i < m_Sizes.size(); ++i)
-        {
-            ui.PushID(static_cast<int>(i));
-
-            // The variant GUID comes from the .data file when it has one.
-            std::string variantGuid = GetVariantGuidFromData(assetPath, m_Sizes[i]);
-            if (variantGuid.empty())
-            {
-                variantGuid = DekiEditor::Tr("(not saved)");
-            }
-            {
-                char buf[64];
-                std::snprintf(buf, sizeof(buf), "%d px", m_Sizes[i]);
-                ui.Text(buf);
-            }
-            ui.SameLine();
-            {
-                char buf[64];
-                std::snprintf(buf, sizeof(buf), "(%s...)",
-                              variantGuid.length() > 8 ? variantGuid.substr(0, 8).c_str() : variantGuid.c_str());
-                ui.TextDisabled(buf);
-            }
-
-            ui.SameLine();
-            if (ui.SmallButton("X"))
-            {
-                indexToRemove = static_cast<int>(i);
-            }
-
-            ui.PopID();
-        }
-
-        if (indexToRemove >= 0)
-        {
-            m_Sizes.erase(m_Sizes.begin() + indexToRemove);
-            m_SettingsModified = true;
-            m_VariantCacheDirty = true;
-        }
-
-        ui.Separator();
-        ui.SetNextItemWidth(80);
-        ui.InputInt("##NewSize", &m_NewSize);
-        m_NewSize = (std::max)(6, (std::min)(128, m_NewSize));
-
-        ui.SameLine();
-        bool sizeExists = std::find(m_Sizes.begin(), m_Sizes.end(), m_NewSize) != m_Sizes.end();
-        if (sizeExists)
-        {
-            ui.BeginDisabled();
-            ui.Button(DekiEditor::TrLabel("Add Size"));
-            ui.EndDisabled();
-            ui.SameLine();
-            ui.TextDisabled(DekiEditor::Tr("(already exists)"));
-        }
-        else if (ui.Button(DekiEditor::TrLabel("Add Size")))
-        {
-            m_Sizes.push_back(m_NewSize);
-            std::sort(m_Sizes.begin(), m_Sizes.end());
-            m_SettingsModified = true;
-            m_VariantCacheDirty = true;
-        }
+        ui.Hint(DekiEditor::Tr("Affects edge smoothness. Re-bake variants after changing."));
     }
 
     // The "is it cached" map is refreshed only when something changed, not every frame.
@@ -381,12 +261,83 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
         }
     }
 
-    // Apply is enabled when the settings changed or a variant is not cached.
-    ui.Separator();
-    bool canBake = m_SettingsModified || hasUncachedVariants;
-    if (canBake && !m_Sizes.empty())
+    if (ui.SectionHeader(DekiEditor::Tr("Size Variants")))
     {
-        if (ui.Button(DekiEditor::TrLabel("Apply & Bake Fonts")))
+        ui.Hint(DekiEditor::Tr("Configure which sizes to bake for this font."));
+
+        // One row per size: whether it is baked, and a button to drop it.
+        int indexToRemove = -1;
+        for (size_t i = 0; i < m_Sizes.size(); ++i)
+        {
+            ui.PushID(static_cast<int>(i));
+            auto it = m_VariantCached.find(m_Sizes[i]);
+            const bool cached = (it != m_VariantCached.end()) && it->second;
+            char label[32];
+            std::snprintf(label, sizeof(label), "%d px", m_Sizes[i]);
+            ui.PropertyRow(label);
+            ui.ValueText(cached ? DekiEditor::Tr("Cached") : DekiEditor::Tr("Not cached"));
+            ui.SameLine();
+            if (ui.SmallButton(ICON_TI_X "##remove"))
+            {
+                indexToRemove = static_cast<int>(i);
+            }
+            if (ui.IsItemHovered())
+            {
+                ui.SetTooltip(DekiEditor::Tr("Remove this size"));
+            }
+            ui.PopID();
+        }
+
+        if (indexToRemove >= 0)
+        {
+            m_Sizes.erase(m_Sizes.begin() + indexToRemove);
+            m_SettingsModified = true;
+            m_VariantCacheDirty = true;
+        }
+
+        ui.PropertyRow("New Size");
+        ui.DragInt("##newSize", &m_NewSize, 0.2f, 6, 128);
+        m_NewSize = (std::max)(6, (std::min)(128, m_NewSize));
+        const bool sizeExists = std::find(m_Sizes.begin(), m_Sizes.end(), m_NewSize) != m_Sizes.end();
+        ui.BeginDisabled(sizeExists);
+        if (ui.ActionButton(DekiEditor::TrLabel("Add Size")) && !sizeExists)
+        {
+            m_Sizes.push_back(m_NewSize);
+            std::sort(m_Sizes.begin(), m_Sizes.end());
+            m_SettingsModified = true;
+            m_VariantCacheDirty = true;
+        }
+        ui.EndDisabled();
+        if (sizeExists)
+        {
+            ui.Hint(DekiEditor::Tr("That size is already in the list."));
+        }
+    }
+
+    // Baking: what needs doing, then Apply (when something does) and Rebake.
+    if (ui.SectionHeader(DekiEditor::Tr("Bake")))
+    {
+        const bool canBake = (m_SettingsModified || hasUncachedVariants) && !m_Sizes.empty();
+        ui.PropertyRow("Status");
+        if (m_Sizes.empty())
+        {
+            ui.ValueText(DekiEditor::Tr("No sizes"));
+        }
+        else if (m_SettingsModified)
+        {
+            ui.ValueText(DekiEditor::Tr("Unsaved changes"));
+        }
+        else if (hasUncachedVariants)
+        {
+            ui.ValueText(DekiEditor::Tr("Not cached"));
+        }
+        else
+        {
+            ui.ValueText(DekiEditor::Tr("Up to date"));
+        }
+
+        ui.BeginDisabled(!canBake);
+        if (ui.ActionButton(DekiEditor::TrLabel("Apply & Bake Fonts")) && canBake)
         {
             SaveSettings(assetPath, assetGuid);
 
@@ -401,123 +352,74 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
             // Invalidate all assets so the scene view picks up the re-baked fonts.
             DekiEditor::EditorApplication::Get().RequestAssetInvalidation();
         }
-        if (m_SettingsModified)
-        {
-            ui.SameLine();
-            ui.TextColored(1.0f, 0.8f, 0.2f, 1.0f, DekiEditor::Tr("Unsaved changes"));
-        }
-        else if (hasUncachedVariants)
-        {
-            ui.SameLine();
-            ui.TextColored(0.9f, 0.6f, 0.2f, 1.0f, DekiEditor::Tr("Not cached"));
-        }
-    }
-    else
-    {
-        ui.BeginDisabled();
-        ui.Button(DekiEditor::TrLabel("Apply & Bake Fonts"));
         ui.EndDisabled();
-    }
 
-    // Rebake deletes the cached files, then bakes every variant again.
-    if (!m_Sizes.empty())
-    {
-        ui.SameLine();
-        if (ui.Button(DekiEditor::TrLabel("Rebake")))
+        // Rebake deletes the cached files, then bakes every variant again.
+        if (!m_Sizes.empty())
         {
-            SaveSettings(assetPath, assetGuid);
-
-            auto* pl = DekiEditor::AssetPipeline::Instance();
-            if (pl)
+            if (ui.ActionButton(DekiEditor::TrLabel("Rebake")))
             {
-                std::string cacheDir = pl->GetProjectPath() + "/cache/";
+                SaveSettings(assetPath, assetGuid);
+
+                auto* pl = DekiEditor::AssetPipeline::Instance();
+                if (pl)
+                {
+                    std::string cacheDir = pl->GetProjectPath() + "/cache/";
+                    for (int size : m_Sizes)
+                    {
+                        std::string variantGuid = GetVariantGuidFromData(assetPath, size);
+                        std::string atlasGuid = GetAtlasGuidFromData(assetPath, size);
+                        std::error_code ec;
+                        if (!variantGuid.empty())
+                        {
+                            fs::remove(cacheDir + variantGuid, ec);
+                        }
+                        if (!atlasGuid.empty())
+                        {
+                            fs::remove(cacheDir + atlasGuid, ec);
+                        }
+                    }
+                }
+
                 for (int size : m_Sizes)
                 {
-                    std::string variantGuid = GetVariantGuidFromData(assetPath, size);
-                    std::string atlasGuid = GetAtlasGuidFromData(assetPath, size);
-                    std::error_code ec;
-                    if (!variantGuid.empty())
-                    {
-                        fs::remove(cacheDir + variantGuid, ec);
-                    }
-                    if (!atlasGuid.empty())
-                    {
-                        fs::remove(cacheDir + atlasGuid, ec);
-                    }
+                    BakeFontVariant(assetPath, assetGuid, size);
                 }
+
+                m_SettingsModified = false;
+                m_VariantCacheDirty = true;
+                DekiEditor::EditorApplication::Get().RequestAssetInvalidation();
             }
-
-            for (int size : m_Sizes)
+            if (ui.IsItemHovered())
             {
-                BakeFontVariant(assetPath, assetGuid, size);
-            }
-
-            m_SettingsModified = false;
-            m_VariantCacheDirty = true;
-            DekiEditor::EditorApplication::Get().RequestAssetInvalidation();
-        }
-        if (ui.IsItemHovered())
-        {
-            ui.SetTooltip(DekiEditor::Tr("Delete cached fonts and re-bake all variants"));
-        }
-    }
-
-    if (!m_Sizes.empty())
-    {
-        ui.Separator();
-        if (ui.CollapsingHeader(DekiEditor::TrLabel("Variant Status")))
-        {
-            for (int size : m_Sizes)
-            {
-                auto it = m_VariantCached.find(size);
-                bool cached = (it != m_VariantCached.end()) && it->second;
-
-                if (cached)
-                {
-                    char buf[64];
-                    std::snprintf(buf, sizeof(buf), DekiEditor::Tr("%d px: Cached"), size);
-                    ui.TextColored(0.4f, 0.9f, 0.4f, 1.0f, buf);
-                }
-                else
-                {
-                    char buf[64];
-                    std::snprintf(buf, sizeof(buf), DekiEditor::Tr("%d px: Not cached"), size);
-                    ui.TextColored(0.9f, 0.6f, 0.2f, 1.0f, buf);
-                }
+                ui.SetTooltip(DekiEditor::Tr("Delete cached fonts and re-bake all variants"));
             }
         }
     }
 
-    ui.Separator();
-    if (ui.CollapsingHeader(DekiEditor::TrLabel("Preview"), nullptr, true))
+    if (ui.SectionHeader(DekiEditor::Tr("Preview")))
     {
-        ui.SetNextItemWidth(80);
-        ui.InputInt(DekiEditor::TrLabel("Preview Size"), &m_PreviewSize);
+        ui.PropertyRow("Preview Size");
+        ui.DragInt("##previewSize", &m_PreviewSize, 0.2f, 6, 128);
         m_PreviewSize = (std::max)(6, (std::min)(128, m_PreviewSize));
 
-        ui.SetNextItemWidth(200);
-        ui.InputText(DekiEditor::TrLabel("Preview Text"), m_PreviewText, sizeof(m_PreviewText));
+        ui.PropertyRow("Preview Text");
+        ui.InputText("##previewText", m_PreviewText, sizeof(m_PreviewText));
 
-        if (ui.Button(DekiEditor::TrLabel("Generate Preview")))
+        if (ui.ActionButton(DekiEditor::TrLabel("Generate Preview")))
         {
             GeneratePreview(assetPath, m_PreviewSize);
         }
 
         if (m_PreviewTextureId != 0 && m_PreviewTextureWidth > 0 && m_PreviewTextureHeight > 0)
         {
-            ui.SameLine();
-
             // Save adds this size to the list and bakes it.
-            bool sizeExists = std::find(m_Sizes.begin(), m_Sizes.end(), m_PreviewSize) != m_Sizes.end();
+            const bool sizeExists = std::find(m_Sizes.begin(), m_Sizes.end(), m_PreviewSize) != m_Sizes.end();
             if (sizeExists)
             {
-                ui.BeginDisabled();
-                ui.Button(DekiEditor::TrLabel("Save This Size"));
-                ui.EndDisabled();
-                ui.SameLine();
-                ui.TextDisabled(DekiEditor::Tr("(already saved)"));
+                ui.Hint(DekiEditor::Tr("This size is already saved."));
             }
-            else if (ui.Button(DekiEditor::TrLabel("Save This Size")))
+            else if (ui.ActionButton(DekiEditor::TrLabel("Save This Size")))
             {
                 m_Sizes.push_back(m_PreviewSize);
                 std::sort(m_Sizes.begin(), m_Sizes.end());
@@ -532,13 +434,10 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
                 DekiEditor::EditorApplication::Get().RequestAssetInvalidation();
             }
 
-            ui.Spacing();
-            {
-                char buf[64];
-                std::snprintf(buf, sizeof(buf), DekiEditor::Tr("Preview at %d px:"), m_LastPreviewSize);
-                ui.Text(buf);
-            }
-
+            char buf[32];
+            std::snprintf(buf, sizeof(buf), "%d px", m_LastPreviewSize);
+            ui.PropertyRow("Previewed");
+            ui.ValueText(buf);
             ui.Image(m_PreviewTextureId, (float)m_PreviewTextureWidth, (float)m_PreviewTextureHeight);
         }
     }
