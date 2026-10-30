@@ -8,6 +8,13 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
+## Unreleased
+
+### Changed
+- The editor's previews (fonts, BDF fonts, icon fonts, spritesheets) make
+  their textures with `EditorTexture` instead of OpenGL, which the editor no
+  longer uses. Needs editor 0.22.
+
 ## 0.21.0
 
 ### Changed

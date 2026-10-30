@@ -52,7 +52,7 @@ private:
 
     // File I/O
     void LoadTextureData();     // pixel data from the cache
-    void UploadTextureToGPU();  // creates the OpenGL texture (called from OnGUI)
+    void UploadTextureToGPU();  // creates the EditorTexture (called from OnGUI)
     bool LoadSliceSettings();   // from .png.data
     bool SaveSliceSettings();   // to .png.data
 

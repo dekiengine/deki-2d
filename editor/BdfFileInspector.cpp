@@ -18,13 +18,7 @@
 #include <cmath>
 #include <unordered_map>
 
-#ifdef _WIN32
-// NOMINMAX: windows.h's min/max macros would break std::min/std::max in every
-// file sharing this translation unit (unity build).
-#define NOMINMAX
-#include <windows.h>
-#endif
-#include <GL/gl.h>
+#include <deki-editor/EditorTexture.h>
 
 #include <deki/LogSystem.h>
 #include <deki/Guid.h>
@@ -265,7 +259,7 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
         return;
     }
 
-    float iconSize = 32.0f;  // fixed size; GL_NEAREST keeps it crisp
+    float iconSize = 32.0f;  // fixed size; nearest sampling keeps it crisp
     float rowHeight = iconSize + 4.0f;
 
     ui.BeginChild("GlyphList", 0, 400, true);
@@ -549,19 +543,7 @@ void BdfFileInspector::LoadBdf(const std::string& assetPath)
         m_GlyphUVs[i].v1 = (float)(cellY + cellSize) / (float)atlasH;
     }
 
-    GLuint tex;
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    // Unpack state is global, and other GL users (ImGui glyph uploads, say) can
-    // leave a row stride set that would shear or overread this tight upload.
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, atlasW, atlasH, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba.data());
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    m_GlyphAtlasTexture = tex;
+    m_GlyphAtlasTexture = DekiEditor::EditorTexture::CreateRgba(atlasW, atlasH, rgba.data());
     m_GlyphAtlasW = atlasW;
     m_GlyphAtlasH = atlasH;
 }
@@ -868,8 +850,7 @@ void BdfFileInspector::CleanupTextures()
 {
     if (m_GlyphAtlasTexture != 0)
     {
-        GLuint tex = m_GlyphAtlasTexture;
-        glDeleteTextures(1, &tex);
+        DekiEditor::EditorTexture::Destroy(m_GlyphAtlasTexture);
         m_GlyphAtlasTexture = 0;
     }
 }

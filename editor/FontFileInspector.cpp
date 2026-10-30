@@ -18,14 +18,7 @@
 #include <sstream>
 #include <iomanip>
 
-// OpenGL for preview texture
-#ifdef _WIN32
-// NOMINMAX: windows.h's min/max macros would break std::min/std::max in every
-// file sharing this translation unit (unity build).
-#define NOMINMAX
-#include <windows.h>
-#endif
-#include <GL/gl.h>
+#include <deki-editor/EditorTexture.h>
 
 #include <deki/LogSystem.h>
 #include <deki/Guid.h>                 // For Deki::GenerateDeterministicGuid
@@ -1039,19 +1032,8 @@ void FontFileInspector::GeneratePreview(const std::string& assetPath, int fontSi
         }
     }
 
-    if (m_PreviewTextureId == 0)
-    {
-        glGenTextures(1, &m_PreviewTextureId);
-    }
-
-    glBindTexture(GL_TEXTURE_2D, m_PreviewTextureId);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // Unpack state is global, and other GL users (ImGui glyph uploads, say) can
-    // leave a row stride set that would shear or overread this tight upload.
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bufferWidth, bufferHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
+    DekiEditor::EditorTexture::Destroy(m_PreviewTextureId);
+    m_PreviewTextureId = DekiEditor::EditorTexture::CreateRgba(bufferWidth, bufferHeight, buffer.data());
 
     m_PreviewTextureWidth = bufferWidth;
     m_PreviewTextureHeight = bufferHeight;
@@ -1065,7 +1047,7 @@ void FontFileInspector::CleanupPreview()
 {
     if (m_PreviewTextureId != 0)
     {
-        glDeleteTextures(1, &m_PreviewTextureId);
+        DekiEditor::EditorTexture::Destroy(m_PreviewTextureId);
         m_PreviewTextureId = 0;
     }
     m_PreviewTextureWidth = 0;

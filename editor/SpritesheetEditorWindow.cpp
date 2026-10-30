@@ -21,7 +21,7 @@
 #include <fstream>
 #include <filesystem>
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_opengl.h>
+#include <deki-editor/EditorTexture.h>
 #include <nlohmann/json.hpp>
 
 namespace fs = std::filesystem;
@@ -42,7 +42,7 @@ SpritesheetEditorWindow::~SpritesheetEditorWindow()
 
     if (m_TextureId != 0)
     {
-        glDeleteTextures(1, &m_TextureId);
+        DekiEditor::EditorTexture::Destroy(m_TextureId);
     }
 }
 
@@ -64,7 +64,7 @@ void SpritesheetEditorWindow::OnClose()
     }
     if (m_TextureId != 0)
     {
-        glDeleteTextures(1, &m_TextureId);
+        DekiEditor::EditorTexture::Destroy(m_TextureId);
         m_TextureId = 0;
     }
 
@@ -436,7 +436,7 @@ void SpritesheetEditorWindow::DrawSlicingControls()
     }
 
     char buf[192];
-    const ImTextureID tex = (ImTextureID)(intptr_t)m_TextureId;
+    const ImTextureID tex = DekiEditor::EditorTexture::ToImGui(m_TextureId);
 
     // ── Header: a thumbnail of the image, its name and size ──────────────
     {
@@ -712,7 +712,7 @@ void SpritesheetEditorWindow::DrawTexturePreview()
                           ImVec2(imgMax.x + o, imgMax.y + o + 2.0f * dpi), IM_COL32(0, 0, 0, 22), o);
     }
     DrawChecker(dl, imgMin, imgMax, 8.0f * dpi);
-    dl->AddImage((ImTextureID)(intptr_t)m_TextureId, imgMin, imgMax);
+    dl->AddImage(DekiEditor::EditorTexture::ToImGui(m_TextureId), imgMin, imgMax);
 
     // Grid mode: tint the pixels the grid leaves out.
     if (m_UIMode == SlicingUIMode::Grid && m_FrameWidth > 0 && m_FrameHeight > 0)
@@ -933,28 +933,11 @@ void SpritesheetEditorWindow::UploadTextureToGPU()
 
     if (m_TextureId != 0)
     {
-        glDeleteTextures(1, &m_TextureId);
+        DekiEditor::EditorTexture::Destroy(m_TextureId);
         m_TextureId = 0;
     }
 
-    glGenTextures(1, &m_TextureId);
-    glBindTexture(GL_TEXTURE_2D, m_TextureId);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    // Unpack state is global. Other GL users (e.g. ImGui glyph uploads) can
-    // leave a row stride set, which would shear or overread this tightly
-    // packed upload.
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_TextureWidth, m_TextureHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-                 m_TextureData);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
+    m_TextureId = DekiEditor::EditorTexture::CreateRgba(m_TextureWidth, m_TextureHeight, m_TextureData);
 }
 
 bool SpritesheetEditorWindow::LoadSliceSettings()

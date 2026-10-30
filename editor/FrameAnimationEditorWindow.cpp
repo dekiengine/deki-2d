@@ -21,7 +21,7 @@
 #include <cstring>
 #include <cfloat>
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_opengl.h>
+#include <deki-editor/EditorTexture.h>
 #include <nlohmann/json.hpp>
 
 // Editor extensions live in DekiEditor; the package's own types are in Deki2D.

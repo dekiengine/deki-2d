@@ -1,6 +1,6 @@
 // Editor-only font and texture preview support for deki-2d. Kept out of the
 // package entry point (Deki2DModule.cpp), which should not pull in
-// windows.h, OpenGL, JSON and the asset pipeline.
+// editor textures, JSON and the asset pipeline.
 
 #ifdef DEKI_EDITOR
 
@@ -24,18 +24,7 @@
 #include <fstream>
 #include <nlohmann/json.hpp>
 
-// OpenGL for preview texture upload
-#ifdef _WIN32
-// NOMINMAX: windows.h defines min/max as macros, which break every
-// std::min/std::max after it in the same translation unit. That matters once
-// this file shares a translation unit with others (unity build).
-#define NOMINMAX
-#include <windows.h>
-#endif
-#include <GL/gl.h>
-#ifndef GL_CLAMP_TO_EDGE
-#define GL_CLAMP_TO_EDGE 0x812F
-#endif
+#include <deki-editor/EditorTexture.h>
 
 namespace Deki2D
 {
@@ -409,25 +398,7 @@ static uint32_t UploadTextureToGPU(const uint8_t* rgba, uint32_t width, uint32_t
         return 0;
     }
 
-    GLuint texId = 0;
-    glGenTextures(1, &texId);
-    if (texId == 0)
-    {
-        return 0;
-    }
-
-    glBindTexture(GL_TEXTURE_2D, texId);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    // Unpack state is global, and other GL users (ImGui glyph uploads, say) can
-    // leave a row stride set that would shear or overread this tight upload.
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
-
-    return static_cast<uint32_t>(texId);
+    return DekiEditor::EditorTexture::CreateRgba(static_cast<int>(width), static_cast<int>(height), rgba);
 }
 }  // anonymous namespace
 
@@ -506,8 +477,7 @@ void InitializeFontPreviewCallbacks()
             auto it = s_PreviewTextureCache.find(cacheKey);
             if (it != s_PreviewTextureCache.end() && it->second.textureId != 0)
             {
-                GLuint texId = static_cast<GLuint>(it->second.textureId);
-                glDeleteTextures(1, &texId);
+                DekiEditor::EditorTexture::Destroy(it->second.textureId);
             }
 
             uint32_t texId = UploadTextureToGPU(result.atlasRGBA.data(), result.atlasWidth, result.atlasHeight);
@@ -665,8 +635,7 @@ void ClearPreviewTextureCache()
     {
         if (cached.textureId != 0)
         {
-            GLuint texId = static_cast<GLuint>(cached.textureId);
-            glDeleteTextures(1, &texId);
+            DekiEditor::EditorTexture::Destroy(cached.textureId);
         }
     }
     s_PreviewTextureCache.clear();

@@ -8,7 +8,7 @@
 #include <deki-editor/EditorPaths.h>
 #include <deki-editor/EditorUI.h>
 #include <deki-editor/Localization.h>
-#include <SDL3/SDL_opengl.h>
+#include <deki-editor/EditorTexture.h>
 #include <SDL3/SDL.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -331,8 +331,7 @@ void IconFontExporter::CleanupAtlas()
 {
     if (m_AtlasTexture != 0)
     {
-        GLuint id = m_AtlasTexture;
-        glDeleteTextures(1, &id);
+        DekiEditor::EditorTexture::Destroy(m_AtlasTexture);
         m_AtlasTexture = 0;
     }
     m_AtlasEntries.clear();
@@ -490,21 +489,7 @@ void IconFontExporter::BuildIconAtlas()
         entry.v1 = (float)(baseY + cellSize) / (float)atlasH;
     }
 
-    GLuint textureId;
-    glGenTextures(1, &textureId);
-    glBindTexture(GL_TEXTURE_2D, textureId);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    // Unpack state is global; other GL users (e.g. ImGui glyph uploads) can leave
-    // a row stride behind, which would shear/overread this tightly packed upload.
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, kAtlasMaxWidth, atlasH, 0, GL_RGBA, GL_UNSIGNED_BYTE, atlasData.data());
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    m_AtlasTexture = textureId;
+    m_AtlasTexture = DekiEditor::EditorTexture::CreateRgba(kAtlasMaxWidth, atlasH, atlasData.data());
     m_AtlasWidth = kAtlasMaxWidth;
     m_AtlasHeight = atlasH;
     m_LastBuiltSize = m_IconDisplaySize;
