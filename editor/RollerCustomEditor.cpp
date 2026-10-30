@@ -4,12 +4,14 @@
 
 #include <deki-editor/EditorRegistry.h>
 #include <deki-editor/CustomEditor.h>
+#include <deki-editor/EditorTheme.h>
 #include <deki-editor/EditorUI.h>
 #include <deki-editor/Localization.h>
 #include "RollerComponent.h"
 #include <deki/Engine.h>
-#include <string>
+#include <algorithm>
 #include <cstdio>
+#include <string>
 
 // Editor extensions live in DekiEditor; the package's own types are in Deki2D.
 using namespace Deki2D;
@@ -66,27 +68,24 @@ public:
         ui.Spacing();
         if (ui.ActionButton(TrLabel("Fill Options...")))
         {
-            ui.OpenPopup("FillRollerOptions");
+            ui.OpenPopup(TrLabel("Fill Options Numerically"));
             m_FillCount = 10;
             m_FillStart = 1;
             m_FillLeadingZeros = true;
         }
 
-        if (ui.BeginPopup("FillRollerOptions"))
+        // A dialog like the editor's others: dim labels over full-width
+        // fields, the kit's buttons in the footer.
+        if (BeginSchematicModal(TrLabel("Fill Options Numerically"), 360.0f))
         {
-            ui.Text(Tr("Fill Options Numerically"));
-            ui.Separator();
-
-            ui.InputInt(TrLabel("Start"), &m_FillStart);
-            ui.InputInt(TrLabel("Count"), &m_FillCount);
-            if (m_FillCount < 1)
-            {
-                m_FillCount = 1;
-            }
-            if (m_FillCount > 9999)
-            {
-                m_FillCount = 9999;
-            }
+            const ImVec4 dim = Palette::Dim;
+            ui.TextColored(dim.x, dim.y, dim.z, dim.w, Tr("Start"));
+            ui.SetNextItemWidth(-1.0f);
+            ui.DragInt("##fillStart", &m_FillStart, 0.2f, -99999, 99999);
+            ui.TextColored(dim.x, dim.y, dim.z, dim.w, Tr("Count"));
+            ui.SetNextItemWidth(-1.0f);
+            ui.DragInt("##fillCount", &m_FillCount, 0.2f, 1, 9999);
+            m_FillCount = (std::max)(1, (std::min)(9999, m_FillCount));
             ui.Checkbox(TrMark("Leading zeros"), &m_FillLeadingZeros);
 
             // Preview
@@ -107,30 +106,27 @@ public:
             char previewBuf[256];
             std::snprintf(previewBuf, sizeof(previewBuf), Tr("Preview: %s, %s, ... %s"), fmt(m_FillStart).c_str(),
                           fmt(m_FillStart + 1).c_str(), fmt(lastVal).c_str());
-            ui.TextDisabled(previewBuf);
+            ui.TextColored(dim.x, dim.y, dim.z, dim.w, previewBuf);
 
-            ui.Separator();
-            if (ui.Button(TrLabel("Fill"), 120, 0))
+            switch (SchematicDialogButtons({ { "Cancel" }, { "Fill", DialogButton::Primary } }))
             {
-                roller->options.clear();
-                for (int i = 0; i < m_FillCount; ++i)
-                {
-                    roller->options.push_back(fmt(m_FillStart + i));
-                }
-                // Update the child text objects.
-                if (auto* owner = roller->GetOwner())
-                {
-                    roller->SyncChildObjects(owner);
-                }
-                ui.CloseCurrentPopup();
+                case 1:
+                    roller->options.clear();
+                    for (int i = 0; i < m_FillCount; ++i)
+                    {
+                        roller->options.push_back(fmt(m_FillStart + i));
+                    }
+                    // Update the child text objects.
+                    if (auto* owner = roller->GetOwner())
+                    {
+                        roller->SyncChildObjects(owner);
+                    }
+                    ui.CloseCurrentPopup();
+                    break;
+                case 0: ui.CloseCurrentPopup(); break;
+                default: break;
             }
-            ui.SameLine();
-            if (ui.Button(TrLabel("Cancel"), 120, 0))
-            {
-                ui.CloseCurrentPopup();
-            }
-
-            ui.EndPopup();
+            EndSchematicModal();
         }
     }
 

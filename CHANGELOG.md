@@ -21,6 +21,8 @@ alongside one that has them.
 - The editor's previews (fonts, BDF fonts, icon fonts, spritesheets) make
   their textures with `EditorTexture` instead of OpenGL, which the editor no
   longer uses. Needs editor 0.22.
+- Roller's Fill Options is a dialog like the editor's others: labels over
+  fields, Cancel and Fill.
 
 ## 0.21.0
 
