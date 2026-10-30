@@ -54,23 +54,18 @@ public:
 
     // The AssetRef stores the GUID and loads the font.
     DEKI_EXPORT
-    DEKI_TOOLTIP("A bitmap font asset. Fonts are baked to a fixed size, so pick one close to the size you want rather "
-                 "than scaling far from it.")
+    DEKI_TOOLTIP("A TrueType or BDF font asset. Font Size picks the size a TrueType font is drawn at.")
     Deki::AssetRef<BitmapFont> font;
 
 #ifdef DEKI_EDITOR
-    /// Font size in pixels; picks the baked variant of that size.
+    /// Font size in pixels; picks the baked variant of that size. The editor
+    /// bakes a size the first time a text uses it.
     DEKI_EXPORT
-    DEKI_TOOLTIP(
-        "Size used for the editor preview only. What the device draws is the size the font asset was baked at.")
+    DEKI_TOOLTIP("Font size in pixels. The editor bakes the font at this size the first time a text uses it, and a "
+                 "build ships the sizes its texts use.")
+    DEKI_RANGE(6, 128)
     DEKI_EDITOR_ONLY
     int32_t fontSize = 16;
-
-    /// Live font preview. Not serialized.
-    bool previewEnabled = false;
-
-    /// Font size to preview. Not serialized.
-    int32_t previewSize = 16;
 
     /// True when no baked variant of fontSize exists.
     bool fontSizeUnavailable = false;

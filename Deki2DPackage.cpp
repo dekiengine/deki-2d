@@ -176,6 +176,7 @@ extern "C"
     DEKI_PLUGIN_API void DekiPluginShutdown(void)
     {
         s_Registered = false;
+        Deki2D::StopFontBaker();
         Deki2D::ClearPreviewTextureCache();
     }
 
@@ -267,6 +268,9 @@ extern "C"
     // headers. Order: CompileFont, GetCompiledFontAtlas, WriteDfont,
     // FreeCompileResult.
 
+    /// Compiles the TrueType font at `ttfPath` at `fontSize`. The font's own
+    /// .data settings (characters, hinting, oversample, decoration) win over
+    /// `firstChar` and `lastChar`, so a build bakes what the editor shows.
     DEKI_PLUGIN_API void* DekiPluginCompileFont(const char* ttfPath, int fontSize, int firstChar, int lastChar,
                                                 int padding, int maxAtlas)
     {
@@ -274,12 +278,12 @@ extern "C"
         {
             return nullptr;
         }
+        (void)firstChar;
+        (void)lastChar;
 
         auto* result = new Deki2D::FontCompiler::CompileResult();
-        Deki2D::FontCompiler::CompileOptions options;
+        Deki2D::FontCompiler::CompileOptions options = Deki2D::LoadFontCompileOptions(ttfPath);
         options.fontSize = fontSize;
-        options.firstChar = firstChar;
-        options.lastChar = lastChar;
         options.padding = padding;
         options.maxAtlasSize = maxAtlas;
 
@@ -321,6 +325,23 @@ extern "C"
     DEKI_PLUGIN_API void DekiPluginFreeCompileResult(void* handle)
     {
         delete static_cast<Deki2D::FontCompiler::CompileResult*>(handle);
+    }
+
+    /// Writes up to `maxCount` of the sizes the TrueType font at `ttfPath`
+    /// asks builds to always ship (its "Also Ship" list) to `outSizes`.
+    /// Returns how many there are.
+    DEKI_PLUGIN_API int DekiPluginGetFontExtraSizes(const char* ttfPath, int* outSizes, int maxCount)
+    {
+        if (!ttfPath)
+        {
+            return 0;
+        }
+        const std::vector<int> sizes = Deki2D::LoadFontExtraSizes(ttfPath);
+        for (int i = 0; i < maxCount && i < static_cast<int>(sizes.size()); ++i)
+        {
+            outSizes[i] = sizes[i];
+        }
+        return static_cast<int>(sizes.size());
     }
 
 #endif  // DEKI_PLUGIN_EXPORTS

@@ -12,6 +12,7 @@
 #include "editor/FontSyncHandler.h"
 #include <deki-editor/EditorAssets.h>
 #include <deki-editor/AssetPipeline.h>
+#include <deki-editor/Paths.h>
 #include <deki/Guid.h>
 #include <deki/Scene.h>
 #include <deki/Object.h>
@@ -21,8 +22,6 @@
 #include <filesystem>
 #include <functional>
 #include <unordered_map>
-#include <fstream>
-#include <nlohmann/json.hpp>
 
 #include <deki-editor/EditorTexture.h>
 
@@ -42,99 +41,6 @@ static Deki2D::BitmapFont* s_PreviewFont = nullptr;
 static std::string s_PreviewFontGuid;
 static int s_PreviewFontSize = 0;
 }  // anonymous namespace
-
-static Deki2D::BitmapFont* GetEditorFontVariant(const std::string& fontGuid, int fontSize)
-{
-    if (fontGuid.empty() || fontSize <= 0)
-    {
-        return nullptr;
-    }
-
-    if (s_PreviewFont && s_PreviewFontGuid == fontGuid && s_PreviewFontSize == fontSize)
-    {
-        return s_PreviewFont;
-    }
-
-    if (s_PreviewFont)
-    {
-        delete s_PreviewFont;
-        s_PreviewFont = nullptr;
-        s_PreviewFontGuid.clear();
-        s_PreviewFontSize = 0;
-    }
-
-    auto* pipeline = DekiEditor::AssetPipeline::Instance();
-    if (!pipeline)
-    {
-        return nullptr;
-    }
-    const DekiEditor::AssetInfo* info = pipeline->GetAssetInfoByGuid(fontGuid);
-    if (!info)
-    {
-        return nullptr;
-    }
-    std::string ttfPath = (std::filesystem::path(pipeline->GetProjectPath()) / info->path).string();
-    if (ttfPath.empty() || !std::filesystem::exists(ttfPath))
-    {
-        return nullptr;
-    }
-
-    Deki2D::FontCompiler::CompileOptions options;
-    options.fontSize = fontSize;
-    options.firstChar = 32;
-    options.lastChar = 126;
-    options.padding = 2;
-
-    Deki2D::FontCompiler::CompileResult result;
-    if (!Deki2D::FontCompiler::CompileTrueTypeFont(ttfPath, options, result))
-    {
-        return nullptr;
-    }
-
-    Deki::Texture2D* atlas = new Deki::Texture2D();
-    atlas->width = result.atlasWidth;
-    atlas->height = result.atlasHeight;
-    atlas->format = Deki::Texture2D::TextureFormat::RGBA8888;
-    atlas->hasAlpha = true;
-    atlas->hasTransparency = true;
-
-    size_t atlasSize = result.atlasWidth * result.atlasHeight * 4;
-    if (Deki::Memory::IsInitialized())
-    {
-        atlas->data = static_cast<uint8_t*>(Deki::Memory::Allocate(atlasSize, Deki::Memory::External));
-        atlas->allocatedWithBackend = true;
-    }
-    else
-    {
-        atlas->data = static_cast<uint8_t*>(std::malloc(atlasSize));
-    }
-
-    if (!atlas->data)
-    {
-        delete atlas;
-        return nullptr;
-    }
-    memcpy(atlas->data, result.atlasRGBA.data(), atlasSize);
-
-    Deki::Buffer<Deki2D::GlyphInfo> glyphsCopy(result.glyphs.size(), Deki::Memory::Internal);
-    if (!glyphsCopy)
-    {
-        delete atlas;
-        return nullptr;
-    }
-    memcpy(glyphsCopy.Data(), result.glyphs.data(), glyphsCopy.Bytes());
-
-    Deki2D::BitmapFont* font = Deki2D::BitmapFont::CreateFromMemory(
-        atlas, std::move(glyphsCopy), result.firstChar, result.lastChar, result.lineHeight, result.baseline);
-
-    if (font)
-    {
-        s_PreviewFont = font;
-        s_PreviewFontGuid = fontGuid;
-        s_PreviewFontSize = fontSize;
-    }
-    return font;
-}
 
 static bool IsBdfFont(const std::string& sourceGuid)
 {
@@ -191,13 +97,8 @@ Deki2D::BitmapFont* Deki2D::EditorFontResolve(Deki2D::TextComponent* tc)
         return nullptr;
     }
 
-    // Edit mode: the preview comes first.
-    if (tc->previewEnabled && tc->previewSize > 0)
-    {
-        return GetEditorFontVariant(tc->font.source, tc->previewSize);
-    }
-
-    // Edit mode: sync the GUID to the baked variant.
+    // Edit mode: sync the GUID to the baked variant. TextComponentEditor
+    // bakes the size when it is missing.
     if (!tc->font.source.empty() && tc->fontSize > 0)
     {
         const std::string& expectedGuid = SyncedBakedFontGuid(tc);
@@ -206,7 +107,6 @@ Deki2D::BitmapFont* Deki2D::EditorFontResolve(Deki2D::TextComponent* tc)
             tc->font.guid = expectedGuid;
             tc->font.ptr = nullptr;
             tc->font.loadAttempted = false;
-            Deki2D::EnsureFontSizeBaked(tc->font.source, tc->fontSize);
         }
     }
 
@@ -324,53 +224,21 @@ struct PreviewFontTexture
 };
 static std::unordered_map<std::string, PreviewFontTexture> s_PreviewTextureCache;
 
-// The GUID of the font's baked variant of this size, from the source font's
-// .data sidecar, or "" when there is none.
-static std::string GetVariantGuidFromData(const std::string& sourceGuid, int fontSize)
+// The GUID of the font's baked variant of this size, or "" when it is not
+// baked.
+static std::string GetBakedVariantGuid(const std::string& sourceGuid, int fontSize)
 {
     auto* pipeline = DekiEditor::AssetPipeline::Instance();
     if (!pipeline)
     {
         return "";
     }
-
-    const DekiEditor::AssetInfo* fontInfo = pipeline->GetAssetInfoByGuid(sourceGuid);
-    if (!fontInfo)
+    std::string variantGuid = Deki::GenerateDeterministicGuid(sourceGuid + ":" + std::to_string(fontSize));
+    if (!std::filesystem::exists(DekiEditor::GetCachePath(pipeline->GetProjectPath(), variantGuid)))
     {
         return "";
     }
-
-    namespace fs = std::filesystem;
-    std::string fontPath = (fs::path(pipeline->GetProjectPath()) / fontInfo->path).string();
-    std::string dataPath = fontPath + ".data";
-
-    if (!fs::exists(dataPath))
-    {
-        return "";
-    }
-
-    std::ifstream file(dataPath);
-    if (!file.is_open())
-    {
-        return "";
-    }
-
-    try
-    {
-        nlohmann::json j = nlohmann::json::parse(file);
-        std::string sizeKey = std::to_string(fontSize);
-
-        if (j.contains("variants") && j["variants"].contains(sizeKey) && j["variants"][sizeKey].contains("guid"))
-        {
-            return j["variants"][sizeKey]["guid"].get<std::string>();
-        }
-    }
-    catch (...)
-    {
-        // A file that does not parse has no variant.
-    }
-
-    return "";
+    return variantGuid;
 }
 
 static std::string ResolveTTFPath(const std::string& sourceGuid)
@@ -417,7 +285,7 @@ void InitializeFontPreviewCallbacks()
             }
 
             // 1. Already baked to disk: use the variant GUID from the .data file.
-            std::string variantGuid = GetVariantGuidFromData(sourceGuid, fontSize);
+            std::string variantGuid = GetBakedVariantGuid(sourceGuid, fontSize);
             if (!variantGuid.empty())
             {
                 Deki2D::BitmapFont* baked = DekiEditor::EditorAssets::Get()->GetBitmapFont(variantGuid);
@@ -451,11 +319,8 @@ void InitializeFontPreviewCallbacks()
                 return nullptr;
             }
 
-            Deki2D::FontCompiler::CompileOptions options;
+            Deki2D::FontCompiler::CompileOptions options = Deki2D::LoadFontCompileOptions(ttfPath);
             options.fontSize = fontSize;
-            options.firstChar = 32;
-            options.lastChar = 126;
-            options.padding = 2;
 
             Deki2D::FontCompiler::CompileResult result;
             if (!Deki2D::FontCompiler::CompileTrueTypeFont(ttfPath, options, result))
@@ -513,7 +378,7 @@ void InitializeFontPreviewCallbacks()
             }
 
             // 1. Already baked to disk: use the variant GUID from the .data file.
-            std::string variantGuid = GetVariantGuidFromData(sourceGuid, fontSize);
+            std::string variantGuid = GetBakedVariantGuid(sourceGuid, fontSize);
             if (!variantGuid.empty())
             {
                 uint32_t bakedAtlas = DekiEditor::EditorAssets::Get()->LoadFontAtlas(variantGuid, outW, outH);
@@ -556,11 +421,8 @@ void InitializeFontPreviewCallbacks()
                 return 0;
             }
 
-            Deki2D::FontCompiler::CompileOptions options;
+            Deki2D::FontCompiler::CompileOptions options = Deki2D::LoadFontCompileOptions(ttfPath);
             options.fontSize = fontSize;
-            options.firstChar = 32;
-            options.lastChar = 126;
-            options.padding = 2;
 
             Deki2D::FontCompiler::CompileResult result;
             if (!Deki2D::FontCompiler::CompileTrueTypeFont(ttfPath, options, result))

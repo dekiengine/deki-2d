@@ -75,7 +75,6 @@ private:
     void LoadBdf(const std::string& assetPath);
     void LoadSettings(const std::string& assetPath);
     void SaveSettings(const std::string& assetPath, const std::string& assetGuid);
-    void BakeFont(const std::string& assetPath, const std::string& assetGuid);
     void CleanupTextures();
     std::vector<int> GetSelectedCodepoints() const;
 };

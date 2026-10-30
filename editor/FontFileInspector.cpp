@@ -1,13 +1,10 @@
 #include "FontFileInspector.h"
-#include <deki-editor/Paths.h>
 
 #ifdef DEKI_EDITOR
 
 #include "FontCompiler.h"
+#include "FontSyncHandler.h"
 #include <deki-editor/AssetPipeline.h>
-#include <deki-editor/TextureImporter.h>
-#include <deki-editor/AssetData.h>
-#include <deki-editor/EditorApplication.h>
 #include <deki-editor/EditorUI.h>
 #include <deki-editor/IconsTabler.h>
 #include <deki-editor/Localization.h>
@@ -16,14 +13,10 @@
 #include <fstream>
 #include <filesystem>
 #include <algorithm>
-#include <sstream>
-#include <iomanip>
 
 #include <deki-editor/EditorTexture.h>
 
 #include <deki/LogSystem.h>
-#include <deki/Guid.h>                 // For Deki::GenerateDeterministicGuid
-#include <deki/assets/AssetManager.h>  // For registering variant GUIDs
 
 namespace fs = std::filesystem;
 using json = nlohmann::json;
@@ -102,15 +95,21 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
 {
     auto& ui = DekiEditor::EditorUI::Get();
 
+    // Bakes may land while no text is in view.
+    PumpFontBakes();
+
     if (m_CurrentAssetPath != assetPath)
     {
         DEKI_LOG_DEBUG("FontInspector: Asset changed, loading settings for %s (guid=%s)", assetPath.c_str(),
                        assetGuid.c_str());
         LoadSettings(assetPath);
         m_CurrentAssetPath = assetPath;
-        m_SettingsModified = false;
-        m_VariantCacheDirty = true;
+        m_LastPendingCount = -1;
     }
+
+    // Every change is saved at once; the sync then bakes again what it made
+    // stale.
+    bool changed = false;
 
     // Sections of property rows, as every other inspector: a label column
     // and a value column, hints lined up with the labels, and the actions as
@@ -121,13 +120,13 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
         if (ui.DragInt("##firstChar", &m_FirstChar, 0.2f, 0, 255))
         {
             m_FirstChar = (std::max)(0, (std::min)(255, m_FirstChar));
-            m_SettingsModified = true;
+            changed = true;
         }
         ui.PropertyRow("Last Character");
         if (ui.DragInt("##lastChar", &m_LastChar, 0.2f, 0, 255))
         {
             m_LastChar = (std::max)(m_FirstChar, (std::min)(255, m_LastChar));
-            m_SettingsModified = true;
+            changed = true;
         }
 
         // How many, and the first and last as characters when printable.
@@ -171,7 +170,7 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
         if (ui.Combo("##hinting", &currentIndex, kHintingLabels, 4))
         {
             m_Hinting = kHintingValues[currentIndex];
-            m_SettingsModified = true;
+            changed = true;
         }
 
         // Oversampling is off with Mono hinting: a 1-bit source gains nothing.
@@ -188,7 +187,7 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
         if (ui.Combo("##oversample", &oversampleIndex, kOversampleLabels, 4))
         {
             m_Oversample = oversampleIndex + 1;
-            m_SettingsModified = true;
+            changed = true;
         }
         ui.EndDisabled();
 
@@ -213,7 +212,7 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
         if (ui.Combo("##decoration", &decorationIndex, kDecorationLabels, 3))
         {
             m_Decoration = kDecorationValues[decorationIndex];
-            m_SettingsModified = true;
+            changed = true;
         }
         if (m_Decoration == FontCompiler::DecorationMode::Outline)
         {
@@ -221,7 +220,7 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
             if (ui.DragInt("##outlineSize", &m_OutlineSize, 0.05f, 1, 3))
             {
                 m_OutlineSize = (std::max)(1, (std::min)(3, m_OutlineSize));
-                m_SettingsModified = true;
+                changed = true;
             }
         }
         else if (m_Decoration == FontCompiler::DecorationMode::Shadow)
@@ -230,52 +229,64 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
             if (ui.DragInt("##shadowDx", &m_ShadowDx, 0.05f, -3, 3))
             {
                 m_ShadowDx = (std::max)(-3, (std::min)(3, m_ShadowDx));
-                m_SettingsModified = true;
+                changed = true;
             }
             ui.PropertyRow("Shadow dY");
             if (ui.DragInt("##shadowDy", &m_ShadowDy, 0.05f, -3, 3))
             {
                 m_ShadowDy = (std::max)(-3, (std::min)(3, m_ShadowDy));
-                m_SettingsModified = true;
+                changed = true;
             }
         }
 
-        ui.Hint(DekiEditor::Tr("Affects edge smoothness. Re-bake variants after changing."));
+        ui.Hint(DekiEditor::Tr("Changes bake the sizes in use again."));
     }
 
-    // The "is it cached" map is refreshed only when something changed, not every frame.
-    if (m_VariantCacheDirty)
+    // The baked list is read again only when bakes start or land.
+    const int pendingCount = GetPendingFontBakeCount(assetGuid);
+    if (pendingCount != m_LastPendingCount)
     {
-        RefreshVariantCache(assetPath);
-        m_VariantCacheDirty = false;
+        m_BakedSizes = GetBakedFontSizes(assetGuid);
+        m_LastPendingCount = pendingCount;
     }
 
-    bool hasUncachedVariants = false;
-    for (int size : m_Sizes)
+    if (ui.SectionHeader(DekiEditor::Tr("Sizes")))
     {
-        auto it = m_VariantCached.find(size);
-        if (it == m_VariantCached.end() || !it->second)
+        std::string baked;
+        for (int size : m_BakedSizes)
         {
-            hasUncachedVariants = true;
-            break;
+            baked += (baked.empty() ? "" : ", ") + std::to_string(size);
         }
-    }
+        ui.PropertyRow("Baked");
+        if (baked.empty())
+        {
+            ui.ValueText(DekiEditor::Tr("None yet"));
+        }
+        else
+        {
+            baked += " px";
+            ui.ValueText(baked.c_str());
+        }
+        if (pendingCount > 0)
+        {
+            char buf[64];
+            std::snprintf(buf, sizeof(buf), DekiEditor::Tr("Baking %d sizes..."), pendingCount);
+            ui.PropertyRow("Status");
+            ui.ValueText(buf);
+        }
+        ui.Hint(DekiEditor::Tr("The editor bakes each size a text uses. A build ships the sizes its texts use, and "
+                               "the sizes below."));
 
-    if (ui.SectionHeader(DekiEditor::Tr("Size Variants")))
-    {
-        ui.Hint(DekiEditor::Tr("Configure which sizes to bake for this font."));
-
-        // One row per size: whether it is baked, and a button to drop it.
+        // Sizes only code sets (a Roller's selected row, a script), which no
+        // text in a scene names.
         int indexToRemove = -1;
-        for (size_t i = 0; i < m_Sizes.size(); ++i)
+        for (size_t i = 0; i < m_ExtraSizes.size(); ++i)
         {
             ui.PushID(static_cast<int>(i));
-            auto it = m_VariantCached.find(m_Sizes[i]);
-            const bool cached = (it != m_VariantCached.end()) && it->second;
             char label[32];
-            std::snprintf(label, sizeof(label), "%d px", m_Sizes[i]);
-            ui.PropertyRow(label);
-            ui.ValueText(cached ? DekiEditor::Tr("Cached") : DekiEditor::Tr("Not cached"));
+            std::snprintf(label, sizeof(label), "%d px", m_ExtraSizes[i]);
+            ui.PropertyRow("Also Ship");
+            ui.ValueText(label);
             ui.SameLine();
             if (ui.SmallButton(ICON_TI_X "##remove"))
             {
@@ -287,121 +298,51 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
             }
             ui.PopID();
         }
-
         if (indexToRemove >= 0)
         {
-            m_Sizes.erase(m_Sizes.begin() + indexToRemove);
-            m_SettingsModified = true;
-            m_VariantCacheDirty = true;
+            m_ExtraSizes.erase(m_ExtraSizes.begin() + indexToRemove);
+            changed = true;
         }
 
         ui.PropertyRow("New Size");
-        ui.DragInt("##newSize", &m_NewSize, 0.2f, 6, 128);
-        m_NewSize = (std::max)(6, (std::min)(128, m_NewSize));
-        const bool sizeExists = std::find(m_Sizes.begin(), m_Sizes.end(), m_NewSize) != m_Sizes.end();
+        ui.DragInt("##newSize", &m_NewSize, 0.2f, kMinFontSize, kMaxFontSize);
+        m_NewSize = (std::max)(kMinFontSize, (std::min)(kMaxFontSize, m_NewSize));
+        const bool sizeExists = std::find(m_ExtraSizes.begin(), m_ExtraSizes.end(), m_NewSize) != m_ExtraSizes.end();
         ui.BeginDisabled(sizeExists);
-        if (ui.ActionButton(DekiEditor::TrLabel("Add Size")) && !sizeExists)
+        if (ui.ActionButton(DekiEditor::TrLabel("Ship This Size")) && !sizeExists)
         {
-            m_Sizes.push_back(m_NewSize);
-            std::sort(m_Sizes.begin(), m_Sizes.end());
-            m_SettingsModified = true;
-            m_VariantCacheDirty = true;
+            m_ExtraSizes.push_back(m_NewSize);
+            std::sort(m_ExtraSizes.begin(), m_ExtraSizes.end());
+            changed = true;
         }
         ui.EndDisabled();
-        if (sizeExists)
+        ui.Hint(DekiEditor::Tr("For sizes only code sets, such as the selected row of a Roller."));
+
+        // Settings changes bake by themselves; this is for anything else.
+        ui.BeginDisabled(m_BakedSizes.empty() || pendingCount > 0);
+        if (ui.ActionButton(DekiEditor::TrLabel("Rebake")))
         {
-            ui.Hint(DekiEditor::Tr("That size is already in the list."));
+            RebakeFont(assetGuid);
+            m_LastPendingCount = -1;
+        }
+        ui.EndDisabled();
+        if (ui.IsItemHovered())
+        {
+            ui.SetTooltip(DekiEditor::Tr("Bake every baked size again"));
         }
     }
 
-    // Baking: what needs doing, then Apply (when something does) and Rebake.
-    if (ui.SectionHeader(DekiEditor::Tr("Bake")))
+    if (changed)
     {
-        const bool canBake = (m_SettingsModified || hasUncachedVariants) && !m_Sizes.empty();
-        ui.PropertyRow("Status");
-        if (m_Sizes.empty())
-        {
-            ui.ValueText(DekiEditor::Tr("No sizes"));
-        }
-        else if (m_SettingsModified)
-        {
-            ui.ValueText(DekiEditor::Tr("Unsaved changes"));
-        }
-        else if (hasUncachedVariants)
-        {
-            ui.ValueText(DekiEditor::Tr("Not cached"));
-        }
-        else
-        {
-            ui.ValueText(DekiEditor::Tr("Up to date"));
-        }
-
-        ui.BeginDisabled(!canBake);
-        if (ui.ActionButton(DekiEditor::TrLabel("Apply & Bake Fonts")) && canBake)
-        {
-            SaveSettings(assetPath, assetGuid);
-
-            for (int size : m_Sizes)
-            {
-                BakeFontVariant(assetPath, assetGuid, size);
-            }
-
-            m_SettingsModified = false;
-            m_VariantCacheDirty = true;
-
-            // Invalidate all assets so the scene view picks up the re-baked fonts.
-            DekiEditor::EditorApplication::Get().RequestAssetInvalidation();
-        }
-        ui.EndDisabled();
-
-        // Rebake deletes the cached files, then bakes every variant again.
-        if (!m_Sizes.empty())
-        {
-            if (ui.ActionButton(DekiEditor::TrLabel("Rebake")))
-            {
-                SaveSettings(assetPath, assetGuid);
-
-                auto* pl = DekiEditor::AssetPipeline::Instance();
-                if (pl)
-                {
-                    std::string cacheDir = pl->GetProjectPath() + "/cache/";
-                    for (int size : m_Sizes)
-                    {
-                        std::string variantGuid = GetVariantGuidFromData(assetPath, size);
-                        std::string atlasGuid = GetAtlasGuidFromData(assetPath, size);
-                        std::error_code ec;
-                        if (!variantGuid.empty())
-                        {
-                            fs::remove(cacheDir + variantGuid, ec);
-                        }
-                        if (!atlasGuid.empty())
-                        {
-                            fs::remove(cacheDir + atlasGuid, ec);
-                        }
-                    }
-                }
-
-                for (int size : m_Sizes)
-                {
-                    BakeFontVariant(assetPath, assetGuid, size);
-                }
-
-                m_SettingsModified = false;
-                m_VariantCacheDirty = true;
-                DekiEditor::EditorApplication::Get().RequestAssetInvalidation();
-            }
-            if (ui.IsItemHovered())
-            {
-                ui.SetTooltip(DekiEditor::Tr("Delete cached fonts and re-bake all variants"));
-            }
-        }
+        SaveSettings(assetPath, assetGuid);
+        m_LastPendingCount = -1;
     }
 
     if (ui.SectionHeader(DekiEditor::Tr("Preview")))
     {
         ui.PropertyRow("Preview Size");
-        ui.DragInt("##previewSize", &m_PreviewSize, 0.2f, 6, 128);
-        m_PreviewSize = (std::max)(6, (std::min)(128, m_PreviewSize));
+        ui.DragInt("##previewSize", &m_PreviewSize, 0.2f, kMinFontSize, kMaxFontSize);
+        m_PreviewSize = (std::max)(kMinFontSize, (std::min)(kMaxFontSize, m_PreviewSize));
 
         ui.PropertyRow("Preview Text");
         ui.InputText("##previewText", m_PreviewText, sizeof(m_PreviewText));
@@ -413,27 +354,6 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
 
         if (m_PreviewTextureId != 0 && m_PreviewTextureWidth > 0 && m_PreviewTextureHeight > 0)
         {
-            // Save adds this size to the list and bakes it.
-            const bool sizeExists = std::find(m_Sizes.begin(), m_Sizes.end(), m_PreviewSize) != m_Sizes.end();
-            if (sizeExists)
-            {
-                ui.Hint(DekiEditor::Tr("This size is already saved."));
-            }
-            else if (ui.ActionButton(DekiEditor::TrLabel("Save This Size")))
-            {
-                m_Sizes.push_back(m_PreviewSize);
-                std::sort(m_Sizes.begin(), m_Sizes.end());
-                m_SettingsModified = true;
-
-                SaveSettings(assetPath, assetGuid);
-                BakeFontVariant(assetPath, assetGuid, m_PreviewSize);
-                m_SettingsModified = false;
-                m_VariantCacheDirty = true;
-
-                // Invalidate all assets so the scene view picks up the new font.
-                DekiEditor::EditorApplication::Get().RequestAssetInvalidation();
-            }
-
             char buf[32];
             std::snprintf(buf, sizeof(buf), "%d px", m_LastPreviewSize);
             ui.PropertyRow("Previewed");
@@ -450,42 +370,9 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
     }
 }
 
-void FontFileInspector::RefreshVariantCache(const std::string& assetPath)
-{
-    m_VariantCached.clear();
-
-    auto* pipeline = DekiEditor::AssetPipeline::Instance();
-    if (!pipeline || m_Sizes.empty())
-    {
-        return;
-    }
-
-    const std::string cacheDir = pipeline->GetProjectPath() + "/cache/";
-    for (int size : m_Sizes)
-    {
-        const std::string variantGuid = GetVariantGuidFromData(assetPath, size);
-        if (variantGuid.empty())
-        {
-            m_VariantCached[size] = false;
-            continue;
-        }
-
-        std::string cachePath = cacheDir + variantGuid;
-        for (char& c : cachePath)
-        {
-            if (c == '/')
-            {
-                c = '\\';
-            }
-        }
-
-        m_VariantCached[size] = fs::exists(cachePath);
-    }
-}
-
 void FontFileInspector::LoadSettings(const std::string& assetPath)
 {
-    m_Sizes.clear();
+    m_ExtraSizes.clear();
     m_FirstChar = 32;
     m_LastChar = 126;
     m_Hinting = FontCompiler::HintingMode::Light;
@@ -515,13 +402,13 @@ void FontFileInspector::LoadSettings(const std::string& assetPath)
         {
             auto& settings = j["fontSettings"];
 
-            if (settings.contains("sizes") && settings["sizes"].is_array())
+            if (settings.contains("extraSizes") && settings["extraSizes"].is_array())
             {
-                for (const auto& size : settings["sizes"])
+                for (const auto& size : settings["extraSizes"])
                 {
                     if (size.is_number_integer())
                     {
-                        m_Sizes.push_back(size.get<int>());
+                        m_ExtraSizes.push_back(size.get<int>());
                     }
                 }
             }
@@ -633,8 +520,9 @@ void FontFileInspector::SaveSettings(const std::string& assetPath, const std::st
         j["guid"] = assetGuid;
     }
 
+    // Sizes are not listed: the texts that use them are the record. The
+    // "sizes" and "variants" keys older versions wrote are dropped.
     j["fontSettings"] = json::object();
-    j["fontSettings"]["sizes"] = m_Sizes;
     j["fontSettings"]["firstChar"] = m_FirstChar;
     j["fontSettings"]["lastChar"] = m_LastChar;
     j["fontSettings"]["hinting"] = HintingToString(m_Hinting);
@@ -643,193 +531,27 @@ void FontFileInspector::SaveSettings(const std::string& assetPath, const std::st
     j["fontSettings"]["outlineSize"] = m_OutlineSize;
     j["fontSettings"]["shadowDx"] = m_ShadowDx;
     j["fontSettings"]["shadowDy"] = m_ShadowDy;
-    // Variant GUIDs, derived from the font GUID and the size, so they are the
-    // same on every save.
-    if (!j.contains("variants"))
+    if (!m_ExtraSizes.empty())
     {
-        j["variants"] = json::object();
+        j["fontSettings"]["extraSizes"] = m_ExtraSizes;
     }
+    j.erase("variants");
 
-    for (int size : m_Sizes)
-    {
-        std::string sizeKey = std::to_string(size);
-
-        if (!j["variants"].contains(sizeKey))
-        {
-            j["variants"][sizeKey] = json::object();
-        }
-
-        // From "fontGuid:size".
-        std::string variantGuid = Deki::GenerateDeterministicGuid(assetGuid + ":" + sizeKey);
-        j["variants"][sizeKey]["guid"] = variantGuid;
-
-        // From "fontGuid:size:atlas".
-        std::string atlasGuid = Deki::GenerateDeterministicGuid(assetGuid + ":" + sizeKey + ":atlas");
-        j["variants"][sizeKey]["atlasGuid"] = atlasGuid;
-    }
-
+    // Closed before the refresh below reads it.
     std::ofstream outFile(dataPath);
     if (outFile.is_open())
     {
         outFile << j.dump(2);
+        outFile.close();
     }
 
-    // Tell the AssetPipeline, so it reads the sidecar again.
+    // The pipeline syncs the font again, which bakes what the change made
+    // stale.
     auto* pipeline = DekiEditor::AssetPipeline::Instance();
     if (pipeline)
     {
-        std::string assetsPath = pipeline->GetProjectPath() + "/project/assets";
-        std::string relativePath = fs::relative(assetPath, assetsPath).string();
-        for (char& c : relativePath)
-        {
-            if (c == '\\')
-            {
-                c = '/';
-            }
-        }
-
-        pipeline->RefreshAsset("project/assets/" + relativePath);
+        pipeline->RefreshAsset(pipeline->MakeProjectRelative(assetPath));
     }
-}
-
-std::string FontFileInspector::GenerateVariantGuid(const std::string& fontGuid, int fontSize)
-{
-    // The same GUID SaveSettings writes for this size.
-    std::string seed = fontGuid + ":" + std::to_string(fontSize);
-    return Deki::GenerateDeterministicGuid(seed);
-}
-
-std::string FontFileInspector::GetVariantGuidFromData(const std::string& assetPath, int fontSize)
-{
-    std::string dataPath = assetPath + ".data";
-    if (!fs::exists(dataPath))
-    {
-        return "";
-    }
-
-    std::ifstream file(dataPath);
-    if (!file.is_open())
-    {
-        return "";
-    }
-
-    try
-    {
-        json j = json::parse(file);
-        std::string sizeKey = std::to_string(fontSize);
-
-        if (j.contains("variants") && j["variants"].contains(sizeKey) && j["variants"][sizeKey].contains("guid"))
-        {
-            return j["variants"][sizeKey]["guid"].get<std::string>();
-        }
-    }
-    catch (const json::exception&)
-    {
-        // A file that does not parse is ignored.
-    }
-
-    return "";
-}
-
-std::string FontFileInspector::GetAtlasGuidFromData(const std::string& assetPath, int fontSize)
-{
-    std::string dataPath = assetPath + ".data";
-    if (!fs::exists(dataPath))
-    {
-        return "";
-    }
-
-    std::ifstream file(dataPath);
-    if (!file.is_open())
-    {
-        return "";
-    }
-
-    try
-    {
-        json j = json::parse(file);
-        std::string sizeKey = std::to_string(fontSize);
-
-        if (j.contains("variants") && j["variants"].contains(sizeKey) && j["variants"][sizeKey].contains("atlasGuid"))
-        {
-            return j["variants"][sizeKey]["atlasGuid"].get<std::string>();
-        }
-    }
-    catch (const json::exception&)
-    {
-        // A file that does not parse is ignored.
-    }
-
-    return "";
-}
-
-void FontFileInspector::BakeFontVariant(const std::string& assetPath, const std::string& fontGuid, int fontSize)
-{
-    auto* pipeline = DekiEditor::AssetPipeline::Instance();
-    if (!pipeline)
-    {
-        return;
-    }
-
-    // SaveSettings has written the GUIDs to the .data file.
-    std::string variantGuid = GetVariantGuidFromData(assetPath, fontSize);
-    std::string atlasGuid = GetAtlasGuidFromData(assetPath, fontSize);
-
-    if (variantGuid.empty() || atlasGuid.empty())
-    {
-        DEKI_LOG_ERROR("Failed to get variant/atlas GUIDs from .data file for %s @ %d px", assetPath.c_str(), fontSize);
-        return;
-    }
-
-    std::string projectPath = pipeline->GetProjectPath();
-    std::string cacheDir = DekiEditor::GetCacheDirectory(projectPath);
-
-    fs::create_directories(cacheDir);
-
-    FontCompiler::CompileOptions options;
-    options.fontSize = fontSize;
-    options.firstChar = m_FirstChar;
-    options.lastChar = m_LastChar;
-    options.padding = 2;
-    options.maxAtlasSize = 2048;
-    options.hinting = m_Hinting;
-    options.oversample = m_Oversample;
-    options.decoration = m_Decoration;
-    options.outlineSize = m_OutlineSize;
-    options.shadowDx = m_ShadowDx;
-    options.shadowDy = m_ShadowDy;
-
-    FontCompiler::CompileResult result;
-    if (!FontCompiler::CompileTrueTypeFont(assetPath, options, result))
-    {
-        DEKI_LOG_ERROR("Failed to compile font variant: %s @ %d px", assetPath.c_str(), fontSize);
-        return;
-    }
-
-    // The atlas as DTEX, named by atlasGuid with no extension.
-    std::string atlasPath = cacheDir + "/" + atlasGuid;
-    if (!DekiEditor::TextureImporter::WriteTexFile(atlasPath, result.atlasRGBA.data(), result.atlasWidth,
-                                                   result.atlasHeight, DekiEditor::TextureFormat::ALPHA8))
-    {
-        DEKI_LOG_ERROR("Failed to write font atlas: %s", atlasPath.c_str());
-        return;
-    }
-
-    // The .dfont, named by variantGuid with no extension. It names its atlas
-    // by atlasGuid alone.
-    std::string dfontPath = cacheDir + "/" + variantGuid;
-    if (!FontCompiler::WriteDfontFile(dfontPath, result, atlasGuid))
-    {
-        DEKI_LOG_ERROR("Failed to write dfont file: %s", dfontPath.c_str());
-        return;
-    }
-
-    // Registered so the AssetManager finds the variant at runtime. The file
-    // name is the GUID alone; the AssetManager adds the cache directory.
-    Deki::AssetManager::Get()->RegisterGuid(variantGuid, variantGuid);
-
-    DEKI_LOG_EDITOR("Baked font variant: %s @ %d px -> font=%s, atlas=%s", assetPath.c_str(), fontSize,
-                    variantGuid.c_str(), atlasGuid.c_str());
 }
 
 void FontFileInspector::GeneratePreview(const std::string& assetPath, int fontSize)

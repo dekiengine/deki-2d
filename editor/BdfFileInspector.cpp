@@ -99,8 +99,6 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
 
     ui.Separator();
 
-    bool isCached = IsCached(assetGuid);
-
     ui.InputTextWithHint("##search", DekiEditor::Tr("Search (char or codepoint)..."), m_SearchFilter,
                          sizeof(m_SearchFilter));
     ui.SameLine();
@@ -186,25 +184,19 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
                 m_SettingsModified = true;
             }
         }
-        ui.TextDisabled(DekiEditor::Tr("Baked into atlas. Re-bake after changing."));
+        ui.TextDisabled(DekiEditor::Tr("Baked into the atlas. A change bakes it again."));
     }
 
-    bool canBake = m_SettingsModified || !isCached;
-    if (!canBake || m_SelectedChars.empty())
-    {
-        ui.BeginDisabled();
-    }
-
-    if (ui.Button(DekiEditor::TrLabel("Apply & Bake")))
+    // Every change is saved at once, and the save bakes the font again. With
+    // nothing selected there is nothing to bake, so the last selection stays.
+    if (m_SettingsModified && !m_SelectedChars.empty())
     {
         SaveSettings(assetPath, assetGuid);
-        BakeFont(assetPath, assetGuid);
         m_SettingsModified = false;
     }
-
-    if (!canBake || m_SelectedChars.empty())
+    if (m_SelectedChars.empty())
     {
-        ui.EndDisabled();
+        ui.TextDisabled(DekiEditor::Tr("Select the characters to bake."));
     }
 
     ui.Separator();
@@ -739,97 +731,10 @@ void BdfFileInspector::SaveSettings(const std::string& assetPath, const std::str
         outFile.close();
     }
 
-    // The refresh makes the sync handler bake.
-    pipeline->RefreshAsset(assetPath);
+    // The refresh makes the sync handler bake, and the texts load the bake.
+    pipeline->RefreshAsset(pipeline->MakeProjectRelative(fullPath));
 
-    DEKI_LOG_EDITOR("BdfInspector: Saved %d chars and triggered bake for %s", (int)codepoints.size(),
-                    assetPath.c_str());
-}
-
-void BdfFileInspector::BakeFont(const std::string& assetPath, const std::string& assetGuid)
-{
-    auto* pipeline = DekiEditor::AssetPipeline::Instance();
-    if (!pipeline || assetGuid.empty())
-    {
-        return;
-    }
-
-    std::string fullPath = (fs::path(pipeline->GetProjectPath()) / assetPath).string();
-    std::vector<int> codepoints = GetSelectedCodepoints();
-    if (codepoints.empty())
-    {
-        return;
-    }
-
-    // Derived from the asset GUID, so they stay the same across bakes.
-    std::string variantGuid = Deki::GenerateDeterministicGuid(assetGuid + ":bdf");
-    std::string atlasGuid = Deki::GenerateDeterministicGuid(assetGuid + ":bdf:atlas");
-
-    std::string cacheDir = pipeline->GetProjectPath() + "/cache";
-    fs::create_directories(cacheDir);
-
-    std::string dfontPath = cacheDir + "/" + variantGuid;
-    std::string atlasPath = cacheDir + "/" + atlasGuid;
-
-    FontCompiler::BdfCompileOptions options;
-    options.selectedChars = codepoints;
-    options.padding = 2;
-    options.maxAtlasSize = 2048;
-    options.decoration = m_Decoration;
-    options.outlineSize = m_OutlineSize;
-    options.shadowDx = m_ShadowDx;
-    options.shadowDy = m_ShadowDy;
-
-    FontCompiler::CompileResult result;
-    if (!FontCompiler::CompileBdfFont(fullPath, options, result))
-    {
-        DEKI_LOG_WARNING("BdfInspector: Failed to compile %s", fullPath.c_str());
-        return;
-    }
-
-    if (!DekiEditor::TextureImporter::WriteTexFile(atlasPath, result.atlasRGBA.data(), result.atlasWidth,
-                                                   result.atlasHeight, DekiEditor::TextureFormat::ALPHA8))
-    {
-        DEKI_LOG_WARNING("BdfInspector: Failed to write atlas %s", atlasPath.c_str());
-        return;
-    }
-
-    if (!FontCompiler::WriteDfontFile(dfontPath, result, atlasGuid))
-    {
-        DEKI_LOG_WARNING("BdfInspector: Failed to write dfont %s", dfontPath.c_str());
-        return;
-    }
-
-    Deki::AssetManager::Get()->RegisterGuid(variantGuid, variantGuid);
-
-    // As sub-assets, the variant shows in the Asset Browser.
-    std::vector<DekiEditor::SubAssetInfo> subAssets;
-
-    DekiEditor::SubAssetInfo fontSub;
-    fontSub.guid = variantGuid;
-    fontSub.parentGuid = assetGuid;
-    fontSub.subAssetIndex = 0;
-    fontSub.name = "bdf";
-    fontSub.depth = 0;
-    fontSub.cachePath = dfontPath;
-    subAssets.push_back(fontSub);
-
-    if (fs::exists(atlasPath))
-    {
-        DekiEditor::SubAssetInfo atlasSub;
-        atlasSub.guid = atlasGuid;
-        atlasSub.parentGuid = assetGuid;
-        atlasSub.subAssetIndex = 1;
-        atlasSub.name = "bdf atlas";
-        atlasSub.depth = 1;
-        atlasSub.cachePath = atlasPath;
-        atlasSub.hasPreview = true;
-        subAssets.push_back(atlasSub);
-    }
-
-    pipeline->RegisterSubAssets(assetGuid, subAssets);
-
-    DEKI_LOG_EDITOR("BdfInspector: Baked -> font=%s, atlas=%s", variantGuid.c_str(), atlasGuid.c_str());
+    DEKI_LOG_DEBUG("BdfInspector: Saved %d chars for %s", (int)codepoints.size(), assetPath.c_str());
 }
 
 std::vector<int> BdfFileInspector::GetSelectedCodepoints() const
