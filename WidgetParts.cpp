@@ -1,6 +1,7 @@
 #include "WidgetParts.h"
 
 #include <deki/Object.h>
+#include <deki/Scene.h>
 
 #include <cstring>
 
@@ -35,6 +36,19 @@ Deki::Object* MakeChild(Deki::Object* parent, const char* name)
     auto* child = new Deki::Object(name);
     parent->AddChild(child);
     return child;
+}
+
+void SetShown(Deki::Object* obj, bool show)
+{
+    if (!obj || obj->IsActive() == show)
+    {
+        return;
+    }
+    obj->SetActive(show);
+    if (Deki::Scene* scene = obj->GetOwnerScene())
+    {
+        scene->InvalidateComponentsCache();
+    }
 }
 
 void ShowFocus(Deki::Object* owner, bool show)

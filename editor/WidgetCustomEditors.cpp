@@ -1,5 +1,6 @@
 // Editor support for the UI widgets (Bar, Slider, Switch, Checkbox, LED, Arc,
-// Spinner, Spinbox, Dropdown, Tab View, Message Box, Date Picker): their parts kept in step in edit mode, where
+// Spinner, Spinbox, Dropdown, Tab View, Message Box, Date Picker, Text Area,
+// Keyboard, Chart): their parts kept in step in edit mode, where
 // RuntimeUpdate does not run; their size, so the scene view can select and outline the widget rather than one of its
 // parts; and a line in the inspector that says where the looks are edited.
 
@@ -12,9 +13,11 @@
 #include <deki/Engine.h>
 #include "ArcComponent.h"
 #include "BarComponent.h"
+#include "ChartComponent.h"
 #include "CheckboxComponent.h"
 #include "DatePickerComponent.h"
 #include "DropdownComponent.h"
+#include "KeyboardComponent.h"
 #include "LedComponent.h"
 #include "MsgboxComponent.h"
 #include "SliderComponent.h"
@@ -22,6 +25,7 @@
 #include "SpinnerComponent.h"
 #include "SwitchComponent.h"
 #include "TabviewComponent.h"
+#include "TextareaComponent.h"
 
 #include <algorithm>
 
@@ -316,6 +320,65 @@ protected:
     }
 };
 
+class TextareaEditor : public WidgetEditorOf<TextareaComponent>
+{
+public:
+    const char* GetComponentName() const override { return "TextareaComponent"; }
+
+protected:
+    bool SizeOf(Deki::Component* comp, float& w, float& h) override
+    {
+        auto* area = static_cast<TextareaComponent*>(comp);
+        w = area->width;
+        h = area->height;
+        return true;
+    }
+    const char* PartsHint() const override
+    {
+        return Tr("Its looks are on the child parts Box, Text, Placeholder, Cursor and Focus (shown while it has "
+                  "keyboard focus).");
+    }
+};
+
+class KeyboardEditor : public WidgetEditorOf<KeyboardComponent>
+{
+public:
+    const char* GetComponentName() const override { return "KeyboardComponent"; }
+
+protected:
+    bool SizeOf(Deki::Component* comp, float& w, float& h) override
+    {
+        auto* keys = static_cast<KeyboardComponent*>(comp);
+        w = keys->width;
+        h = keys->height;
+        return true;
+    }
+    const char* PartsHint() const override
+    {
+        return Tr("Its looks are on the child parts Caps and Specials (the key caps), Press (the key held or "
+                  "focused) and the Key texts.");
+    }
+};
+
+class ChartEditor : public WidgetEditorOf<ChartComponent>
+{
+public:
+    const char* GetComponentName() const override { return "ChartComponent"; }
+
+protected:
+    bool SizeOf(Deki::Component* comp, float& w, float& h) override
+    {
+        auto* chart = static_cast<ChartComponent*>(comp);
+        w = chart->width;
+        h = chart->height;
+        return true;
+    }
+    const char* PartsHint() const override
+    {
+        return Tr("Its looks are on the child parts Back, Grid and Series; the line's colour is the Series part's.");
+    }
+};
+
 REGISTER_EDITOR(BarEditor)
 REGISTER_EDITOR(SliderEditor)
 REGISTER_EDITOR(SwitchEditor)
@@ -328,6 +391,9 @@ REGISTER_EDITOR(DropdownEditor)
 REGISTER_EDITOR(TabviewEditor)
 REGISTER_EDITOR(MsgboxEditor)
 REGISTER_EDITOR(DatePickerEditor)
+REGISTER_EDITOR(TextareaEditor)
+REGISTER_EDITOR(KeyboardEditor)
+REGISTER_EDITOR(ChartEditor)
 
 }  // namespace DekiEditor
 

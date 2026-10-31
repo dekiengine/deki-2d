@@ -210,6 +210,33 @@
       "componentTypes": [
         "DatePickerComponent"
       ]
+    },
+    {
+      "id": "textarea",
+      "displayName": "Text Areas",
+      "buildDefine": "DEKI_FEATURE_TEXTAREA",
+      "defaultEnabled": true,
+      "componentTypes": [
+        "TextareaComponent"
+      ]
+    },
+    {
+      "id": "keyboard",
+      "displayName": "On-Screen Keyboards",
+      "buildDefine": "DEKI_FEATURE_KEYBOARD",
+      "defaultEnabled": true,
+      "componentTypes": [
+        "KeyboardComponent"
+      ]
+    },
+    {
+      "id": "chart",
+      "displayName": "Charts",
+      "buildDefine": "DEKI_FEATURE_CHART",
+      "defaultEnabled": true,
+      "componentTypes": [
+        "ChartComponent"
+      ]
     }
   ]
 }

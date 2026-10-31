@@ -229,7 +229,7 @@ void TabviewComponent::LayoutParts()
         }
         // Pages fill the space under the bar, centred in it.
         m_Pages[i]->SetLocalPosition(0.0f, -barHeight * 0.5f);
-        m_Pages[i]->SetActive(i == selectedTab);
+        WidgetParts::SetShown(m_Pages[i], i == selectedTab);
     }
 
     const float line = barHeight * 0.1f;

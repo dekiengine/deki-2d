@@ -56,10 +56,7 @@ void DropdownComponent::Start()
 {
     SyncParts();
     FocusSystem::Register(this);
-    if (m_List)
-    {
-        m_List->SetActive(false);
-    }
+    WidgetParts::SetShown(m_List, false);
 
     DekiInput::InputCollider* collider = inputCollider.Get();
     if (!collider)
@@ -181,7 +178,7 @@ void DropdownComponent::Open()
     // The chosen option in view, as near the top as the list allows.
     const int32_t rows = std::min<int32_t>(static_cast<int32_t>(m_RowParts.size()), listRows);
     m_Scroll = std::clamp(m_Highlight, 0, std::max(0, static_cast<int32_t>(options.size()) - rows));
-    m_List->SetActive(true);
+    WidgetParts::SetShown(m_List, true);
     // A scope round the list: what is under it ignores taps until it
     // closes, and its keys come here whether or not it has the focus.
     m_RestoreFocus = FocusSystem::GetFocused() == this;
@@ -201,7 +198,7 @@ void DropdownComponent::Close()
     if (m_List)
     {
         FocusSystem::PopScope(m_List);
-        m_List->SetActive(false);
+        WidgetParts::SetShown(m_List, false);
     }
     if (m_RestoreFocus)
     {

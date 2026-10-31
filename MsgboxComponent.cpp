@@ -146,10 +146,8 @@ void MsgboxComponent::AddOnClosedCallback(const std::function<void(int32_t)>& ca
 
 void MsgboxComponent::ShowBox()
 {
-    if (m_Box)
-    {
-        m_Box->SetActive(isOpen);
-    }
+    // Its buttons start when it first shows.
+    WidgetParts::SetShown(m_Box, isOpen);
 }
 
 bool MsgboxComponent::OnFocusKey(uint32_t key, uint32_t character)

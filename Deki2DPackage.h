@@ -39,6 +39,9 @@
 #define DEKI_FEATURE_TABVIEW
 #define DEKI_FEATURE_MSGBOX
 #define DEKI_FEATURE_DATE_PICKER
+#define DEKI_FEATURE_TEXTAREA
+#define DEKI_FEATURE_KEYBOARD
+#define DEKI_FEATURE_CHART
 #endif
 
 // Always included
@@ -113,6 +116,15 @@
 #endif
 #ifdef DEKI_FEATURE_DATE_PICKER
 #include "DatePickerComponent.h"
+#endif
+#ifdef DEKI_FEATURE_TEXTAREA
+#include "TextareaComponent.h"
+#endif
+#ifdef DEKI_FEATURE_KEYBOARD
+#include "KeyboardComponent.h"
+#endif
+#ifdef DEKI_FEATURE_CHART
+#include "ChartComponent.h"
 #endif
 #endif  // !defined(DEKI_EDITOR) || !defined(DEKI_ENGINE_EXPORTS)
 

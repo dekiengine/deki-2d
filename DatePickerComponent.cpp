@@ -278,6 +278,9 @@ void DatePickerComponent::EnsureParts()
         roller->infiniteScroll = i != 2;  // days and months come round; years do not
         roller->selectedColor = WidgetColors::Text;
         roller->normalColor = WidgetColors::DimText;
+        // A year must fit a third of the picker.
+        roller->selectedFontSize = 18;
+        roller->normalFontSize = 14;
         roller->EnsureChildObjects(obj);
         TextComponent* fonted = nullptr;
         for (Deki::Object* up = owner; up && !fonted; up = up->GetParent())
