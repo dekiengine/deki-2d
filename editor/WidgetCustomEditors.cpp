@@ -1,6 +1,6 @@
 // Editor support for the UI widgets (Bar, Slider, Switch, Checkbox, LED, Arc,
-// Spinner, Spinbox, Dropdown, Tab View, Message Box, Date Picker, Text Area,
-// Keyboard, Chart): their parts kept in step in edit mode, where
+// Spinner, Spinbox, Dropdown, List, Tab View, Message Box, Date Picker, Text
+// Area, Keyboard, Chart): their parts kept in step in edit mode, where
 // RuntimeUpdate does not run; their size, so the scene view can select and outline the widget rather than one of its
 // parts; and a line in the inspector that says where the looks are edited.
 
@@ -19,6 +19,7 @@
 #include "DropdownComponent.h"
 #include "KeyboardComponent.h"
 #include "LedComponent.h"
+#include "ListComponent.h"
 #include "MsgboxComponent.h"
 #include "SliderComponent.h"
 #include "SpinboxComponent.h"
@@ -261,6 +262,26 @@ protected:
     }
 };
 
+class ListEditor : public WidgetEditorOf<ListComponent>
+{
+public:
+    const char* GetComponentName() const override { return "ListComponent"; }
+
+protected:
+    bool SizeOf(Deki::Component* comp, float& w, float& h) override
+    {
+        auto* list = static_cast<ListComponent*>(comp);
+        w = list->width;
+        h = list->ListHeight();
+        return true;
+    }
+    const char* PartsHint() const override
+    {
+        return Tr("Its looks are on the child parts Back, Highlight, Thumb, Focus and the rows. Titles and a "
+                  "disabled list get the dimmed text colour.");
+    }
+};
+
 class TabviewEditor : public WidgetEditorOf<TabviewComponent>
 {
 public:
@@ -388,6 +409,7 @@ REGISTER_EDITOR(ArcEditor)
 REGISTER_EDITOR(SpinnerEditor)
 REGISTER_EDITOR(SpinboxEditor)
 REGISTER_EDITOR(DropdownEditor)
+REGISTER_EDITOR(ListEditor)
 REGISTER_EDITOR(TabviewEditor)
 REGISTER_EDITOR(MsgboxEditor)
 REGISTER_EDITOR(DatePickerEditor)

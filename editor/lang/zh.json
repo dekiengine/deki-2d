@@ -684,5 +684,14 @@
     "Upper": "大写",
     "Width of the box in meters.": "文本框的宽度，单位为米。",
     "Width of the chart in meters.": "图表的宽度，单位为米。",
-    "Width of the keyboard in meters.": "键盘的宽度，单位为米。"
+    "Width of the keyboard in meters.": "键盘的宽度，单位为米。",
+    "List Component": "列表组件",
+    "A scrolling column of rows to tap, with section titles.": "可滚动的一列可点击行，带分节标题。",
+    "Items": "项目",
+    "The rows, top to bottom. One that starts with \"# \" is a section title.": "从上到下的各行。以 \"# \" 开头的是分节标题。",
+    "Rows shown at once. With more items it scrolls.": "同时显示的行数。项目更多时会滚动。",
+    "A disabled list ignores taps and keys.": "禁用的列表会忽略点击和按键。",
+    "Width of the list, in meters.": "列表的宽度（米）。",
+    "Height of each row, in meters.": "每行的高度（米）。",
+    "Its looks are on the child parts Back, Highlight, Thumb, Focus and the rows. Titles and a disabled list get the dimmed text colour.": "外观在子部件 Back、Highlight、Thumb、Focus 和各行上。标题和禁用的列表使用暗淡的文字颜色。"
 }

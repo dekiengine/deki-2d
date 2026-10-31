@@ -185,6 +185,15 @@
       ]
     },
     {
+      "id": "list",
+      "displayName": "Lists",
+      "buildDefine": "DEKI_FEATURE_LIST",
+      "defaultEnabled": true,
+      "componentTypes": [
+        "ListComponent"
+      ]
+    },
+    {
       "id": "tabview",
       "displayName": "Tab Views",
       "buildDefine": "DEKI_FEATURE_TABVIEW",

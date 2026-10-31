@@ -23,6 +23,9 @@ alongside one that has them.
   longer uses. Needs editor 0.22.
 - Roller's Fill Options is a dialog like the editor's others: labels over
   fields, Cancel and Fill.
+- Widgets show and hide their pages, lists and dialogs with plain
+  `Object::SetActive`, now that engine 0.22 starts what it shows; deki-2d's
+  own workaround is gone, so it needs engine 0.22.
 
 ### Fixed
 - Letters in a word are evenly spaced. A TrueType font is drawn at twice its
@@ -30,6 +33,12 @@ alongside one that has them.
   one starting on an odd column or row landed half a pixel off its
   neighbours. Glyphs are now filtered on the pixel grid. Fonts bake again on
   the next open, and every text's pixels change.
+
+### Added
+- List widget: a scrolling column of rows to tap, with section titles (an
+  item that starts with "# "), a scroll thumb, drag to scroll, and Up, Down and
+  Enter with keyboard focus. Feature `list`, so builds that do not use it
+  leave it out.
 
 ## 0.21.0
 

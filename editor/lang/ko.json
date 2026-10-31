@@ -684,5 +684,14 @@
     "Upper": "대문자",
     "Width of the box in meters.": "상자의 너비(미터)입니다.",
     "Width of the chart in meters.": "차트의 너비(미터)입니다.",
-    "Width of the keyboard in meters.": "키보드의 너비(미터)입니다."
+    "Width of the keyboard in meters.": "키보드의 너비(미터)입니다.",
+    "List Component": "리스트 컴포넌트",
+    "A scrolling column of rows to tap, with section titles.": "탭할 수 있는 행을 세로로 나열한 스크롤 리스트. 섹션 제목 포함.",
+    "Items": "항목",
+    "The rows, top to bottom. One that starts with \"# \" is a section title.": "위에서 아래로의 행. \"# \"로 시작하는 행은 섹션 제목입니다.",
+    "Rows shown at once. With more items it scrolls.": "한 번에 보이는 행 수. 항목이 더 많으면 스크롤됩니다.",
+    "A disabled list ignores taps and keys.": "비활성화된 리스트는 탭과 키를 무시합니다.",
+    "Width of the list, in meters.": "리스트의 너비(미터).",
+    "Height of each row, in meters.": "각 행의 높이(미터).",
+    "Its looks are on the child parts Back, Highlight, Thumb, Focus and the rows. Titles and a disabled list get the dimmed text colour.": "모양은 자식 파트 Back, Highlight, Thumb, Focus와 각 행에 있습니다. 제목과 비활성화된 리스트는 흐린 글자색을 씁니다."
 }

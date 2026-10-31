@@ -36,6 +36,7 @@
 #define DEKI_FEATURE_SPINNER
 #define DEKI_FEATURE_SPINBOX
 #define DEKI_FEATURE_DROPDOWN
+#define DEKI_FEATURE_LIST
 #define DEKI_FEATURE_TABVIEW
 #define DEKI_FEATURE_MSGBOX
 #define DEKI_FEATURE_DATE_PICKER
@@ -107,6 +108,9 @@
 #endif
 #ifdef DEKI_FEATURE_DROPDOWN
 #include "DropdownComponent.h"
+#endif
+#ifdef DEKI_FEATURE_LIST
+#include "ListComponent.h"
 #endif
 #ifdef DEKI_FEATURE_TABVIEW
 #include "TabviewComponent.h"

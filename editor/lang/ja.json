@@ -684,5 +684,14 @@
     "Upper": "大文字",
     "Width of the box in meters.": "欄の幅 (メートル) です。",
     "Width of the chart in meters.": "グラフの幅 (メートル) です。",
-    "Width of the keyboard in meters.": "キーボードの幅 (メートル) です。"
+    "Width of the keyboard in meters.": "キーボードの幅 (メートル) です。",
+    "List Component": "リストコンポーネント",
+    "A scrolling column of rows to tap, with section titles.": "タップする行を縦に並べたスクロールできるリスト。セクション見出し付き。",
+    "Items": "項目",
+    "The rows, top to bottom. One that starts with \"# \" is a section title.": "上から順の行。\"# \" で始まる行はセクション見出しになります。",
+    "Rows shown at once. With more items it scrolls.": "一度に表示する行数。項目がそれより多いとスクロールします。",
+    "A disabled list ignores taps and keys.": "無効なリストはタップとキーを無視します。",
+    "Width of the list, in meters.": "リストの幅（メートル）。",
+    "Height of each row, in meters.": "各行の高さ（メートル）。",
+    "Its looks are on the child parts Back, Highlight, Thumb, Focus and the rows. Titles and a disabled list get the dimmed text colour.": "見た目は子パーツ Back、Highlight、Thumb、Focus と各行にあります。見出しと無効なリストは淡い文字色になります。"
 }
