@@ -8,7 +8,7 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
-## Unreleased
+## 0.22.0
 
 ### Changed
 - Inspector rows line up with the rest: the sprite's 9-slice borders are a
@@ -26,6 +26,8 @@ alongside one that has them.
 - Widgets show and hide their pages, lists and dialogs with plain
   `Object::SetActive`, now that engine 0.22 starts what it shows; deki-2d's
   own workaround is gone, so it needs engine 0.22.
+- `minEngine` 0.22.0: built against engine 0.22.0. A build of this package
+  from before does not load and is rebuilt.
 
 ### Fixed
 - Letters in a word are evenly spaced. A TrueType font is drawn at twice its
