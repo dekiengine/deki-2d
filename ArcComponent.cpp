@@ -30,7 +30,7 @@ void ArcComponent::Start()
     collider->onPointerDown.push_back(
         [this](float x, float y)
         {
-            if (!interactive)
+            if (!interactive || FocusSystem::IsInputBlocked(GetOwner()))
             {
                 return;
             }

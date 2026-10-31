@@ -32,7 +32,7 @@ void SwitchComponent::Start()
         {
             (void)x;
             (void)y;
-            m_Pressed = isEnabled;
+            m_Pressed = isEnabled && !FocusSystem::IsInputBlocked(GetOwner());
         });
     // A tap is a press and a release both inside, as for a button. A scroll
     // that takes the drag over cancels the press, with the pointer outside.

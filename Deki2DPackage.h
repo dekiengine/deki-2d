@@ -34,6 +34,11 @@
 #define DEKI_FEATURE_LED
 #define DEKI_FEATURE_ARC
 #define DEKI_FEATURE_SPINNER
+#define DEKI_FEATURE_SPINBOX
+#define DEKI_FEATURE_DROPDOWN
+#define DEKI_FEATURE_TABVIEW
+#define DEKI_FEATURE_MSGBOX
+#define DEKI_FEATURE_DATE_PICKER
 #endif
 
 // Always included
@@ -93,6 +98,21 @@
 #endif
 #ifdef DEKI_FEATURE_SPINNER
 #include "SpinnerComponent.h"
+#endif
+#ifdef DEKI_FEATURE_SPINBOX
+#include "SpinboxComponent.h"
+#endif
+#ifdef DEKI_FEATURE_DROPDOWN
+#include "DropdownComponent.h"
+#endif
+#ifdef DEKI_FEATURE_TABVIEW
+#include "TabviewComponent.h"
+#endif
+#ifdef DEKI_FEATURE_MSGBOX
+#include "MsgboxComponent.h"
+#endif
+#ifdef DEKI_FEATURE_DATE_PICKER
+#include "DatePickerComponent.h"
 #endif
 #endif  // !defined(DEKI_EDITOR) || !defined(DEKI_ENGINE_EXPORTS)
 

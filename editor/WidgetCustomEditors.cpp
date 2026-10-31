@@ -1,8 +1,7 @@
 // Editor support for the UI widgets (Bar, Slider, Switch, Checkbox, LED, Arc,
-// Spinner): their parts kept in step in edit mode, where RuntimeUpdate does
-// not run; their size, so the scene view can select and outline the widget
-// rather than one of its parts; and a line in the inspector that says where
-// the looks are edited.
+// Spinner, Spinbox, Dropdown, Tab View, Message Box, Date Picker): their parts kept in step in edit mode, where
+// RuntimeUpdate does not run; their size, so the scene view can select and outline the widget rather than one of its
+// parts; and a line in the inspector that says where the looks are edited.
 
 #ifdef DEKI_EDITOR
 
@@ -14,10 +13,15 @@
 #include "ArcComponent.h"
 #include "BarComponent.h"
 #include "CheckboxComponent.h"
+#include "DatePickerComponent.h"
+#include "DropdownComponent.h"
 #include "LedComponent.h"
+#include "MsgboxComponent.h"
 #include "SliderComponent.h"
+#include "SpinboxComponent.h"
 #include "SpinnerComponent.h"
 #include "SwitchComponent.h"
+#include "TabviewComponent.h"
 
 #include <algorithm>
 
@@ -213,6 +217,105 @@ protected:
     }
 };
 
+class SpinboxEditor : public WidgetEditorOf<SpinboxComponent>
+{
+public:
+    const char* GetComponentName() const override { return "SpinboxComponent"; }
+
+protected:
+    bool SizeOf(Deki::Component* comp, float& w, float& h) override
+    {
+        auto* spinbox = static_cast<SpinboxComponent*>(comp);
+        w = spinbox->width;
+        h = spinbox->height;
+        return true;
+    }
+    const char* PartsHint() const override
+    {
+        return Tr("Its looks are on the child parts Field, Value, Minus, Plus, their labels, and Focus (shown while it "
+                  "has keyboard focus).");
+    }
+};
+
+class DropdownEditor : public WidgetEditorOf<DropdownComponent>
+{
+public:
+    const char* GetComponentName() const override { return "DropdownComponent"; }
+
+protected:
+    bool SizeOf(Deki::Component* comp, float& w, float& h) override
+    {
+        auto* dropdown = static_cast<DropdownComponent*>(comp);
+        w = dropdown->width;
+        h = dropdown->height;
+        return true;
+    }
+    const char* PartsHint() const override
+    {
+        return Tr("Its looks are on the child parts Field, Label, Arrow and Focus, and on the List's Back, Highlight "
+                  "and rows. The list shows in play mode.");
+    }
+};
+
+class TabviewEditor : public WidgetEditorOf<TabviewComponent>
+{
+public:
+    const char* GetComponentName() const override { return "TabviewComponent"; }
+
+protected:
+    bool SizeOf(Deki::Component* comp, float& w, float& h) override
+    {
+        auto* tabview = static_cast<TabviewComponent*>(comp);
+        w = tabview->width;
+        h = tabview->height;
+        return true;
+    }
+    const char* PartsHint() const override
+    {
+        return Tr("Put each tab's objects under its page: Page0, Page1 and so on. The bar's looks are on Bar, "
+                  "Indicator and the Tab texts.");
+    }
+};
+
+class MsgboxEditor : public WidgetEditorOf<MsgboxComponent>
+{
+public:
+    const char* GetComponentName() const override { return "MsgboxComponent"; }
+
+protected:
+    bool SizeOf(Deki::Component* comp, float& w, float& h) override
+    {
+        auto* box = static_cast<MsgboxComponent*>(comp);
+        w = box->width;
+        h = box->height;
+        return true;
+    }
+    const char* PartsHint() const override
+    {
+        return Tr("Its looks are on the parts under Box: Backdrop, Panel, Title, Message and the buttons. Tick Is "
+                  "Open to see it while editing.");
+    }
+};
+
+class DatePickerEditor : public WidgetEditorOf<DatePickerComponent>
+{
+public:
+    const char* GetComponentName() const override { return "DatePickerComponent"; }
+
+protected:
+    bool SizeOf(Deki::Component* comp, float& w, float& h) override
+    {
+        auto* picker = static_cast<DatePickerComponent*>(comp);
+        w = picker->width;
+        h = picker->rowHeight * 3.25f;
+        return true;
+    }
+    const char* PartsHint() const override
+    {
+        return Tr("Its looks are on the child parts Back and Band, and on the Day, Month and Year rollers.");
+    }
+};
+
 REGISTER_EDITOR(BarEditor)
 REGISTER_EDITOR(SliderEditor)
 REGISTER_EDITOR(SwitchEditor)
@@ -220,6 +323,11 @@ REGISTER_EDITOR(CheckboxEditor)
 REGISTER_EDITOR(LedEditor)
 REGISTER_EDITOR(ArcEditor)
 REGISTER_EDITOR(SpinnerEditor)
+REGISTER_EDITOR(SpinboxEditor)
+REGISTER_EDITOR(DropdownEditor)
+REGISTER_EDITOR(TabviewEditor)
+REGISTER_EDITOR(MsgboxEditor)
+REGISTER_EDITOR(DatePickerEditor)
 
 }  // namespace DekiEditor
 

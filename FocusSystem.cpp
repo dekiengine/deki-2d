@@ -356,6 +356,16 @@ void FocusSystem::PopScope(Deki::Object* root)
     }
 }
 
+bool FocusSystem::IsInputBlocked(const Deki::Object* obj)
+{
+    if (s_Scopes.empty() || !obj)
+    {
+        return false;
+    }
+    Deki::Object* root = s_Scopes.back().root;
+    return obj != root && !obj->IsDescendantOf(root);
+}
+
 void FocusSystem::SetWrap(bool wrap)
 {
     s_Wrap = wrap;

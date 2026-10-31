@@ -37,7 +37,8 @@ void ButtonComponent::Start()
         {
             (void)x;
             (void)y;
-            if (!isEnabled)
+            // Behind an open dialog a button does nothing.
+            if (!isEnabled || FocusSystem::IsInputBlocked(GetOwner()))
             {
                 return;
             }

@@ -33,7 +33,7 @@ void CheckboxComponent::Start()
         {
             (void)x;
             (void)y;
-            m_Pressed = isEnabled;
+            m_Pressed = isEnabled && !FocusSystem::IsInputBlocked(GetOwner());
         });
     collider->onPointerUp.push_back(
         [this](float x, float y)

@@ -6,9 +6,6 @@
 #include "TextComponent.h"
 #include "SpriteComponent.h"
 #include <deki/Object.h>
-#ifdef DEKI_EDITOR
-#include <deki-editor/EditorComponents.h>
-#endif
 #include <deki/Engine.h>
 #include <deki/LogSystem.h>
 #include "deki-rendering/CameraComponent.h"
@@ -93,7 +90,18 @@ Deki::Object* RollerComponent::FindOrCreateChild(Deki::Object* owner, const char
     // Only the editor creates children; at runtime they come from the scene.
     Deki::Object* child = new Deki::Object(name);
     owner->AddChild(child);
-    DekiEditor::AddComponentByName(child, componentType);
+    if (std::strcmp(componentType, "ClipComponent") == 0)
+    {
+        child->AddComponent<ClipComponent>();
+    }
+    else if (std::strcmp(componentType, "SpriteComponent") == 0)
+    {
+        child->AddComponent<SpriteComponent>();
+    }
+    else if (std::strcmp(componentType, "TextComponent") == 0)
+    {
+        child->AddComponent<TextComponent>();
+    }
     return child;
 #else
     // The scene should already hold the child.
@@ -706,6 +714,11 @@ void RollerComponent::UpdateSelection()
 void RollerComponent::HandlePointerDown(float x, float y)
 {
     (void)x;
+    // Behind an open dialog the roller does not move.
+    if (FocusSystem::IsInputBlocked(GetOwner()))
+    {
+        return;
+    }
     // Pointer y is in world meters, like the scroll state.
     float touchY = static_cast<float>(y);
     m_IsDragging = true;

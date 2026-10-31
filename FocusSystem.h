@@ -88,6 +88,11 @@ public:
     /// Ends the scope `root` began, and any begun after it.
     static void PopScope(Deki::Object* root);
 
+    /// True while a scope is open and `obj` is outside it: a dialog is up,
+    /// and taps on what is behind it must do nothing. Widgets check it when
+    /// a press begins.
+    static bool IsInputBlocked(const Deki::Object* obj);
+
     /// Whether moving past the last widget comes round to the first. On by
     /// default.
     static void SetWrap(bool wrap);

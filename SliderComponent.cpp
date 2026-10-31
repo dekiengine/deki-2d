@@ -30,7 +30,7 @@ void SliderComponent::Start()
     collider->onPointerDown.push_back(
         [this](float x, float y)
         {
-            if (!isEnabled)
+            if (!isEnabled || FocusSystem::IsInputBlocked(GetOwner()))
             {
                 return;
             }
