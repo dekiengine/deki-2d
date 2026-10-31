@@ -239,7 +239,41 @@ TEST(ShapeComponent, BakesOnlyWhenTheGeometryChanges)
     EXPECT_NE(second, third);
     EXPECT_EQ(src.pixels, pixels);
     const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
-    EXPECT_EQ(src.width, static_cast<int32_t>(std::lround(3.0f * ppm)));
+    const int32_t shapePixels = static_cast<int32_t>(std::lround(3.0f * ppm));
+    EXPECT_FLOAT_EQ(src.pixelsPerMeter * 3.0f, static_cast<float>(shapePixels));
+    // The empty margin around it is drawn too.
+    EXPECT_EQ(src.width, shapePixels + 4);
+}
+
+TEST(ShapeComponent, EdgesAreNotCutByTheMask)
+{
+    Deki::Object obj("Shape");
+    auto* shape = obj.AddComponent<ShapeComponent>();
+    shape->kind = ShapeKind::Ellipse;
+    shape->width = 2.0f;
+    shape->height = 2.0f;
+
+    QuadBlit::Source src;
+    float px = 0;
+    float py = 0;
+    uint8_t r = 0;
+    uint8_t g = 0;
+    uint8_t b = 0;
+    uint8_t a = 0;
+    ASSERT_TRUE(shape->RenderContent(&obj, src, px, py, r, g, b, a));
+
+    // The outermost rows and columns are empty, so the soft edge fits whole
+    // wherever the shape lands between pixels.
+    for (int32_t i = 0; i < src.width; ++i)
+    {
+        EXPECT_EQ(src.pixels[i], 0) << "top, column " << i;
+        EXPECT_EQ(src.pixels[static_cast<size_t>(src.height - 1) * src.stride + i], 0) << "bottom, column " << i;
+    }
+    for (int32_t j = 0; j < src.height; ++j)
+    {
+        EXPECT_EQ(src.pixels[static_cast<size_t>(j) * src.stride], 0) << "left, row " << j;
+        EXPECT_EQ(src.pixels[static_cast<size_t>(j) * src.stride + src.width - 1], 0) << "right, row " << j;
+    }
 }
 
 TEST(ShapeComponent, CustomMaskDrawsWhatCodeWrote)

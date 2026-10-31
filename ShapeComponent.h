@@ -140,6 +140,9 @@ private:
     Deki::Buffer<uint8_t> m_Mask;
     int32_t m_MaskW = 0;
     int32_t m_MaskH = 0;
+    // Empty pixels around a baked shape on every side, so its soft edge is
+    // never cut where it lands between screen pixels. 0 for a custom mask.
+    int32_t m_MaskPad = 0;
     uint32_t m_BakeVersion = 0;
     uint64_t m_BakeKey = 0;
     bool m_HasBake = false;

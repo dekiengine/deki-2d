@@ -13,6 +13,15 @@
 namespace Deki2D
 {
 
+namespace
+{
+
+// Empty pixels baked around a shape on each side. The soft edge reaches half a
+// pixel past the shape, and landing between screen pixels can move it one more.
+constexpr int32_t kBakePad = 2;
+
+}  // namespace
+
 ShapeComponent::~ShapeComponent() = default;
 
 void ShapeComponent::SetSize(float newWidth, float newHeight)
@@ -68,6 +77,7 @@ uint8_t* ShapeComponent::BeginCustomMask(int32_t w, int32_t h)
     }
     m_MaskW = w;
     m_MaskH = h;
+    m_MaskPad = 0;
     std::memset(m_Mask.Data(), 0, static_cast<size_t>(w) * static_cast<size_t>(h));
     return m_Mask.Data();
 }
@@ -120,20 +130,24 @@ bool ShapeComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& 
         const int32_t h = std::max<int32_t>(1, static_cast<int32_t>(std::lround(height * bakePPM)));
 
         const uint64_t key = ComputeBakeKey(w, h, bakePPM);
-        if (!m_HasBake || key != m_BakeKey)
+        if (!m_HasBake || key != m_BakeKey || m_MaskPad != kBakePad)
         {
-            if (!Reserve(w, h))
+            const int32_t maskW = w + kBakePad * 2;
+            const int32_t maskH = h + kBakePad * 2;
+            if (!Reserve(maskW, maskH))
             {
                 return false;
             }
-            // The mask's exact pixel size, so the edge lands where the shape
-            // is drawn: rounding the size moves it by under a pixel.
+            // The shape's exact pixel size, so the edge lands where the shape
+            // is drawn: rounding the size moves it by under a pixel. It sits
+            // in the middle of the padded mask.
             ShapeMaskParams params = MaskParams(bakePPM);
             params.width = static_cast<float>(w);
             params.height = static_cast<float>(h);
-            BakeShapeMask(m_Mask.Data(), w, h, w, params);
-            m_MaskW = w;
-            m_MaskH = h;
+            BakeShapeMask(m_Mask.Data(), maskW, maskH, maskW, params);
+            m_MaskW = maskW;
+            m_MaskH = maskH;
+            m_MaskPad = kBakePad;
             m_BakeKey = key;
             m_HasBake = true;
             ++m_BakeVersion;
@@ -149,7 +163,8 @@ bool ShapeComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& 
                                      false  // ownsPixels: the component keeps its mask
     );
     outSource.stride = m_MaskW;
-    outSource.pixelsPerMeter = static_cast<float>(m_MaskW) / width;
+    // The padding is drawn too, around the shape, so the shape keeps its size.
+    outSource.pixelsPerMeter = static_cast<float>(m_MaskW - m_MaskPad * 2) / width;
 
     outPivotX = 0.5f;
     outPivotY = 0.5f;
