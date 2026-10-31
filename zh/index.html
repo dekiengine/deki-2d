@@ -57,7 +57,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">deki-2d<span id="projectnumber">&#160;0.21.0</span>
+   <div id="projectname">deki-2d<span id="projectnumber">&#160;0.22.0</span>
    </div>
    <div id="projectbrief">Deki 包参考</div>
   </td>
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 <img src="deki-2d.png" alt=""/>
 </div>
     <p>2D 内容组件：精灵、文本（BitmapFont + TTF 烘焙）、动画、渐变、按钮、滚动、裁剪和滚轮选择器。</p>
-<p>仓库：<a href="https://github.com/dekiengine/deki-2d">github.com/dekiengine/deki-2d</a> · 最新版本：0.21.0 · 需要引擎 0.21.0 或更高版本 · 依赖：<a href="https://dekiengine.github.io/deki-rendering/zh/">deki-rendering</a>, <a href="https://dekiengine.github.io/deki-input/zh/">deki-input</a></p>
+<p>仓库：<a href="https://github.com/dekiengine/deki-2d">github.com/dekiengine/deki-2d</a> · 最新版本：0.22.0 · 需要引擎 0.22.0 或更高版本 · 依赖：<a href="https://dekiengine.github.io/deki-rendering/zh/">deki-rendering</a>, <a href="https://dekiengine.github.io/deki-input/zh/">deki-input</a></p>
 <p>使用 <span class="tt">DekiEditor --packages-add deki-2d &lt;project&gt;</span> 或通过包管理器安装。引擎自身的组件和 C++ API 见 <a href="https://dekiengine.github.io/docs/zh/">Deki 文档</a>。</p>
 <p>在编辑器中显示为 **2D**。</p>
 <h1 class="doxsection"><a class="anchor" id="components"></a>
@@ -126,13 +126,33 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><a class="el" href="#c-animationcomponent" title="AnimationComponent">AnimationComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">在对象的精灵上播放帧动画资源。  </td></tr>
 <tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-arccomponent" title="ArcComponent">ArcComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">圆形仪表或旋钮：用圆环上的一段长度表示数值。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-barcomponent" title="BarComponent">BarComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">显示最小值与最大值之间某个值的条：生命值、加载进度、音量。  </td></tr>
+<tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><a class="el" href="#c-buttoncomponent" title="ButtonComponent">ButtonComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">使对象成为按钮：跟踪悬停和按下，并触发点击回调。  </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><a class="el" href="#c-buttonstylecomponent" title="ButtonStyleComponent">ButtonStyleComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">为按钮的每种状态设置外观，可通过着色或替换精灵实现。  </td></tr>
 <tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-chartcomponent" title="ChartComponent">ChartComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">一组数值的折线图或柱状图。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-checkboxcomponent" title="CheckboxComponent">CheckboxComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">可勾选和取消勾选的方框，带标签。  </td></tr>
+<tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><a class="el" href="#c-clipcomponent" title="ClipComponent">ClipComponent</a>  </td><td class="markdownTableBodyNone">核心  </td><td class="markdownTableBodyNone">将子对象的渲染裁剪到一个矩形内。  </td></tr>
 <tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-datepickercomponent" title="DatePickerComponent">DatePickerComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">日期选择器：用日、月、年三个滚轮选择。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-dropdowncomponent" title="DropdownComponent">DropdownComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">打开选项列表以选择其中一项的输入框。  </td></tr>
+<tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><a class="el" href="#c-gradientcomponent" title="GradientComponent">GradientComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">绘制程序化渐变：线性、径向或锥形。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-keyboardcomponent" title="KeyboardComponent">KeyboardComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">向文本框输入的屏幕键盘。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-ledcomponent" title="LedComponent">LedComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">圆形指示灯，有颜色、亮度和光晕。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-listcomponent" title="ListComponent">ListComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">可滚动的一列可点击行，带分节标题。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-msgboxcomponent" title="MsgboxComponent">MsgboxComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">带标题、消息和按钮的对话框。  </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><a class="el" href="#c-rollercomponent" title="RollerComponent">RollerComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">滚轮选择器：带惯性地滚过一列值，并停靠在其中一个上。  </td></tr>
 <tr class="markdownTableRowOdd">
@@ -140,11 +160,25 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><a class="el" href="#c-scrollelement" title="ScrollElement">ScrollElement</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">声明一个列表项的大小，以便其滚动组件排布列表。  </td></tr>
 <tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-shapecomponent" title="ShapeComponent">ShapeComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">绘制边缘平滑的平面图形：圆角矩形、椭圆、圆弧、三角形或勾号。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-slidercomponent" title="SliderComponent">SliderComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">带旋钮的条，可拖动或用按键逐步调节：音量、亮度。  </td></tr>
+<tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><a class="el" href="#c-sortinggroupcomponent" title="SortingGroupComponent">SortingGroupComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">让子对象作为一个整体，与场景中的其余部分一起排序。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-spinboxcomponent" title="SpinboxComponent">SpinboxComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">带减号和加号按钮的数字。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-spinnercomponent" title="SpinnerComponent">SpinnerComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">忙碌指示器：一段圆弧绕着圆环转动。  </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><a class="el" href="#c-spritecomponent" title="SpriteComponent">SpriteComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">绘制精灵，支持着色、翻转以及平铺或九宫格模式。  </td></tr>
 <tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-switchcomponent" title="SwitchComponent">SwitchComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">带滑动旋钮的开/关开关。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-tabviewcomponent" title="TabviewComponent">TabviewComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">页面上方的一排标签，每次只显示一页。  </td></tr>
+<tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><a class="el" href="#c-textcomponent" title="TextComponent">TextComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">使用位图字体绘制文本，支持对齐和自动换行。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-textareacomponent" title="TextareaComponent">TextareaComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">输入文字的文本框，可用键盘或屏幕键盘输入。  </td></tr>
 </table>
 <h1 class="doxsection"><a class="anchor" id="feature-flags"></a>
 功能开关</h1>
@@ -170,6 +204,40 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 <td class="markdownTableBodyNone">Clipping  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_CLIP</span>  </td><td class="markdownTableBodyNone">开  </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone">Sorting Groups  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SORTING_GROUP</span>  </td><td class="markdownTableBodyNone">开  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Shapes  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SHAPE</span>  </td><td class="markdownTableBodyNone">开  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Bars  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_BAR</span>  </td><td class="markdownTableBodyNone">开  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Sliders  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SLIDER</span>  </td><td class="markdownTableBodyNone">开  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Switches  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SWITCH</span>  </td><td class="markdownTableBodyNone">开  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Checkboxes  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_CHECKBOX</span>  </td><td class="markdownTableBodyNone">开  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">LEDs  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_LED</span>  </td><td class="markdownTableBodyNone">开  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Arcs  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_ARC</span>  </td><td class="markdownTableBodyNone">开  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Spinners  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SPINNER</span>  </td><td class="markdownTableBodyNone">开  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Spinboxes  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SPINBOX</span>  </td><td class="markdownTableBodyNone">开  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Dropdowns  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_DROPDOWN</span>  </td><td class="markdownTableBodyNone">开  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Lists  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_LIST</span>  </td><td class="markdownTableBodyNone">开  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Tab Views  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_TABVIEW</span>  </td><td class="markdownTableBodyNone">开  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Message Boxes  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_MSGBOX</span>  </td><td class="markdownTableBodyNone">开  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Date Pickers  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_DATE_PICKER</span>  </td><td class="markdownTableBodyNone">开  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Text Areas  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_TEXTAREA</span>  </td><td class="markdownTableBodyNone">开  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">On-Screen Keyboards  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_KEYBOARD</span>  </td><td class="markdownTableBodyNone">开  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Charts  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_CHART</span>  </td><td class="markdownTableBodyNone">开  </td></tr>
 </table>
 <h1 class="doxsection"><a class="anchor" id="component-reference"></a>
 组件参考</h1>
@@ -192,6 +260,56 @@ AnimationComponent</h2>
 <td class="markdownTableBodyNone"><span class="tt">hasFinished</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone">非循环序列到达最后一帧时置位。读取它即可知道何时进行下一步。  </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><span class="tt">playOnceOverride</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone">即使资源将当前序列标记为循环，也只播放一次。序列改变时清除。  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-arccomponent"></a>
+ArcComponent</h2>
+<p>圆形仪表或旋钮：用圆环上的一段长度表示数值。</p>
+<p>检视器中的名称：圆弧组件 · 类别：2D · 类型：<span class="tt">Deki2D::ArcComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">属性  </th><th class="markdownTableHeadNone">类型  </th><th class="markdownTableHeadNone">默认值  </th><th class="markdownTableHeadNone">约束  </th><th class="markdownTableHeadNone">说明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">接收拖动的点击区域。编辑器会在同一对象上添加一个，并按圆环设定大小。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">value</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">40</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">显示的数值，介于最小值和最大值之间。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">minValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">圆环起点的数值。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">maxValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">100</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">圆环终点的数值。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">step</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">数值从最小值起按此值的倍数对齐。为 0 时自由转动。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">size</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">5</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">圆环的直径，单位为米。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">thickness</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.6</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">圆环的粗细，单位为米。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">startAngle</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">3.92699</span>  </td><td class="markdownTableBodyNone">单位 rad  </td><td class="markdownTableBodyNone">圆环开始的位置，即最小值。0 指向右方；225 度是左下方，和仪表一样。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">sweepAngle</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">4.71239</span>  </td><td class="markdownTableBodyNone">单位 rad  </td><td class="markdownTableBodyNone">圆环从起点顺时针延伸的角度。270 度会在底部留出缺口。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">interactive</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">允许拖动数值或用按键逐步调节。关闭时，圆弧是没有旋钮的只读仪表。  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-barcomponent"></a>
+BarComponent</h2>
+<p>显示最小值与最大值之间某个值的条：生命值、加载进度、音量。</p>
+<p>检视器中的名称：进度条组件 · 类别：2D · 类型：<span class="tt">Deki2D::BarComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">属性  </th><th class="markdownTableHeadNone">类型  </th><th class="markdownTableHeadNone">默认值  </th><th class="markdownTableHeadNone">约束  </th><th class="markdownTableHeadNone">说明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">value</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">50</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">显示的数值，介于最小值和最大值之间。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">minValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">空的一端的数值。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">maxValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">100</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">满的一端的数值。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">orientation</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Horizontal"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Horizontal</span>, <span class="tt">Vertical</span>  </td><td class="markdownTableBodyNone">水平时从左向右填充；垂直时从下向上填充。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">8</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">水平条的长度，或垂直条的粗细，单位为米。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.75</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">水平条的粗细，或垂直条的长度，单位为米。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">glideSpeed</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">0 到 60  </td><td class="markdownTableBodyNone">填充过渡到新数值的速度。为 0 时直接跳过去；为 10 时大约三分之一秒后停稳。  </td></tr>
 </table>
 <h2 class="doxsection"><a class="anchor" id="c-buttoncomponent"></a>
 ButtonComponent</h2>
@@ -237,6 +355,56 @@ ButtonStyleComponent</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><span class="tt">disabledSprite</span>  </td><td class="markdownTableBodyNone">AssetRef (Sprite)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"><span class="tt">transition</span> 允许时显示  </td><td class="markdownTableBodyNone">精灵切换模式下，禁用时的精灵。  </td></tr>
 </table>
+<h2 class="doxsection"><a class="anchor" id="c-chartcomponent"></a>
+ChartComponent</h2>
+<p>一组数值的折线图或柱状图。</p>
+<p>检视器中的名称：图表组件 · 类别：2D · 类型：<span class="tt">Deki2D::ChartComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">属性  </th><th class="markdownTableHeadNone">类型  </th><th class="markdownTableHeadNone">默认值  </th><th class="markdownTableHeadNone">约束  </th><th class="markdownTableHeadNone">说明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">kind</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Line"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Line</span>, <span class="tt">Bars</span>  </td><td class="markdownTableBodyNone">连接各点的线，或每个点一根柱。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">points</span>  </td><td class="markdownTableBodyNone">Array&lt;float&gt;  </td><td class="markdownTableBodyNone"><span class="tt">[20.0, 45.0, 30.0, 60.0, 55.0, 80.0, 70.0]</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">按从旧到新排列的数值。AddPoint 会添加到末尾。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">pointCount</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">16</span>  </td><td class="markdownTableBodyNone">2 到 256  </td><td class="markdownTableBodyNone">图表保存的点数。超过后再添加点，会丢弃最旧的点。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">minValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">底边对应的数值。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">maxValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">100</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">顶边对应的数值。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">gridLines</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">4</span>  </td><td class="markdownTableBodyNone">0 到 16  </td><td class="markdownTableBodyNone">横穿图表的水平网格线数量。为 0 时没有网格线。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">lineWidth</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.18</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">线的粗细，单位为米。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">12</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">图表的宽度，单位为米。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">图表的高度，单位为米。  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-checkboxcomponent"></a>
+CheckboxComponent</h2>
+<p>可勾选和取消勾选的方框，带标签。</p>
+<p>检视器中的名称：复选框组件 · 类别：2D · 类型：<span class="tt">Deki2D::CheckboxComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">属性  </th><th class="markdownTableHeadNone">类型  </th><th class="markdownTableHeadNone">默认值  </th><th class="markdownTableHeadNone">约束  </th><th class="markdownTableHeadNone">说明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">接收点击的点击区域。编辑器会在同一对象上添加一个，并按方框和标签设定大小。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">isChecked</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">方框是否已勾选。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">禁用的复选框会忽略点击和按键。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">label</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">"Checkbox"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">方框旁边的文字。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">8</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">方框和标签合起来的宽度，单位为米。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">boxSize</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.5</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">方框的大小，单位为米。复选框的高度也是这个值。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">checkedColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#408CFFFF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">勾选时方框的颜色。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">uncheckedColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#8C92A0FF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">未勾选时边框的颜色。  </td></tr>
+</table>
 <h2 class="doxsection"><a class="anchor" id="c-clipcomponent"></a>
 ClipComponent</h2>
 <p>将子对象的渲染裁剪到一个矩形内。</p>
@@ -250,6 +418,54 @@ ClipComponent</h2>
 <td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.25</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">裁剪窗口的高度，单位为米。  </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><span class="tt">sortingOrder</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">整个被裁剪组相对于组外所有内容的绘制顺序。  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-datepickercomponent"></a>
+DatePickerComponent</h2>
+<p>日期选择器：用日、月、年三个滚轮选择。</p>
+<p>检视器中的名称：日期选择器组件 · 类别：2D · 类型：<span class="tt">Deki2D::DatePickerComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">属性  </th><th class="markdownTableHeadNone">类型  </th><th class="markdownTableHeadNone">默认值  </th><th class="markdownTableHeadNone">约束  </th><th class="markdownTableHeadNone">说明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">year</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">2026</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">选中的年份。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">month</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone">1 到 12  </td><td class="markdownTableBodyNone">选中的月份，1 到 12。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">day</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone">1 到 31  </td><td class="markdownTableBodyNone">选中的日期，从 1 开始。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">minYear</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">2000</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">可选的最早年份。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">maxYear</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">2050</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">可选的最晚年份。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">order</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"DayMonthYear"</span>  </td><td class="markdownTableBodyNone"><span class="tt">DayMonthYear</span>, <span class="tt">MonthDayYear</span>, <span class="tt">YearMonthDay</span>  </td><td class="markdownTableBodyNone">各列的顺序，按游戏所在地区的日期写法排列。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">monthNames</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">用名称（Jan、Feb 等）而不是数字显示月份。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">11</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">日期选择器的宽度，单位为米。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">rowHeight</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.5</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">一行的高度，单位为米。选中的行会稍高一些。  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-dropdowncomponent"></a>
+DropdownComponent</h2>
+<p>打开选项列表以选择其中一项的输入框。</p>
+<p>检视器中的名称：下拉框组件 · 类别：2D · 类型：<span class="tt">Deki2D::DropdownComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">属性  </th><th class="markdownTableHeadNone">类型  </th><th class="markdownTableHeadNone">默认值  </th><th class="markdownTableHeadNone">约束  </th><th class="markdownTableHeadNone">说明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">关闭状态下输入框的点击区域。编辑器会在同一对象上添加一个，并按输入框设定大小。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">options</span>  </td><td class="markdownTableBodyNone">Array&lt;string&gt;  </td><td class="markdownTableBodyNone"><span class="tt">["Easy", "Normal", "Hard"]</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">按顺序排列的选项。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">selectedIndex</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">选中的是哪个选项，从 0 开始计数。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">listRows</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">4</span>  </td><td class="markdownTableBodyNone">1 到 12  </td><td class="markdownTableBodyNone">打开的列表一次显示的行数。选项更多时可以滚动。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">禁用的下拉框会忽略点击和按键。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">7</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">输入框和列表的宽度，单位为米。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.75</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">输入框以及列表每一行的高度，单位为米。  </td></tr>
 </table>
 <h2 class="doxsection"><a class="anchor" id="c-gradientcomponent"></a>
 GradientComponent</h2>
@@ -302,6 +518,84 @@ GradientComponent</h2>
 <td class="markdownTableBodyNone"><span class="tt">tileHeight</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">平铺模式为重复或镜像时，一次重复的高度。  </td></tr>
 </table>
 <p>从 <a href="https://dekiengine.github.io/docs/zh/engine-core.html#engine-renderercomponent">RendererComponent</a> 继承 <span class="tt">sortingOrder</span>, <span class="tt">ignoreClip</span>, <span class="tt">pixelSnap</span>, <span class="tt">alphaMode</span>。</p>
+<h2 class="doxsection"><a class="anchor" id="c-keyboardcomponent"></a>
+KeyboardComponent</h2>
+<p>向文本框输入的屏幕键盘。</p>
+<p>检视器中的名称：键盘组件 · 类别：2D · 类型：<span class="tt">Deki2D::KeyboardComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">属性  </th><th class="markdownTableHeadNone">类型  </th><th class="markdownTableHeadNone">默认值  </th><th class="markdownTableHeadNone">约束  </th><th class="markdownTableHeadNone">说明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">接收按键按下的点击区域。编辑器会在同一对象上添加一个，并按键盘设定大小。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">target</span>  </td><td class="markdownTableBodyNone">ObjectRef (TextareaComponent)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">按键输入到的文本框。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">mode</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Lower"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Lower</span>, <span class="tt">Upper</span>, <span class="tt">Symbols</span>  </td><td class="markdownTableBodyNone">小写、大写，或数字和符号。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">禁用的键盘会忽略按下。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">19</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">键盘的宽度，单位为米。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">7</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">键盘的高度，单位为米，共四行按键。  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-ledcomponent"></a>
+LedComponent</h2>
+<p>圆形指示灯，有颜色、亮度和光晕。</p>
+<p>检视器中的名称：LED 组件 · 类别：2D · 类型：<span class="tt">Deki2D::LedComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">属性  </th><th class="markdownTableHeadNone">类型  </th><th class="markdownTableHeadNone">默认值  </th><th class="markdownTableHeadNone">约束  </th><th class="markdownTableHeadNone">说明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">color</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#40DC78FF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">最大亮度时指示灯的颜色。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">brightness</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone">0 到 1（滑块）  </td><td class="markdownTableBodyNone">指示灯的亮度，从 0（暗）到 1。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isOn</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">关闭时，无论亮度多少，指示灯都显示为暗。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">size</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">指示灯的直径，单位为米。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">glow</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.6</span>  </td><td class="markdownTableBodyNone">0 到 2  </td><td class="markdownTableBodyNone">光晕超出指示灯的范围，以其尺寸的比例表示。为 0 时没有光晕。  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-listcomponent"></a>
+ListComponent</h2>
+<p>可滚动的一列可点击行，带分节标题。</p>
+<p>检视器中的名称：列表组件 · 类别：2D · 类型：<span class="tt">Deki2D::ListComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">属性  </th><th class="markdownTableHeadNone">类型  </th><th class="markdownTableHeadNone">默认值  </th><th class="markdownTableHeadNone">约束  </th><th class="markdownTableHeadNone">说明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">items</span>  </td><td class="markdownTableBodyNone">Array&lt;string&gt;  </td><td class="markdownTableBodyNone"><span class="tt">["# Audio", "Music", "Sound effects", "# Display", "Brigh...</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">从上到下的各行。以 "\# " 开头的是分节标题。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">visibleRows</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">5</span>  </td><td class="markdownTableBodyNone">1 到 16  </td><td class="markdownTableBodyNone">同时显示的行数。项目更多时会滚动。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">禁用的列表会忽略点击和按键。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">8</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">列表的宽度（米）。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">rowHeight</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.5</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">每行的高度（米）。  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-msgboxcomponent"></a>
+MsgboxComponent</h2>
+<p>带标题、消息和按钮的对话框。</p>
+<p>检视器中的名称：消息框组件 · 类别：2D · 类型：<span class="tt">Deki2D::MsgboxComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">属性  </th><th class="markdownTableHeadNone">类型  </th><th class="markdownTableHeadNone">默认值  </th><th class="markdownTableHeadNone">约束  </th><th class="markdownTableHeadNone">说明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">title</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">"Title"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">对话框的标题。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">message</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">"Message"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">标题下方的消息。长行会自动换行。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">buttons</span>  </td><td class="markdownTableBodyNone">Array&lt;string&gt;  </td><td class="markdownTableBodyNone"><span class="tt">["OK", "Cancel"]</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">按钮的文字，从左到右，最多三个。第一个按主按钮绘制。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">isOpen</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">是否显示对话框。代码中用 Open 和 Close 设置；编辑时勾选即可看到对话框。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">closeOnEsc</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">按 Esc 以取消的方式关闭对话框，视为没有按下任何按钮。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">14</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">对话框的宽度，单位为米。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">8</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">对话框的高度，单位为米。  </td></tr>
+</table>
 <h2 class="doxsection"><a class="anchor" id="c-rollercomponent"></a>
 RollerComponent</h2>
 <p>滚轮选择器：带惯性地滚过一列值，并停靠在其中一个上。</p>
@@ -388,6 +682,54 @@ ScrollElement</h2>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">3.75</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">一个项的高度，单位为米。  </td></tr>
 </table>
+<h2 class="doxsection"><a class="anchor" id="c-shapecomponent"></a>
+ShapeComponent</h2>
+<p>绘制边缘平滑的平面图形：圆角矩形、椭圆、圆弧、三角形或勾号。</p>
+<p>检视器中的名称：形状组件 · 类别：2D · 类型：<span class="tt">Deki2D::ShapeComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">属性  </th><th class="markdownTableHeadNone">类型  </th><th class="markdownTableHeadNone">默认值  </th><th class="markdownTableHeadNone">约束  </th><th class="markdownTableHeadNone">说明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">kind</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Rectangle"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Rectangle</span>, <span class="tt">Ellipse</span>, <span class="tt">Arc</span>, <span class="tt">Triangle</span>, <span class="tt">Check</span>, <span class="tt">Custom</span>  </td><td class="markdownTableBodyNone">要绘制的图形。自定义会绘制代码写入的内容。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">4</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">图形的宽度，单位为米。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">4</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">图形的高度，单位为米。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">color</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#FFFFFFFF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">绘制图形的颜色。其透明度会让整个图形变淡。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">cornerRadius</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">单位 m；<span class="tt">kind</span> 允许时显示  </td><td class="markdownTableBodyNone">圆角的半径，单位为米。设为高度的一半时两端为圆形。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">lineWidth</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">单位 m；<span class="tt">kind</span> 允许时显示  </td><td class="markdownTableBodyNone">为 0 时填充图形。大于 0 时，只沿边缘内侧画出这么粗的线。圆弧和勾号总是线条；为 0 时按尺寸选择粗细。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">startAngle</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">单位 rad；<span class="tt">kind</span> 允许时显示  </td><td class="markdownTableBodyNone">圆弧开始的位置。0 指向右方，圆弧从这里逆时针延伸。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">endAngle</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.28319</span>  </td><td class="markdownTableBodyNone">单位 rad；<span class="tt">kind</span> 允许时显示  </td><td class="markdownTableBodyNone">圆弧结束的位置。比起点多一整圈时画出完整圆环。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">roundCaps</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"><span class="tt">kind</span> 允许时显示  </td><td class="markdownTableBodyNone">让圆弧两端变圆，而不是切成方形。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">direction</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Down"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Down</span>, <span class="tt">Up</span>, <span class="tt">Left</span>, <span class="tt">Right</span>；<span class="tt">kind</span> 允许时显示  </td><td class="markdownTableBodyNone">三角形指向的方向。  </td></tr>
+</table>
+<p>从 <a href="https://dekiengine.github.io/docs/zh/engine-core.html#engine-renderercomponent">RendererComponent</a> 继承 <span class="tt">sortingOrder</span>, <span class="tt">ignoreClip</span>, <span class="tt">pixelSnap</span>, <span class="tt">alphaMode</span>。</p>
+<h2 class="doxsection"><a class="anchor" id="c-slidercomponent"></a>
+SliderComponent</h2>
+<p>带旋钮的条，可拖动或用按键逐步调节：音量、亮度。</p>
+<p>检视器中的名称：滑块组件 · 类别：2D · 类型：<span class="tt">Deki2D::SliderComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">属性  </th><th class="markdownTableHeadNone">类型  </th><th class="markdownTableHeadNone">默认值  </th><th class="markdownTableHeadNone">约束  </th><th class="markdownTableHeadNone">说明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">接收拖动的点击区域。编辑器会在同一对象上添加一个，并保持与滑块大小一致。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">step</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">数值从最小值起按此值的倍数对齐。为 0 时自由滑动。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">keyStep</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">按一次键时数值移动的量。为 0 时移动范围的二十分之一，或一个步长。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">knobSize</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.5</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">旋钮的直径，单位为米。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">禁用的滑块会忽略触摸和按键。  </td></tr>
+</table>
+<p>从 <a href="https://dekiengine.github.io/deki-2d/zh/#c-barcomponent">BarComponent</a> 继承 <span class="tt">value</span>, <span class="tt">minValue</span>, <span class="tt">maxValue</span>, <span class="tt">orientation</span>, <span class="tt">width</span>, <span class="tt">height</span>, <span class="tt">glideSpeed</span>。</p>
 <h2 class="doxsection"><a class="anchor" id="c-sortinggroupcomponent"></a>
 SortingGroupComponent</h2>
 <p>让子对象作为一个整体，与场景中的其余部分一起排序。</p>
@@ -397,6 +739,52 @@ SortingGroupComponent</h2>
 <th class="markdownTableHeadNone">属性  </th><th class="markdownTableHeadNone">类型  </th><th class="markdownTableHeadNone">默认值  </th><th class="markdownTableHeadNone">说明  </th></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><span class="tt">sortingOrder</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">将此对象的整个子树视为一个整体时的绘制顺序。子对象之间保持相对顺序，但整组一起移动，从而避免某个子对象被排到另一组的子对象之间。  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-spinboxcomponent"></a>
+SpinboxComponent</h2>
+<p>带减号和加号按钮的数字。</p>
+<p>检视器中的名称：数字框组件 · 类别：2D · 类型：<span class="tt">Deki2D::SpinboxComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">属性  </th><th class="markdownTableHeadNone">类型  </th><th class="markdownTableHeadNone">默认值  </th><th class="markdownTableHeadNone">约束  </th><th class="markdownTableHeadNone">说明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">接收按钮按下的点击区域。编辑器会在同一对象上添加一个，并按数字框设定大小。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">value</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">显示的数字，介于最小值和最大值之间。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">minValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">最小的数字。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">maxValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">99</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">最大的数字。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">step</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">按一次按钮时数字改变的量。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">decimals</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">0 到 4  </td><td class="markdownTableBodyNone">小数点后显示的位数。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">wrap</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">超过最大数字后回到最小数字，反之亦然。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">禁用的数字框会忽略按下和按键。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.5</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">包括按钮在内的数字框宽度，单位为米。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.75</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">数字框的高度，单位为米。按钮是正方形的。  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-spinnercomponent"></a>
+SpinnerComponent</h2>
+<p>忙碌指示器：一段圆弧绕着圆环转动。</p>
+<p>检视器中的名称：加载指示器组件 · 类别：2D · 类型：<span class="tt">Deki2D::SpinnerComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">属性  </th><th class="markdownTableHeadNone">类型  </th><th class="markdownTableHeadNone">默认值  </th><th class="markdownTableHeadNone">约束  </th><th class="markdownTableHeadNone">说明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">size</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">2.5</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">加载指示器的直径，单位为米。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">thickness</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.35</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">圆环的粗细，单位为米。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">arcLength</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.5708</span>  </td><td class="markdownTableBodyNone">单位 rad  </td><td class="markdownTableBodyNone">转动的圆弧占圆环的多少。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">turnsPerSecond</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone">-5 到 5  </td><td class="markdownTableBodyNone">每秒转动的圈数。负数时逆时针转动。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isSpinning</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">关闭时停在当前位置。  </td></tr>
 </table>
 <h2 class="doxsection"><a class="anchor" id="c-spritecomponent"></a>
 SpriteComponent</h2>
@@ -421,6 +809,52 @@ SpriteComponent</h2>
 <td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">单位 m；<span class="tt">renderMode</span> 允许时显示  </td><td class="markdownTableBodyNone">绘制大小，单位为米。保持为 0 时使用精灵自身的像素大小，并按项目的每米像素数换算。  </td></tr>
 </table>
 <p>从 <a href="https://dekiengine.github.io/docs/zh/engine-core.html#engine-renderercomponent">RendererComponent</a> 继承 <span class="tt">sortingOrder</span>, <span class="tt">ignoreClip</span>, <span class="tt">pixelSnap</span>, <span class="tt">alphaMode</span>。</p>
+<h2 class="doxsection"><a class="anchor" id="c-switchcomponent"></a>
+SwitchComponent</h2>
+<p>带滑动旋钮的开/关开关。</p>
+<p>检视器中的名称：开关组件 · 类别：2D · 类型：<span class="tt">Deki2D::SwitchComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">属性  </th><th class="markdownTableHeadNone">类型  </th><th class="markdownTableHeadNone">默认值  </th><th class="markdownTableHeadNone">约束  </th><th class="markdownTableHeadNone">说明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">接收点击的点击区域。编辑器会在同一对象上添加一个，并按开关设定大小。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">isOn</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">开关是否打开。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">禁用的开关会忽略点击和按键。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">3</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">开关的宽度，单位为米。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.6</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">开关的高度，单位为米。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">onColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#408CFFFF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">打开时轨道的颜色。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">offColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#3A3F4BFF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">关闭时轨道的颜色。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">glideSpeed</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">14</span>  </td><td class="markdownTableBodyNone">0 到 60  </td><td class="markdownTableBodyNone">旋钮滑过去的速度。为 0 时直接跳过去。  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-tabviewcomponent"></a>
+TabviewComponent</h2>
+<p>页面上方的一排标签，每次只显示一页。</p>
+<p>检视器中的名称：标签页视图组件 · 类别：2D · 类型：<span class="tt">Deki2D::TabviewComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">属性  </th><th class="markdownTableHeadNone">类型  </th><th class="markdownTableHeadNone">默认值  </th><th class="markdownTableHeadNone">约束  </th><th class="markdownTableHeadNone">说明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">tabs</span>  </td><td class="markdownTableBodyNone">Array&lt;string&gt;  </td><td class="markdownTableBodyNone"><span class="tt">["One", "Two", "Three"]</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">按顺序排列的标签标题。每个标签都有一个页面：Page0、Page1 等。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">selectedTab</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">显示的是哪个标签，从 0 开始计数。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">禁用的标签页视图会忽略点击和按键。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">16</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">标签页视图的宽度，单位为米。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">10</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">包括标签栏在内的标签页视图高度，单位为米。其余部分由页面填满。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">barHeight</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.75</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">标签栏的高度，单位为米。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">glideSpeed</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">14</span>  </td><td class="markdownTableBodyNone">0 到 60  </td><td class="markdownTableBodyNone">标签下方的线滑到新标签的速度。为 0 时直接跳过去。  </td></tr>
+</table>
 <h2 class="doxsection"><a class="anchor" id="c-textcomponent"></a>
 TextComponent</h2>
 <p>使用位图字体绘制文本，支持对齐和自动换行。</p>
@@ -431,9 +865,9 @@ TextComponent</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><span class="tt">text</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">要绘制的字符串。换行符会另起一行；设置了宽度时，会在单词之间自动换行以适应宽度。  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">font</span>  </td><td class="markdownTableBodyNone">AssetRef (BitmapFont)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">位图字体资源。字体按固定字号烘焙，因此请选择接近所需大小的字体，而不要大幅缩放。  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">font</span>  </td><td class="markdownTableBodyNone">AssetRef (BitmapFont)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">TrueType 或 BDF 字体资源。TrueType 字体绘制的字号由“字号”选择。  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">fontSize</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">16</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">仅用于编辑器预览的字号。设备上绘制的是字体资源烘焙时的字号。  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">fontSize</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">16</span>  </td><td class="markdownTableBodyNone">6 到 128  </td><td class="markdownTableBodyNone">以像素为单位的字号。文本第一次使用此字号时，编辑器会按此字号烘焙字体；构建会包含文本使用的字号。  </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.25</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">文本框的宽度，单位为米。对齐以此为基准，因此即使文字较短也有影响。  </td></tr>
 <tr class="markdownTableRowOdd">
@@ -450,12 +884,60 @@ TextComponent</h2>
 <td class="markdownTableBodyNone"><span class="tt">verticalAlign</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"CapCenter"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Top</span>, <span class="tt">Middle</span>, <span class="tt">Bottom</span>, <span class="tt">CapCenter</span>, <span class="tt">XCenter</span>, <span class="tt">TypoCenter</span>, <span class="tt">Baseline</span>  </td><td class="markdownTableBodyNone">在上方高度内的垂直位置。大写居中以大写字母为准对齐，通常在视觉上显得居中；真正的居中会把下伸部分也算在内。  </td></tr>
 </table>
 <p>从 <a href="https://dekiengine.github.io/docs/zh/engine-core.html#engine-renderercomponent">RendererComponent</a> 继承 <span class="tt">sortingOrder</span>, <span class="tt">ignoreClip</span>, <span class="tt">pixelSnap</span>, <span class="tt">alphaMode</span>。</p>
+<h2 class="doxsection"><a class="anchor" id="c-textareacomponent"></a>
+TextareaComponent</h2>
+<p>输入文字的文本框，可用键盘或屏幕键盘输入。</p>
+<p>检视器中的名称：文本区域组件 · 类别：2D · 类型：<span class="tt">Deki2D::TextareaComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">属性  </th><th class="markdownTableHeadNone">类型  </th><th class="markdownTableHeadNone">默认值  </th><th class="markdownTableHeadNone">约束  </th><th class="markdownTableHeadNone">说明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">接收开始输入的点击的区域。编辑器会在同一对象上添加一个，并按文本框设定大小。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">text</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">目前已输入的文字。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">placeholder</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">"Type here"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">文本框为空时以暗色显示。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">maxLength</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">32</span>  </td><td class="markdownTableBodyNone">0 到 1024  </td><td class="markdownTableBodyNone">最多可输入的字符数。为 0 时不限制。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">oneLine</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">单行时按 Enter 提交。关闭时按 Enter 换行，长行会自动换行。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">password</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">每个字符显示为一个星号，而不显示文字。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">禁用的文本框会忽略点击和输入。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">10</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">文本框的宽度，单位为米。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.75</span>  </td><td class="markdownTableBodyNone">单位 m  </td><td class="markdownTableBodyNone">文本框的高度，单位为米。  </td></tr>
+</table>
 <h1 class="doxsection"><a class="anchor" id="changelog"></a>
 更新日志</h1>
 <p>更新日志为英文。</p>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md0"></a>
-0.21.0</h2>
+0.22.0</h2>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md1"></a>
+Changed</h2>
+<ul>
+<li>Inspector rows line up with the rest: the sprite's 9-slice borders are a row with an Edit 9-Slice button, Clip's Edit Rect and Roller's Fill Options use the editor's action button, and the Text component's font size and preview rows are rows and hints.</li>
+<li>The font asset inspector is sections of rows, like the other asset inspectors: character range, rasterization, sizes (each with whether it is baked), bake and preview.</li>
+<li>The editor's previews (fonts, BDF fonts, icon fonts, spritesheets) make their textures with <span class="tt">EditorTexture</span> instead of OpenGL, which the editor no longer uses. Needs editor 0.22.</li>
+<li>Roller's Fill Options is a dialog like the editor's others: labels over fields, Cancel and Fill.</li>
+<li>Widgets show and hide their pages, lists and dialogs with plain <span class="tt">Object::SetActive</span>, now that engine 0.22 starts what it shows; deki-2d's own workaround is gone, so it needs engine 0.22.</li>
+<li><span class="tt">minEngine</span> 0.22.0: built against engine 0.22.0. A build of this package from before does not load and is rebuilt.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
+Fixed</h2>
+<ul>
+<li>Letters in a word are evenly spaced. A TrueType font is drawn at twice its size and filtered down, and each glyph was filtered from its own corner, so one starting on an odd column or row landed half a pixel off its neighbours. Glyphs are now filtered on the pixel grid. Fonts bake again on the next open, and every text's pixels change.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
+Added</h2>
+<ul>
+<li>List widget: a scrolling column of rows to tap, with section titles (an item that starts with "# "), a scroll thumb, drag to scroll, and Up, Down and Enter with keyboard focus. Feature <span class="tt">list</span>, so builds that do not use it leave it out.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
+0.21.0</h2>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
 Changed</h2>
 <ul>
 <li><span class="tt">minEngine</span> 0.21.0: built against engine 0.21.0. A build of this package from before does not load and is rebuilt.</li>
@@ -465,22 +947,14 @@ Changed</h2>
 <li>Sprites and fonts loaded one after another give the device's other tasks a turn after every 50 ms of loading, not after every load: a few milliseconds off opening a scene with many sprites.</li>
 <li><b>Scenes open faster.</b> A <span class="tt">GradientComponent</span> worked out every pixel of its bake from scratch on the first frame of every scene: a full-screen background took 0.7 s on an ESP32-S3. The bake now fills runs of one colour, and a gradient that changes along one axis only (straight down or across, undithered) is baked as one column or one row that QuadBlit stretches: a few hundred bytes instead of a screenful, and well under a millisecond. Needs deki-rendering with <span class="tt">Source::stretchWidth</span>.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md6"></a>
 Fixed</h2>
 <ul>
 <li>A gradient at a whole number of right angles is exactly straight. <span class="tt">cos(pi/2)</span> is not 0 in float, which tilted it by a hair, and where a row met a colour's edge one pixel of it turned.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
-0.20.1</h2>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
-Fixed</h2>
-<ul>
-<li>A short line of text at the start of a wide <span class="tt">TextComponent</span> hung the game: finding where to draw its crop never finished. Left-aligned labels were the usual case.</li>
-<li>Text drawn scaled, as on a desktop window, lost a pixel at its right edge and gained one at its left. It draws as it did in 0.19 again.</li>
-</ul>
 <p>更早的版本：<a href="https://github.com/dekiengine/deki-2d/blob/master/CHANGELOG.md">CHANGELOG.md</a></p>
 <hr  />
-<p>由包的反射数据生成（引擎 0.21.0）。属性名就是场景文件中使用的键。重命名后会保留别名（<a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">兼容性</a>）。 </p>
+<p>由包的反射数据生成（引擎 0.22.0）。属性名就是场景文件中使用的键。重命名后会保留别名（<a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">兼容性</a>）。 </p>
 </div></div><!-- PageDoc -->
 <a href="doxygen_crawl.html"></a>
 </div><!-- contents -->

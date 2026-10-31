@@ -57,7 +57,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">deki-2d<span id="projectnumber">&#160;0.21.0</span>
+   <div id="projectname">deki-2d<span id="projectnumber">&#160;0.22.0</span>
    </div>
    <div id="projectbrief">Deki パッケージリファレンス</div>
   </td>
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 <img src="deki-2d.png" alt=""/>
 </div>
     <p>2D コンテンツ用のコンポーネント：スプライト、テキスト（BitmapFont と TTF ベイク）、アニメーション、グラデーション、ボタン、スクロール、クリッピング、ローラー。</p>
-<p>リポジトリ: <a href="https://github.com/dekiengine/deki-2d">github.com/dekiengine/deki-2d</a> · 最新リリース: 0.21.0 · エンジン 0.21.0 以降が必要 · 依存: <a href="https://dekiengine.github.io/deki-rendering/ja/">deki-rendering</a>, <a href="https://dekiengine.github.io/deki-input/ja/">deki-input</a></p>
+<p>リポジトリ: <a href="https://github.com/dekiengine/deki-2d">github.com/dekiengine/deki-2d</a> · 最新リリース: 0.22.0 · エンジン 0.22.0 以降が必要 · 依存: <a href="https://dekiengine.github.io/deki-rendering/ja/">deki-rendering</a>, <a href="https://dekiengine.github.io/deki-input/ja/">deki-input</a></p>
 <p><span class="tt">DekiEditor --packages-add deki-2d &lt;project&gt;</span> か、パッケージマネージャーからインストールします。エンジン自身のコンポーネントと C++ API は <a href="https://dekiengine.github.io/docs/ja/">Deki のドキュメント</a>にあります。</p>
 <p>エディターでは <b>2D</b> と表示されます。</p>
 <h1 class="doxsection"><a class="anchor" id="components"></a>
@@ -126,13 +126,33 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><a class="el" href="#c-animationcomponent" title="AnimationComponent">AnimationComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">オブジェクトのスプライトでフレームアニメーションのアセットを再生します。  </td></tr>
 <tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-arccomponent" title="ArcComponent">ArcComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">丸いゲージやダイヤルです。値をリングの長さで示します。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-barcomponent" title="BarComponent">BarComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">最小値と最大値の間の値を示すバーです。体力、読み込み、音量などに使います。  </td></tr>
+<tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><a class="el" href="#c-buttoncomponent" title="ButtonComponent">ButtonComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">オブジェクトをボタンにします。ホバーと押下を追跡し、クリックのコールバックを呼び出します。  </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><a class="el" href="#c-buttonstylecomponent" title="ButtonStyleComponent">ButtonStyleComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">ボタンの見た目を状態ごとに決めます。色合いを変えるか、スプライトを差し替えます。  </td></tr>
 <tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-chartcomponent" title="ChartComponent">ChartComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">一連の値の折れ線グラフまたは棒グラフです。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-checkboxcomponent" title="CheckboxComponent">CheckboxComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">チェックを付けたり外したりできるボックスと、そのラベルです。  </td></tr>
+<tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><a class="el" href="#c-clipcomponent" title="ClipComponent">ClipComponent</a>  </td><td class="markdownTableBodyNone">コア  </td><td class="markdownTableBodyNone">子の描画を矩形の範囲で切り取ります。  </td></tr>
 <tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-datepickercomponent" title="DatePickerComponent">DatePickerComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">日付の選択です。日、月、年のローラーで選びます。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-dropdowncomponent" title="DropdownComponent">DropdownComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">選択肢のリストを開いて 1 つを選ぶ欄です。  </td></tr>
+<tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><a class="el" href="#c-gradientcomponent" title="GradientComponent">GradientComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">プロシージャルなグラデーションを描きます。リニア、放射状、円錐状から選べます。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-keyboardcomponent" title="KeyboardComponent">KeyboardComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">テキスト欄に入力する画面上のキーボードです。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-ledcomponent" title="LedComponent">LedComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">色、明るさ、光のにじみを持つ丸いライトです。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-listcomponent" title="ListComponent">ListComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">タップする行を縦に並べたスクロールできるリスト。セクション見出し付き。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-msgboxcomponent" title="MsgboxComponent">MsgboxComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">タイトル、メッセージ、ボタンを持つダイアログです。  </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><a class="el" href="#c-rollercomponent" title="RollerComponent">RollerComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">ピッカーホイールです。値のリストを慣性で回し、1 つの値で止まります。  </td></tr>
 <tr class="markdownTableRowOdd">
@@ -140,11 +160,25 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><a class="el" href="#c-scrollelement" title="ScrollElement">ScrollElement</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">リストの 1 項目のサイズを示し、スクロールコンポーネントがリストを並べられるようにします。  </td></tr>
 <tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-shapecomponent" title="ShapeComponent">ShapeComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">縁がなめらかな平らな図形を描きます。角丸の長方形、楕円、円弧、三角形、チェックマークです。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-slidercomponent" title="SliderComponent">SliderComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">ノブをドラッグするか、キーで少しずつ動かすバーです。音量や明るさなどに使います。  </td></tr>
+<tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><a class="el" href="#c-sortinggroupcomponent" title="SortingGroupComponent">SortingGroupComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">子をひとまとまりにして、シーンのほかの部分に対する描画順をまとめて決めます。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-spinboxcomponent" title="SpinboxComponent">SpinboxComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">マイナスとプラスのボタンが付いた数値です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-spinnercomponent" title="SpinnerComponent">SpinnerComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">処理中を示す表示です。円弧がリングの上を回ります。  </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><a class="el" href="#c-spritecomponent" title="SpriteComponent">SpriteComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">スプライトを描きます。色合い、反転、タイルと 9 スライスのモードに対応します。  </td></tr>
 <tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-switchcomponent" title="SwitchComponent">SwitchComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">ノブがスライドするオン/オフのスイッチです。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-tabviewcomponent" title="TabviewComponent">TabviewComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">ページの上に並ぶタブです。一度に 1 ページだけ表示します。  </td></tr>
+<tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><a class="el" href="#c-textcomponent" title="TextComponent">TextComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">ビットマップフォントでテキストを描きます。揃えと折り返しに対応します。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-textareacomponent" title="TextareaComponent">TextareaComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">文字を入力する欄です。キーボードや画面上のキーボードから入力します。  </td></tr>
 </table>
 <h1 class="doxsection"><a class="anchor" id="feature-flags"></a>
 機能フラグ</h1>
@@ -170,6 +204,40 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 <td class="markdownTableBodyNone">Clipping  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_CLIP</span>  </td><td class="markdownTableBodyNone">オン  </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone">Sorting Groups  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SORTING_GROUP</span>  </td><td class="markdownTableBodyNone">オン  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Shapes  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SHAPE</span>  </td><td class="markdownTableBodyNone">オン  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Bars  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_BAR</span>  </td><td class="markdownTableBodyNone">オン  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Sliders  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SLIDER</span>  </td><td class="markdownTableBodyNone">オン  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Switches  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SWITCH</span>  </td><td class="markdownTableBodyNone">オン  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Checkboxes  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_CHECKBOX</span>  </td><td class="markdownTableBodyNone">オン  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">LEDs  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_LED</span>  </td><td class="markdownTableBodyNone">オン  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Arcs  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_ARC</span>  </td><td class="markdownTableBodyNone">オン  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Spinners  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SPINNER</span>  </td><td class="markdownTableBodyNone">オン  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Spinboxes  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SPINBOX</span>  </td><td class="markdownTableBodyNone">オン  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Dropdowns  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_DROPDOWN</span>  </td><td class="markdownTableBodyNone">オン  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Lists  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_LIST</span>  </td><td class="markdownTableBodyNone">オン  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Tab Views  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_TABVIEW</span>  </td><td class="markdownTableBodyNone">オン  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Message Boxes  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_MSGBOX</span>  </td><td class="markdownTableBodyNone">オン  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Date Pickers  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_DATE_PICKER</span>  </td><td class="markdownTableBodyNone">オン  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Text Areas  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_TEXTAREA</span>  </td><td class="markdownTableBodyNone">オン  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">On-Screen Keyboards  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_KEYBOARD</span>  </td><td class="markdownTableBodyNone">オン  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Charts  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_CHART</span>  </td><td class="markdownTableBodyNone">オン  </td></tr>
 </table>
 <h1 class="doxsection"><a class="anchor" id="component-reference"></a>
 コンポーネントリファレンス</h1>
@@ -192,6 +260,56 @@ AnimationComponent</h2>
 <td class="markdownTableBodyNone"><span class="tt">hasFinished</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone">ループしないシーケンスが最後のフレームに達するとオンになります。次へ進むタイミングを知るのに使います。  </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><span class="tt">playOnceOverride</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone">アセットでループ指定されていても、現在のシーケンスを一度だけ再生します。シーケンスが変わるとオフに戻ります。  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-arccomponent"></a>
+ArcComponent</h2>
+<p>丸いゲージやダイヤルです。値をリングの長さで示します。</p>
+<p>インスペクターでの名前: アークコンポーネント · カテゴリ: 2D · 型: <span class="tt">Deki2D::ArcComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">プロパティ  </th><th class="markdownTableHeadNone">型  </th><th class="markdownTableHeadNone">デフォルト  </th><th class="markdownTableHeadNone">制約  </th><th class="markdownTableHeadNone">説明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">ドラッグを受け取る当たり判定の領域です。エディターが同じオブジェクトに追加し、リングの大きさに合わせます。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">value</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">40</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">表示する値です。最小値と最大値の間です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">minValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">リングの始まりでの値です。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">maxValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">100</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">リングの終わりでの値です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">step</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">値は最小値からこの倍数ごとに揃います。0 では自由に回ります。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">size</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">5</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">リングの直径 (メートル) です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">thickness</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.6</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">リングの太さ (メートル) です。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">startAngle</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">3.92699</span>  </td><td class="markdownTableBodyNone">単位 rad  </td><td class="markdownTableBodyNone">リングの始まる位置、つまり最小値の位置です。0 は右向きで、225 度はゲージのように左下になります。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">sweepAngle</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">4.71239</span>  </td><td class="markdownTableBodyNone">単位 rad  </td><td class="markdownTableBodyNone">開始位置から時計回りにリングが続く角度です。270 度にすると下側が空きます。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">interactive</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">値をドラッグやキーで変えられるようにします。オフにすると、ノブのない表示専用のゲージになります。  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-barcomponent"></a>
+BarComponent</h2>
+<p>最小値と最大値の間の値を示すバーです。体力、読み込み、音量などに使います。</p>
+<p>インスペクターでの名前: バーコンポーネント · カテゴリ: 2D · 型: <span class="tt">Deki2D::BarComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">プロパティ  </th><th class="markdownTableHeadNone">型  </th><th class="markdownTableHeadNone">デフォルト  </th><th class="markdownTableHeadNone">制約  </th><th class="markdownTableHeadNone">説明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">value</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">50</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">表示する値です。最小値と最大値の間です。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">minValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">空の端での値です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">maxValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">100</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">満タンの端での値です。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">orientation</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Horizontal"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Horizontal</span>, <span class="tt">Vertical</span>  </td><td class="markdownTableBodyNone">水平では左から右へ、垂直では下から上へ満ちます。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">8</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">水平なバーの長さ、または垂直なバーの太さ (メートル) です。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.75</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">水平なバーの太さ、または垂直なバーの長さ (メートル) です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">glideSpeed</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">0 から 60  </td><td class="markdownTableBodyNone">塗りが新しい値へ移る速さです。0 ではすぐに移り、10 ではおよそ 3 分の 1 秒で落ち着きます。  </td></tr>
 </table>
 <h2 class="doxsection"><a class="anchor" id="c-buttoncomponent"></a>
 ButtonComponent</h2>
@@ -237,6 +355,56 @@ ButtonStyleComponent</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><span class="tt">disabledSprite</span>  </td><td class="markdownTableBodyNone">AssetRef (Sprite)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"><span class="tt">transition</span> が許すときに表示  </td><td class="markdownTableBodyNone">スプライト差し替えモードで、無効なときのスプライトです。  </td></tr>
 </table>
+<h2 class="doxsection"><a class="anchor" id="c-chartcomponent"></a>
+ChartComponent</h2>
+<p>一連の値の折れ線グラフまたは棒グラフです。</p>
+<p>インスペクターでの名前: チャートコンポーネント · カテゴリ: 2D · 型: <span class="tt">Deki2D::ChartComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">プロパティ  </th><th class="markdownTableHeadNone">型  </th><th class="markdownTableHeadNone">デフォルト  </th><th class="markdownTableHeadNone">制約  </th><th class="markdownTableHeadNone">説明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">kind</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Line"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Line</span>, <span class="tt">Bars</span>  </td><td class="markdownTableBodyNone">点を結ぶ線、または点ごとの棒です。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">points</span>  </td><td class="markdownTableBodyNone">Array&lt;float&gt;  </td><td class="markdownTableBodyNone"><span class="tt">[20.0, 45.0, 30.0, 60.0, 55.0, 80.0, 70.0]</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">値を古い順に並べたものです。AddPoint で末尾に追加します。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">pointCount</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">16</span>  </td><td class="markdownTableBodyNone">2 から 256  </td><td class="markdownTableBodyNone">グラフが保持する点の数です。これを超えて点を追加すると、最も古い点が消えます。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">minValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">下端の値です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">maxValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">100</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">上端の値です。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">gridLines</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">4</span>  </td><td class="markdownTableBodyNone">0 から 16  </td><td class="markdownTableBodyNone">グラフを横切る水平なグリッド線の数です。0 でなしになります。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">lineWidth</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.18</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">線の太さ (メートル) です。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">12</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">グラフの幅 (メートル) です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">グラフの高さ (メートル) です。  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-checkboxcomponent"></a>
+CheckboxComponent</h2>
+<p>チェックを付けたり外したりできるボックスと、そのラベルです。</p>
+<p>インスペクターでの名前: チェックボックスコンポーネント · カテゴリ: 2D · 型: <span class="tt">Deki2D::CheckboxComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">プロパティ  </th><th class="markdownTableHeadNone">型  </th><th class="markdownTableHeadNone">デフォルト  </th><th class="markdownTableHeadNone">制約  </th><th class="markdownTableHeadNone">説明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">タップを受け取る当たり判定の領域です。エディターが同じオブジェクトに追加し、ボックスとラベルの大きさに合わせます。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">isChecked</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">ボックスにチェックが付いているかどうかです。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">無効なチェックボックスはタップとキーを無視します。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">label</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">"Checkbox"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">ボックスの横に表示する文字です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">8</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">ボックスとラベルを合わせた幅 (メートル) です。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">boxSize</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.5</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">ボックスの大きさ (メートル) です。チェックボックスの高さもこれになります。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">checkedColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#408CFFFF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">チェックが付いているときのボックスの色です。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">uncheckedColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#8C92A0FF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">チェックが付いていないときの枠の色です。  </td></tr>
+</table>
 <h2 class="doxsection"><a class="anchor" id="c-clipcomponent"></a>
 ClipComponent</h2>
 <p>子の描画を矩形の範囲で切り取ります。</p>
@@ -250,6 +418,54 @@ ClipComponent</h2>
 <td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.25</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">クリップ領域の高さ (メートル) です。  </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><span class="tt">sortingOrder</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">クリップされたグループ全体の、外側のものに対する描画順です。  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-datepickercomponent"></a>
+DatePickerComponent</h2>
+<p>日付の選択です。日、月、年のローラーで選びます。</p>
+<p>インスペクターでの名前: 日付選択コンポーネント · カテゴリ: 2D · 型: <span class="tt">Deki2D::DatePickerComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">プロパティ  </th><th class="markdownTableHeadNone">型  </th><th class="markdownTableHeadNone">デフォルト  </th><th class="markdownTableHeadNone">制約  </th><th class="markdownTableHeadNone">説明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">year</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">2026</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">選択中の年です。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">month</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone">1 から 12  </td><td class="markdownTableBodyNone">選択中の月です。1 から 12 までです。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">day</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone">1 から 31  </td><td class="markdownTableBodyNone">選択中の日です。1 から数えます。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">minYear</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">2000</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">選べる最も早い年です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">maxYear</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">2050</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">選べる最も遅い年です。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">order</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"DayMonthYear"</span>  </td><td class="markdownTableBodyNone"><span class="tt">DayMonthYear</span>, <span class="tt">MonthDayYear</span>, <span class="tt">YearMonthDay</span>  </td><td class="markdownTableBodyNone">列の順序です。ゲームを遊ぶ地域での日付の書き方に合わせます。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">monthNames</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">月を数字ではなく名前 (Jan、Feb など) で表示します。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">11</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">日付選択の幅 (メートル) です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">rowHeight</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.5</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">1 行の高さ (メートル) です。選択中の行は少し高くなります。  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-dropdowncomponent"></a>
+DropdownComponent</h2>
+<p>選択肢のリストを開いて 1 つを選ぶ欄です。</p>
+<p>インスペクターでの名前: ドロップダウンコンポーネント · カテゴリ: 2D · 型: <span class="tt">Deki2D::DropdownComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">プロパティ  </th><th class="markdownTableHeadNone">型  </th><th class="markdownTableHeadNone">デフォルト  </th><th class="markdownTableHeadNone">制約  </th><th class="markdownTableHeadNone">説明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">閉じた欄の当たり判定の領域です。エディターが同じオブジェクトに追加し、欄の大きさに合わせます。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">options</span>  </td><td class="markdownTableBodyNone">Array&lt;string&gt;  </td><td class="markdownTableBodyNone"><span class="tt">["Easy", "Normal", "Hard"]</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">選択肢を順に並べたものです。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">selectedIndex</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">選択中の選択肢の番号です。0 から数えます。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">listRows</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">4</span>  </td><td class="markdownTableBodyNone">1 から 12  </td><td class="markdownTableBodyNone">開いたリストに一度に表示する行数です。選択肢がそれより多いとスクロールします。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">無効なドロップダウンはタップとキーを無視します。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">7</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">欄とリストの幅 (メートル) です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.75</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">欄の高さと、リストの各行の高さ (メートル) です。  </td></tr>
 </table>
 <h2 class="doxsection"><a class="anchor" id="c-gradientcomponent"></a>
 GradientComponent</h2>
@@ -302,6 +518,84 @@ GradientComponent</h2>
 <td class="markdownTableBodyNone"><span class="tt">tileHeight</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">タイルモードで繰り返しや反転をするときの、1 回分の高さです。  </td></tr>
 </table>
 <p><span class="tt">sortingOrder</span>, <span class="tt">ignoreClip</span>, <span class="tt">pixelSnap</span>, <span class="tt">alphaMode</span> を <a href="https://dekiengine.github.io/docs/ja/engine-core.html#engine-renderercomponent">RendererComponent</a> から継承します。</p>
+<h2 class="doxsection"><a class="anchor" id="c-keyboardcomponent"></a>
+KeyboardComponent</h2>
+<p>テキスト欄に入力する画面上のキーボードです。</p>
+<p>インスペクターでの名前: キーボードコンポーネント · カテゴリ: 2D · 型: <span class="tt">Deki2D::KeyboardComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">プロパティ  </th><th class="markdownTableHeadNone">型  </th><th class="markdownTableHeadNone">デフォルト  </th><th class="markdownTableHeadNone">制約  </th><th class="markdownTableHeadNone">説明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">キーの押下を受け取る当たり判定の領域です。エディターが同じオブジェクトに追加し、キーボードの大きさに合わせます。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">target</span>  </td><td class="markdownTableBodyNone">ObjectRef (TextareaComponent)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">キーで入力する先のテキスト欄です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">mode</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Lower"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Lower</span>, <span class="tt">Upper</span>, <span class="tt">Symbols</span>  </td><td class="markdownTableBodyNone">小文字、大文字、または数字と記号です。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">無効なキーボードは押下を無視します。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">19</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">キーボードの幅 (メートル) です。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">7</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">キーボードの高さ (メートル) です。キーは 4 列あります。  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-ledcomponent"></a>
+LedComponent</h2>
+<p>色、明るさ、光のにじみを持つ丸いライトです。</p>
+<p>インスペクターでの名前: LED コンポーネント · カテゴリ: 2D · 型: <span class="tt">Deki2D::LedComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">プロパティ  </th><th class="markdownTableHeadNone">型  </th><th class="markdownTableHeadNone">デフォルト  </th><th class="markdownTableHeadNone">制約  </th><th class="markdownTableHeadNone">説明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">color</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#40DC78FF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">最大の明るさのときのライトの色です。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">brightness</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone">0 から 1 (スライダー)  </td><td class="markdownTableBodyNone">ライトの明るさです。0 (暗い) から 1 までです。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isOn</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">オフにすると、明るさに関係なくライトを暗く表示します。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">size</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">ライトの直径 (メートル) です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">glow</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.6</span>  </td><td class="markdownTableBodyNone">0 から 2  </td><td class="markdownTableBodyNone">ライトの外側に光がにじむ範囲を、大きさに対する割合で指定します。0 でなしになります。  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-listcomponent"></a>
+ListComponent</h2>
+<p>タップする行を縦に並べたスクロールできるリスト。セクション見出し付き。</p>
+<p>インスペクターでの名前: リストコンポーネント · カテゴリ: 2D · 型: <span class="tt">Deki2D::ListComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">プロパティ  </th><th class="markdownTableHeadNone">型  </th><th class="markdownTableHeadNone">デフォルト  </th><th class="markdownTableHeadNone">制約  </th><th class="markdownTableHeadNone">説明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">items</span>  </td><td class="markdownTableBodyNone">Array&lt;string&gt;  </td><td class="markdownTableBodyNone"><span class="tt">["# Audio", "Music", "Sound effects", "# Display", "Brigh...</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">上から順の行。"\# " で始まる行はセクション見出しになります。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">visibleRows</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">5</span>  </td><td class="markdownTableBodyNone">1 から 16  </td><td class="markdownTableBodyNone">一度に表示する行数。項目がそれより多いとスクロールします。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">無効なリストはタップとキーを無視します。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">8</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">リストの幅（メートル）。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">rowHeight</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.5</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">各行の高さ（メートル）。  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-msgboxcomponent"></a>
+MsgboxComponent</h2>
+<p>タイトル、メッセージ、ボタンを持つダイアログです。</p>
+<p>インスペクターでの名前: メッセージボックスコンポーネント · カテゴリ: 2D · 型: <span class="tt">Deki2D::MsgboxComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">プロパティ  </th><th class="markdownTableHeadNone">型  </th><th class="markdownTableHeadNone">デフォルト  </th><th class="markdownTableHeadNone">制約  </th><th class="markdownTableHeadNone">説明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">title</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">"Title"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">ダイアログのタイトルです。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">message</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">"Message"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">タイトルの下のメッセージです。長い行は折り返します。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">buttons</span>  </td><td class="markdownTableBodyNone">Array&lt;string&gt;  </td><td class="markdownTableBodyNone"><span class="tt">["OK", "Cancel"]</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">ボタンのラベルです。左から右へ最大 3 つまでです。最初のボタンが主なボタンとして描かれます。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">isOpen</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">ダイアログを表示するかどうかです。コードからは Open と Close で設定します。編集中に見るにはオンにします。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">closeOnEsc</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Esc でダイアログをキャンセルとして閉じます。どのボタンも押されなかったことになります。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">14</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">ダイアログの幅 (メートル) です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">8</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">ダイアログの高さ (メートル) です。  </td></tr>
+</table>
 <h2 class="doxsection"><a class="anchor" id="c-rollercomponent"></a>
 RollerComponent</h2>
 <p>ピッカーホイールです。値のリストを慣性で回し、1 つの値で止まります。</p>
@@ -388,6 +682,54 @@ ScrollElement</h2>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">3.75</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">1 項目の高さ (メートル) です。  </td></tr>
 </table>
+<h2 class="doxsection"><a class="anchor" id="c-shapecomponent"></a>
+ShapeComponent</h2>
+<p>縁がなめらかな平らな図形を描きます。角丸の長方形、楕円、円弧、三角形、チェックマークです。</p>
+<p>インスペクターでの名前: シェイプコンポーネント · カテゴリ: 2D · 型: <span class="tt">Deki2D::ShapeComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">プロパティ  </th><th class="markdownTableHeadNone">型  </th><th class="markdownTableHeadNone">デフォルト  </th><th class="markdownTableHeadNone">制約  </th><th class="markdownTableHeadNone">説明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">kind</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Rectangle"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Rectangle</span>, <span class="tt">Ellipse</span>, <span class="tt">Arc</span>, <span class="tt">Triangle</span>, <span class="tt">Check</span>, <span class="tt">Custom</span>  </td><td class="markdownTableBodyNone">描く図形の種類です。カスタムではコードが書き込んだものを描きます。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">4</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">図形の幅 (メートル) です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">4</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">図形の高さ (メートル) です。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">color</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#FFFFFFFF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">図形を描く色です。アルファで図形全体が薄くなります。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">cornerRadius</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">単位 m。<span class="tt">kind</span> が許すときに表示  </td><td class="markdownTableBodyNone">角の丸みの半径 (メートル) です。高さの半分にすると両端が丸い形になります。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">lineWidth</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">単位 m。<span class="tt">kind</span> が許すときに表示  </td><td class="markdownTableBodyNone">0 で図形を塗りつぶします。0 より大きいと、この太さの線だけを縁の内側に沿って描きます。円弧とチェックは常に線で、0 のときは大きさから太さを決めます。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">startAngle</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">単位 rad。<span class="tt">kind</span> が許すときに表示  </td><td class="markdownTableBodyNone">円弧の始まる位置です。0 は右向きで、円弧はここから反時計回りに続きます。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">endAngle</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.28319</span>  </td><td class="markdownTableBodyNone">単位 rad。<span class="tt">kind</span> が許すときに表示  </td><td class="markdownTableBodyNone">円弧の終わる位置です。開始から 1 周分先にすると、リング全体を描きます。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">roundCaps</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"><span class="tt">kind</span> が許すときに表示  </td><td class="markdownTableBodyNone">円弧の端を四角く切らずに丸くします。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">direction</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Down"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Down</span>, <span class="tt">Up</span>, <span class="tt">Left</span>, <span class="tt">Right</span>。<span class="tt">kind</span> が許すときに表示  </td><td class="markdownTableBodyNone">三角形が向く方向です。  </td></tr>
+</table>
+<p><span class="tt">sortingOrder</span>, <span class="tt">ignoreClip</span>, <span class="tt">pixelSnap</span>, <span class="tt">alphaMode</span> を <a href="https://dekiengine.github.io/docs/ja/engine-core.html#engine-renderercomponent">RendererComponent</a> から継承します。</p>
+<h2 class="doxsection"><a class="anchor" id="c-slidercomponent"></a>
+SliderComponent</h2>
+<p>ノブをドラッグするか、キーで少しずつ動かすバーです。音量や明るさなどに使います。</p>
+<p>インスペクターでの名前: スライダーコンポーネント · カテゴリ: 2D · 型: <span class="tt">Deki2D::SliderComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">プロパティ  </th><th class="markdownTableHeadNone">型  </th><th class="markdownTableHeadNone">デフォルト  </th><th class="markdownTableHeadNone">制約  </th><th class="markdownTableHeadNone">説明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">ドラッグを受け取る当たり判定の領域です。エディターが同じオブジェクトに追加し、スライダーの大きさに合わせます。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">step</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">値は最小値からこの倍数ごとに揃います。0 では自由に動きます。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">keyStep</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">キーを 1 回押したときに値が動く量です。0 のときは範囲の 20 分の 1、またはステップ 1 つ分動きます。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">knobSize</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.5</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">ノブの直径 (メートル) です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">無効なスライダーはタッチとキーを無視します。  </td></tr>
+</table>
+<p><span class="tt">value</span>, <span class="tt">minValue</span>, <span class="tt">maxValue</span>, <span class="tt">orientation</span>, <span class="tt">width</span>, <span class="tt">height</span>, <span class="tt">glideSpeed</span> を <a href="https://dekiengine.github.io/deki-2d/ja/#c-barcomponent">BarComponent</a> から継承します。</p>
 <h2 class="doxsection"><a class="anchor" id="c-sortinggroupcomponent"></a>
 SortingGroupComponent</h2>
 <p>子をひとまとまりにして、シーンのほかの部分に対する描画順をまとめて決めます。</p>
@@ -397,6 +739,52 @@ SortingGroupComponent</h2>
 <th class="markdownTableHeadNone">プロパティ  </th><th class="markdownTableHeadNone">型  </th><th class="markdownTableHeadNone">デフォルト  </th><th class="markdownTableHeadNone">説明  </th></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><span class="tt">sortingOrder</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">このオブジェクトのサブツリー全体を 1 つのまとまりとして扱う描画順です。子同士の順序はそのままでグループ全体が一緒に動くので、ある子が別のグループの子の間に入り込むことがなくなります。  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-spinboxcomponent"></a>
+SpinboxComponent</h2>
+<p>マイナスとプラスのボタンが付いた数値です。</p>
+<p>インスペクターでの名前: スピンボックスコンポーネント · カテゴリ: 2D · 型: <span class="tt">Deki2D::SpinboxComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">プロパティ  </th><th class="markdownTableHeadNone">型  </th><th class="markdownTableHeadNone">デフォルト  </th><th class="markdownTableHeadNone">制約  </th><th class="markdownTableHeadNone">説明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">ボタンの押下を受け取る当たり判定の領域です。エディターが同じオブジェクトに追加し、スピンボックスの大きさに合わせます。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">value</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">表示する数値です。最小値と最大値の間です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">minValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">最小の数値です。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">maxValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">99</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">最大の数値です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">step</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">ボタンを 1 回押したときに数値が変わる量です。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">decimals</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">0 から 4  </td><td class="markdownTableBodyNone">小数点以下に表示する桁数です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">wrap</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">最大の数値の次に最小の数値が来ます。逆も同じです。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">無効なスピンボックスは押下とキーを無視します。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.5</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">ボタンを含むスピンボックスの幅 (メートル) です。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.75</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">スピンボックスの高さ (メートル) です。ボタンは正方形になります。  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-spinnercomponent"></a>
+SpinnerComponent</h2>
+<p>処理中を示す表示です。円弧がリングの上を回ります。</p>
+<p>インスペクターでの名前: スピナーコンポーネント · カテゴリ: 2D · 型: <span class="tt">Deki2D::SpinnerComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">プロパティ  </th><th class="markdownTableHeadNone">型  </th><th class="markdownTableHeadNone">デフォルト  </th><th class="markdownTableHeadNone">制約  </th><th class="markdownTableHeadNone">説明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">size</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">2.5</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">スピナーの直径 (メートル) です。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">thickness</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.35</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">リングの太さ (メートル) です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">arcLength</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.5708</span>  </td><td class="markdownTableBodyNone">単位 rad  </td><td class="markdownTableBodyNone">動く円弧がリングのどれだけを覆うかです。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">turnsPerSecond</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone">-5 から 5  </td><td class="markdownTableBodyNone">1 秒あたりの回転数です。負の値で反時計回りに回ります。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isSpinning</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">オフにするとその位置で止まります。  </td></tr>
 </table>
 <h2 class="doxsection"><a class="anchor" id="c-spritecomponent"></a>
 SpriteComponent</h2>
@@ -421,6 +809,52 @@ SpriteComponent</h2>
 <td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">単位 m。<span class="tt">renderMode</span> が許すときに表示  </td><td class="markdownTableBodyNone">描画するサイズ (メートル) です。0 のままなら、スプライト自身のピクセルサイズをプロジェクトの 1 メートルあたりのピクセル数で換算して使います。  </td></tr>
 </table>
 <p><span class="tt">sortingOrder</span>, <span class="tt">ignoreClip</span>, <span class="tt">pixelSnap</span>, <span class="tt">alphaMode</span> を <a href="https://dekiengine.github.io/docs/ja/engine-core.html#engine-renderercomponent">RendererComponent</a> から継承します。</p>
+<h2 class="doxsection"><a class="anchor" id="c-switchcomponent"></a>
+SwitchComponent</h2>
+<p>ノブがスライドするオン/オフのスイッチです。</p>
+<p>インスペクターでの名前: スイッチコンポーネント · カテゴリ: 2D · 型: <span class="tt">Deki2D::SwitchComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">プロパティ  </th><th class="markdownTableHeadNone">型  </th><th class="markdownTableHeadNone">デフォルト  </th><th class="markdownTableHeadNone">制約  </th><th class="markdownTableHeadNone">説明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">タップを受け取る当たり判定の領域です。エディターが同じオブジェクトに追加し、スイッチの大きさに合わせます。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">isOn</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">スイッチがオンかどうかです。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">無効なスイッチはタップとキーを無視します。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">3</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">スイッチの幅 (メートル) です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.6</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">スイッチの高さ (メートル) です。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">onColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#408CFFFF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">オンのときのトラックの色です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">offColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#3A3F4BFF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">オフのときのトラックの色です。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">glideSpeed</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">14</span>  </td><td class="markdownTableBodyNone">0 から 60  </td><td class="markdownTableBodyNone">ノブがスライドする速さです。0 ではすぐに移ります。  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-tabviewcomponent"></a>
+TabviewComponent</h2>
+<p>ページの上に並ぶタブです。一度に 1 ページだけ表示します。</p>
+<p>インスペクターでの名前: タブビューコンポーネント · カテゴリ: 2D · 型: <span class="tt">Deki2D::TabviewComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">プロパティ  </th><th class="markdownTableHeadNone">型  </th><th class="markdownTableHeadNone">デフォルト  </th><th class="markdownTableHeadNone">制約  </th><th class="markdownTableHeadNone">説明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">tabs</span>  </td><td class="markdownTableBodyNone">Array&lt;string&gt;  </td><td class="markdownTableBodyNone"><span class="tt">["One", "Two", "Three"]</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">タブのタイトルを順に並べたものです。それぞれにページ (Page0、Page1 など) があります。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">selectedTab</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">表示するタブの番号です。0 から数えます。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">無効なタブビューはタップとキーを無視します。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">16</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">タブビューの幅 (メートル) です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">10</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">タブバーを含むタブビューの高さ (メートル) です。残りをページが埋めます。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">barHeight</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.75</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">タブバーの高さ (メートル) です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">glideSpeed</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">14</span>  </td><td class="markdownTableBodyNone">0 から 60  </td><td class="markdownTableBodyNone">タブの下の線が新しいタブへ移る速さです。0 ではすぐに移ります。  </td></tr>
+</table>
 <h2 class="doxsection"><a class="anchor" id="c-textcomponent"></a>
 TextComponent</h2>
 <p>ビットマップフォントでテキストを描きます。揃えと折り返しに対応します。</p>
@@ -431,9 +865,9 @@ TextComponent</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><span class="tt">text</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">描画する文字列です。改行で新しい行になり、幅を設定すると単語の区切りで折り返して幅に収めます。  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">font</span>  </td><td class="markdownTableBodyNone">AssetRef (BitmapFont)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">ビットマップフォントのアセットです。フォントは決まったサイズでベイクされるので、大きく拡大縮小するより、使いたいサイズに近いものを選んでください。  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">font</span>  </td><td class="markdownTableBodyNone">AssetRef (BitmapFont)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">TrueType または BDF のフォントアセットです。TrueType フォントを描くサイズは「フォントサイズ」で選びます。  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">fontSize</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">16</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">エディターのプレビューにだけ使うサイズです。デバイスでは、フォントアセットをベイクしたサイズで描画します。  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">fontSize</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">16</span>  </td><td class="markdownTableBodyNone">6 から 128  </td><td class="markdownTableBodyNone">フォントのサイズ (ピクセル) です。テキストがはじめてこのサイズを使うと、エディターがそのサイズでフォントをベイクします。ビルドには、テキストが使うサイズが入ります。  </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.25</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">テキストボックスの幅 (メートル) です。揃えはこの幅を基準にするので、テキストが短くても影響します。  </td></tr>
 <tr class="markdownTableRowOdd">
@@ -450,12 +884,60 @@ TextComponent</h2>
 <td class="markdownTableBodyNone"><span class="tt">verticalAlign</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"CapCenter"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Top</span>, <span class="tt">Middle</span>, <span class="tt">Bottom</span>, <span class="tt">CapCenter</span>, <span class="tt">XCenter</span>, <span class="tt">TypoCenter</span>, <span class="tt">Baseline</span>  </td><td class="markdownTableBodyNone">上の高さの中での縦方向の配置です。キャップ中央は大文字を基準に揃えるので、たいてい見た目どおり中央に見えます。真の中央はディセンダーも含めます。  </td></tr>
 </table>
 <p><span class="tt">sortingOrder</span>, <span class="tt">ignoreClip</span>, <span class="tt">pixelSnap</span>, <span class="tt">alphaMode</span> を <a href="https://dekiengine.github.io/docs/ja/engine-core.html#engine-renderercomponent">RendererComponent</a> から継承します。</p>
+<h2 class="doxsection"><a class="anchor" id="c-textareacomponent"></a>
+TextareaComponent</h2>
+<p>文字を入力する欄です。キーボードや画面上のキーボードから入力します。</p>
+<p>インスペクターでの名前: テキストエリアコンポーネント · カテゴリ: 2D · 型: <span class="tt">Deki2D::TextareaComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">プロパティ  </th><th class="markdownTableHeadNone">型  </th><th class="markdownTableHeadNone">デフォルト  </th><th class="markdownTableHeadNone">制約  </th><th class="markdownTableHeadNone">説明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">入力を始めるタップを受け取る当たり判定の領域です。エディターが同じオブジェクトに追加し、欄の大きさに合わせます。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">text</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">これまでに入力した文字です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">placeholder</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">"Type here"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">欄が空のあいだ、薄く表示します。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">maxLength</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">32</span>  </td><td class="markdownTableBodyNone">0 から 1024  </td><td class="markdownTableBodyNone">入力できる最大の文字数です。0 で無制限です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">oneLine</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">1 行の場合、Enter で送信します。オフにすると Enter で改行し、長い行は折り返します。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">password</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">文字の代わりに 1 文字ごとに星印を表示します。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">無効な欄はタップと入力を無視します。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">10</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">欄の幅 (メートル) です。  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.75</span>  </td><td class="markdownTableBodyNone">単位 m  </td><td class="markdownTableBodyNone">欄の高さ (メートル) です。  </td></tr>
+</table>
 <h1 class="doxsection"><a class="anchor" id="changelog"></a>
 変更履歴</h1>
 <p>変更履歴は英語です。</p>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md0"></a>
-0.21.0</h2>
+0.22.0</h2>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md1"></a>
+Changed</h2>
+<ul>
+<li>Inspector rows line up with the rest: the sprite's 9-slice borders are a row with an Edit 9-Slice button, Clip's Edit Rect and Roller's Fill Options use the editor's action button, and the Text component's font size and preview rows are rows and hints.</li>
+<li>The font asset inspector is sections of rows, like the other asset inspectors: character range, rasterization, sizes (each with whether it is baked), bake and preview.</li>
+<li>The editor's previews (fonts, BDF fonts, icon fonts, spritesheets) make their textures with <span class="tt">EditorTexture</span> instead of OpenGL, which the editor no longer uses. Needs editor 0.22.</li>
+<li>Roller's Fill Options is a dialog like the editor's others: labels over fields, Cancel and Fill.</li>
+<li>Widgets show and hide their pages, lists and dialogs with plain <span class="tt">Object::SetActive</span>, now that engine 0.22 starts what it shows; deki-2d's own workaround is gone, so it needs engine 0.22.</li>
+<li><span class="tt">minEngine</span> 0.22.0: built against engine 0.22.0. A build of this package from before does not load and is rebuilt.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
+Fixed</h2>
+<ul>
+<li>Letters in a word are evenly spaced. A TrueType font is drawn at twice its size and filtered down, and each glyph was filtered from its own corner, so one starting on an odd column or row landed half a pixel off its neighbours. Glyphs are now filtered on the pixel grid. Fonts bake again on the next open, and every text's pixels change.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
+Added</h2>
+<ul>
+<li>List widget: a scrolling column of rows to tap, with section titles (an item that starts with "# "), a scroll thumb, drag to scroll, and Up, Down and Enter with keyboard focus. Feature <span class="tt">list</span>, so builds that do not use it leave it out.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
+0.21.0</h2>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
 Changed</h2>
 <ul>
 <li><span class="tt">minEngine</span> 0.21.0: built against engine 0.21.0. A build of this package from before does not load and is rebuilt.</li>
@@ -465,22 +947,14 @@ Changed</h2>
 <li>Sprites and fonts loaded one after another give the device's other tasks a turn after every 50 ms of loading, not after every load: a few milliseconds off opening a scene with many sprites.</li>
 <li><b>Scenes open faster.</b> A <span class="tt">GradientComponent</span> worked out every pixel of its bake from scratch on the first frame of every scene: a full-screen background took 0.7 s on an ESP32-S3. The bake now fills runs of one colour, and a gradient that changes along one axis only (straight down or across, undithered) is baked as one column or one row that QuadBlit stretches: a few hundred bytes instead of a screenful, and well under a millisecond. Needs deki-rendering with <span class="tt">Source::stretchWidth</span>.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md6"></a>
 Fixed</h2>
 <ul>
 <li>A gradient at a whole number of right angles is exactly straight. <span class="tt">cos(pi/2)</span> is not 0 in float, which tilted it by a hair, and where a row met a colour's edge one pixel of it turned.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
-0.20.1</h2>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
-Fixed</h2>
-<ul>
-<li>A short line of text at the start of a wide <span class="tt">TextComponent</span> hung the game: finding where to draw its crop never finished. Left-aligned labels were the usual case.</li>
-<li>Text drawn scaled, as on a desktop window, lost a pixel at its right edge and gained one at its left. It draws as it did in 0.19 again.</li>
-</ul>
 <p>それ以前のリリース: <a href="https://github.com/dekiengine/deki-2d/blob/master/CHANGELOG.md">CHANGELOG.md</a></p>
 <hr  />
-<p>パッケージのリフレクションデータから生成しています (エンジン 0.21.0)。プロパティ名はシーンファイルで使われるキーです。名前を変えても別名が残ります (<a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">互換性</a>)。 </p>
+<p>パッケージのリフレクションデータから生成しています (エンジン 0.22.0)。プロパティ名はシーンファイルで使われるキーです。名前を変えても別名が残ります (<a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">互換性</a>)。 </p>
 </div></div><!-- PageDoc -->
 <a href="doxygen_crawl.html"></a>
 </div><!-- contents -->

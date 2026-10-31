@@ -29,23 +29,42 @@ var NAVTREE =
     [ "功能开关", "index.html#feature-flags", null ],
     [ "组件参考", "index.html#component-reference", [
       [ "AnimationComponent", "index.html#c-animationcomponent", null ],
+      [ "ArcComponent", "index.html#c-arccomponent", null ],
+      [ "BarComponent", "index.html#c-barcomponent", null ],
       [ "ButtonComponent", "index.html#c-buttoncomponent", null ],
       [ "ButtonStyleComponent", "index.html#c-buttonstylecomponent", null ],
+      [ "ChartComponent", "index.html#c-chartcomponent", null ],
+      [ "CheckboxComponent", "index.html#c-checkboxcomponent", null ],
       [ "ClipComponent", "index.html#c-clipcomponent", null ],
+      [ "DatePickerComponent", "index.html#c-datepickercomponent", null ],
+      [ "DropdownComponent", "index.html#c-dropdowncomponent", null ],
       [ "GradientComponent", "index.html#c-gradientcomponent", null ],
+      [ "KeyboardComponent", "index.html#c-keyboardcomponent", null ],
+      [ "LedComponent", "index.html#c-ledcomponent", null ],
+      [ "ListComponent", "index.html#c-listcomponent", null ],
+      [ "MsgboxComponent", "index.html#c-msgboxcomponent", null ],
       [ "RollerComponent", "index.html#c-rollercomponent", null ],
       [ "ScrollComponent", "index.html#c-scrollcomponent", null ],
       [ "ScrollElement", "index.html#c-scrollelement", null ],
+      [ "ShapeComponent", "index.html#c-shapecomponent", null ],
+      [ "SliderComponent", "index.html#c-slidercomponent", null ],
       [ "SortingGroupComponent", "index.html#c-sortinggroupcomponent", null ],
+      [ "SpinboxComponent", "index.html#c-spinboxcomponent", null ],
+      [ "SpinnerComponent", "index.html#c-spinnercomponent", null ],
       [ "SpriteComponent", "index.html#c-spritecomponent", null ],
-      [ "TextComponent", "index.html#c-textcomponent", null ]
+      [ "SwitchComponent", "index.html#c-switchcomponent", null ],
+      [ "TabviewComponent", "index.html#c-tabviewcomponent", null ],
+      [ "TextComponent", "index.html#c-textcomponent", null ],
+      [ "TextareaComponent", "index.html#c-textareacomponent", null ]
     ] ],
     [ "更新日志", "index.html#changelog", [
-      [ "0.21.0", "index.html#autotoc_md0", null ],
+      [ "0.22.0", "index.html#autotoc_md0", null ],
       [ "Changed", "index.html#autotoc_md1", null ],
       [ "Fixed", "index.html#autotoc_md2", null ],
-      [ "0.20.1", "index.html#autotoc_md3", null ],
-      [ "Fixed", "index.html#autotoc_md4", null ]
+      [ "Added", "index.html#autotoc_md3", null ],
+      [ "0.21.0", "index.html#autotoc_md4", null ],
+      [ "Changed", "index.html#autotoc_md5", null ],
+      [ "Fixed", "index.html#autotoc_md6", null ]
     ] ]
   ] ]
 ];

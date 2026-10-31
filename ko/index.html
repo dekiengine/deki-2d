@@ -57,7 +57,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">deki-2d<span id="projectnumber">&#160;0.21.0</span>
+   <div id="projectname">deki-2d<span id="projectnumber">&#160;0.22.0</span>
    </div>
    <div id="projectbrief">Deki 패키지 레퍼런스</div>
   </td>
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 <img src="deki-2d.png" alt=""/>
 </div>
     <p>2D 콘텐츠 컴포넌트: 스프라이트, 텍스트(BitmapFont + TTF 베이킹), 애니메이션, 그라데이션, 버튼, 스크롤, 클리핑, 롤러.</p>
-<p>저장소: <a href="https://github.com/dekiengine/deki-2d">github.com/dekiengine/deki-2d</a> · 최신 릴리스: 0.21.0 · 엔진 0.21.0 이상 필요 · 의존: <a href="https://dekiengine.github.io/deki-rendering/ko/">deki-rendering</a>, <a href="https://dekiengine.github.io/deki-input/ko/">deki-input</a></p>
+<p>저장소: <a href="https://github.com/dekiengine/deki-2d">github.com/dekiengine/deki-2d</a> · 최신 릴리스: 0.22.0 · 엔진 0.22.0 이상 필요 · 의존: <a href="https://dekiengine.github.io/deki-rendering/ko/">deki-rendering</a>, <a href="https://dekiengine.github.io/deki-input/ko/">deki-input</a></p>
 <p><span class="tt">DekiEditor --packages-add deki-2d &lt;project&gt;</span> 또는 패키지 관리자로 설치합니다. 엔진 자체의 컴포넌트와 C++ API는 <a href="https://dekiengine.github.io/docs/ko/">Deki 문서</a>에 있습니다.</p>
 <p>에디터에는 <b>2D</b>(으)로 표시됩니다.</p>
 <h1 class="doxsection"><a class="anchor" id="components"></a>
@@ -126,13 +126,33 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><a class="el" href="#c-animationcomponent" title="AnimationComponent">AnimationComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">오브젝트의 스프라이트에서 프레임 애니메이션 에셋을 재생합니다.  </td></tr>
 <tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-arccomponent" title="ArcComponent">ArcComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">둥근 게이지나 다이얼입니다. 값을 링의 길이로 보여 줍니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-barcomponent" title="BarComponent">BarComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">최솟값과 최댓값 사이의 값을 보여 주는 막대입니다. 체력, 로딩, 음량 등에 씁니다.  </td></tr>
+<tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><a class="el" href="#c-buttoncomponent" title="ButtonComponent">ButtonComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">오브젝트를 버튼으로 만듭니다. 호버와 누름을 추적하고 클릭 콜백을 호출합니다.  </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><a class="el" href="#c-buttonstylecomponent" title="ButtonStyleComponent">ButtonStyleComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">틴트 또는 스프라이트 교체로 버튼의 상태별 모양을 정합니다.  </td></tr>
 <tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-chartcomponent" title="ChartComponent">ChartComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">일련의 값을 나타내는 선 차트 또는 막대 차트입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-checkboxcomponent" title="CheckboxComponent">CheckboxComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">체크를 켜고 끌 수 있는 상자와 레이블입니다.  </td></tr>
+<tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><a class="el" href="#c-clipcomponent" title="ClipComponent">ClipComponent</a>  </td><td class="markdownTableBodyNone">코어  </td><td class="markdownTableBodyNone">자식의 렌더링을 사각형 영역으로 잘라냅니다.  </td></tr>
 <tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-datepickercomponent" title="DatePickerComponent">DatePickerComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">날짜 선택기입니다. 일, 월, 연도 롤러로 고릅니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-dropdowncomponent" title="DropdownComponent">DropdownComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">선택지 목록을 열어 하나를 고르는 필드입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><a class="el" href="#c-gradientcomponent" title="GradientComponent">GradientComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">선형, 방사형 또는 원뿔형 절차적 그라디언트를 그립니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-keyboardcomponent" title="KeyboardComponent">KeyboardComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">텍스트 상자에 입력하는 화면 키보드입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-ledcomponent" title="LedComponent">LedComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">색상, 밝기, 빛 번짐이 있는 둥근 표시등입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-listcomponent" title="ListComponent">ListComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">탭할 수 있는 행을 세로로 나열한 스크롤 리스트. 섹션 제목 포함.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-msgboxcomponent" title="MsgboxComponent">MsgboxComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">제목, 메시지, 버튼이 있는 대화상자입니다.  </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><a class="el" href="#c-rollercomponent" title="RollerComponent">RollerComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">선택 휠입니다. 관성으로 값 목록을 돌다가 하나에 맞춰 멈춥니다.  </td></tr>
 <tr class="markdownTableRowOdd">
@@ -140,11 +160,25 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><a class="el" href="#c-scrollelement" title="ScrollElement">ScrollElement</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">목록 항목 하나의 크기를 지정하여 스크롤 컴포넌트가 목록을 배치할 수 있게 합니다.  </td></tr>
 <tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-shapecomponent" title="ShapeComponent">ShapeComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">가장자리가 매끄러운 평면 도형을 그립니다. 둥근 사각형, 타원, 호, 삼각형, 체크 표시입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-slidercomponent" title="SliderComponent">SliderComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">노브를 드래그하거나 키로 한 단계씩 움직이는 막대입니다. 음량, 밝기 등에 씁니다.  </td></tr>
+<tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><a class="el" href="#c-sortinggroupcomponent" title="SortingGroupComponent">SortingGroupComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">자식들을 하나의 단위로 묶어 씬의 나머지 부분과 함께 정렬되게 합니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-spinboxcomponent" title="SpinboxComponent">SpinboxComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">빼기와 더하기 버튼이 달린 숫자입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-spinnercomponent" title="SpinnerComponent">SpinnerComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">처리 중임을 알리는 표시입니다. 호가 링을 따라 돕니다.  </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><a class="el" href="#c-spritecomponent" title="SpriteComponent">SpriteComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">스프라이트를 그립니다. 틴트, 뒤집기, 타일 및 9-슬라이스 모드를 지원합니다.  </td></tr>
 <tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-switchcomponent" title="SwitchComponent">SwitchComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">노브가 미끄러지는 켬/끔 스위치입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-tabviewcomponent" title="TabviewComponent">TabviewComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">페이지 위에 늘어선 탭입니다. 한 번에 한 페이지만 보입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><a class="el" href="#c-textcomponent" title="TextComponent">TextComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">비트맵 폰트로 텍스트를 그립니다. 정렬과 단어 단위 줄 바꿈을 지원합니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-textareacomponent" title="TextareaComponent">TextareaComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">텍스트를 입력하는 상자입니다. 키보드나 화면 키보드로 입력합니다.  </td></tr>
 </table>
 <h1 class="doxsection"><a class="anchor" id="feature-flags"></a>
 기능 플래그</h1>
@@ -170,6 +204,40 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 <td class="markdownTableBodyNone">Clipping  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_CLIP</span>  </td><td class="markdownTableBodyNone">켜짐  </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone">Sorting Groups  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SORTING_GROUP</span>  </td><td class="markdownTableBodyNone">켜짐  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Shapes  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SHAPE</span>  </td><td class="markdownTableBodyNone">켜짐  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Bars  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_BAR</span>  </td><td class="markdownTableBodyNone">켜짐  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Sliders  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SLIDER</span>  </td><td class="markdownTableBodyNone">켜짐  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Switches  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SWITCH</span>  </td><td class="markdownTableBodyNone">켜짐  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Checkboxes  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_CHECKBOX</span>  </td><td class="markdownTableBodyNone">켜짐  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">LEDs  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_LED</span>  </td><td class="markdownTableBodyNone">켜짐  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Arcs  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_ARC</span>  </td><td class="markdownTableBodyNone">켜짐  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Spinners  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SPINNER</span>  </td><td class="markdownTableBodyNone">켜짐  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Spinboxes  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SPINBOX</span>  </td><td class="markdownTableBodyNone">켜짐  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Dropdowns  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_DROPDOWN</span>  </td><td class="markdownTableBodyNone">켜짐  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Lists  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_LIST</span>  </td><td class="markdownTableBodyNone">켜짐  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Tab Views  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_TABVIEW</span>  </td><td class="markdownTableBodyNone">켜짐  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Message Boxes  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_MSGBOX</span>  </td><td class="markdownTableBodyNone">켜짐  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Date Pickers  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_DATE_PICKER</span>  </td><td class="markdownTableBodyNone">켜짐  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Text Areas  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_TEXTAREA</span>  </td><td class="markdownTableBodyNone">켜짐  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">On-Screen Keyboards  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_KEYBOARD</span>  </td><td class="markdownTableBodyNone">켜짐  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Charts  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_CHART</span>  </td><td class="markdownTableBodyNone">켜짐  </td></tr>
 </table>
 <h1 class="doxsection"><a class="anchor" id="component-reference"></a>
 컴포넌트 레퍼런스</h1>
@@ -192,6 +260,56 @@ AnimationComponent</h2>
 <td class="markdownTableBodyNone"><span class="tt">hasFinished</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone">반복하지 않는 시퀀스가 마지막 프레임에 도달하면 켜집니다. 다음으로 넘어갈 때를 알기 위해 읽습니다.  </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><span class="tt">playOnceOverride</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone">에셋에서 반복으로 지정되어 있어도 현재 시퀀스를 한 번만 재생합니다. 시퀀스가 바뀌면 꺼집니다.  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-arccomponent"></a>
+ArcComponent</h2>
+<p>둥근 게이지나 다이얼입니다. 값을 링의 길이로 보여 줍니다.</p>
+<p>인스펙터 이름: 아크 컴포넌트 · 카테고리: 2D · 유형: <span class="tt">Deki2D::ArcComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">속성  </th><th class="markdownTableHeadNone">유형  </th><th class="markdownTableHeadNone">기본값  </th><th class="markdownTableHeadNone">제약  </th><th class="markdownTableHeadNone">설명  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">드래그를 받는 히트 영역입니다. 에디터가 같은 오브젝트에 추가하고 링 크기에 맞춥니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">value</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">40</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">표시할 값입니다. 최솟값과 최댓값 사이입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">minValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">링 시작의 값입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">maxValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">100</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">링 끝의 값입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">step</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">값이 최솟값부터 이 값의 배수에 맞춰집니다. 0이면 자유롭게 돕니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">size</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">5</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">링의 지름(미터)입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">thickness</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.6</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">링의 두께(미터)입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">startAngle</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">3.92699</span>  </td><td class="markdownTableBodyNone">단위 rad  </td><td class="markdownTableBodyNone">링이 시작하는 위치, 곧 최솟값의 위치입니다. 0은 오른쪽이고, 225도는 게이지처럼 왼쪽 아래입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">sweepAngle</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">4.71239</span>  </td><td class="markdownTableBodyNone">단위 rad  </td><td class="markdownTableBodyNone">시작점에서 시계 방향으로 링이 이어지는 각도입니다. 270도면 아래쪽이 비어 있습니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">interactive</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">값을 드래그하거나 키로 바꿀 수 있게 합니다. 끄면 노브 없는 읽기 전용 게이지가 됩니다.  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-barcomponent"></a>
+BarComponent</h2>
+<p>최솟값과 최댓값 사이의 값을 보여 주는 막대입니다. 체력, 로딩, 음량 등에 씁니다.</p>
+<p>인스펙터 이름: 바 컴포넌트 · 카테고리: 2D · 유형: <span class="tt">Deki2D::BarComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">속성  </th><th class="markdownTableHeadNone">유형  </th><th class="markdownTableHeadNone">기본값  </th><th class="markdownTableHeadNone">제약  </th><th class="markdownTableHeadNone">설명  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">value</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">50</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">표시할 값입니다. 최솟값과 최댓값 사이입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">minValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">빈 쪽 끝의 값입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">maxValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">100</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">가득 찬 쪽 끝의 값입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">orientation</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Horizontal"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Horizontal</span>, <span class="tt">Vertical</span>  </td><td class="markdownTableBodyNone">가로는 왼쪽에서 오른쪽으로, 세로는 아래에서 위로 채웁니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">8</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">가로 막대의 길이, 또는 세로 막대의 두께(미터)입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.75</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">가로 막대의 두께, 또는 세로 막대의 길이(미터)입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">glideSpeed</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">0~60  </td><td class="markdownTableBodyNone">채움이 새 값으로 옮겨 가는 속도입니다. 0이면 바로 옮겨 가고, 10이면 약 3분의 1초 만에 자리를 잡습니다.  </td></tr>
 </table>
 <h2 class="doxsection"><a class="anchor" id="c-buttoncomponent"></a>
 ButtonComponent</h2>
@@ -237,6 +355,56 @@ ButtonStyleComponent</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><span class="tt">disabledSprite</span>  </td><td class="markdownTableBodyNone">AssetRef (Sprite)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"><span class="tt">transition</span>이(가) 허용할 때 표시  </td><td class="markdownTableBodyNone">스프라이트 교체 모드에서 비활성화되었을 때의 스프라이트입니다.  </td></tr>
 </table>
+<h2 class="doxsection"><a class="anchor" id="c-chartcomponent"></a>
+ChartComponent</h2>
+<p>일련의 값을 나타내는 선 차트 또는 막대 차트입니다.</p>
+<p>인스펙터 이름: 차트 컴포넌트 · 카테고리: 2D · 유형: <span class="tt">Deki2D::ChartComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">속성  </th><th class="markdownTableHeadNone">유형  </th><th class="markdownTableHeadNone">기본값  </th><th class="markdownTableHeadNone">제약  </th><th class="markdownTableHeadNone">설명  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">kind</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Line"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Line</span>, <span class="tt">Bars</span>  </td><td class="markdownTableBodyNone">점을 잇는 선, 또는 점마다 막대입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">points</span>  </td><td class="markdownTableBodyNone">Array&lt;float&gt;  </td><td class="markdownTableBodyNone"><span class="tt">[20.0, 45.0, 30.0, 60.0, 55.0, 80.0, 70.0]</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">가장 오래된 것부터 나열한 값입니다. AddPoint는 끝에 더합니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">pointCount</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">16</span>  </td><td class="markdownTableBodyNone">2~256  </td><td class="markdownTableBodyNone">차트가 담는 점의 수입니다. 이를 넘어 점을 더하면 가장 오래된 점이 빠집니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">minValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">아래쪽 가장자리의 값입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">maxValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">100</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">위쪽 가장자리의 값입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">gridLines</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">4</span>  </td><td class="markdownTableBodyNone">0~16  </td><td class="markdownTableBodyNone">차트를 가로지르는 가로 격자선 수입니다. 0이면 없습니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">lineWidth</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.18</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">선의 두께(미터)입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">12</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">차트의 너비(미터)입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">차트의 높이(미터)입니다.  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-checkboxcomponent"></a>
+CheckboxComponent</h2>
+<p>체크를 켜고 끌 수 있는 상자와 레이블입니다.</p>
+<p>인스펙터 이름: 체크박스 컴포넌트 · 카테고리: 2D · 유형: <span class="tt">Deki2D::CheckboxComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">속성  </th><th class="markdownTableHeadNone">유형  </th><th class="markdownTableHeadNone">기본값  </th><th class="markdownTableHeadNone">제약  </th><th class="markdownTableHeadNone">설명  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">탭을 받는 히트 영역입니다. 에디터가 같은 오브젝트에 추가하고 상자와 레이블 크기에 맞춥니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">isChecked</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">상자가 체크되었는지 여부입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">비활성화된 체크박스는 탭과 키를 무시합니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">label</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">"Checkbox"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">상자 옆에 표시할 텍스트입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">8</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">상자와 레이블을 합친 너비(미터)입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">boxSize</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.5</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">상자의 크기(미터)입니다. 체크박스의 높이도 이 값입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">checkedColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#408CFFFF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">체크되었을 때 상자의 색상입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">uncheckedColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#8C92A0FF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">체크되지 않았을 때 테두리 색상입니다.  </td></tr>
+</table>
 <h2 class="doxsection"><a class="anchor" id="c-clipcomponent"></a>
 ClipComponent</h2>
 <p>자식의 렌더링을 사각형 영역으로 잘라냅니다.</p>
@@ -250,6 +418,54 @@ ClipComponent</h2>
 <td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.25</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">클리핑 영역의 높이(미터)입니다.  </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><span class="tt">sortingOrder</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">클립된 그룹 전체를 바깥의 모든 것과 비교한 그리기 순서입니다.  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-datepickercomponent"></a>
+DatePickerComponent</h2>
+<p>날짜 선택기입니다. 일, 월, 연도 롤러로 고릅니다.</p>
+<p>인스펙터 이름: 날짜 선택기 컴포넌트 · 카테고리: 2D · 유형: <span class="tt">Deki2D::DatePickerComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">속성  </th><th class="markdownTableHeadNone">유형  </th><th class="markdownTableHeadNone">기본값  </th><th class="markdownTableHeadNone">제약  </th><th class="markdownTableHeadNone">설명  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">year</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">2026</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">선택된 연도입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">month</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone">1~12  </td><td class="markdownTableBodyNone">선택된 월입니다. 1부터 12까지입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">day</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone">1~31  </td><td class="markdownTableBodyNone">선택된 날짜입니다. 1부터 셉니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">minYear</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">2000</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">고를 수 있는 가장 이른 연도입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">maxYear</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">2050</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">고를 수 있는 가장 늦은 연도입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">order</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"DayMonthYear"</span>  </td><td class="markdownTableBodyNone"><span class="tt">DayMonthYear</span>, <span class="tt">MonthDayYear</span>, <span class="tt">YearMonthDay</span>  </td><td class="markdownTableBodyNone">열의 순서입니다. 게임을 하는 곳의 날짜 표기에 맞춥니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">monthNames</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">월을 숫자 대신 이름(Jan, Feb 등)으로 보여 줍니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">11</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">날짜 선택기의 너비(미터)입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">rowHeight</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.5</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">한 행의 높이(미터)입니다. 선택된 행은 조금 더 높습니다.  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-dropdowncomponent"></a>
+DropdownComponent</h2>
+<p>선택지 목록을 열어 하나를 고르는 필드입니다.</p>
+<p>인스펙터 이름: 드롭다운 컴포넌트 · 카테고리: 2D · 유형: <span class="tt">Deki2D::DropdownComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">속성  </th><th class="markdownTableHeadNone">유형  </th><th class="markdownTableHeadNone">기본값  </th><th class="markdownTableHeadNone">제약  </th><th class="markdownTableHeadNone">설명  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">닫힌 필드의 히트 영역입니다. 에디터가 같은 오브젝트에 추가하고 필드 크기에 맞춥니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">options</span>  </td><td class="markdownTableBodyNone">Array&lt;string&gt;  </td><td class="markdownTableBodyNone"><span class="tt">["Easy", "Normal", "Hard"]</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">순서대로 나열한 선택지입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">selectedIndex</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">선택된 선택지의 번호입니다. 0부터 셉니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">listRows</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">4</span>  </td><td class="markdownTableBodyNone">1~12  </td><td class="markdownTableBodyNone">열린 목록이 한 번에 보여 주는 행 수입니다. 선택지가 더 많으면 스크롤됩니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">비활성화된 드롭다운은 탭과 키를 무시합니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">7</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">필드와 목록의 너비(미터)입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.75</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">필드와 목록 각 행의 높이(미터)입니다.  </td></tr>
 </table>
 <h2 class="doxsection"><a class="anchor" id="c-gradientcomponent"></a>
 GradientComponent</h2>
@@ -302,6 +518,84 @@ GradientComponent</h2>
 <td class="markdownTableBodyNone"><span class="tt">tileHeight</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">타일 모드가 반복 또는 미러일 때 한 번 반복되는 높이입니다.  </td></tr>
 </table>
 <p><a href="https://dekiengine.github.io/docs/ko/engine-core.html#engine-renderercomponent">RendererComponent</a>에서 <span class="tt">sortingOrder</span>, <span class="tt">ignoreClip</span>, <span class="tt">pixelSnap</span>, <span class="tt">alphaMode</span>을(를) 상속합니다.</p>
+<h2 class="doxsection"><a class="anchor" id="c-keyboardcomponent"></a>
+KeyboardComponent</h2>
+<p>텍스트 상자에 입력하는 화면 키보드입니다.</p>
+<p>인스펙터 이름: 키보드 컴포넌트 · 카테고리: 2D · 유형: <span class="tt">Deki2D::KeyboardComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">속성  </th><th class="markdownTableHeadNone">유형  </th><th class="markdownTableHeadNone">기본값  </th><th class="markdownTableHeadNone">제약  </th><th class="markdownTableHeadNone">설명  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">키 누름을 받는 히트 영역입니다. 에디터가 같은 오브젝트에 추가하고 키보드 크기에 맞춥니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">target</span>  </td><td class="markdownTableBodyNone">ObjectRef (TextareaComponent)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">키로 입력할 텍스트 상자입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">mode</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Lower"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Lower</span>, <span class="tt">Upper</span>, <span class="tt">Symbols</span>  </td><td class="markdownTableBodyNone">소문자, 대문자, 또는 숫자와 기호입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">비활성화된 키보드는 누름을 무시합니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">19</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">키보드의 너비(미터)입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">7</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">키보드의 높이(미터)입니다. 키는 네 줄입니다.  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-ledcomponent"></a>
+LedComponent</h2>
+<p>색상, 밝기, 빛 번짐이 있는 둥근 표시등입니다.</p>
+<p>인스펙터 이름: LED 컴포넌트 · 카테고리: 2D · 유형: <span class="tt">Deki2D::LedComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">속성  </th><th class="markdownTableHeadNone">유형  </th><th class="markdownTableHeadNone">기본값  </th><th class="markdownTableHeadNone">제약  </th><th class="markdownTableHeadNone">설명  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">color</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#40DC78FF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">최대 밝기일 때 표시등의 색상입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">brightness</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone">0~1(슬라이더)  </td><td class="markdownTableBodyNone">표시등의 밝기입니다. 0(어두움)부터 1까지입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isOn</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">끄면 밝기와 상관없이 표시등을 어둡게 보여 줍니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">size</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">표시등의 지름(미터)입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">glow</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.6</span>  </td><td class="markdownTableBodyNone">0~2  </td><td class="markdownTableBodyNone">빛 번짐이 표시등 바깥으로 퍼지는 정도를 크기에 대한 비율로 정합니다. 0이면 없습니다.  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-listcomponent"></a>
+ListComponent</h2>
+<p>탭할 수 있는 행을 세로로 나열한 스크롤 리스트. 섹션 제목 포함.</p>
+<p>인스펙터 이름: 리스트 컴포넌트 · 카테고리: 2D · 유형: <span class="tt">Deki2D::ListComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">속성  </th><th class="markdownTableHeadNone">유형  </th><th class="markdownTableHeadNone">기본값  </th><th class="markdownTableHeadNone">제약  </th><th class="markdownTableHeadNone">설명  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">items</span>  </td><td class="markdownTableBodyNone">Array&lt;string&gt;  </td><td class="markdownTableBodyNone"><span class="tt">["# Audio", "Music", "Sound effects", "# Display", "Brigh...</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">위에서 아래로의 행. "\# "로 시작하는 행은 섹션 제목입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">visibleRows</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">5</span>  </td><td class="markdownTableBodyNone">1~16  </td><td class="markdownTableBodyNone">한 번에 보이는 행 수. 항목이 더 많으면 스크롤됩니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">비활성화된 리스트는 탭과 키를 무시합니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">8</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">리스트의 너비(미터).  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">rowHeight</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.5</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">각 행의 높이(미터).  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-msgboxcomponent"></a>
+MsgboxComponent</h2>
+<p>제목, 메시지, 버튼이 있는 대화상자입니다.</p>
+<p>인스펙터 이름: 메시지 상자 컴포넌트 · 카테고리: 2D · 유형: <span class="tt">Deki2D::MsgboxComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">속성  </th><th class="markdownTableHeadNone">유형  </th><th class="markdownTableHeadNone">기본값  </th><th class="markdownTableHeadNone">제약  </th><th class="markdownTableHeadNone">설명  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">title</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">"Title"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">대화상자의 제목입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">message</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">"Message"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">제목 아래의 메시지입니다. 긴 줄은 줄바꿈됩니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">buttons</span>  </td><td class="markdownTableBodyNone">Array&lt;string&gt;  </td><td class="markdownTableBodyNone"><span class="tt">["OK", "Cancel"]</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">버튼 레이블입니다. 왼쪽에서 오른쪽으로 최대 세 개입니다. 첫 번째가 주 버튼으로 그려집니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">isOpen</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">대화상자를 보여 줄지 여부입니다. 코드에서는 Open과 Close로 설정합니다. 편집 중에 보려면 켭니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">closeOnEsc</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Esc로 대화상자를 취소로 닫습니다. 어떤 버튼도 누르지 않은 것으로 처리합니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">14</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">대화상자의 너비(미터)입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">8</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">대화상자의 높이(미터)입니다.  </td></tr>
+</table>
 <h2 class="doxsection"><a class="anchor" id="c-rollercomponent"></a>
 RollerComponent</h2>
 <p>선택 휠입니다. 관성으로 값 목록을 돌다가 하나에 맞춰 멈춥니다.</p>
@@ -388,6 +682,54 @@ ScrollElement</h2>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">3.75</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">한 항목의 높이(미터)입니다.  </td></tr>
 </table>
+<h2 class="doxsection"><a class="anchor" id="c-shapecomponent"></a>
+ShapeComponent</h2>
+<p>가장자리가 매끄러운 평면 도형을 그립니다. 둥근 사각형, 타원, 호, 삼각형, 체크 표시입니다.</p>
+<p>인스펙터 이름: 셰이프 컴포넌트 · 카테고리: 2D · 유형: <span class="tt">Deki2D::ShapeComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">속성  </th><th class="markdownTableHeadNone">유형  </th><th class="markdownTableHeadNone">기본값  </th><th class="markdownTableHeadNone">제약  </th><th class="markdownTableHeadNone">설명  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">kind</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Rectangle"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Rectangle</span>, <span class="tt">Ellipse</span>, <span class="tt">Arc</span>, <span class="tt">Triangle</span>, <span class="tt">Check</span>, <span class="tt">Custom</span>  </td><td class="markdownTableBodyNone">그릴 도형의 종류입니다. 사용자 지정은 코드가 써 넣은 것을 그립니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">4</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">도형의 너비(미터)입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">4</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">도형의 높이(미터)입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">color</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#FFFFFFFF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">도형을 그리는 색상입니다. 알파 값으로 도형 전체가 흐려집니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">cornerRadius</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">단위 m; <span class="tt">kind</span>이(가) 허용할 때 표시  </td><td class="markdownTableBodyNone">둥근 모서리의 반지름(미터)입니다. 높이의 절반이면 양 끝이 둥근 모양이 됩니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">lineWidth</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">단위 m; <span class="tt">kind</span>이(가) 허용할 때 표시  </td><td class="markdownTableBodyNone">0이면 도형을 채웁니다. 0보다 크면 가장자리 안쪽을 따라 이 두께의 선만 그립니다. 호와 체크 표시는 항상 선이며, 0이면 크기에 맞춰 두께를 정합니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">startAngle</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">단위 rad; <span class="tt">kind</span>이(가) 허용할 때 표시  </td><td class="markdownTableBodyNone">호가 시작하는 위치입니다. 0은 오른쪽이며, 호는 여기서 시계 반대 방향으로 이어집니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">endAngle</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.28319</span>  </td><td class="markdownTableBodyNone">단위 rad; <span class="tt">kind</span>이(가) 허용할 때 표시  </td><td class="markdownTableBodyNone">호가 끝나는 위치입니다. 시작에서 한 바퀴 지나면 링 전체를 그립니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">roundCaps</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"><span class="tt">kind</span>이(가) 허용할 때 표시  </td><td class="markdownTableBodyNone">호의 끝을 네모나게 자르지 않고 둥글게 만듭니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">direction</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Down"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Down</span>, <span class="tt">Up</span>, <span class="tt">Left</span>, <span class="tt">Right</span>; <span class="tt">kind</span>이(가) 허용할 때 표시  </td><td class="markdownTableBodyNone">삼각형이 가리키는 방향입니다.  </td></tr>
+</table>
+<p><a href="https://dekiengine.github.io/docs/ko/engine-core.html#engine-renderercomponent">RendererComponent</a>에서 <span class="tt">sortingOrder</span>, <span class="tt">ignoreClip</span>, <span class="tt">pixelSnap</span>, <span class="tt">alphaMode</span>을(를) 상속합니다.</p>
+<h2 class="doxsection"><a class="anchor" id="c-slidercomponent"></a>
+SliderComponent</h2>
+<p>노브를 드래그하거나 키로 한 단계씩 움직이는 막대입니다. 음량, 밝기 등에 씁니다.</p>
+<p>인스펙터 이름: 슬라이더 컴포넌트 · 카테고리: 2D · 유형: <span class="tt">Deki2D::SliderComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">속성  </th><th class="markdownTableHeadNone">유형  </th><th class="markdownTableHeadNone">기본값  </th><th class="markdownTableHeadNone">제약  </th><th class="markdownTableHeadNone">설명  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">드래그를 받는 히트 영역입니다. 에디터가 같은 오브젝트에 추가하고 슬라이더 크기에 맞춥니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">step</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">값이 최솟값부터 이 값의 배수에 맞춰집니다. 0이면 자유롭게 움직입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">keyStep</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">키를 한 번 누를 때 값이 움직이는 양입니다. 0이면 범위의 20분의 1, 또는 한 단계만큼 움직입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">knobSize</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.5</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">노브의 지름(미터)입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">비활성화된 슬라이더는 터치와 키를 무시합니다.  </td></tr>
+</table>
+<p><a href="https://dekiengine.github.io/deki-2d/ko/#c-barcomponent">BarComponent</a>에서 <span class="tt">value</span>, <span class="tt">minValue</span>, <span class="tt">maxValue</span>, <span class="tt">orientation</span>, <span class="tt">width</span>, <span class="tt">height</span>, <span class="tt">glideSpeed</span>을(를) 상속합니다.</p>
 <h2 class="doxsection"><a class="anchor" id="c-sortinggroupcomponent"></a>
 SortingGroupComponent</h2>
 <p>자식들을 하나의 단위로 묶어 씬의 나머지 부분과 함께 정렬되게 합니다.</p>
@@ -397,6 +739,52 @@ SortingGroupComponent</h2>
 <th class="markdownTableHeadNone">속성  </th><th class="markdownTableHeadNone">유형  </th><th class="markdownTableHeadNone">기본값  </th><th class="markdownTableHeadNone">설명  </th></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><span class="tt">sortingOrder</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">이 오브젝트의 하위 트리 전체를 하나의 단위로 취급하는 그리기 순서입니다. 자식끼리의 순서는 유지되지만 그룹 전체가 함께 움직이므로, 한 자식이 다른 그룹의 자식들 사이에 끼어드는 일이 없습니다.  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-spinboxcomponent"></a>
+SpinboxComponent</h2>
+<p>빼기와 더하기 버튼이 달린 숫자입니다.</p>
+<p>인스펙터 이름: 스핀박스 컴포넌트 · 카테고리: 2D · 유형: <span class="tt">Deki2D::SpinboxComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">속성  </th><th class="markdownTableHeadNone">유형  </th><th class="markdownTableHeadNone">기본값  </th><th class="markdownTableHeadNone">제약  </th><th class="markdownTableHeadNone">설명  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">버튼 누름을 받는 히트 영역입니다. 에디터가 같은 오브젝트에 추가하고 스핀박스 크기에 맞춥니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">value</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">표시할 숫자입니다. 최솟값과 최댓값 사이입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">minValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">가장 작은 숫자입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">maxValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">99</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">가장 큰 숫자입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">step</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">버튼을 한 번 누를 때 숫자가 바뀌는 양입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">decimals</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">0~4  </td><td class="markdownTableBodyNone">소수점 뒤에 보여 줄 자릿수입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">wrap</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">가장 큰 숫자 다음에 가장 작은 숫자가 옵니다. 반대도 마찬가지입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">비활성화된 스핀박스는 누름과 키를 무시합니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.5</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">버튼을 포함한 스핀박스의 너비(미터)입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.75</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">스핀박스의 높이(미터)입니다. 버튼은 정사각형입니다.  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-spinnercomponent"></a>
+SpinnerComponent</h2>
+<p>처리 중임을 알리는 표시입니다. 호가 링을 따라 돕니다.</p>
+<p>인스펙터 이름: 스피너 컴포넌트 · 카테고리: 2D · 유형: <span class="tt">Deki2D::SpinnerComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">속성  </th><th class="markdownTableHeadNone">유형  </th><th class="markdownTableHeadNone">기본값  </th><th class="markdownTableHeadNone">제약  </th><th class="markdownTableHeadNone">설명  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">size</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">2.5</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">스피너의 지름(미터)입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">thickness</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.35</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">링의 두께(미터)입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">arcLength</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.5708</span>  </td><td class="markdownTableBodyNone">단위 rad  </td><td class="markdownTableBodyNone">움직이는 호가 링을 얼마나 덮는지입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">turnsPerSecond</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone">-5~5  </td><td class="markdownTableBodyNone">초당 회전 수입니다. 음수면 시계 반대 방향으로 돕니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isSpinning</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">끄면 그 자리에서 멈춥니다.  </td></tr>
 </table>
 <h2 class="doxsection"><a class="anchor" id="c-spritecomponent"></a>
 SpriteComponent</h2>
@@ -421,6 +809,52 @@ SpriteComponent</h2>
 <td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">단위 m; <span class="tt">renderMode</span>이(가) 허용할 때 표시  </td><td class="markdownTableBodyNone">그려지는 크기(미터)입니다. 0으로 두면 스프라이트 자체의 픽셀 크기를 프로젝트의 미터당 픽셀 수로 환산해 사용합니다.  </td></tr>
 </table>
 <p><a href="https://dekiengine.github.io/docs/ko/engine-core.html#engine-renderercomponent">RendererComponent</a>에서 <span class="tt">sortingOrder</span>, <span class="tt">ignoreClip</span>, <span class="tt">pixelSnap</span>, <span class="tt">alphaMode</span>을(를) 상속합니다.</p>
+<h2 class="doxsection"><a class="anchor" id="c-switchcomponent"></a>
+SwitchComponent</h2>
+<p>노브가 미끄러지는 켬/끔 스위치입니다.</p>
+<p>인스펙터 이름: 스위치 컴포넌트 · 카테고리: 2D · 유형: <span class="tt">Deki2D::SwitchComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">속성  </th><th class="markdownTableHeadNone">유형  </th><th class="markdownTableHeadNone">기본값  </th><th class="markdownTableHeadNone">제약  </th><th class="markdownTableHeadNone">설명  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">탭을 받는 히트 영역입니다. 에디터가 같은 오브젝트에 추가하고 스위치 크기에 맞춥니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">isOn</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">스위치가 켜져 있는지 여부입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">비활성화된 스위치는 탭과 키를 무시합니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">3</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">스위치의 너비(미터)입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.6</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">스위치의 높이(미터)입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">onColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#408CFFFF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">켜져 있을 때 트랙의 색상입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">offColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#3A3F4BFF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">꺼져 있을 때 트랙의 색상입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">glideSpeed</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">14</span>  </td><td class="markdownTableBodyNone">0~60  </td><td class="markdownTableBodyNone">노브가 미끄러지는 속도입니다. 0이면 바로 옮겨 갑니다.  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-tabviewcomponent"></a>
+TabviewComponent</h2>
+<p>페이지 위에 늘어선 탭입니다. 한 번에 한 페이지만 보입니다.</p>
+<p>인스펙터 이름: 탭 뷰 컴포넌트 · 카테고리: 2D · 유형: <span class="tt">Deki2D::TabviewComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">속성  </th><th class="markdownTableHeadNone">유형  </th><th class="markdownTableHeadNone">기본값  </th><th class="markdownTableHeadNone">제약  </th><th class="markdownTableHeadNone">설명  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">tabs</span>  </td><td class="markdownTableBodyNone">Array&lt;string&gt;  </td><td class="markdownTableBodyNone"><span class="tt">["One", "Two", "Three"]</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">순서대로 나열한 탭 제목입니다. 각 탭에는 페이지(Page0, Page1 등)가 있습니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">selectedTab</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">보이는 탭의 번호입니다. 0부터 셉니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">비활성화된 탭 뷰는 탭과 키를 무시합니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">16</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">탭 뷰의 너비(미터)입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">10</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">탭 바를 포함한 탭 뷰의 높이(미터)입니다. 나머지는 페이지가 채웁니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">barHeight</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.75</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">탭 바의 높이(미터)입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">glideSpeed</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">14</span>  </td><td class="markdownTableBodyNone">0~60  </td><td class="markdownTableBodyNone">탭 아래의 선이 새 탭으로 미끄러지는 속도입니다. 0이면 바로 옮겨 갑니다.  </td></tr>
+</table>
 <h2 class="doxsection"><a class="anchor" id="c-textcomponent"></a>
 TextComponent</h2>
 <p>비트맵 폰트로 텍스트를 그립니다. 정렬과 단어 단위 줄 바꿈을 지원합니다.</p>
@@ -431,9 +865,9 @@ TextComponent</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><span class="tt">text</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">그릴 문자열입니다. 줄 바꿈은 새 줄을 시작하며, 너비를 설정하면 단어 사이에서 줄을 바꿔 너비에 맞춥니다.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">font</span>  </td><td class="markdownTableBodyNone">AssetRef (BitmapFont)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">비트맵 폰트 에셋입니다. 폰트는 고정 크기로 베이크되므로, 크게 확대·축소하기보다 원하는 크기에 가까운 폰트를 고르세요.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">font</span>  </td><td class="markdownTableBodyNone">AssetRef (BitmapFont)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">TrueType 또는 BDF 폰트 에셋입니다. TrueType 폰트를 그리는 크기는 '폰트 크기'로 고릅니다.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">fontSize</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">16</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">에디터 미리 보기에만 쓰는 크기입니다. 장치에서는 폰트 에셋이 베이크된 크기로 그립니다.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">fontSize</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">16</span>  </td><td class="markdownTableBodyNone">6~128  </td><td class="markdownTableBodyNone">픽셀 단위의 폰트 크기입니다. 텍스트가 이 크기를 처음 쓸 때 에디터가 이 크기로 폰트를 베이크하며, 빌드에는 텍스트가 쓰는 크기가 들어갑니다.  </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.25</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">텍스트 상자의 너비(미터)입니다. 정렬은 이 너비를 기준으로 하므로 텍스트가 더 짧아도 영향을 줍니다.  </td></tr>
 <tr class="markdownTableRowOdd">
@@ -450,12 +884,60 @@ TextComponent</h2>
 <td class="markdownTableBodyNone"><span class="tt">verticalAlign</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"CapCenter"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Top</span>, <span class="tt">Middle</span>, <span class="tt">Bottom</span>, <span class="tt">CapCenter</span>, <span class="tt">XCenter</span>, <span class="tt">TypoCenter</span>, <span class="tt">Baseline</span>  </td><td class="markdownTableBodyNone">위의 높이 안에서의 세로 위치입니다. 대문자 중앙은 대문자를 기준으로 맞추므로 보통 눈으로 보기에 가운데로 보입니다. 실제 중앙은 디센더까지 포함합니다.  </td></tr>
 </table>
 <p><a href="https://dekiengine.github.io/docs/ko/engine-core.html#engine-renderercomponent">RendererComponent</a>에서 <span class="tt">sortingOrder</span>, <span class="tt">ignoreClip</span>, <span class="tt">pixelSnap</span>, <span class="tt">alphaMode</span>을(를) 상속합니다.</p>
+<h2 class="doxsection"><a class="anchor" id="c-textareacomponent"></a>
+TextareaComponent</h2>
+<p>텍스트를 입력하는 상자입니다. 키보드나 화면 키보드로 입력합니다.</p>
+<p>인스펙터 이름: 텍스트 영역 컴포넌트 · 카테고리: 2D · 유형: <span class="tt">Deki2D::TextareaComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">속성  </th><th class="markdownTableHeadNone">유형  </th><th class="markdownTableHeadNone">기본값  </th><th class="markdownTableHeadNone">제약  </th><th class="markdownTableHeadNone">설명  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">입력을 시작하는 탭을 받는 히트 영역입니다. 에디터가 같은 오브젝트에 추가하고 상자 크기에 맞춥니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">text</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">지금까지 입력한 텍스트입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">placeholder</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">"Type here"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">상자가 비어 있는 동안 흐리게 보입니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">maxLength</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">32</span>  </td><td class="markdownTableBodyNone">0~1024  </td><td class="markdownTableBodyNone">받을 수 있는 최대 문자 수입니다. 0이면 제한이 없습니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">oneLine</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">한 줄이면 Enter로 제출합니다. 끄면 Enter로 줄을 바꾸고 긴 줄은 줄바꿈됩니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">password</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">텍스트 대신 문자마다 별표를 보여 줍니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">비활성화된 상자는 탭과 입력을 무시합니다.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">10</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">상자의 너비(미터)입니다.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.75</span>  </td><td class="markdownTableBodyNone">단위 m  </td><td class="markdownTableBodyNone">상자의 높이(미터)입니다.  </td></tr>
+</table>
 <h1 class="doxsection"><a class="anchor" id="changelog"></a>
 변경 내역</h1>
 <p>변경 내역은 영어로 되어 있습니다.</p>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md0"></a>
-0.21.0</h2>
+0.22.0</h2>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md1"></a>
+Changed</h2>
+<ul>
+<li>Inspector rows line up with the rest: the sprite's 9-slice borders are a row with an Edit 9-Slice button, Clip's Edit Rect and Roller's Fill Options use the editor's action button, and the Text component's font size and preview rows are rows and hints.</li>
+<li>The font asset inspector is sections of rows, like the other asset inspectors: character range, rasterization, sizes (each with whether it is baked), bake and preview.</li>
+<li>The editor's previews (fonts, BDF fonts, icon fonts, spritesheets) make their textures with <span class="tt">EditorTexture</span> instead of OpenGL, which the editor no longer uses. Needs editor 0.22.</li>
+<li>Roller's Fill Options is a dialog like the editor's others: labels over fields, Cancel and Fill.</li>
+<li>Widgets show and hide their pages, lists and dialogs with plain <span class="tt">Object::SetActive</span>, now that engine 0.22 starts what it shows; deki-2d's own workaround is gone, so it needs engine 0.22.</li>
+<li><span class="tt">minEngine</span> 0.22.0: built against engine 0.22.0. A build of this package from before does not load and is rebuilt.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
+Fixed</h2>
+<ul>
+<li>Letters in a word are evenly spaced. A TrueType font is drawn at twice its size and filtered down, and each glyph was filtered from its own corner, so one starting on an odd column or row landed half a pixel off its neighbours. Glyphs are now filtered on the pixel grid. Fonts bake again on the next open, and every text's pixels change.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
+Added</h2>
+<ul>
+<li>List widget: a scrolling column of rows to tap, with section titles (an item that starts with "# "), a scroll thumb, drag to scroll, and Up, Down and Enter with keyboard focus. Feature <span class="tt">list</span>, so builds that do not use it leave it out.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
+0.21.0</h2>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
 Changed</h2>
 <ul>
 <li><span class="tt">minEngine</span> 0.21.0: built against engine 0.21.0. A build of this package from before does not load and is rebuilt.</li>
@@ -465,22 +947,14 @@ Changed</h2>
 <li>Sprites and fonts loaded one after another give the device's other tasks a turn after every 50 ms of loading, not after every load: a few milliseconds off opening a scene with many sprites.</li>
 <li><b>Scenes open faster.</b> A <span class="tt">GradientComponent</span> worked out every pixel of its bake from scratch on the first frame of every scene: a full-screen background took 0.7 s on an ESP32-S3. The bake now fills runs of one colour, and a gradient that changes along one axis only (straight down or across, undithered) is baked as one column or one row that QuadBlit stretches: a few hundred bytes instead of a screenful, and well under a millisecond. Needs deki-rendering with <span class="tt">Source::stretchWidth</span>.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md6"></a>
 Fixed</h2>
 <ul>
 <li>A gradient at a whole number of right angles is exactly straight. <span class="tt">cos(pi/2)</span> is not 0 in float, which tilted it by a hair, and where a row met a colour's edge one pixel of it turned.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
-0.20.1</h2>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
-Fixed</h2>
-<ul>
-<li>A short line of text at the start of a wide <span class="tt">TextComponent</span> hung the game: finding where to draw its crop never finished. Left-aligned labels were the usual case.</li>
-<li>Text drawn scaled, as on a desktop window, lost a pixel at its right edge and gained one at its left. It draws as it did in 0.19 again.</li>
-</ul>
 <p>이전 릴리스: <a href="https://github.com/dekiengine/deki-2d/blob/master/CHANGELOG.md">CHANGELOG.md</a></p>
 <hr  />
-<p>패키지의 리플렉션 데이터에서 생성했습니다(엔진 0.21.0). 속성 이름은 씬 파일에서 쓰는 키입니다. 이름을 바꿔도 별칭이 유지됩니다(<a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">호환성</a>). </p>
+<p>패키지의 리플렉션 데이터에서 생성했습니다(엔진 0.22.0). 속성 이름은 씬 파일에서 쓰는 키입니다. 이름을 바꿔도 별칭이 유지됩니다(<a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">호환성</a>). </p>
 </div></div><!-- PageDoc -->
 <a href="doxygen_crawl.html"></a>
 </div><!-- contents -->

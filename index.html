@@ -56,7 +56,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">deki-2d<span id="projectnumber">&#160;0.21.0</span>
+   <div id="projectname">deki-2d<span id="projectnumber">&#160;0.22.0</span>
    </div>
    <div id="projectbrief">Deki package reference</div>
   </td>
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 <img src="deki-2d.png" alt=""/>
 </div>
     <p>Sprites, text, animations, gradients, buttons, scrolling</p>
-<p>Repository: <a href="https://github.com/dekiengine/deki-2d">github.com/dekiengine/deki-2d</a> · Latest release: 0.21.0 · Needs engine 0.21.0+ · Requires: <a href="https://dekiengine.github.io/deki-rendering/">deki-rendering</a>, <a href="https://dekiengine.github.io/deki-input/">deki-input</a></p>
+<p>Repository: <a href="https://github.com/dekiengine/deki-2d">github.com/dekiengine/deki-2d</a> · Latest release: 0.22.0 · Needs engine 0.22.0+ · Requires: <a href="https://dekiengine.github.io/deki-rendering/">deki-rendering</a>, <a href="https://dekiengine.github.io/deki-input/">deki-input</a></p>
 <p>Install with <span class="tt">DekiEditor --packages-add deki-2d &lt;project&gt;</span>, or from the Package Manager. The engine's own components and C++ API are in the <a href="https://dekiengine.github.io/docs/">Deki docs</a>.</p>
 <p>Shown in the editor as <b>2D</b>.</p>
 <h1 class="doxsection"><a class="anchor" id="components"></a>
@@ -125,13 +125,33 @@ Components</h1>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><a class="el" href="#c-animationcomponent" title="AnimationComponent">AnimationComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">Plays a frame animation asset on the object's sprite.  </td></tr>
 <tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-arccomponent" title="ArcComponent">ArcComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">A round gauge or dial: a value shown as a stretch of a ring.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-barcomponent" title="BarComponent">BarComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">A bar that shows a value between a minimum and a maximum: health, loading, volume.  </td></tr>
+<tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><a class="el" href="#c-buttoncomponent" title="ButtonComponent">ButtonComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">Makes the object a button: tracks hover and press, and fires a click callback.  </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><a class="el" href="#c-buttonstylecomponent" title="ButtonStyleComponent">ButtonStyleComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">Gives a button its look per state, by tinting or by swapping sprites.  </td></tr>
 <tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-chartcomponent" title="ChartComponent">ChartComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">A line or bar chart of a series of values.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-checkboxcomponent" title="CheckboxComponent">CheckboxComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">A box that ticks on and off, with a label.  </td></tr>
+<tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><a class="el" href="#c-clipcomponent" title="ClipComponent">ClipComponent</a>  </td><td class="markdownTableBodyNone">Core  </td><td class="markdownTableBodyNone">Clips its children's rendering to a rectangle.  </td></tr>
 <tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-datepickercomponent" title="DatePickerComponent">DatePickerComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">A date picker: rollers for day, month and year.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-dropdowncomponent" title="DropdownComponent">DropdownComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">A field that opens a list of options to pick one.  </td></tr>
+<tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><a class="el" href="#c-gradientcomponent" title="GradientComponent">GradientComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">Draws a procedural gradient: linear, radial or conical.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-keyboardcomponent" title="KeyboardComponent">KeyboardComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">A keyboard on the screen that types into a text box.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-ledcomponent" title="LedComponent">LedComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">A round light with a colour, a brightness and a glow.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-listcomponent" title="ListComponent">ListComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">A scrolling column of rows to tap, with section titles.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-msgboxcomponent" title="MsgboxComponent">MsgboxComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">A dialog with a title, a message and buttons.  </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><a class="el" href="#c-rollercomponent" title="RollerComponent">RollerComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">Picker wheel: spins through a list of values with momentum and snaps to one.  </td></tr>
 <tr class="markdownTableRowOdd">
@@ -139,11 +159,25 @@ Components</h1>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><a class="el" href="#c-scrollelement" title="ScrollElement">ScrollElement</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">Declares one list item's size so its Scroll Component can lay the list out.  </td></tr>
 <tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-shapecomponent" title="ShapeComponent">ShapeComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">Draws a flat shape with smooth edges: rounded rectangle, ellipse, arc, triangle or tick.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-slidercomponent" title="SliderComponent">SliderComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">A bar with a knob to drag or step with the keys: volume, brightness.  </td></tr>
+<tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><a class="el" href="#c-sortinggroupcomponent" title="SortingGroupComponent">SortingGroupComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">Makes its children sort together as one unit against the rest of the scene.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-spinboxcomponent" title="SpinboxComponent">SpinboxComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">A number with minus and plus buttons.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-spinnercomponent" title="SpinnerComponent">SpinnerComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">A busy indicator: an arc that runs round a ring.  </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><a class="el" href="#c-spritecomponent" title="SpriteComponent">SpriteComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">Draws a sprite, with tint, flip, and tiled or 9-slice modes.  </td></tr>
 <tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-switchcomponent" title="SwitchComponent">SwitchComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">An on/off switch with a sliding knob.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-tabviewcomponent" title="TabviewComponent">TabviewComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">A row of tabs over pages, one page showing at a time.  </td></tr>
+<tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><a class="el" href="#c-textcomponent" title="TextComponent">TextComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">Draws text with a bitmap font, alignment and word wrap.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-textareacomponent" title="TextareaComponent">TextareaComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">A box to type text into, from a keyboard or one on screen.  </td></tr>
 </table>
 <h1 class="doxsection"><a class="anchor" id="feature-flags"></a>
 Feature flags</h1>
@@ -169,6 +203,40 @@ Feature flags</h1>
 <td class="markdownTableBodyNone">Clipping  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_CLIP</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone">Sorting Groups  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SORTING_GROUP</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Shapes  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SHAPE</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Bars  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_BAR</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Sliders  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SLIDER</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Switches  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SWITCH</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Checkboxes  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_CHECKBOX</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">LEDs  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_LED</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Arcs  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_ARC</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Spinners  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SPINNER</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Spinboxes  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_SPINBOX</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Dropdowns  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_DROPDOWN</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Lists  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_LIST</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Tab Views  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_TABVIEW</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Message Boxes  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_MSGBOX</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Date Pickers  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_DATE_PICKER</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Text Areas  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_TEXTAREA</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">On-Screen Keyboards  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_KEYBOARD</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Charts  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_CHART</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
 </table>
 <h1 class="doxsection"><a class="anchor" id="component-reference"></a>
 Component reference</h1>
@@ -191,6 +259,56 @@ AnimationComponent</h2>
 <td class="markdownTableBodyNone"><span class="tt">hasFinished</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone">Set when a non-looping sequence reaches its last frame. Read it to know when to move on.  </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><span class="tt">playOnceOverride</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone">Play the current sequence once even if the asset marks it as looping. Cleared when the sequence changes.  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-arccomponent"></a>
+ArcComponent</h2>
+<p>A round gauge or dial: a value shown as a stretch of a ring.</p>
+<p>Inspector name: Arc Component · Category: 2D · Type: <span class="tt">Deki2D::ArcComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The hit area that catches the drag. The editor adds one on the same object and sizes it to the ring.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">value</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">40</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The value shown, between Min Value and Max Value.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">minValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The value at the start of the ring.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">maxValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">100</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The value at the end of the ring.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">step</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Values snap to multiples of this from Min Value. 0 turns freely.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">size</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">5</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Diameter of the ring in meters.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">thickness</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.6</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Thickness of the ring in meters.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">startAngle</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">3.92699</span>  </td><td class="markdownTableBodyNone">in rad  </td><td class="markdownTableBodyNone">Where the ring starts: the minimum. 0 points right; 225 degrees is the lower left, as on a gauge.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">sweepAngle</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">4.71239</span>  </td><td class="markdownTableBodyNone">in rad  </td><td class="markdownTableBodyNone">How far round the ring runs clockwise from the start. 270 degrees leaves a gap at the bottom.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">interactive</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Lets the value be dragged and stepped with the keys. Off, the arc is a read-only gauge with no knob.  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-barcomponent"></a>
+BarComponent</h2>
+<p>A bar that shows a value between a minimum and a maximum: health, loading, volume.</p>
+<p>Inspector name: Bar Component · Category: 2D · Type: <span class="tt">Deki2D::BarComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">value</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">50</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The value shown, between Min Value and Max Value.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">minValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The value at the empty end.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">maxValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">100</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The value at the full end.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">orientation</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Horizontal"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Horizontal</span>, <span class="tt">Vertical</span>  </td><td class="markdownTableBodyNone">Horizontal fills left to right; vertical fills bottom to top.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">8</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Length of a horizontal bar, or thickness of a vertical one, in meters.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.75</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Thickness of a horizontal bar, or length of a vertical one, in meters.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">glideSpeed</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">0 to 60  </td><td class="markdownTableBodyNone">How fast the fill glides to a new value. 0 jumps straight there; 10 settles in about a third of a second.  </td></tr>
 </table>
 <h2 class="doxsection"><a class="anchor" id="c-buttoncomponent"></a>
 ButtonComponent</h2>
@@ -236,6 +354,56 @@ ButtonStyleComponent</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><span class="tt">disabledSprite</span>  </td><td class="markdownTableBodyNone">AssetRef (Sprite)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">transition</span> allows  </td><td class="markdownTableBodyNone">Sprite while disabled, in sprite-swap mode.  </td></tr>
 </table>
+<h2 class="doxsection"><a class="anchor" id="c-chartcomponent"></a>
+ChartComponent</h2>
+<p>A line or bar chart of a series of values.</p>
+<p>Inspector name: Chart Component · Category: 2D · Type: <span class="tt">Deki2D::ChartComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">kind</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Line"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Line</span>, <span class="tt">Bars</span>  </td><td class="markdownTableBodyNone">A line through the points, or a bar for each.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">points</span>  </td><td class="markdownTableBodyNone">Array&lt;float&gt;  </td><td class="markdownTableBodyNone"><span class="tt">[20.0, 45.0, 30.0, 60.0, 55.0, 80.0, 70.0]</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The values, oldest first. AddPoint adds to the end.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">pointCount</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">16</span>  </td><td class="markdownTableBodyNone">2 to 256  </td><td class="markdownTableBodyNone">How many points the chart holds. Past this, adding a point drops the oldest.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">minValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The value at the bottom edge.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">maxValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">100</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The value at the top edge.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">gridLines</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">4</span>  </td><td class="markdownTableBodyNone">0 to 16  </td><td class="markdownTableBodyNone">Horizontal grid lines across the chart. 0 for none.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">lineWidth</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.18</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Thickness of the line in meters.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">12</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Width of the chart in meters.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Height of the chart in meters.  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-checkboxcomponent"></a>
+CheckboxComponent</h2>
+<p>A box that ticks on and off, with a label.</p>
+<p>Inspector name: Checkbox Component · Category: 2D · Type: <span class="tt">Deki2D::CheckboxComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The hit area that catches the tap. The editor adds one on the same object and sizes it to the box and label.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">isChecked</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Whether the box is ticked.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">A disabled checkbox ignores taps and keys.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">label</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">"Checkbox"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The text beside the box.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">8</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Width of the box and its label together, in meters.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">boxSize</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.5</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Size of the box in meters. The checkbox is this tall.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">checkedColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#408CFFFF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Box colour while ticked.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">uncheckedColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#8C92A0FF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Outline colour while not ticked.  </td></tr>
+</table>
 <h2 class="doxsection"><a class="anchor" id="c-clipcomponent"></a>
 ClipComponent</h2>
 <p>Clips its children's rendering to a rectangle.</p>
@@ -249,6 +417,54 @@ ClipComponent</h2>
 <td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.25</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Height of the clipping window in meters.  </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><span class="tt">sortingOrder</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Draw order of the clipped group as a whole against everything outside it.  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-datepickercomponent"></a>
+DatePickerComponent</h2>
+<p>A date picker: rollers for day, month and year.</p>
+<p>Inspector name: Date Picker Component · Category: 2D · Type: <span class="tt">Deki2D::DatePickerComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">year</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">2026</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The chosen year.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">month</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone">1 to 12  </td><td class="markdownTableBodyNone">The chosen month, 1 to 12.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">day</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone">1 to 31  </td><td class="markdownTableBodyNone">The chosen day of the month, from 1.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">minYear</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">2000</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The earliest year on offer.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">maxYear</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">2050</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The latest year on offer.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">order</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"DayMonthYear"</span>  </td><td class="markdownTableBodyNone"><span class="tt">DayMonthYear</span>, <span class="tt">MonthDayYear</span>, <span class="tt">YearMonthDay</span>  </td><td class="markdownTableBodyNone">The order of the columns, as dates are written where the game is played.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">monthNames</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Show months by name (Jan, Feb, ...) instead of by number.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">11</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Width of the date picker in meters.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">rowHeight</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.5</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Height of one row in meters. The chosen row is a little taller.  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-dropdowncomponent"></a>
+DropdownComponent</h2>
+<p>A field that opens a list of options to pick one.</p>
+<p>Inspector name: Dropdown Component · Category: 2D · Type: <span class="tt">Deki2D::DropdownComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The hit area of the closed field. The editor adds one on the same object and sizes it to the field.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">options</span>  </td><td class="markdownTableBodyNone">Array&lt;string&gt;  </td><td class="markdownTableBodyNone"><span class="tt">["Easy", "Normal", "Hard"]</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The choices, in order.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">selectedIndex</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Which option is chosen, counting from 0.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">listRows</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">4</span>  </td><td class="markdownTableBodyNone">1 to 12  </td><td class="markdownTableBodyNone">Rows the open list shows at once. With more options it scrolls.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">A disabled dropdown ignores taps and keys.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">7</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Width of the field and the list, in meters.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.75</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Height of the field, and of each row of the list, in meters.  </td></tr>
 </table>
 <h2 class="doxsection"><a class="anchor" id="c-gradientcomponent"></a>
 GradientComponent</h2>
@@ -301,6 +517,84 @@ GradientComponent</h2>
 <td class="markdownTableBodyNone"><span class="tt">tileHeight</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Height of one repeat when the tile mode repeats or mirrors.  </td></tr>
 </table>
 <p>Inherits <span class="tt">sortingOrder</span>, <span class="tt">ignoreClip</span>, <span class="tt">pixelSnap</span>, <span class="tt">alphaMode</span> from <a href="https://dekiengine.github.io/docs/engine-core.html#engine-renderercomponent">RendererComponent</a>.</p>
+<h2 class="doxsection"><a class="anchor" id="c-keyboardcomponent"></a>
+KeyboardComponent</h2>
+<p>A keyboard on the screen that types into a text box.</p>
+<p>Inspector name: Keyboard Component · Category: 2D · Type: <span class="tt">Deki2D::KeyboardComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The hit area that catches presses on the keys. The editor adds one on the same object and sizes it to the keyboard.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">target</span>  </td><td class="markdownTableBodyNone">ObjectRef (TextareaComponent)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The text box the keys type into.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">mode</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Lower"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Lower</span>, <span class="tt">Upper</span>, <span class="tt">Symbols</span>  </td><td class="markdownTableBodyNone">Lower case, upper case, or numbers and symbols.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">A disabled keyboard ignores presses.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">19</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Width of the keyboard in meters.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">7</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Height of the keyboard in meters, four rows of keys.  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-ledcomponent"></a>
+LedComponent</h2>
+<p>A round light with a colour, a brightness and a glow.</p>
+<p>Inspector name: Led Component · Category: 2D · Type: <span class="tt">Deki2D::LedComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">color</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#40DC78FF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The colour of the light at full brightness.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">brightness</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone">0 to 1 (slider)  </td><td class="markdownTableBodyNone">How bright the light is, 0 (dark) to 1.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isOn</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Off shows the light dark, whatever the brightness.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">size</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Diameter of the light in meters.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">glow</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.6</span>  </td><td class="markdownTableBodyNone">0 to 2  </td><td class="markdownTableBodyNone">How far the glow reaches past the light, as a share of its size. 0 for none.  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-listcomponent"></a>
+ListComponent</h2>
+<p>A scrolling column of rows to tap, with section titles.</p>
+<p>Inspector name: List Component · Category: 2D · Type: <span class="tt">Deki2D::ListComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">items</span>  </td><td class="markdownTableBodyNone">Array&lt;string&gt;  </td><td class="markdownTableBodyNone"><span class="tt">["# Audio", "Music", "Sound effects", "# Display", "Brigh...</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The rows, top to bottom. One that starts with "\# " is a section title.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">visibleRows</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">5</span>  </td><td class="markdownTableBodyNone">1 to 16  </td><td class="markdownTableBodyNone">Rows shown at once. With more items it scrolls.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">A disabled list ignores taps and keys.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">8</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Width of the list, in meters.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">rowHeight</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.5</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Height of each row, in meters.  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-msgboxcomponent"></a>
+MsgboxComponent</h2>
+<p>A dialog with a title, a message and buttons.</p>
+<p>Inspector name: Msgbox Component · Category: 2D · Type: <span class="tt">Deki2D::MsgboxComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">title</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">"Title"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The dialog's title.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">message</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">"Message"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The message under the title. Long lines wrap.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">buttons</span>  </td><td class="markdownTableBodyNone">Array&lt;string&gt;  </td><td class="markdownTableBodyNone"><span class="tt">["OK", "Cancel"]</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The button labels, left to right, up to three. The first is drawn as the main one.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">isOpen</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Whether the dialog shows. Open and Close set it from code; tick it to see the dialog while editing.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">closeOnEsc</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Esc closes the dialog as a cancel, with no button pressed.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">14</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Width of the dialog in meters.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">8</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Height of the dialog in meters.  </td></tr>
+</table>
 <h2 class="doxsection"><a class="anchor" id="c-rollercomponent"></a>
 RollerComponent</h2>
 <p>Picker wheel: spins through a list of values with momentum and snaps to one.</p>
@@ -387,6 +681,54 @@ ScrollElement</h2>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">3.75</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Height of one item in meters.  </td></tr>
 </table>
+<h2 class="doxsection"><a class="anchor" id="c-shapecomponent"></a>
+ShapeComponent</h2>
+<p>Draws a flat shape with smooth edges: rounded rectangle, ellipse, arc, triangle or tick.</p>
+<p>Inspector name: Shape Component · Category: 2D · Type: <span class="tt">Deki2D::ShapeComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">kind</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Rectangle"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Rectangle</span>, <span class="tt">Ellipse</span>, <span class="tt">Arc</span>, <span class="tt">Triangle</span>, <span class="tt">Check</span>, <span class="tt">Custom</span>  </td><td class="markdownTableBodyNone">Which shape to draw. Custom draws what code writes into it.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">4</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Width of the shape in meters.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">4</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Height of the shape in meters.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">color</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#FFFFFFFF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The colour the shape is drawn in. Its alpha fades the whole shape.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">cornerRadius</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m; shown when <span class="tt">kind</span> allows  </td><td class="markdownTableBodyNone">Radius of the rounded corners in meters. Half the height makes a pill.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">lineWidth</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m; shown when <span class="tt">kind</span> allows  </td><td class="markdownTableBodyNone">0 fills the shape. Above 0, only a line this thick is drawn along the inside of the edge. An arc and a tick are always lines; at 0 they pick a thickness from their size.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">startAngle</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in rad; shown when <span class="tt">kind</span> allows  </td><td class="markdownTableBodyNone">Where the arc starts. 0 points right, and the arc runs counter-clockwise from here.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">endAngle</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.28319</span>  </td><td class="markdownTableBodyNone">in rad; shown when <span class="tt">kind</span> allows  </td><td class="markdownTableBodyNone">Where the arc ends. A full turn past the start draws a whole ring.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">roundCaps</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone">shown when <span class="tt">kind</span> allows  </td><td class="markdownTableBodyNone">Round the arc's ends instead of cutting them square.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">direction</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Down"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Down</span>, <span class="tt">Up</span>, <span class="tt">Left</span>, <span class="tt">Right</span>; shown when <span class="tt">kind</span> allows  </td><td class="markdownTableBodyNone">Which way the triangle points.  </td></tr>
+</table>
+<p>Inherits <span class="tt">sortingOrder</span>, <span class="tt">ignoreClip</span>, <span class="tt">pixelSnap</span>, <span class="tt">alphaMode</span> from <a href="https://dekiengine.github.io/docs/engine-core.html#engine-renderercomponent">RendererComponent</a>.</p>
+<h2 class="doxsection"><a class="anchor" id="c-slidercomponent"></a>
+SliderComponent</h2>
+<p>A bar with a knob to drag or step with the keys: volume, brightness.</p>
+<p>Inspector name: Slider Component · Category: 2D · Type: <span class="tt">Deki2D::SliderComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The hit area that catches the drag. The editor adds one on the same object and keeps it sized to the slider.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">step</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Values snap to multiples of this from Min Value. 0 slides freely.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">keyStep</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">How far one key press moves the value. 0 moves it a twentieth of the range, or one step.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">knobSize</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.5</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Diameter of the knob in meters.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">A disabled slider ignores touch and keys.  </td></tr>
+</table>
+<p>Inherits <span class="tt">value</span>, <span class="tt">minValue</span>, <span class="tt">maxValue</span>, <span class="tt">orientation</span>, <span class="tt">width</span>, <span class="tt">height</span>, <span class="tt">glideSpeed</span> from <a href="https://dekiengine.github.io/deki-2d/#c-barcomponent">BarComponent</a>.</p>
 <h2 class="doxsection"><a class="anchor" id="c-sortinggroupcomponent"></a>
 SortingGroupComponent</h2>
 <p>Makes its children sort together as one unit against the rest of the scene.</p>
@@ -396,6 +738,52 @@ SortingGroupComponent</h2>
 <th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Description  </th></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><span class="tt">sortingOrder</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">Draw order for this object's whole subtree, treated as one unit. Children keep their order relative to each other but the group moves together, which stops one child sorting between another group's children.  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-spinboxcomponent"></a>
+SpinboxComponent</h2>
+<p>A number with minus and plus buttons.</p>
+<p>Inspector name: Spinbox Component · Category: 2D · Type: <span class="tt">Deki2D::SpinboxComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The hit area that catches presses on the buttons. The editor adds one on the same object and sizes it to the spinbox.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">value</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The number shown, between Min Value and Max Value.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">minValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The lowest number.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">maxValue</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">99</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The highest number.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">step</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">How much one press of a button changes the number.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">decimals</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">0 to 4  </td><td class="markdownTableBodyNone">Digits shown after the decimal point.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">wrap</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Past the highest number comes the lowest, and the other way round.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">A disabled spinbox ignores presses and keys.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.5</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Width of the spinbox, buttons included, in meters.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.75</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Height of the spinbox in meters. The buttons are square.  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-spinnercomponent"></a>
+SpinnerComponent</h2>
+<p>A busy indicator: an arc that runs round a ring.</p>
+<p>Inspector name: Spinner Component · Category: 2D · Type: <span class="tt">Deki2D::SpinnerComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">size</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">2.5</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Diameter of the spinner in meters.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">thickness</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0.35</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Thickness of the ring in meters.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">arcLength</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.5708</span>  </td><td class="markdownTableBodyNone">in rad  </td><td class="markdownTableBodyNone">How much of the ring the moving arc covers.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">turnsPerSecond</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1</span>  </td><td class="markdownTableBodyNone">-5 to 5  </td><td class="markdownTableBodyNone">Turns per second. Negative turns counter-clockwise.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isSpinning</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Off stops it where it is.  </td></tr>
 </table>
 <h2 class="doxsection"><a class="anchor" id="c-spritecomponent"></a>
 SpriteComponent</h2>
@@ -420,6 +808,52 @@ SpriteComponent</h2>
 <td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">in m; shown when <span class="tt">renderMode</span> allows  </td><td class="markdownTableBodyNone">Drawn size in meters. Left at 0 the sprite's own pixel size is used, converted through the project's pixels-per-meter.  </td></tr>
 </table>
 <p>Inherits <span class="tt">sortingOrder</span>, <span class="tt">ignoreClip</span>, <span class="tt">pixelSnap</span>, <span class="tt">alphaMode</span> from <a href="https://dekiengine.github.io/docs/engine-core.html#engine-renderercomponent">RendererComponent</a>.</p>
+<h2 class="doxsection"><a class="anchor" id="c-switchcomponent"></a>
+SwitchComponent</h2>
+<p>An on/off switch with a sliding knob.</p>
+<p>Inspector name: Switch Component · Category: 2D · Type: <span class="tt">Deki2D::SwitchComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The hit area that catches the tap. The editor adds one on the same object and sizes it to the switch.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">isOn</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Whether the switch is on.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">A disabled switch ignores taps and keys.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">3</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Width of the switch in meters.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.6</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Height of the switch in meters.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">onColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#408CFFFF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Track colour while on.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">offColor</span>  </td><td class="markdownTableBodyNone">Color  </td><td class="markdownTableBodyNone"><span class="tt">"#3A3F4BFF"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Track colour while off.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">glideSpeed</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">14</span>  </td><td class="markdownTableBodyNone">0 to 60  </td><td class="markdownTableBodyNone">How fast the knob slides across. 0 jumps.  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-tabviewcomponent"></a>
+TabviewComponent</h2>
+<p>A row of tabs over pages, one page showing at a time.</p>
+<p>Inspector name: Tabview Component · Category: 2D · Type: <span class="tt">Deki2D::TabviewComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">tabs</span>  </td><td class="markdownTableBodyNone">Array&lt;string&gt;  </td><td class="markdownTableBodyNone"><span class="tt">["One", "Two", "Three"]</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The tab titles, in order. Each has a page, Page0, Page1 and so on.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">selectedTab</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Which tab shows, counting from 0.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">A disabled tab view ignores taps and keys.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">16</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Width of the tab view in meters.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">10</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Height of the tab view, the tab bar included, in meters. The pages fill the rest.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">barHeight</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.75</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Height of the tab bar in meters.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">glideSpeed</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">14</span>  </td><td class="markdownTableBodyNone">0 to 60  </td><td class="markdownTableBodyNone">How fast the line under the tabs slides to a new tab. 0 jumps.  </td></tr>
+</table>
 <h2 class="doxsection"><a class="anchor" id="c-textcomponent"></a>
 TextComponent</h2>
 <p>Draws text with a bitmap font, alignment and word wrap.</p>
@@ -430,9 +864,9 @@ TextComponent</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><span class="tt">text</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The string to draw. Newlines start a new line, and with a width set, lines wrap between words to fit it.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">font</span>  </td><td class="markdownTableBodyNone">AssetRef (BitmapFont)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">A bitmap font asset. Fonts are baked to a fixed size, so pick one close to the size you want rather than scaling far from it.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">font</span>  </td><td class="markdownTableBodyNone">AssetRef (BitmapFont)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">A TrueType or BDF font asset. Font Size picks the size a TrueType font is drawn at.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">fontSize</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">16</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Size used for the editor preview only. What the device draws is the size the font asset was baked at.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">fontSize</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">16</span>  </td><td class="markdownTableBodyNone">6 to 128  </td><td class="markdownTableBodyNone">Font size in pixels. The editor bakes the font at this size the first time a text uses it, and a build ships the sizes its texts use.  </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">6.25</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Width of the text box in meters. Alignment is measured against this, so it matters even when the text is shorter.  </td></tr>
 <tr class="markdownTableRowOdd">
@@ -449,11 +883,59 @@ TextComponent</h2>
 <td class="markdownTableBodyNone"><span class="tt">verticalAlign</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"CapCenter"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Top</span>, <span class="tt">Middle</span>, <span class="tt">Bottom</span>, <span class="tt">CapCenter</span>, <span class="tt">XCenter</span>, <span class="tt">TypoCenter</span>, <span class="tt">Baseline</span>  </td><td class="markdownTableBodyNone">Vertical placement inside the height above. Cap-centre lines up the capital letters, which usually looks centred to the eye; true centre includes descenders.  </td></tr>
 </table>
 <p>Inherits <span class="tt">sortingOrder</span>, <span class="tt">ignoreClip</span>, <span class="tt">pixelSnap</span>, <span class="tt">alphaMode</span> from <a href="https://dekiengine.github.io/docs/engine-core.html#engine-renderercomponent">RendererComponent</a>.</p>
+<h2 class="doxsection"><a class="anchor" id="c-textareacomponent"></a>
+TextareaComponent</h2>
+<p>A box to type text into, from a keyboard or one on screen.</p>
+<p>Inspector name: Textarea Component · Category: 2D · Type: <span class="tt">Deki2D::TextareaComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">inputCollider</span>  </td><td class="markdownTableBodyNone">ObjectRef (InputCollider)  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The hit area that takes the tap that starts typing. The editor adds one on the same object and sizes it to the box.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">text</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">The text typed so far.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">placeholder</span>  </td><td class="markdownTableBodyNone">string  </td><td class="markdownTableBodyNone"><span class="tt">"Type here"</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Shown dimmed while the box is empty.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">maxLength</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">32</span>  </td><td class="markdownTableBodyNone">0 to 1024  </td><td class="markdownTableBodyNone">The most characters it takes. 0 for no limit.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">oneLine</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">One line: Enter submits. Off, Enter starts a new line and long lines wrap.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">password</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Shows a star for each character instead of the text.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">isEnabled</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">A disabled box ignores taps and typing.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">width</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">10</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Width of the box in meters.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">height</span>  </td><td class="markdownTableBodyNone">float  </td><td class="markdownTableBodyNone"><span class="tt">1.75</span>  </td><td class="markdownTableBodyNone">in m  </td><td class="markdownTableBodyNone">Height of the box in meters.  </td></tr>
+</table>
 <h1 class="doxsection"><a class="anchor" id="changelog"></a>
 Changelog</h1>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md0"></a>
-0.21.0</h2>
+0.22.0</h2>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md1"></a>
+Changed</h2>
+<ul>
+<li>Inspector rows line up with the rest: the sprite's 9-slice borders are a row with an Edit 9-Slice button, Clip's Edit Rect and Roller's Fill Options use the editor's action button, and the Text component's font size and preview rows are rows and hints.</li>
+<li>The font asset inspector is sections of rows, like the other asset inspectors: character range, rasterization, sizes (each with whether it is baked), bake and preview.</li>
+<li>The editor's previews (fonts, BDF fonts, icon fonts, spritesheets) make their textures with <span class="tt">EditorTexture</span> instead of OpenGL, which the editor no longer uses. Needs editor 0.22.</li>
+<li>Roller's Fill Options is a dialog like the editor's others: labels over fields, Cancel and Fill.</li>
+<li>Widgets show and hide their pages, lists and dialogs with plain <span class="tt">Object::SetActive</span>, now that engine 0.22 starts what it shows; deki-2d's own workaround is gone, so it needs engine 0.22.</li>
+<li><span class="tt">minEngine</span> 0.22.0: built against engine 0.22.0. A build of this package from before does not load and is rebuilt.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
+Fixed</h2>
+<ul>
+<li>Letters in a word are evenly spaced. A TrueType font is drawn at twice its size and filtered down, and each glyph was filtered from its own corner, so one starting on an odd column or row landed half a pixel off its neighbours. Glyphs are now filtered on the pixel grid. Fonts bake again on the next open, and every text's pixels change.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
+Added</h2>
+<ul>
+<li>List widget: a scrolling column of rows to tap, with section titles (an item that starts with "# "), a scroll thumb, drag to scroll, and Up, Down and Enter with keyboard focus. Feature <span class="tt">list</span>, so builds that do not use it leave it out.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
+0.21.0</h2>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
 Changed</h2>
 <ul>
 <li><span class="tt">minEngine</span> 0.21.0: built against engine 0.21.0. A build of this package from before does not load and is rebuilt.</li>
@@ -463,22 +945,14 @@ Changed</h2>
 <li>Sprites and fonts loaded one after another give the device's other tasks a turn after every 50 ms of loading, not after every load: a few milliseconds off opening a scene with many sprites.</li>
 <li><b>Scenes open faster.</b> A <span class="tt">GradientComponent</span> worked out every pixel of its bake from scratch on the first frame of every scene: a full-screen background took 0.7 s on an ESP32-S3. The bake now fills runs of one colour, and a gradient that changes along one axis only (straight down or across, undithered) is baked as one column or one row that QuadBlit stretches: a few hundred bytes instead of a screenful, and well under a millisecond. Needs deki-rendering with <span class="tt">Source::stretchWidth</span>.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md6"></a>
 Fixed</h2>
 <ul>
 <li>A gradient at a whole number of right angles is exactly straight. <span class="tt">cos(pi/2)</span> is not 0 in float, which tilted it by a hair, and where a row met a colour's edge one pixel of it turned.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
-0.20.1</h2>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
-Fixed</h2>
-<ul>
-<li>A short line of text at the start of a wide <span class="tt">TextComponent</span> hung the game: finding where to draw its crop never finished. Left-aligned labels were the usual case.</li>
-<li>Text drawn scaled, as on a desktop window, lost a pixel at its right edge and gained one at its left. It draws as it did in 0.19 again.</li>
-</ul>
 <p>Earlier releases: <a href="https://github.com/dekiengine/deki-2d/blob/master/CHANGELOG.md">CHANGELOG.md</a>.</p>
 <hr  />
-<p>Generated from the package's reflection data (engine 0.21.0). Property names are the keys used in scene files. Renames keep an alias (<a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">compatibility</a>). </p>
+<p>Generated from the package's reflection data (engine 0.22.0). Property names are the keys used in scene files. Renames keep an alias (<a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">compatibility</a>). </p>
 </div></div><!-- PageDoc -->
 <a href="doxygen_crawl.html"></a>
 </div><!-- contents -->
