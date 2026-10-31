@@ -101,16 +101,44 @@ float RayDistance(float x, float y, float ux, float uy)
     return std::fabs(x * uy - y * ux);
 }
 
-float ArcDistance(const ShapeMaskParams& p, float x, float y, float lineWidth)
+// What an arc's distance needs that is the same for every pixel, worked out
+// once per mask: the trigonometry would otherwise run on each pixel.
+struct ArcGeometry
 {
-    const float halfLine = lineWidth * 0.5f;
-    const float radius = std::max(0.0f, std::min(p.width, p.height) * 0.5f - halfLine);
-    const float ring = std::fabs(Length(x, y) - radius) - halfLine;
+    float halfLine = 0.0f;
+    float radius = 0.0f;
+    float sweep = 0.0f;
+    bool fullTurn = false;
+    bool empty = false;
+    bool roundCaps = false;
+    float u0x = 0.0f;
+    float u0y = 0.0f;
+    float u1x = 0.0f;
+    float u1y = 0.0f;
+    // Squared distances from the centre between which a pixel can be
+    // covered. Caps sit on the ring's middle line, so they stay inside too.
+    float coverMin2 = -1.0f;
+    float coverMax2 = 0.0f;
+};
+
+ArcGeometry MakeArcGeometry(const ShapeMaskParams& p, float lineWidth)
+{
+    ArcGeometry g;
+    g.halfLine = lineWidth * 0.5f;
+    g.radius = std::max(0.0f, std::min(p.width, p.height) * 0.5f - g.halfLine);
+    g.roundCaps = p.roundCaps;
+
+    // Coverage is 0 from half a pixel outside the edge; a whole pixel leaves room.
+    const float coverMin = g.radius - g.halfLine - 1.0f;
+    const float coverMax = g.radius + g.halfLine + 1.0f;
+    g.coverMin2 = coverMin > 0.0f ? coverMin * coverMin : -1.0f;
+    g.coverMax2 = coverMax * coverMax;
 
     float sweep = p.endAngle - p.startAngle;
     if (sweep >= kTwoPi - 1e-4f || sweep <= -kTwoPi + 1e-4f)
     {
-        return ring;
+        g.fullTurn = true;
+        return g;
     }
     sweep = std::fmod(sweep, kTwoPi);
     if (sweep < 0.0f)
@@ -119,34 +147,75 @@ float ArcDistance(const ShapeMaskParams& p, float x, float y, float lineWidth)
     }
     if (sweep <= 0.0f)
     {
+        g.empty = true;
+        return g;
+    }
+    g.sweep = sweep;
+    g.u0x = std::cos(p.startAngle);
+    g.u0y = std::sin(p.startAngle);
+    g.u1x = std::cos(p.startAngle + sweep);
+    g.u1y = std::sin(p.startAngle + sweep);
+    return g;
+}
+
+float ArcDistance(const ArcGeometry& g, float x, float y)
+{
+    if (g.empty)
+    {
         return 1e30f;
     }
-
-    const float u0x = std::cos(p.startAngle);
-    const float u0y = std::sin(p.startAngle);
-    const float u1x = std::cos(p.startAngle + sweep);
-    const float u1y = std::sin(p.startAngle + sweep);
+    const float ring = std::fabs(Length(x, y) - g.radius) - g.halfLine;
+    if (g.fullTurn)
+    {
+        return ring;
+    }
 
     // Inside the angle range, worked out with cross products instead of
     // atan2 on every pixel. A sweep over half a turn is the complement of a
     // wedge under half a turn.
-    const float c0 = u0x * y - u0y * x;  // > 0: counter-clockwise of the start
-    const float c1 = x * u1y - y * u1x;  // > 0: clockwise of the end
-    const bool within = sweep <= kTwoPi * 0.5f ? (c0 >= 0.0f && c1 >= 0.0f) : !(c0 < 0.0f && c1 < 0.0f);
+    const float c0 = g.u0x * y - g.u0y * x;  // > 0: counter-clockwise of the start
+    const float c1 = x * g.u1y - y * g.u1x;  // > 0: clockwise of the end
+    const bool within = g.sweep <= kTwoPi * 0.5f ? (c0 >= 0.0f && c1 >= 0.0f) : !(c0 < 0.0f && c1 < 0.0f);
 
-    if (p.roundCaps)
+    if (g.roundCaps)
     {
         if (within)
         {
             return ring;
         }
-        const float cap0 = Length(x - u0x * radius, y - u0y * radius);
-        const float cap1 = Length(x - u1x * radius, y - u1y * radius);
-        return std::min(cap0, cap1) - halfLine;
+        const float cap0 = Length(x - g.u0x * g.radius, y - g.u0y * g.radius);
+        const float cap1 = Length(x - g.u1x * g.radius, y - g.u1y * g.radius);
+        return std::min(cap0, cap1) - g.halfLine;
     }
 
-    const float toRays = std::min(RayDistance(x, y, u0x, u0y), RayDistance(x, y, u1x, u1y));
+    const float toRays = std::min(RayDistance(x, y, g.u0x, g.u0y), RayDistance(x, y, g.u1x, g.u1y));
     return std::max(ring, within ? -toRays : toRays);
+}
+
+// An arc's mask, row 0 at the top. Pixels off the ring are skipped without a
+// square root, and they are most of the mask.
+void BakeArcMask(uint8_t* mask, int32_t w, int32_t h, int32_t stride, const ShapeMaskParams& p)
+{
+    const float line = p.lineWidth > 0.0f ? p.lineWidth : DefaultShapeLineWidth(p);
+    const ArcGeometry g = MakeArcGeometry(p, line);
+    const float halfW = static_cast<float>(w) * 0.5f;
+    const float halfH = static_cast<float>(h) * 0.5f;
+    for (int32_t j = 0; j < h; ++j)
+    {
+        uint8_t* row = mask + static_cast<size_t>(j) * stride;
+        const float y = halfH - (static_cast<float>(j) + 0.5f);
+        for (int32_t i = 0; i < w; ++i)
+        {
+            const float x = (static_cast<float>(i) + 0.5f) - halfW;
+            const float r2 = x * x + y * y;
+            if (g.empty || r2 < g.coverMin2 || r2 > g.coverMax2)
+            {
+                row[i] = 0;
+                continue;
+            }
+            row[i] = static_cast<uint8_t>(Clamp01(0.5f - ArcDistance(g, x, y)) * 255.0f + 0.5f);
+        }
+    }
 }
 
 float CheckDistance(const ShapeMaskParams& p, float x, float y, float lineWidth)
@@ -202,7 +271,7 @@ float ShapeDistance(const ShapeMaskParams& p, float x, float y)
         case ShapeKind::Arc:
         {
             const float line = p.lineWidth > 0.0f ? p.lineWidth : DefaultShapeLineWidth(p);
-            return ArcDistance(p, x, y, line);
+            return ArcDistance(MakeArcGeometry(p, line), x, y);
         }
         case ShapeKind::Check:
         {
@@ -242,6 +311,11 @@ bool BakeShapeMask(uint8_t* mask, int32_t w, int32_t h, int32_t stride, const Sh
     }
     if (params.kind == ShapeKind::Custom)
     {
+        return true;
+    }
+    if (params.kind == ShapeKind::Arc)
+    {
+        BakeArcMask(mask, w, h, stride, params);
         return true;
     }
 
