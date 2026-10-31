@@ -5,7 +5,7 @@
 
 using namespace Deki2D;
 
-// Called from ::Deki2DRegisterComponents(), so the interface adapters are
+// Called from Deki2DInitSystem() (Deki2DInit.cpp), so the interface adapters are
 // registered even when the linker drops object files that hold only static
 // initializers (as with ESP-IDF static libraries).
 void Deki2DRegisterClipAdapters()

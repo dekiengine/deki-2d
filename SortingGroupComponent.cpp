@@ -4,7 +4,8 @@
 
 using namespace Deki2D;
 
-// Called from ::Deki2DRegisterComponents().
+// Called from Deki2DInitSystem() (Deki2DInit.cpp), which keeps this file in
+// a firmware link.
 void Deki2DRegisterSortingGroupAdapters()
 {
     static bool s_Registered = false;

@@ -8,6 +8,15 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
+## 0.22.1
+
+### Fixed
+- Clip and Sorting Group work on boards. Their renderer hookup was only
+  registered by a static initialiser, which an ESP-IDF link drops, so on a
+  board every Clip drew its children uncut (a roller's hidden rows above and
+  below it) and every Sorting Group sorted as a plain parent. Deki2DInitSystem
+  now registers both.
+
 ## 0.22.0
 
 ### Changed
