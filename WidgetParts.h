@@ -86,10 +86,10 @@ inline float Glide(float shown, float target, float speed, float deltaTime)
     return (gap < 0.0005f && gap > -0.0005f) ? target : shown;
 }
 
-/// Shows or hides `obj`, telling its scene when that changes. Object::
-/// SetActive alone leaves the scene's list of live components as it was, so
-/// the components under an object shown later (a tab's page, a dialog's
-/// buttons) would never start or update.
+/// Shows or hides `obj`, telling its scene when that changes. Before engine
+/// 0.22, Object::SetActive alone left the scene's list of live components as
+/// it was, so the components under an object shown later (a tab's page, a
+/// dialog's buttons) never started or updated.
 void SetShown(Deki::Object* obj, bool show);
 
 /// Shows or hides the part called "Focus", the ring a widget shows while it
