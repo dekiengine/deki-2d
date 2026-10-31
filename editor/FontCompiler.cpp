@@ -317,13 +317,23 @@ bool FontCompiler::CompileTrueTypeFont(const std::string& ttfPath, const Compile
         const int srcW = static_cast<int>(g->bitmap.width);
         const int srcH = static_cast<int>(g->bitmap.rows);
 
-        // Target size and bearings, rounded up so no edge pixel is lost.
-        const int dstW = (srcW + oversampleN - 1) / oversampleN;
-        const int dstH = (srcH + oversampleN - 1) / oversampleN;
+        // The oversampled bitmap is padded so its left and top edges fall on
+        // the target pixel grid. Every glyph is then filtered at the same
+        // phase and its bearing divides exactly; filtered from its own corner,
+        // a glyph starting on an odd oversampled column landed half a pixel
+        // off its neighbours, and a word's letters looked uneven.
+        const int padX = ((g->bitmap_left % oversampleN) + oversampleN) % oversampleN;
+        const int padY = ((-g->bitmap_top % oversampleN) + oversampleN) % oversampleN;
+        const int alignedW = srcW > 0 ? srcW + padX : 0;
+        const int alignedH = srcH > 0 ? srcH + padY : 0;
+
+        // Target size, rounded up so no edge pixel is lost.
+        const int dstW = (alignedW + oversampleN - 1) / oversampleN;
+        const int dstH = (alignedH + oversampleN - 1) / oversampleN;
         glyphData[i].width = dstW;
         glyphData[i].height = dstH;
-        glyphData[i].bearingX = g->bitmap_left / oversampleN;
-        glyphData[i].bearingY = g->bitmap_top / oversampleN;
+        glyphData[i].bearingX = (g->bitmap_left - padX) / oversampleN;
+        glyphData[i].bearingY = (g->bitmap_top + padY) / oversampleN;
         // Advance is 26.6 fixed point at the OVERSAMPLED scale. One division
         // turns it into whole target pixels, rounded to nearest.
         glyphData[i].advance = static_cast<int>((g->advance.x + 32 * oversampleN) / (64 * oversampleN));
@@ -358,14 +368,15 @@ bool FontCompiler::CompileTrueTypeFont(const std::string& ttfPath, const Compile
             else
             {
                 // Copy the oversampled bitmap (minding its pitch) into a
-                // contiguous buffer, then box-filter it down to the target size.
-                std::vector<uint8_t> src(srcW * srcH);
+                // contiguous buffer at its grid padding, then box-filter it
+                // down to the target size.
+                std::vector<uint8_t> src(alignedW * alignedH, 0);
                 for (int row = 0; row < srcH; row++)
                 {
-                    memcpy(src.data() + row * srcW, g->bitmap.buffer + row * g->bitmap.pitch, srcW);
+                    memcpy(src.data() + (row + padY) * alignedW + padX, g->bitmap.buffer + row * g->bitmap.pitch, srcW);
                 }
                 glyphData[i].bitmap.resize(dstW * dstH);
-                BoxDownsample(src.data(), srcW, srcH, glyphData[i].bitmap.data(), dstW, dstH, oversampleN);
+                BoxDownsample(src.data(), alignedW, alignedH, glyphData[i].bitmap.data(), dstW, dstH, oversampleN);
             }
         }
 

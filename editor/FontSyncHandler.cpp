@@ -34,7 +34,7 @@ namespace
 {
 
 // Goes up when baking changes what it writes, so older caches bake again.
-constexpr int kBakeVersion = 1;
+constexpr int kBakeVersion = 2;
 
 std::string VariantGuid(const std::string& fontGuid, int fontSize)
 {
@@ -740,8 +740,11 @@ void RegisterFontSyncHandlers()
     DekiEditor::AssetPipeline::OnStarted(
         [](DekiEditor::AssetPipeline* pipeline)
         {
-            pipeline->RegisterSyncHandler(".ttf", HandleFontSync);
-            pipeline->RegisterSyncHandler(".otf", HandleFontSync);
+            // Always, not only when the font file changes: a cache baked by
+            // an older baker (kBakeVersion) must be found on the next open.
+            // It costs a stamp compare when nothing changed.
+            pipeline->RegisterSyncHandler(".ttf", HandleFontSync, DekiEditor::AssetPipeline::SyncHandlerPolicy::Always);
+            pipeline->RegisterSyncHandler(".otf", HandleFontSync, DekiEditor::AssetPipeline::SyncHandlerPolicy::Always);
             pipeline->RegisterSyncHandler(".bdf", HandleBdfSync);
 
             // A .dfont is already compiled, so its handler returns PreCached:

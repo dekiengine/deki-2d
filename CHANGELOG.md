@@ -24,6 +24,13 @@ alongside one that has them.
 - Roller's Fill Options is a dialog like the editor's others: labels over
   fields, Cancel and Fill.
 
+### Fixed
+- Letters in a word are evenly spaced. A TrueType font is drawn at twice its
+  size and filtered down, and each glyph was filtered from its own corner, so
+  one starting on an odd column or row landed half a pixel off its
+  neighbours. Glyphs are now filtered on the pixel grid. Fonts bake again on
+  the next open, and every text's pixels change.
+
 ## 0.21.0
 
 ### Changed
