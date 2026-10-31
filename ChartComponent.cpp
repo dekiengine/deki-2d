@@ -27,9 +27,9 @@ float ChartClamp01(float v)
 // one-pixel soft edge, merged into the mask by keeping the larger value.
 void DrawSegment(uint8_t* mask, int32_t w, int32_t h, float ax, float ay, float bx, float by, float half)
 {
-    const int32_t x0 = std::max(0, static_cast<int32_t>(std::floor(std::min(ax, bx) - half - 1.0f)));
+    const int32_t x0 = std::max<int32_t>(0, static_cast<int32_t>(std::floor(std::min(ax, bx) - half - 1.0f)));
     const int32_t x1 = std::min(w - 1, static_cast<int32_t>(std::ceil(std::max(ax, bx) + half + 1.0f)));
-    const int32_t y0 = std::max(0, static_cast<int32_t>(std::floor(std::min(ay, by) - half - 1.0f)));
+    const int32_t y0 = std::max<int32_t>(0, static_cast<int32_t>(std::floor(std::min(ay, by) - half - 1.0f)));
     const int32_t y1 = std::min(h - 1, static_cast<int32_t>(std::ceil(std::max(ay, by) + half + 1.0f)));
     const float dx = bx - ax;
     const float dy = by - ay;
@@ -56,7 +56,7 @@ void DrawSegment(uint8_t* mask, int32_t w, int32_t h, float ax, float ay, float 
 
 void ChartComponent::AddPoint(float value)
 {
-    const size_t limit = static_cast<size_t>(std::max(2, pointCount));
+    const size_t limit = static_cast<size_t>(std::max<int32_t>(2, pointCount));
     // Full: shift down in place, so a scrolling chart never allocates.
     if (points.size() >= limit)
     {
@@ -83,7 +83,7 @@ void ChartComponent::Clear()
 void ChartComponent::Start()
 {
     // Room for every point up front: AddPoint then never grows the vector.
-    points.reserve(static_cast<size_t>(std::max(2, pointCount)));
+    points.reserve(static_cast<size_t>(std::max<int32_t>(2, pointCount)));
     SyncParts();
 }
 
@@ -190,7 +190,7 @@ void ChartComponent::BakeSeries()
     {
         return;
     }
-    const int32_t slots = std::max(2, pointCount);
+    const int32_t slots = std::max<int32_t>(2, pointCount);
     const int32_t count = std::min<int32_t>(static_cast<int32_t>(points.size()), slots);
     const int32_t first = static_cast<int32_t>(points.size()) - count;  // the newest `count`
     const float range = maxValue - minValue;
@@ -212,10 +212,10 @@ void ChartComponent::BakeSeries()
         {
             const int32_t x0 = static_cast<int32_t>(std::lround(slot * i + gap * 0.5f));
             const int32_t x1 = static_cast<int32_t>(std::lround(slot * (i + 1) - gap * 0.5f));
-            const int32_t top = std::clamp(static_cast<int32_t>(std::lround(valueY(points[first + i]))), 0, h);
+            const int32_t top = std::clamp<int32_t>(static_cast<int32_t>(std::lround(valueY(points[first + i]))), 0, h);
             for (int32_t y = top; y < h; ++y)
             {
-                std::fill(mask + static_cast<size_t>(y) * w + std::max(0, x0),
+                std::fill(mask + static_cast<size_t>(y) * w + std::max<int32_t>(0, x0),
                           mask + static_cast<size_t>(y) * w + std::min(w, x1), uint8_t(255));
             }
         }

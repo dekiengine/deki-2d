@@ -554,13 +554,13 @@ void KeyboardComponent::BakeCaps()
         float h = 0.0f;
         KeyBox(i, x, y, w, h);
         const float gap = std::min(w, h) * 0.1f;
-        const int32_t left =
-            std::clamp(static_cast<int32_t>(std::lround((x - w * 0.5f + gap * 0.5f + width * 0.5f) * ppm)), 0, maskW);
-        const int32_t right =
-            std::clamp(static_cast<int32_t>(std::lround((x + w * 0.5f - gap * 0.5f + width * 0.5f) * ppm)), 0, maskW);
-        const int32_t top = std::clamp(
+        const int32_t left = std::clamp<int32_t>(
+            static_cast<int32_t>(std::lround((x - w * 0.5f + gap * 0.5f + width * 0.5f) * ppm)), 0, maskW);
+        const int32_t right = std::clamp<int32_t>(
+            static_cast<int32_t>(std::lround((x + w * 0.5f - gap * 0.5f + width * 0.5f) * ppm)), 0, maskW);
+        const int32_t top = std::clamp<int32_t>(
             static_cast<int32_t>(std::lround((height * 0.5f - (y + h * 0.5f - gap * 0.5f)) * ppm)), 0, maskH);
-        const int32_t bottom = std::clamp(
+        const int32_t bottom = std::clamp<int32_t>(
             static_cast<int32_t>(std::lround((height * 0.5f - (y - h * 0.5f + gap * 0.5f)) * ppm)), 0, maskH);
         if (right <= left || bottom <= top)
         {

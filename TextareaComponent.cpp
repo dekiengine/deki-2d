@@ -366,7 +366,8 @@ void TextareaComponent::CursorPosition(float& x, float& y) const
     }
     const std::vector<std::string> lines = tc->WrapTextWithFont(font);
     const std::string last = lines.empty() ? std::string() : lines.back();
-    const float lastWidth = static_cast<float>(font->MeasureWidth(last.c_str()) * std::max(1, tc->pixelScale)) / ppm;
+    const float lastWidth =
+        static_cast<float>(font->MeasureWidth(last.c_str()) * std::max<int32_t>(1, tc->pixelScale)) / ppm;
     x += std::min(lastWidth, inner);
     y = height * 0.5f - pad - lineHeight * (static_cast<float>(std::max<size_t>(1, lines.size())) - 0.5f);
 }

@@ -40,7 +40,7 @@ bool DatePickerComponent::IsLeapYear(int32_t year)
 int32_t DatePickerComponent::DaysInMonth(int32_t year, int32_t month)
 {
     static const int32_t kDays[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-    month = std::clamp(month, 1, 12);
+    month = std::clamp<int32_t>(month, 1, 12);
     return month == 2 && IsLeapYear(year) ? 29 : kDays[month - 1];
 }
 
@@ -49,8 +49,8 @@ void DatePickerComponent::ClampDate()
     const int32_t lo = std::min(minYear, maxYear);
     const int32_t hi = std::max(minYear, maxYear);
     year = std::clamp(year, lo, hi);
-    month = std::clamp(month, 1, 12);
-    day = std::clamp(day, 1, DaysInMonth(year, month));
+    month = std::clamp<int32_t>(month, 1, 12);
+    day = std::clamp<int32_t>(day, 1, DaysInMonth(year, month));
 }
 
 void DatePickerComponent::SetDate(int32_t newYear, int32_t newMonth, int32_t newDay)

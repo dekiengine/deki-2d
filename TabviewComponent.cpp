@@ -43,7 +43,7 @@ void TabviewComponent::Start()
             }
             const float local = x - owner->GetWorldX() + width * 0.5f;
             const int32_t count = static_cast<int32_t>(tabs.size());
-            SelectTab(std::clamp(static_cast<int32_t>(local / width * count), 0, count - 1));
+            SelectTab(std::clamp<int32_t>(static_cast<int32_t>(local / width * count), 0, count - 1));
         });
 }
 
@@ -53,7 +53,7 @@ void TabviewComponent::SelectTab(int32_t index, bool notify)
     {
         return;
     }
-    index = std::clamp(index, 0, static_cast<int32_t>(tabs.size()) - 1);
+    index = std::clamp<int32_t>(index, 0, static_cast<int32_t>(tabs.size()) - 1);
     if (index == selectedTab)
     {
         return;

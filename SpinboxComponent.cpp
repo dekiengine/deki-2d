@@ -235,7 +235,7 @@ void SpinboxComponent::LayoutParts()
     WidgetParts::PlaceText(m_Value, 0.0f, 0.0f, std::max(0.0f, width - button * 2.0f), height);
 
     char text[32];
-    std::snprintf(text, sizeof(text), "%.*f", static_cast<int>(std::clamp(decimals, 0, 4)), value);
+    std::snprintf(text, sizeof(text), "%.*f", static_cast<int>(std::clamp<int32_t>(decimals, 0, 4)), value);
     WidgetParts::SetPartText(m_Value, text);
 
     const float ring = height * 0.3f;

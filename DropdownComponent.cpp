@@ -137,7 +137,7 @@ void DropdownComponent::SetSelectedIndex(int32_t index, bool notify)
     {
         return;
     }
-    index = std::clamp(index, 0, static_cast<int32_t>(options.size()) - 1);
+    index = std::clamp<int32_t>(index, 0, static_cast<int32_t>(options.size()) - 1);
     if (index == selectedIndex)
     {
         return;
@@ -174,10 +174,10 @@ void DropdownComponent::Open()
         return;
     }
     m_Open = true;
-    m_Highlight = std::clamp(selectedIndex, 0, static_cast<int32_t>(options.size()) - 1);
+    m_Highlight = std::clamp<int32_t>(selectedIndex, 0, static_cast<int32_t>(options.size()) - 1);
     // The chosen option in view, as near the top as the list allows.
     const int32_t rows = std::min<int32_t>(static_cast<int32_t>(m_RowParts.size()), listRows);
-    m_Scroll = std::clamp(m_Highlight, 0, std::max(0, static_cast<int32_t>(options.size()) - rows));
+    m_Scroll = std::clamp<int32_t>(m_Highlight, 0, std::max<int32_t>(0, static_cast<int32_t>(options.size()) - rows));
     WidgetParts::SetShown(m_List, true);
     // A scope round the list: what is under it ignores taps until it
     // closes, and its keys come here whether or not it has the focus.
@@ -232,7 +232,7 @@ void DropdownComponent::MoveHighlight(int32_t index)
     {
         return;
     }
-    m_Highlight = std::clamp(index, 0, static_cast<int32_t>(options.size()) - 1);
+    m_Highlight = std::clamp<int32_t>(index, 0, static_cast<int32_t>(options.size()) - 1);
     const int32_t rows = std::max<int32_t>(1, std::min<int32_t>(static_cast<int32_t>(m_RowParts.size()), listRows));
     if (m_Highlight < m_Scroll)
     {
@@ -248,7 +248,7 @@ void DropdownComponent::MoveHighlight(int32_t index)
 float DropdownComponent::ListHeight() const
 {
     const int32_t rows = std::min<int32_t>(static_cast<int32_t>(options.size()), listRows);
-    return height * static_cast<float>(std::max(1, rows));
+    return height * static_cast<float>(std::max<int32_t>(1, rows));
 }
 
 void DropdownComponent::OnPropertyChanged(const char* propertyName)
