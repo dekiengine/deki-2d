@@ -7,7 +7,6 @@ var NAVTREEINDEX0 =
 "index.html#autotoc_md3":[3,3],
 "index.html#autotoc_md4":[3,4],
 "index.html#autotoc_md5":[3,5],
-"index.html#autotoc_md6":[3,6],
 "index.html#c-animationcomponent":[2,0],
 "index.html#c-arccomponent":[2,1],
 "index.html#c-barcomponent":[2,2],

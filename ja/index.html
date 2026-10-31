@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 <img src="deki-2d.png" alt=""/>
 </div>
     <p>2D コンテンツ用のコンポーネント：スプライト、テキスト（BitmapFont と TTF ベイク）、アニメーション、グラデーション、ボタン、スクロール、クリッピング、ローラー。</p>
-<p>リポジトリ: <a href="https://github.com/dekiengine/deki-2d">github.com/dekiengine/deki-2d</a> · 最新リリース: 0.22.0 · エンジン 0.22.0 以降が必要 · 依存: <a href="https://dekiengine.github.io/deki-rendering/ja/">deki-rendering</a>, <a href="https://dekiengine.github.io/deki-input/ja/">deki-input</a></p>
+<p>リポジトリ: <a href="https://github.com/dekiengine/deki-2d">github.com/dekiengine/deki-2d</a> · 最新リリース: 0.22.1 · エンジン 0.22.0 以降が必要 · 依存: <a href="https://dekiengine.github.io/deki-rendering/ja/">deki-rendering</a>, <a href="https://dekiengine.github.io/deki-input/ja/">deki-input</a></p>
 <p><span class="tt">DekiEditor --packages-add deki-2d &lt;project&gt;</span> か、パッケージマネージャーからインストールします。エンジン自身のコンポーネントと C++ API は <a href="https://dekiengine.github.io/docs/ja/">Deki のドキュメント</a>にあります。</p>
 <p>エディターでは <b>2D</b> と表示されます。</p>
 <h1 class="doxsection"><a class="anchor" id="components"></a>
@@ -914,8 +914,15 @@ TextareaComponent</h2>
 変更履歴</h1>
 <p>変更履歴は英語です。</p>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md0"></a>
-0.22.0</h2>
+0.22.1</h2>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md1"></a>
+Fixed</h2>
+<ul>
+<li>Clip and Sorting Group work on boards. Their renderer hookup was only registered by a static initialiser, which an ESP-IDF link drops, so on a board every Clip drew its children uncut (a roller's hidden rows above and below it) and every Sorting Group sorted as a plain parent. Deki2DInitSystem now registers both.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
+0.22.0</h2>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
 Changed</h2>
 <ul>
 <li>Inspector rows line up with the rest: the sprite's 9-slice borders are a row with an Edit 9-Slice button, Clip's Edit Rect and Roller's Fill Options use the editor's action button, and the Text component's font size and preview rows are rows and hints.</li>
@@ -925,32 +932,15 @@ Changed</h2>
 <li>Widgets show and hide their pages, lists and dialogs with plain <span class="tt">Object::SetActive</span>, now that engine 0.22 starts what it shows; deki-2d's own workaround is gone, so it needs engine 0.22.</li>
 <li><span class="tt">minEngine</span> 0.22.0: built against engine 0.22.0. A build of this package from before does not load and is rebuilt.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
 Fixed</h2>
 <ul>
 <li>Letters in a word are evenly spaced. A TrueType font is drawn at twice its size and filtered down, and each glyph was filtered from its own corner, so one starting on an odd column or row landed half a pixel off its neighbours. Glyphs are now filtered on the pixel grid. Fonts bake again on the next open, and every text's pixels change.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
 Added</h2>
 <ul>
 <li>List widget: a scrolling column of rows to tap, with section titles (an item that starts with "# "), a scroll thumb, drag to scroll, and Up, Down and Enter with keyboard focus. Feature <span class="tt">list</span>, so builds that do not use it leave it out.</li>
-</ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
-0.21.0</h2>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
-Changed</h2>
-<ul>
-<li><span class="tt">minEngine</span> 0.21.0: built against engine 0.21.0. A build of this package from before does not load and is rebuilt.</li>
-<li><b>Plain sprites fill their solid middles.</b> A sprite with soft edges drawn at its own size gets each row's transparent run and its run of one colour at load (<span class="tt">Sprite::clearRowSpans</span>, <span class="tt">uniformRuns</span>), as resized and 9-slice sprites had: the first is skipped unread, the second filled.</li>
-<li>Sprites, text and gradients say when their pixels change in place (<span class="tt">GetContentVersion</span>), for deki-rendering's redraw-only-what-changed.</li>
-<li>A gradient's check for a new bake costs a third less: its settings are fingerprinted a word at a time.</li>
-<li>Sprites and fonts loaded one after another give the device's other tasks a turn after every 50 ms of loading, not after every load: a few milliseconds off opening a scene with many sprites.</li>
-<li><b>Scenes open faster.</b> A <span class="tt">GradientComponent</span> worked out every pixel of its bake from scratch on the first frame of every scene: a full-screen background took 0.7 s on an ESP32-S3. The bake now fills runs of one colour, and a gradient that changes along one axis only (straight down or across, undithered) is baked as one column or one row that QuadBlit stretches: a few hundred bytes instead of a screenful, and well under a millisecond. Needs deki-rendering with <span class="tt">Source::stretchWidth</span>.</li>
-</ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md6"></a>
-Fixed</h2>
-<ul>
-<li>A gradient at a whole number of right angles is exactly straight. <span class="tt">cos(pi/2)</span> is not 0 in float, which tilted it by a hair, and where a row met a colour's edge one pixel of it turned.</li>
 </ul>
 <p>それ以前のリリース: <a href="https://github.com/dekiengine/deki-2d/blob/master/CHANGELOG.md">CHANGELOG.md</a></p>
 <hr  />
