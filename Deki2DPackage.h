@@ -4,15 +4,7 @@
 // gradients, shapes, and UI widgets (buttons, scrolling, rollers, sliders and
 // the rest). Its contents are included only when DEKI_PACKAGE_2D is defined.
 
-#ifdef _WIN32
-#if defined(DEKI_2D_EXPORTS) || defined(DEKI_PLUGIN_EXPORTS)
-#define DEKI_2D_API __declspec(dllexport)
-#else
-#define DEKI_2D_API __declspec(dllimport)
-#endif
-#else
-#define DEKI_2D_API __attribute__((visibility("default")))
-#endif
+#include "Deki2DApi.h"
 
 #ifdef DEKI_PACKAGE_2D
 
