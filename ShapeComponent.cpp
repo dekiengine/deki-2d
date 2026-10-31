@@ -77,7 +77,7 @@ uint8_t* ShapeComponent::BeginCustomMask(int32_t w, int32_t h)
     }
     m_MaskW = w;
     m_MaskH = h;
-    m_MaskPad = 0;
+    m_MaskPPM = 0.0f;
     std::memset(m_Mask.Data(), 0, static_cast<size_t>(w) * static_cast<size_t>(h));
     return m_Mask.Data();
 }
@@ -94,6 +94,8 @@ uint64_t ShapeComponent::ComputeBakeKey(int32_t w, int32_t h, float pixelsPerMet
     f.Add(static_cast<uint32_t>(kind));
     f.Add(w);
     f.Add(h);
+    f.Add(width * pixelsPerMeter);
+    f.Add(height * pixelsPerMeter);
     f.Add(cornerRadius * pixelsPerMeter);
     f.Add(lineWidth * pixelsPerMeter);
     f.Add(startAngle);
@@ -126,11 +128,18 @@ bool ShapeComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& 
         {
             bakePPM *= static_cast<float>(std::sqrt(viewArea * 2.0 / bakeArea));
         }
-        const int32_t w = std::max<int32_t>(1, static_cast<int32_t>(std::lround(width * bakePPM)));
-        const int32_t h = std::max<int32_t>(1, static_cast<int32_t>(std::lround(height * bakePPM)));
+        // The shape keeps its exact size in pixels, fractions included, and
+        // the mask is drawn at the bake's own scale. A mask scaled to fit a
+        // rounded size would scale both ways, so a fill that only grows wider
+        // (a slider's) would also jump a pixel taller and shorter as it moved.
+        // An even mask keeps the shape's centre on a pixel corner.
+        const float shapeW = width * bakePPM;
+        const float shapeH = height * bakePPM;
+        const int32_t w = std::max<int32_t>(2, static_cast<int32_t>(std::ceil(shapeW * 0.5f)) * 2);
+        const int32_t h = std::max<int32_t>(2, static_cast<int32_t>(std::ceil(shapeH * 0.5f)) * 2);
 
         const uint64_t key = ComputeBakeKey(w, h, bakePPM);
-        if (!m_HasBake || key != m_BakeKey || m_MaskPad != kBakePad)
+        if (!m_HasBake || key != m_BakeKey || m_MaskPPM != bakePPM)
         {
             const int32_t maskW = w + kBakePad * 2;
             const int32_t maskH = h + kBakePad * 2;
@@ -138,16 +147,11 @@ bool ShapeComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& 
             {
                 return false;
             }
-            // The shape's exact pixel size, so the edge lands where the shape
-            // is drawn: rounding the size moves it by under a pixel. It sits
-            // in the middle of the padded mask.
             ShapeMaskParams params = MaskParams(bakePPM);
-            params.width = static_cast<float>(w);
-            params.height = static_cast<float>(h);
             BakeShapeMask(m_Mask.Data(), maskW, maskH, maskW, params);
             m_MaskW = maskW;
             m_MaskH = maskH;
-            m_MaskPad = kBakePad;
+            m_MaskPPM = bakePPM;
             m_BakeKey = key;
             m_HasBake = true;
             ++m_BakeVersion;
@@ -163,8 +167,9 @@ bool ShapeComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& 
                                      false  // ownsPixels: the component keeps its mask
     );
     outSource.stride = m_MaskW;
-    // The padding is drawn too, around the shape, so the shape keeps its size.
-    outSource.pixelsPerMeter = static_cast<float>(m_MaskW - m_MaskPad * 2) / width;
+    // A baked mask, padding and all, is drawn at the scale it was baked at; a
+    // custom mask covers the shape's size.
+    outSource.pixelsPerMeter = m_MaskPPM > 0.0f ? m_MaskPPM : static_cast<float>(m_MaskW) / width;
 
     outPivotX = 0.5f;
     outPivotY = 0.5f;

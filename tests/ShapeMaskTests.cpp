@@ -239,10 +239,40 @@ TEST(ShapeComponent, BakesOnlyWhenTheGeometryChanges)
     EXPECT_NE(second, third);
     EXPECT_EQ(src.pixels, pixels);
     const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
-    const int32_t shapePixels = static_cast<int32_t>(std::lround(3.0f * ppm));
-    EXPECT_FLOAT_EQ(src.pixelsPerMeter * 3.0f, static_cast<float>(shapePixels));
-    // The empty margin around it is drawn too.
-    EXPECT_EQ(src.width, shapePixels + 4);
+    // Drawn at the scale it was baked at, with an empty margin around it.
+    EXPECT_FLOAT_EQ(src.pixelsPerMeter, ppm);
+    EXPECT_GE(src.width, static_cast<int32_t>(std::ceil(3.0f * ppm)) + 4);
+}
+
+TEST(ShapeComponent, AFillGrowingWiderKeepsItsHeight)
+{
+    Deki::Object obj("Fill");
+    auto* shape = obj.AddComponent<ShapeComponent>();
+    shape->height = 0.5f;
+    shape->cornerRadius = 0.25f;
+
+    QuadBlit::Source src;
+    float px = 0;
+    float py = 0;
+    uint8_t r = 0;
+    uint8_t g = 0;
+    uint8_t b = 0;
+    uint8_t a = 0;
+    const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
+    int32_t height = -1;
+    // A slider's fill, a fraction of a pixel wider each step: its scale and
+    // height must not move, or it is drawn a pixel taller and shorter.
+    for (int i = 1; i <= 40; ++i)
+    {
+        shape->width = 1.0f + static_cast<float>(i) * 0.037f;
+        ASSERT_TRUE(shape->RenderContent(&obj, src, px, py, r, g, b, a));
+        EXPECT_FLOAT_EQ(src.pixelsPerMeter, ppm) << "step " << i;
+        if (height < 0)
+        {
+            height = src.height;
+        }
+        EXPECT_EQ(src.height, height) << "step " << i;
+    }
 }
 
 TEST(ShapeComponent, EdgesAreNotCutByTheMask)
