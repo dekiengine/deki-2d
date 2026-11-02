@@ -133,7 +133,7 @@ private:
     // Animation frames need no buffer: they point QuadBlit at the sub-rect of
     // the sprite's own pixels via Source::stride.
     Deki::Buffer<uint8_t> m_CachedRenderBuffer;
-    uint32_t m_BakeVersion = 0;  // GetContentVersion: one more each bake
+    uint32_t m_BakeVersion = 0;  // GetContentVersion and Source::revision: QuadBlit::NextRevision() each bake
     int32_t m_CachedRenderW = 0;
     int32_t m_CachedRenderH = 0;
     // The frame SetFrame showed, by GUID ("" after SetFrameRect), and the

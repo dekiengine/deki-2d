@@ -191,12 +191,19 @@ public:
     /// file. Returns false when the borders do not fit the sprite.
     bool SetNineSliceBorders(uint16_t left, uint16_t right, uint16_t top, uint16_t bottom);
 
+    /// A QuadBlit::Source::revision for the sprite's pixels, which stay as
+    /// they are while it lives: a GPU drawing it keeps one upload of them.
+    /// Taken the first time it is asked for.
+    uint32_t Revision() const;
+
 protected:
     /// `data` is the pixel data after the header.
     bool LoadFromMemory(const Deki::Texture2D::Header& header, const uint8_t* data) override;
 
 private:
     void SetDefaultSpriteProperties();
+
+    mutable uint32_t m_Revision = 0;  // Revision(); 0 until asked
 };
 
 }  // namespace Deki2D

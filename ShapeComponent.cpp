@@ -79,13 +79,14 @@ uint8_t* ShapeComponent::BeginCustomMask(int32_t w, int32_t h)
     m_MaskH = h;
     m_MaskPPM = 0.0f;
     std::memset(m_Mask.Data(), 0, static_cast<size_t>(w) * static_cast<size_t>(h));
+    m_BakeVersion = QuadBlit::NextRevision();
     return m_Mask.Data();
 }
 
 void ShapeComponent::EndCustomMask()
 {
     m_HasBake = m_Mask && m_MaskW > 0 && m_MaskH > 0;
-    ++m_BakeVersion;
+    m_BakeVersion = QuadBlit::NextRevision();
 }
 
 uint64_t ShapeComponent::ComputeBakeKey(int32_t w, int32_t h, float pixelsPerMeter) const
@@ -154,7 +155,7 @@ bool ShapeComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& 
             m_MaskPPM = bakePPM;
             m_BakeKey = key;
             m_HasBake = true;
-            ++m_BakeVersion;
+            m_BakeVersion = QuadBlit::NextRevision();
         }
     }
 
@@ -167,6 +168,7 @@ bool ShapeComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& 
                                      false  // ownsPixels: the component keeps its mask
     );
     outSource.stride = m_MaskW;
+    outSource.revision = m_BakeVersion;
     // A baked mask, padding and all, is drawn at the scale it was baked at; a
     // custom mask covers the shape's size.
     outSource.pixelsPerMeter = m_MaskPPM > 0.0f ? m_MaskPPM : static_cast<float>(m_MaskW) / width;

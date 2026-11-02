@@ -225,7 +225,7 @@ private:
 
     // The baked text, RGB565A8. Owning, and it knows its own size.
     Deki::Buffer<uint8_t> m_CachedBuffer;
-    uint32_t m_BakeVersion = 0;  // GetContentVersion: one more each bake
+    uint32_t m_BakeVersion = 0;  // GetContentVersion and Source::revision: QuadBlit::NextRevision() each bake
     std::string m_CachedText;
     int32_t m_CachedWidth = 0;
     int32_t m_CachedHeight = 0;

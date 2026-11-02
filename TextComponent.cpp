@@ -67,6 +67,7 @@ QuadBlit::Source TextComponent::CroppedSource(int32_t bakeWidth) const
         m_CachedBuffer.Data() + (m_CropFirstRow * bakeWidth + m_CropFirstCol) * bpp, m_CropWidth, m_CropHeight,
         m_CachedAlphaOnly ? QuadBlit::PixelLayout::Alpha8() : QuadBlit::PixelLayout::RGB565A8(), false);
     source.stride = bakeWidth * bpp;
+    source.revision = m_BakeVersion;
     return source;
 }
 
@@ -461,7 +462,7 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
         return false;
     }
     memset(m_CachedBuffer.Data(), 0, bufferSize);  // Clear to transparent
-    ++m_BakeVersion;
+    m_BakeVersion = QuadBlit::NextRevision();
 
     std::vector<GlyphLayout> glyphLayouts;
     CalculateGlyphLayout(fontPtr, glyphLayouts);

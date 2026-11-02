@@ -2,7 +2,7 @@
 #include "SpriteRowSpans.h"
 #include "LoadYield.h"
 #include "PixelFormat.h"
-#include "QuadBlit.h"  // ForgetScaled
+#include "QuadBlit.h"  // ForgetScaled, NextRevision
 #include <deki/assets/Texture2D.h>
 
 #include <cstdlib>
@@ -660,6 +660,7 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
 
 bool Sprite::LoadFromMemory(const Deki::Texture2D::Header& header, const uint8_t* pixelData)
 {
+    m_Revision = 0;  // other pixels: a revision of their own
     if (!Deki::Texture2D::LoadFromMemory(header, pixelData))
     {
         return false;
@@ -667,6 +668,15 @@ bool Sprite::LoadFromMemory(const Deki::Texture2D::Header& header, const uint8_t
 
     // The constructor already set the sprite defaults.
     return true;
+}
+
+uint32_t Sprite::Revision() const
+{
+    if (m_Revision == 0)
+    {
+        m_Revision = QuadBlit::NextRevision();
+    }
+    return m_Revision;
 }
 
 Sprite* Sprite::CreateSolid(int32_t width, int32_t height, uint8_t r, uint8_t g, uint8_t b)

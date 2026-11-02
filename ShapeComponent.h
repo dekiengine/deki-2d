@@ -143,7 +143,7 @@ private:
     // The pixels per meter a shape was baked at, which it is drawn at too.
     // 0 for a custom mask, which covers the shape's size.
     float m_MaskPPM = 0.0f;
-    uint32_t m_BakeVersion = 0;
+    uint32_t m_BakeVersion = 0;  // GetContentVersion and Source::revision: QuadBlit::NextRevision() each bake
     uint64_t m_BakeKey = 0;
     bool m_HasBake = false;
 

@@ -457,7 +457,7 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
             }
 
             m_CachedRenderTint = bakeTint;
-            ++m_BakeVersion;
+            m_BakeVersion = QuadBlit::NextRevision();
             m_CachedRenderRegion = region;
             m_CachedRenderSrc = spr;
             m_CachedRenderW = targetW;
@@ -471,6 +471,7 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
                                          m_CachedRowSpans ? m_CachedRowSpans.Data() : nullptr);
         outSource.clearRowSpans = m_CachedClearSpans ? m_CachedClearSpans.Data() : nullptr;
         outSource.uniformRuns = m_CachedUniformRuns ? m_CachedUniformRuns.Data() : nullptr;
+        outSource.revision = m_BakeVersion;
         if (tintInBake)
         {
             // Already in the pixels; the alpha tint stays the blit's.
@@ -506,8 +507,10 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
         ApplyChromaKey(outSource, spr, /*attachRowSpans=*/true);
         outSource.pixelsPerMeter = spr->pixelsPerMeter;
         // The sprite's pixels stay as they are while it lives (~Sprite
-        // forgets the copies), so a scaled draw may be cached.
+        // forgets the copies), so a scaled draw may be cached, and a GPU
+        // keeps its upload.
         outSource.cacheScaled = true;
+        outSource.revision = spr->Revision();
         outPivotX = spr->pivotX;
         outPivotY = spr->pivotY;
     }
@@ -543,6 +546,7 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
         );
         outSource.stride = spr->width * bytesPerPixel;
         outSource.cacheScaled = true;  // the sprite's own pixels, as above
+        outSource.revision = spr->Revision();
         // The frame's rows do not match the sprite's chromaRowSpans (other y
         // origin and width), so frames use the per-pixel chroma compare.
         ApplyChromaKey(outSource, spr, /*attachRowSpans=*/false);

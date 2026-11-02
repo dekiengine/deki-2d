@@ -238,6 +238,9 @@ TEST(ShapeComponent, BakesOnlyWhenTheGeometryChanges)
     shape->GetContentVersion(third);
     EXPECT_NE(second, third);
     EXPECT_EQ(src.pixels, pixels);
+    // The same memory, new pixels: a GPU drawing it must upload them again.
+    EXPECT_NE(third, 0u);
+    EXPECT_EQ(src.revision, third);
     const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
     // Drawn at the scale it was baked at, with an empty margin around it.
     EXPECT_FLOAT_EQ(src.pixelsPerMeter, ppm);

@@ -8,6 +8,15 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
+## Unreleased
+
+### Added
+- Every source the components hand QuadBlit carries a revision
+  (`QuadBlit::Source::revision`): new at each bake of text, a gradient, a
+  shape, a sliced or tiled sprite, and one per sprite for its own pixels
+  (`Sprite::Revision()`). A GPU drawing the 2D (`deki-gl`) uploads each once,
+  and again only when it changes. `GetContentVersion` returns the same number.
+
 ## 0.22.1
 
 ### Fixed

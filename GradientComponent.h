@@ -273,7 +273,7 @@ private:
     // QuadBlit. Keyed by a hash of every input, so the gradient is rasterised
     // (with trig per pixel) only when something changed.
     Deki::Buffer<uint8_t> m_Baked;
-    uint32_t m_BakeVersion = 0;  // GetContentVersion: one more each bake
+    uint32_t m_BakeVersion = 0;  // GetContentVersion and Source::revision: QuadBlit::NextRevision() each bake
     uint64_t m_BakeKey = 0;
     // The bake's size in pixels: the drawn size, or 1 across or down for a
     // gradient that changes along one axis only (FindStraightAxes).

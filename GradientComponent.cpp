@@ -924,7 +924,7 @@ bool GradientComponent::RenderContent(const Deki::Object* owner, QuadBlit::Sourc
         m_BakeHeight = bakeH;
         CheckBakeUniformity(bakeW, bakeH);
         m_BakeKey = key;
-        ++m_BakeVersion;
+        m_BakeVersion = QuadBlit::NextRevision();
     }
 
     outSource = QuadBlit::MakeSource(m_Baked.Data(), m_BakeWidth, m_BakeHeight, QuadBlit::PixelLayout::RGB565(),
@@ -940,6 +940,7 @@ bool GradientComponent::RenderContent(const Deki::Object* owner, QuadBlit::Sourc
     // filled as it is drawn and needs none.
     outSource.cacheScaled = outSource.stretchWidth == 0 && outSource.stretchHeight == 0;
     outSource.rowColors = m_UniformRows && m_RowColors ? m_RowColors.Data() : nullptr;
+    outSource.revision = m_BakeVersion;
     // The full bake's density: the renderer then scales it by the object's
     // scale alone, 1:1 for an unscaled object.
     outSource.pixelsPerMeter = static_cast<float>(widthPx) / width;
