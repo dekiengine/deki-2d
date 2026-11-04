@@ -11,6 +11,12 @@ alongside one that has them.
 ## Unreleased
 
 ### Added
+- Images have a Filter, per platform (Point, Bilinear, Trilinear), in the
+  image's inspector, which can set several selected images at once. A sprite
+  carries it (`Sprite::filter`, from its header) into the sources it hands
+  QuadBlit, so a GPU draws it filtered; a platform without one draws Point,
+  and the image's card for it says so. An image compiled before reads as
+  Point.
 - Every source the components hand QuadBlit carries a revision
   (`QuadBlit::Source::revision`): new at each bake of text, a gradient, a
   shape, a sliced or tiled sprite, and one per sprite for its own pixels

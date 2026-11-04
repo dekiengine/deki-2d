@@ -315,7 +315,8 @@ bool CompileImage(const std::string& imagePath, const std::string& guid, const I
     const ChromaKeySettings* chromaPtr = sidecar.chromaKey.enabled ? &sidecar.chromaKey : nullptr;
     return TextureImporter::WriteTexFile(outPath, pixels, static_cast<uint32_t>(storedW),
                                          static_cast<uint32_t>(storedH), format, settingsPtr, subAssetsPtr, chromaPtr,
-                                         static_cast<uint32_t>(decoded.width), static_cast<uint32_t>(decoded.height));
+                                         static_cast<uint32_t>(decoded.width), static_cast<uint32_t>(decoded.height),
+                                         ResolveTextureFilter(sidecar.texture, target.platformId));
 }
 
 /// Whether the sidecar changed after the cache was written, in a way that
@@ -371,6 +372,15 @@ AssetCacheResult HandleSpriteImageCache(const AssetCacheContext& ctx)
                                     TextureFormatName(wanted));
                     needsRegen = true;
                 }
+            }
+            // ... and with that target's filter.
+            TexData filterCheck;
+            if (!needsRegen && TextureImporter::ReadTexFile(ctx.cachePath, filterCheck) &&
+                Deki::TextureFilterFromFlags(filterCheck.header.flags) !=
+                    ResolveTextureFilter(sidecar.texture, editorTarget.platformId))
+            {
+                DEKI_LOG_EDITOR("ImageCache: %s is filtered for another target; regenerating", ctx.relativePath.c_str());
+                needsRegen = true;
             }
             // ... and at that target's Max Size.
             TexData cached;

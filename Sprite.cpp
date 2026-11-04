@@ -125,6 +125,7 @@ void BuildRowRuns(Sprite& sprite)
 // runs of the rest found.
 void FinishPixels(Sprite& sprite, uint32_t headerFlags)
 {
+    sprite.filter = Deki::TextureFilterFromFlags(headerFlags);
     if (!sprite.hasAlpha || sprite.format != Deki::Texture2D::TextureFormat::RGB565A8)
     {
         return;
@@ -809,6 +810,7 @@ Sprite* Sprite::CreateTiled(Sprite* source, int32_t targetWidth, int32_t targetH
     tiled->format = source->format;
     tiled->hasTransparency = source->hasTransparency;
     tiled->hasAlpha = source->hasAlpha;
+    tiled->filter = source->filter;
 
     tiled->pivotX = source->pivotX;
     tiled->pivotY = source->pivotY;

@@ -482,6 +482,7 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
         // The bake has other dimensions than the sprite, so its chromaRowSpans do not apply.
         ApplyChromaKey(outSource, spr, /*attachRowSpans=*/false);
         outSource.pixelsPerMeter = spr->pixelsPerMeter;
+        outSource.filter = spr->filter;
         ApplyFlip(outSource);
         outPivotX = spr->pivotX;
         outPivotY = spr->pivotY;
@@ -506,6 +507,7 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
         outSource.uniformRuns = spr->uniformRuns.Data();
         ApplyChromaKey(outSource, spr, /*attachRowSpans=*/true);
         outSource.pixelsPerMeter = spr->pixelsPerMeter;
+        outSource.filter = spr->filter;
         // The sprite's pixels stay as they are while it lives (~Sprite
         // forgets the copies), so a scaled draw may be cached, and a GPU
         // keeps its upload.
@@ -551,6 +553,7 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
         // origin and width), so frames use the per-pixel chroma compare.
         ApplyChromaKey(outSource, spr, /*attachRowSpans=*/false);
         outSource.pixelsPerMeter = spr->pixelsPerMeter;
+        outSource.filter = spr->filter;
         // Frames pivot on their centre.
         outPivotX = 0.5f;
         outPivotY = 0.5f;
