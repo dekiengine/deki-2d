@@ -191,8 +191,7 @@ void RegisterAnimationLoader()
         delete data;
         return nullptr;
     };
-    Deki::AssetManager::RegisterLoader("FrameAnimationData", loader, unloader, memLoader);
-    Deki::AssetManager::RegisterLoader("Animation", loader, unloader, memLoader);
+    Deki::AssetManager::RegisterLoader(FrameAnimationData::kAssetTypeName, loader, unloader, memLoader);
 }
 
 }  // namespace Deki2D

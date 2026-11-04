@@ -10,6 +10,13 @@ alongside one that has them.
 
 ## Unreleased
 
+### Changed
+- The animation loader is registered once, as "Animation"
+  (`FrameAnimationData::kAssetTypeName`); its second name,
+  "FrameAnimationData", was only for the reflection's old naming (engine
+  changelog). The asset picker of an animation reference now lists
+  animations, where it listed every asset.
+
 ### Added
 - Images have a Filter, per platform (Point, Bilinear, Trilinear), in the
   image's inspector, which can set several selected images at once. A sprite
