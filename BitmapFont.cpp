@@ -640,7 +640,7 @@ BitmapFont* BitmapFont::CreateFromMemory(Deki::Texture2D* atlas, Deki::Buffer<Gl
     font->m_GlyphCount = lastChar - firstChar + 1;
 
     DEKI_LOG_INTERNAL("BitmapFont::CreateFromMemory: Created font with %u glyphs, line height %u", font->m_GlyphCount,
-                      m_LineHeight);
+                      font->m_LineHeight);
 
     return font;
 }

@@ -31,6 +31,10 @@ alongside one that has them.
   `GLBlitSink`) uploads each once, and again only when it changes.
   `GetContentVersion` returns the same number.
 
+### Fixed
+- deki-2d builds with internal logging on: `BitmapFont::CreateFromMemory`,
+  a static function, logged `m_LineHeight` rather than the new font's.
+
 ## 0.22.1
 
 ### Fixed
