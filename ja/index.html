@@ -57,7 +57,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">deki-2d<span id="projectnumber">&#160;0.22.0</span>
+   <div id="projectname">deki-2d<span id="projectnumber">&#160;0.30.0</span>
    </div>
    <div id="projectbrief">Deki パッケージリファレンス</div>
   </td>
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 <img src="deki-2d.png" alt=""/>
 </div>
     <p>2D コンテンツ用のコンポーネント：スプライト、テキスト（BitmapFont と TTF ベイク）、アニメーション、グラデーション、ボタン、スクロール、クリッピング、ローラー。</p>
-<p>リポジトリ: <a href="https://github.com/dekiengine/deki-2d">github.com/dekiengine/deki-2d</a> · 最新リリース: 0.22.1 · エンジン 0.22.0 以降が必要 · 依存: <a href="https://dekiengine.github.io/deki-rendering/ja/">deki-rendering</a>, <a href="https://dekiengine.github.io/deki-input/ja/">deki-input</a></p>
+<p>リポジトリ: <a href="https://github.com/dekiengine/deki-2d">github.com/dekiengine/deki-2d</a> · 最新リリース: 0.30.0 · エンジン 0.30.0 以降が必要 · 依存: <a href="https://dekiengine.github.io/deki-rendering/ja/">deki-rendering</a>, <a href="https://dekiengine.github.io/deki-input/ja/">deki-input</a></p>
 <p><span class="tt">DekiEditor --packages-add deki-2d &lt;project&gt;</span> か、パッケージマネージャーからインストールします。エンジン自身のコンポーネントと C++ API は <a href="https://dekiengine.github.io/docs/ja/">Deki のドキュメント</a>にあります。</p>
 <p>エディターでは <b>2D</b> と表示されます。</p>
 <h1 class="doxsection"><a class="anchor" id="components"></a>
@@ -249,7 +249,7 @@ AnimationComponent</h2>
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">プロパティ  </th><th class="markdownTableHeadNone">型  </th><th class="markdownTableHeadNone">デフォルト  </th><th class="markdownTableHeadNone">説明  </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">animation</span>  </td><td class="markdownTableBodyNone">AssetRef (FrameAnimationData)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone">フレームアニメーションのアセットです。フレームと、それぞれを表示する長さを並べたものです。  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">animation</span>  </td><td class="markdownTableBodyNone">AssetRef (Animation)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone">フレームアニメーションのアセットです。フレームと、それぞれを表示する長さを並べたものです。  </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><span class="tt">currentSequence</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">再生中のシーケンスの番号です。シーケンスは 1 つのアセットの中にある個々のアニメーション (idle や walk など) です。  </td></tr>
 <tr class="markdownTableRowOdd">
@@ -914,37 +914,34 @@ TextareaComponent</h2>
 変更履歴</h1>
 <p>変更履歴は英語です。</p>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md0"></a>
-0.22.1</h2>
+0.30.0</h2>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md1"></a>
+Changed</h2>
+<ul>
+<li><span class="tt">minEngine</span> 0.30.0: built against engine 0.30.0. A build of this package from before does not load and is rebuilt.</li>
+<li>The animation loader is registered once, as "Animation" (<span class="tt">FrameAnimationData::kAssetTypeName</span>); its second name, "FrameAnimationData", was only for the reflection's old naming (engine changelog). The asset picker of an animation reference now lists animations, where it listed every asset.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
+Added</h2>
+<ul>
+<li>Images have a Filter, per platform (Point, Bilinear, Trilinear), in the image's inspector, which can set several selected images at once. A sprite carries it (<span class="tt">Sprite::filter</span>, from its header) into the sources it hands QuadBlit, so a GPU draws it filtered; a platform without one draws Point, and the image's card for it says so. An image compiled before reads as Point.</li>
+<li>Every source the components hand QuadBlit carries a revision (<span class="tt">QuadBlit::Source::revision</span>): new at each bake of text, a gradient, a shape, a sliced or tiled sprite, and one per sprite for its own pixels (<span class="tt">Sprite::Revision()</span>). A GPU drawing the 2D (deki-rendering's <span class="tt">GLBlitSink</span>) uploads each once, and again only when it changes. <span class="tt">GetContentVersion</span> returns the same number.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
+Fixed</h2>
+<ul>
+<li>deki-2d builds with internal logging on: <span class="tt">BitmapFont::CreateFromMemory</span>, a static function, logged <span class="tt">m_LineHeight</span> rather than the new font's.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
+0.22.1</h2>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
 Fixed</h2>
 <ul>
 <li>Clip and Sorting Group work on boards. Their renderer hookup was only registered by a static initialiser, which an ESP-IDF link drops, so on a board every Clip drew its children uncut (a roller's hidden rows above and below it) and every Sorting Group sorted as a plain parent. Deki2DInitSystem now registers both.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
-0.22.0</h2>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
-Changed</h2>
-<ul>
-<li>Inspector rows line up with the rest: the sprite's 9-slice borders are a row with an Edit 9-Slice button, Clip's Edit Rect and Roller's Fill Options use the editor's action button, and the Text component's font size and preview rows are rows and hints.</li>
-<li>The font asset inspector is sections of rows, like the other asset inspectors: character range, rasterization, sizes (each with whether it is baked), bake and preview.</li>
-<li>The editor's previews (fonts, BDF fonts, icon fonts, spritesheets) make their textures with <span class="tt">EditorTexture</span> instead of OpenGL, which the editor no longer uses. Needs editor 0.22.</li>
-<li>Roller's Fill Options is a dialog like the editor's others: labels over fields, Cancel and Fill.</li>
-<li>Widgets show and hide their pages, lists and dialogs with plain <span class="tt">Object::SetActive</span>, now that engine 0.22 starts what it shows; deki-2d's own workaround is gone, so it needs engine 0.22.</li>
-<li><span class="tt">minEngine</span> 0.22.0: built against engine 0.22.0. A build of this package from before does not load and is rebuilt.</li>
-</ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
-Fixed</h2>
-<ul>
-<li>Letters in a word are evenly spaced. A TrueType font is drawn at twice its size and filtered down, and each glyph was filtered from its own corner, so one starting on an odd column or row landed half a pixel off its neighbours. Glyphs are now filtered on the pixel grid. Fonts bake again on the next open, and every text's pixels change.</li>
-</ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
-Added</h2>
-<ul>
-<li>List widget: a scrolling column of rows to tap, with section titles (an item that starts with "# "), a scroll thumb, drag to scroll, and Up, Down and Enter with keyboard focus. Feature <span class="tt">list</span>, so builds that do not use it leave it out.</li>
-</ul>
 <p>それ以前のリリース: <a href="https://github.com/dekiengine/deki-2d/blob/master/CHANGELOG.md">CHANGELOG.md</a></p>
 <hr  />
-<p>パッケージのリフレクションデータから生成しています (エンジン 0.22.0)。プロパティ名はシーンファイルで使われるキーです。名前を変えても別名が残ります (<a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">互換性</a>)。 </p>
+<p>パッケージのリフレクションデータから生成しています (エンジン 0.30.0)。プロパティ名はシーンファイルで使われるキーです。名前を変えても別名が残ります (<a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">互換性</a>)。 </p>
 </div></div><!-- PageDoc -->
 <a href="doxygen_crawl.html"></a>
 </div><!-- contents -->

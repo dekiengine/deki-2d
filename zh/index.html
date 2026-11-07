@@ -57,7 +57,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">deki-2d<span id="projectnumber">&#160;0.22.0</span>
+   <div id="projectname">deki-2d<span id="projectnumber">&#160;0.30.0</span>
    </div>
    <div id="projectbrief">Deki 包参考</div>
   </td>
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 <img src="deki-2d.png" alt=""/>
 </div>
     <p>2D 内容组件：精灵、文本（BitmapFont + TTF 烘焙）、动画、渐变、按钮、滚动、裁剪和滚轮选择器。</p>
-<p>仓库：<a href="https://github.com/dekiengine/deki-2d">github.com/dekiengine/deki-2d</a> · 最新版本：0.22.1 · 需要引擎 0.22.0 或更高版本 · 依赖：<a href="https://dekiengine.github.io/deki-rendering/zh/">deki-rendering</a>, <a href="https://dekiengine.github.io/deki-input/zh/">deki-input</a></p>
+<p>仓库：<a href="https://github.com/dekiengine/deki-2d">github.com/dekiengine/deki-2d</a> · 最新版本：0.30.0 · 需要引擎 0.30.0 或更高版本 · 依赖：<a href="https://dekiengine.github.io/deki-rendering/zh/">deki-rendering</a>, <a href="https://dekiengine.github.io/deki-input/zh/">deki-input</a></p>
 <p>使用 <span class="tt">DekiEditor --packages-add deki-2d &lt;project&gt;</span> 或通过包管理器安装。引擎自身的组件和 C++ API 见 <a href="https://dekiengine.github.io/docs/zh/">Deki 文档</a>。</p>
 <p>在编辑器中显示为 **2D**。</p>
 <h1 class="doxsection"><a class="anchor" id="components"></a>
@@ -249,7 +249,7 @@ AnimationComponent</h2>
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">属性  </th><th class="markdownTableHeadNone">类型  </th><th class="markdownTableHeadNone">默认值  </th><th class="markdownTableHeadNone">说明  </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">animation</span>  </td><td class="markdownTableBodyNone">AssetRef (FrameAnimationData)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone">帧动画资源，列出各帧及每帧停留的时长。  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">animation</span>  </td><td class="markdownTableBodyNone">AssetRef (Animation)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone">帧动画资源，列出各帧及每帧停留的时长。  </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><span class="tt">currentSequence</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">正在播放的命名序列的索引。序列是同一资源中的各段独立动画，例如待机和行走。  </td></tr>
 <tr class="markdownTableRowOdd">
@@ -914,37 +914,34 @@ TextareaComponent</h2>
 更新日志</h1>
 <p>更新日志为英文。</p>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md0"></a>
-0.22.1</h2>
+0.30.0</h2>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md1"></a>
+Changed</h2>
+<ul>
+<li><span class="tt">minEngine</span> 0.30.0: built against engine 0.30.0. A build of this package from before does not load and is rebuilt.</li>
+<li>The animation loader is registered once, as "Animation" (<span class="tt">FrameAnimationData::kAssetTypeName</span>); its second name, "FrameAnimationData", was only for the reflection's old naming (engine changelog). The asset picker of an animation reference now lists animations, where it listed every asset.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
+Added</h2>
+<ul>
+<li>Images have a Filter, per platform (Point, Bilinear, Trilinear), in the image's inspector, which can set several selected images at once. A sprite carries it (<span class="tt">Sprite::filter</span>, from its header) into the sources it hands QuadBlit, so a GPU draws it filtered; a platform without one draws Point, and the image's card for it says so. An image compiled before reads as Point.</li>
+<li>Every source the components hand QuadBlit carries a revision (<span class="tt">QuadBlit::Source::revision</span>): new at each bake of text, a gradient, a shape, a sliced or tiled sprite, and one per sprite for its own pixels (<span class="tt">Sprite::Revision()</span>). A GPU drawing the 2D (deki-rendering's <span class="tt">GLBlitSink</span>) uploads each once, and again only when it changes. <span class="tt">GetContentVersion</span> returns the same number.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
+Fixed</h2>
+<ul>
+<li>deki-2d builds with internal logging on: <span class="tt">BitmapFont::CreateFromMemory</span>, a static function, logged <span class="tt">m_LineHeight</span> rather than the new font's.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
+0.22.1</h2>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
 Fixed</h2>
 <ul>
 <li>Clip and Sorting Group work on boards. Their renderer hookup was only registered by a static initialiser, which an ESP-IDF link drops, so on a board every Clip drew its children uncut (a roller's hidden rows above and below it) and every Sorting Group sorted as a plain parent. Deki2DInitSystem now registers both.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
-0.22.0</h2>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
-Changed</h2>
-<ul>
-<li>Inspector rows line up with the rest: the sprite's 9-slice borders are a row with an Edit 9-Slice button, Clip's Edit Rect and Roller's Fill Options use the editor's action button, and the Text component's font size and preview rows are rows and hints.</li>
-<li>The font asset inspector is sections of rows, like the other asset inspectors: character range, rasterization, sizes (each with whether it is baked), bake and preview.</li>
-<li>The editor's previews (fonts, BDF fonts, icon fonts, spritesheets) make their textures with <span class="tt">EditorTexture</span> instead of OpenGL, which the editor no longer uses. Needs editor 0.22.</li>
-<li>Roller's Fill Options is a dialog like the editor's others: labels over fields, Cancel and Fill.</li>
-<li>Widgets show and hide their pages, lists and dialogs with plain <span class="tt">Object::SetActive</span>, now that engine 0.22 starts what it shows; deki-2d's own workaround is gone, so it needs engine 0.22.</li>
-<li><span class="tt">minEngine</span> 0.22.0: built against engine 0.22.0. A build of this package from before does not load and is rebuilt.</li>
-</ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
-Fixed</h2>
-<ul>
-<li>Letters in a word are evenly spaced. A TrueType font is drawn at twice its size and filtered down, and each glyph was filtered from its own corner, so one starting on an odd column or row landed half a pixel off its neighbours. Glyphs are now filtered on the pixel grid. Fonts bake again on the next open, and every text's pixels change.</li>
-</ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
-Added</h2>
-<ul>
-<li>List widget: a scrolling column of rows to tap, with section titles (an item that starts with "# "), a scroll thumb, drag to scroll, and Up, Down and Enter with keyboard focus. Feature <span class="tt">list</span>, so builds that do not use it leave it out.</li>
-</ul>
 <p>更早的版本：<a href="https://github.com/dekiengine/deki-2d/blob/master/CHANGELOG.md">CHANGELOG.md</a></p>
 <hr  />
-<p>由包的反射数据生成（引擎 0.22.0）。属性名就是场景文件中使用的键。重命名后会保留别名（<a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">兼容性</a>）。 </p>
+<p>由包的反射数据生成（引擎 0.30.0）。属性名就是场景文件中使用的键。重命名后会保留别名（<a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">兼容性</a>）。 </p>
 </div></div><!-- PageDoc -->
 <a href="doxygen_crawl.html"></a>
 </div><!-- contents -->
