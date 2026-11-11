@@ -49,8 +49,8 @@ inline void BuildOpaqueRowSpans(const uint8_t* pixelData, int32_t w, int32_t h, 
                 runStart = -1;
             }
         }
-        spans[y * 2] = (int16_t)bestStart;
-        spans[y * 2 + 1] = (int16_t)bestEnd;
+        spans[y * 2] = static_cast<int16_t>(bestStart);
+        spans[y * 2 + 1] = static_cast<int16_t>(bestEnd);
     }
 }
 

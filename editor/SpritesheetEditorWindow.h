@@ -8,6 +8,11 @@
 #include <vector>
 
 // Editor extensions live in DekiEditor; the package's own types are in Deki2D.
+// Declared here too: a unity build can put this header before anything that
+// declares the namespace.
+namespace Deki2D
+{
+}
 using namespace Deki2D;
 
 namespace DekiEditor

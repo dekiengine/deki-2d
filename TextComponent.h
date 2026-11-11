@@ -155,6 +155,12 @@ public:
     bool RenderContent(const Deki::Object* owner, QuadBlit::Source& outSource, float& outPivotX, float& outPivotY,
                        uint8_t& outTintR, uint8_t& outTintG, uint8_t& outTintB, uint8_t& outTintA) override;
 
+    /// What its drawing depends on beyond its transform: its text, box,
+    /// colours, alignment, font and bake (RendererComponent::GetDrawKey), so
+    /// the renderer reuses what it measured of unchanged text. None while the
+    /// editor resolves fonts itself or nothing is loaded.
+    bool GetDrawKey(uint64_t& outKey) const override;
+
     // ========================================================================
     // Layout methods (shared between runtime and editor)
     // ========================================================================

@@ -93,7 +93,7 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
     {
         char buf[128];
         std::snprintf(buf, sizeof(buf), DekiEditor::Tr("Ascent: %d  |  Descent: %d  |  Available: %d glyphs"), m_Ascent,
-                      m_Descent, (int)m_AvailableChars.size());
+                      m_Descent, static_cast<int>(m_AvailableChars.size()));
         ui.Text(buf);
     }
 
@@ -104,7 +104,7 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
     ui.SameLine();
     {
         char buf[64];
-        std::snprintf(buf, sizeof(buf), DekiEditor::Tr("%d selected"), (int)m_SelectedChars.size());
+        std::snprintf(buf, sizeof(buf), DekiEditor::Tr("%d selected"), static_cast<int>(m_SelectedChars.size()));
         ui.Text(buf);
     }
     ui.SameLine();
@@ -213,7 +213,7 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
                        [](unsigned char c) { return std::tolower(c); });
     }
 
-    for (int i = 0; i < (int)m_AvailableChars.size(); i++)
+    for (int i = 0; i < static_cast<int>(m_AvailableChars.size()); i++)
     {
         if (filterLower.empty())
         {
@@ -242,7 +242,7 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
 
     {
         char buf[64];
-        std::snprintf(buf, sizeof(buf), DekiEditor::Tr("%d glyphs shown"), (int)filtered.size());
+        std::snprintf(buf, sizeof(buf), DekiEditor::Tr("%d glyphs shown"), static_cast<int>(filtered.size()));
         ui.Text(buf);
     }
 
@@ -256,7 +256,7 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
 
     ui.BeginChild("GlyphList", 0, 400, true);
 
-    ui.BeginListClipper((int)filtered.size(), rowHeight);
+    ui.BeginListClipper(static_cast<int>(filtered.size()), rowHeight);
 
     int clipStart, clipEnd;
     while (ui.ListClipperStep(&clipStart, &clipEnd))
@@ -294,7 +294,7 @@ void BdfFileInspector::OnInspectorGUI(const std::string& assetPath, const std::s
                 m_SettingsModified = true;
             }
 
-            if (m_GlyphAtlasTexture != 0 && charIdx < (int)m_GlyphUVs.size())
+            if (m_GlyphAtlasTexture != 0 && charIdx < static_cast<int>(m_GlyphUVs.size()))
             {
                 auto& uv = m_GlyphUVs[charIdx];
                 float imgP0X = rowStartX + 2.0f;
@@ -381,21 +381,21 @@ void BdfFileInspector::LoadBdf(const std::string& assetPath)
                 continue;
             }
             int bytesPerRow = (cur.bbxW + 7) / 8;
-            for (int bi = 0; bi < bytesPerRow && (bi * 2 + 1) < (int)line.size(); bi++)
+            for (int bi = 0; bi < bytesPerRow && (bi * 2 + 1) < static_cast<int>(line.size()); bi++)
             {
                 auto hex = [](char c) -> uint8_t
                 {
                     if (c >= '0' && c <= '9')
                     {
-                        return (uint8_t)(c - '0');
+                        return static_cast<uint8_t>(c - '0');
                     }
                     if (c >= 'A' && c <= 'F')
                     {
-                        return (uint8_t)(c - 'A' + 10);
+                        return static_cast<uint8_t>(c - 'A' + 10);
                     }
                     if (c >= 'a' && c <= 'f')
                     {
-                        return (uint8_t)(c - 'a' + 10);
+                        return static_cast<uint8_t>(c - 'a' + 10);
                     }
                     return 0;
                 };
@@ -461,10 +461,10 @@ void BdfFileInspector::LoadBdf(const std::string& assetPath)
               [](const auto& a, const auto& b) { return a.encoding < b.encoding; });
 
     m_AvailableChars.resize(parsedGlyphs.size());
-    for (int i = 0; i < (int)parsedGlyphs.size(); i++)
+    for (int i = 0; i < static_cast<int>(parsedGlyphs.size()); i++)
     {
         m_AvailableChars[i].codepoint = parsedGlyphs[i].encoding;
-        char ch = (char)parsedGlyphs[i].encoding;
+        char ch = static_cast<char>(parsedGlyphs[i].encoding);
         if (ch >= 33 && ch <= 126)
         {
             snprintf(m_AvailableChars[i].label, sizeof(m_AvailableChars[i].label), "%c (%d)", ch,
@@ -492,8 +492,8 @@ void BdfFileInspector::LoadBdf(const std::string& assetPath)
     m_GlyphDisplaySize = (std::max)(maxW, maxH) + 4;
 
     int cellSize = m_GlyphDisplaySize;
-    int count = (int)parsedGlyphs.size();
-    int cols = (std::max)(1, (int)std::ceil(std::sqrt((double)count)));
+    int count = static_cast<int>(parsedGlyphs.size());
+    int cols = (std::max)(1, static_cast<int>(std::ceil(std::sqrt(static_cast<double>(count)))));
     int rows = (count + cols - 1) / cols;
     int atlasW = cols * cellSize;
     int atlasH = rows * cellSize;
@@ -529,10 +529,10 @@ void BdfFileInspector::LoadBdf(const std::string& assetPath)
             }
         }
 
-        m_GlyphUVs[i].u0 = (float)cellX / (float)atlasW;
-        m_GlyphUVs[i].v0 = (float)cellY / (float)atlasH;
-        m_GlyphUVs[i].u1 = (float)(cellX + cellSize) / (float)atlasW;
-        m_GlyphUVs[i].v1 = (float)(cellY + cellSize) / (float)atlasH;
+        m_GlyphUVs[i].u0 = static_cast<float>(cellX) / static_cast<float>(atlasW);
+        m_GlyphUVs[i].v0 = static_cast<float>(cellY) / static_cast<float>(atlasH);
+        m_GlyphUVs[i].u1 = static_cast<float>(cellX + cellSize) / static_cast<float>(atlasW);
+        m_GlyphUVs[i].v1 = static_cast<float>(cellY + cellSize) / static_cast<float>(atlasH);
     }
 
     m_GlyphAtlasTexture = DekiEditor::EditorTexture::CreateRgba(atlasW, atlasH, rgba.data());
@@ -588,7 +588,7 @@ void BdfFileInspector::LoadSettings(const std::string& assetPath)
     if (!fs::exists(dataPath))
     {
         // No .data: everything is selected.
-        for (int i = 0; i < (int)m_AvailableChars.size(); i++)
+        for (int i = 0; i < static_cast<int>(m_AvailableChars.size()); i++)
         {
             m_SelectedChars.insert(i);
         }
@@ -614,7 +614,7 @@ void BdfFileInspector::LoadSettings(const std::string& assetPath)
     if (!j.contains("bdfSettings") || !j["bdfSettings"].contains("selectedChars"))
     {
         // Settings without a selection: everything is selected.
-        for (int i = 0; i < (int)m_AvailableChars.size(); i++)
+        for (int i = 0; i < static_cast<int>(m_AvailableChars.size()); i++)
         {
             m_SelectedChars.insert(i);
         }
@@ -623,7 +623,7 @@ void BdfFileInspector::LoadSettings(const std::string& assetPath)
 
     // Codepoint to index.
     std::unordered_map<int, int> cpToIdx;
-    for (int i = 0; i < (int)m_AvailableChars.size(); i++)
+    for (int i = 0; i < static_cast<int>(m_AvailableChars.size()); i++)
     {
         cpToIdx[m_AvailableChars[i].codepoint] = i;
     }
@@ -734,7 +734,7 @@ void BdfFileInspector::SaveSettings(const std::string& assetPath, const std::str
     // The refresh makes the sync handler bake, and the texts load the bake.
     pipeline->RefreshAsset(pipeline->MakeProjectRelative(fullPath));
 
-    DEKI_LOG_DEBUG("BdfInspector: Saved %d chars for %s", (int)codepoints.size(), assetPath.c_str());
+    DEKI_LOG_DEBUG("BdfInspector: Saved %d chars for %s", static_cast<int>(codepoints.size()), assetPath.c_str());
 }
 
 std::vector<int> BdfFileInspector::GetSelectedCodepoints() const
@@ -743,7 +743,7 @@ std::vector<int> BdfFileInspector::GetSelectedCodepoints() const
     codepoints.reserve(m_SelectedChars.size());
     for (int idx : m_SelectedChars)
     {
-        if (idx >= 0 && idx < (int)m_AvailableChars.size())
+        if (idx >= 0 && idx < static_cast<int>(m_AvailableChars.size()))
         {
             codepoints.push_back(m_AvailableChars[idx].codepoint);
         }

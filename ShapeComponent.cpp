@@ -61,8 +61,8 @@ bool ShapeComponent::Reserve(int32_t w, int32_t h)
     // Allocate() frees the old mask first, so the two never exist at once.
     if (!m_Mask.Allocate(need, Deki::Memory::External))
     {
-        DEKI_LOG_WARNING("ShapeComponent: no room for a %dx%d mask (%u bytes); not drawing it", (int)w, (int)h,
-                         (unsigned)need);
+        DEKI_LOG_WARNING("ShapeComponent: no room for a %dx%d mask (%u bytes); not drawing it", static_cast<int>(w),
+                         static_cast<int>(h), static_cast<unsigned>(need));
         m_HasBake = false;
         return false;
     }
@@ -104,6 +104,30 @@ uint64_t ShapeComponent::ComputeBakeKey(int32_t w, int32_t h, float pixelsPerMet
     f.Add(static_cast<uint32_t>(roundCaps));
     f.Add(static_cast<uint32_t>(direction));
     return f.Value();
+}
+
+bool ShapeComponent::GetDrawKey(uint64_t& outKey) const
+{
+    // Everything RenderContent reads but the view's scale, which the renderer
+    // already keys (it measures in full when the view changes). The bake
+    // version covers a custom mask and each new bake.
+    DekiRendering::Fingerprint f;
+    f.Add(static_cast<uint32_t>(kind));
+    f.Add(width);
+    f.Add(height);
+    f.Add(cornerRadius);
+    f.Add(lineWidth);
+    f.Add(startAngle);
+    f.Add(endAngle);
+    f.Add(static_cast<uint32_t>(roundCaps) | (static_cast<uint32_t>(direction) << 8) |
+          (static_cast<uint32_t>(m_HasBake) << 16));
+    f.Add(static_cast<uint32_t>(color.r) | (static_cast<uint32_t>(color.g) << 8) |
+          (static_cast<uint32_t>(color.b) << 16) | (static_cast<uint32_t>(color.a) << 24));
+    f.Add(m_BakeVersion);
+    f.Add(m_MaskPPM);
+    f.Add(Deki::EngineSettings::Global().pixelsPerMeter);
+    outKey = f.Value();
+    return true;
 }
 
 bool ShapeComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& outSource, float& outPivotX,

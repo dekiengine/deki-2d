@@ -550,7 +550,8 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
     {
         m_FitViewPending = false;
         const float margin = 48.0f;
-        float fit = std::min((availX - margin * 2.0f) / (float)texW, (availY - margin * 2.0f) / (float)texH);
+        float fit = std::min((availX - margin * 2.0f) / static_cast<float>(texW),
+                             (availY - margin * 2.0f) / static_cast<float>(texH));
         m_Zoom = std::clamp(fit, 0.5f, 32.0f);
         m_PanX = m_PanY = 0.0f;
     }
@@ -620,9 +621,9 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
         {
             b = 0;
         }
-        if (a + b > (int32_t)texW)
+        if (a + b > static_cast<int32_t>(texW))
         {
-            int32_t over = a + b - (int32_t)texW;
+            int32_t over = a + b - static_cast<int32_t>(texW);
             int32_t shrinkA = std::min(a, over / 2);
             a -= shrinkA;
             b -= (over - shrinkA);
@@ -642,9 +643,9 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
         {
             b = 0;
         }
-        if (a + b > (int32_t)texH)
+        if (a + b > static_cast<int32_t>(texH))
         {
-            int32_t over = a + b - (int32_t)texH;
+            int32_t over = a + b - static_cast<int32_t>(texH);
             int32_t shrinkA = std::min(a, over / 2);
             a -= shrinkA;
             b -= (over - shrinkA);
@@ -665,9 +666,9 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
     float sx1 = spriteX + displayW, sy1 = spriteY + displayH;
 
     float lineLeftX = pxX(m_Current.left);
-    float lineRightX = pxX((int32_t)texW - m_Current.right);
+    float lineRightX = pxX(static_cast<int32_t>(texW) - m_Current.right);
     float lineTopY = pxY(m_Current.top);
-    float lineBottomY = pxY((int32_t)texH - m_Current.bottom);
+    float lineBottomY = pxY(static_cast<int32_t>(texH) - m_Current.bottom);
 
     float mpx, mpy;
     ui.GetMousePos(&mpx, &mpy);
@@ -755,30 +756,34 @@ bool NineSliceEditorWindow::DrawCanvasAndHandles()
     {
         if (ui.IsMouseDown(0))
         {
-            int32_t dx = (int32_t)std::round((mpx - m_DragStartMouseX) / m_Zoom);
-            int32_t dy = (int32_t)std::round((mpy - m_DragStartMouseY) / m_Zoom);
+            int32_t dx = static_cast<int32_t>(std::round((mpx - m_DragStartMouseX) / m_Zoom));
+            int32_t dy = static_cast<int32_t>(std::round((mpy - m_DragStartMouseY) / m_Zoom));
             if (AffectsLeft(m_ActiveDrag))
             {
-                m_Current.left = std::clamp(m_BordersAtDragStart.left + dx, 0, (int32_t)texW - m_Current.right);
+                m_Current.left =
+                    std::clamp(m_BordersAtDragStart.left + dx, 0, static_cast<int32_t>(texW) - m_Current.right);
             }
             if (AffectsRight(m_ActiveDrag))
             {
-                m_Current.right = std::clamp(m_BordersAtDragStart.right - dx, 0, (int32_t)texW - m_Current.left);
+                m_Current.right =
+                    std::clamp(m_BordersAtDragStart.right - dx, 0, static_cast<int32_t>(texW) - m_Current.left);
             }
             if (AffectsTop(m_ActiveDrag))
             {
-                m_Current.top = std::clamp(m_BordersAtDragStart.top + dy, 0, (int32_t)texH - m_Current.bottom);
+                m_Current.top =
+                    std::clamp(m_BordersAtDragStart.top + dy, 0, static_cast<int32_t>(texH) - m_Current.bottom);
             }
             if (AffectsBottom(m_ActiveDrag))
             {
-                m_Current.bottom = std::clamp(m_BordersAtDragStart.bottom - dy, 0, (int32_t)texH - m_Current.top);
+                m_Current.bottom =
+                    std::clamp(m_BordersAtDragStart.bottom - dy, 0, static_cast<int32_t>(texH) - m_Current.top);
             }
 
             // Draw the guides at the dragged position this same frame.
             lineLeftX = pxX(m_Current.left);
-            lineRightX = pxX((int32_t)texW - m_Current.right);
+            lineRightX = pxX(static_cast<int32_t>(texW) - m_Current.right);
             lineTopY = pxY(m_Current.top);
-            lineBottomY = pxY((int32_t)texH - m_Current.bottom);
+            lineBottomY = pxY(static_cast<int32_t>(texH) - m_Current.bottom);
         }
         else
         {

@@ -7,6 +7,7 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <memory>
 
 #include <deki/providers/FileSystem.h>
 #include <deki/providers/Memory.h>
@@ -295,12 +296,13 @@ Sprite* Sprite::Load(const char* filePath)
         uint64_t(sizeof(Deki::Texture2D::Header)) + uint64_t(header.dataSize) + uint64_t(header.metadataSize);
     if (fileSize < 0 || uint64_t(fileSize) < expectedSize)
     {
-        DEKI_LOG_ERROR("File size mismatch. Expected: %llu, Got: %ld", (unsigned long long)expectedSize, fileSize);
+        DEKI_LOG_ERROR("File size mismatch. Expected: %llu, Got: %ld", static_cast<unsigned long long>(expectedSize),
+                       fileSize);
         fs->CloseFile(file);
         return nullptr;
     }
 
-    uint8_t* pixelData = (uint8_t*)Deki::Memory::Allocate(header.dataSize, Deki::Memory::External);
+    uint8_t* pixelData = static_cast<uint8_t*>(Deki::Memory::Allocate(header.dataSize, Deki::Memory::External));
 
     if (!pixelData)
     {
@@ -321,7 +323,7 @@ Sprite* Sprite::Load(const char* filePath)
     uint8_t* metadata = nullptr;
     if (header.metadataSize > 0)
     {
-        metadata = (uint8_t*)Deki::Memory::Allocate(header.metadataSize, Deki::Memory::Internal);
+        metadata = static_cast<uint8_t*>(Deki::Memory::Allocate(header.metadataSize, Deki::Memory::Internal));
 
         if (metadata)
         {
@@ -338,7 +340,7 @@ Sprite* Sprite::Load(const char* filePath)
     fs->CloseFile(file);
 
     PixelsToMemoryOrder(header, pixelData);
-    Sprite* sprite = new Sprite();
+    std::unique_ptr<Sprite> sprite(new Sprite());
     if (!sprite->LoadFromMemory(header, pixelData))
     {
         DEKI_LOG_ERROR("Failed to load sprite from memory");
@@ -347,7 +349,6 @@ Sprite* Sprite::Load(const char* filePath)
         {
             Deki::Memory::Free(metadata);
         }
-        delete sprite;
         return nullptr;
     }
 
@@ -355,15 +356,15 @@ Sprite* Sprite::Load(const char* filePath)
     if (metadata && header.metadataSize >= sizeof(uint32_t))
     {
         uint32_t offset = 0;
-        uint32_t numChunks = *(uint32_t*)(metadata + offset);
+        uint32_t numChunks = *reinterpret_cast<uint32_t*>(metadata + offset);
         offset += sizeof(uint32_t);
         int32_t imageWidth = 0, imageHeight = 0;  // SourceSize chunk, applied after the rest
 
         for (uint32_t i = 0; i < numChunks && offset + 8 <= header.metadataSize; ++i)
         {
-            uint32_t chunkType = *(uint32_t*)(metadata + offset);
+            uint32_t chunkType = *reinterpret_cast<uint32_t*>(metadata + offset);
             offset += sizeof(uint32_t);
-            uint32_t chunkSize = *(uint32_t*)(metadata + offset);
+            uint32_t chunkSize = *reinterpret_cast<uint32_t*>(metadata + offset);
             offset += sizeof(uint32_t);
 
             // Written so it cannot wrap; offset + a huge chunkSize can, on 32 bits.
@@ -374,8 +375,8 @@ Sprite* Sprite::Load(const char* filePath)
 
             if (chunkType == 1 && chunkSize >= 8)  // Sprite chunk
             {
-                int32_t frameWidth = *(int32_t*)(metadata + offset);
-                int32_t frameHeight = *(int32_t*)(metadata + offset + sizeof(int32_t));
+                int32_t frameWidth = *reinterpret_cast<int32_t*>(metadata + offset);
+                int32_t frameHeight = *reinterpret_cast<int32_t*>(metadata + offset + sizeof(int32_t));
                 sprite->defaultFrameWidth = frameWidth;
                 sprite->defaultFrameHeight = frameHeight;
 
@@ -386,10 +387,10 @@ Sprite* Sprite::Load(const char* filePath)
                     if (nine[0])
                     {
                         sprite->hasNineSlice = true;
-                        sprite->nineSliceLeft = *(uint16_t*)(nine + 1);
-                        sprite->nineSliceRight = *(uint16_t*)(nine + 3);
-                        sprite->nineSliceTop = *(uint16_t*)(nine + 5);
-                        sprite->nineSliceBottom = *(uint16_t*)(nine + 7);
+                        sprite->nineSliceLeft = *reinterpret_cast<const uint16_t*>(nine + 1);
+                        sprite->nineSliceRight = *reinterpret_cast<const uint16_t*>(nine + 3);
+                        sprite->nineSliceTop = *reinterpret_cast<const uint16_t*>(nine + 5);
+                        sprite->nineSliceBottom = *reinterpret_cast<const uint16_t*>(nine + 7);
                     }
                 }
 
@@ -398,7 +399,7 @@ Sprite* Sprite::Load(const char* filePath)
             }
             else if (chunkType == 2 && chunkSize >= 2)  // Frame list chunk
             {
-                uint16_t frameCount = *(uint16_t*)(metadata + offset);
+                uint16_t frameCount = *reinterpret_cast<uint16_t*>(metadata + offset);
                 uint32_t frameOffset = sizeof(uint16_t);
 
                 // Each frame: 36 bytes GUID + 4*int32_t (x,y,w,h) = 52 bytes
@@ -414,13 +415,13 @@ Sprite* Sprite::Load(const char* filePath)
                         memcpy(frame.guid, metadata + offset + frameOffset, 36);
                         frame.guid[36] = '\0';
                         frameOffset += 36;
-                        frame.x = *(int32_t*)(metadata + offset + frameOffset);
+                        frame.x = *reinterpret_cast<int32_t*>(metadata + offset + frameOffset);
                         frameOffset += sizeof(int32_t);
-                        frame.y = *(int32_t*)(metadata + offset + frameOffset);
+                        frame.y = *reinterpret_cast<int32_t*>(metadata + offset + frameOffset);
                         frameOffset += sizeof(int32_t);
-                        frame.width = *(int32_t*)(metadata + offset + frameOffset);
+                        frame.width = *reinterpret_cast<int32_t*>(metadata + offset + frameOffset);
                         frameOffset += sizeof(int32_t);
-                        frame.height = *(int32_t*)(metadata + offset + frameOffset);
+                        frame.height = *reinterpret_cast<int32_t*>(metadata + offset + frameOffset);
                         frameOffset += sizeof(int32_t);
                     }
                     ReadFrameNineSlices(sprite->frames, metadata + offset, chunkSize, frameOffset);
@@ -440,7 +441,7 @@ Sprite* Sprite::Load(const char* filePath)
                     sprite->transparentG = p[2];
                     sprite->transparentB = p[3];
                 }
-                uint32_t spansCount = *(const uint32_t*)(p + 4);
+                uint32_t spansCount = *reinterpret_cast<const uint32_t*>(p + 4);
                 // Divided, not multiplied: spansCount comes from the file, and
                 // `spansCount * sizeof(int16_t)` is a 32-bit size_t on the device,
                 // where a large count wraps to a small one and passes the check.
@@ -456,16 +457,16 @@ Sprite* Sprite::Load(const char* filePath)
                     {
                         DEKI_LOG_WARNING("Sprite: no room for %u chroma spans; "
                                          "the slower per-pixel compare will be used",
-                                         (unsigned)spansCount);
+                                         static_cast<unsigned>(spansCount));
                     }
                 }
-                DEKI_LOG_INTERNAL("  Chroma key: enabled=%d rgb=(%u,%u,%u) spans=%u", (int)enabled, p[1], p[2], p[3],
-                                  spansCount);
+                DEKI_LOG_INTERNAL("  Chroma key: enabled=%d rgb=(%u,%u,%u) spans=%u", static_cast<int>(enabled), p[1],
+                                  p[2], p[3], spansCount);
             }
             else if (chunkType == 4 && chunkSize >= 8)  // Source size (Max Size)
             {
-                imageWidth = *(int32_t*)(metadata + offset);
-                imageHeight = *(int32_t*)(metadata + offset + sizeof(int32_t));
+                imageWidth = *reinterpret_cast<int32_t*>(metadata + offset);
+                imageHeight = *reinterpret_cast<int32_t*>(metadata + offset + sizeof(int32_t));
             }
             offset += chunkSize;
         }
@@ -489,7 +490,7 @@ Sprite* Sprite::Load(const char* filePath)
     DEKI_LOG_INTERNAL("Loaded sprite: %s (%dx%d, %s, pivot: %.2f,%.2f)", filePath, sprite->width, sprite->height,
                       Deki::Texture2D::GetFormatName(sprite->format), sprite->pivotX, sprite->pivotY);
 
-    return sprite;
+    return sprite.release();
 }
 
 Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
@@ -520,7 +521,7 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
     const uint8_t* src = fileData + sizeof(Deki::Texture2D::Header);
 
     // Pixels go to external memory (PSRAM); the sprite owns them.
-    uint8_t* pixelData = (uint8_t*)Deki::Memory::Allocate(header.dataSize, Deki::Memory::External);
+    uint8_t* pixelData = static_cast<uint8_t*>(Deki::Memory::Allocate(header.dataSize, Deki::Memory::External));
     if (!pixelData)
     {
         DEKI_LOG_ERROR("Sprite::LoadFromFileData: alloc failed");
@@ -530,11 +531,10 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
     src += header.dataSize;
     PixelsToMemoryOrder(header, pixelData);
 
-    Sprite* sprite = new Sprite();
+    std::unique_ptr<Sprite> sprite(new Sprite());
     if (!sprite->LoadFromMemory(header, pixelData))
     {
         Deki::Memory::Free(pixelData);
-        delete sprite;
         return nullptr;
     }
 
@@ -546,15 +546,15 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
 
         if (header.metadataSize >= sizeof(uint32_t))
         {
-            uint32_t numChunks = *(uint32_t*)(metadata + offset);
+            uint32_t numChunks = *reinterpret_cast<const uint32_t*>(metadata + offset);
             offset += sizeof(uint32_t);
             int32_t imageWidth = 0, imageHeight = 0;  // SourceSize chunk, applied after the rest
 
             for (uint32_t i = 0; i < numChunks && offset + 8 <= header.metadataSize; ++i)
             {
-                uint32_t chunkType = *(uint32_t*)(metadata + offset);
+                uint32_t chunkType = *reinterpret_cast<const uint32_t*>(metadata + offset);
                 offset += sizeof(uint32_t);
-                uint32_t chunkSize = *(uint32_t*)(metadata + offset);
+                uint32_t chunkSize = *reinterpret_cast<const uint32_t*>(metadata + offset);
                 offset += sizeof(uint32_t);
 
                 if (chunkSize > header.metadataSize - offset)
@@ -564,8 +564,8 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
 
                 if (chunkType == 1 && chunkSize >= 8)
                 {
-                    sprite->defaultFrameWidth = *(int32_t*)(metadata + offset);
-                    sprite->defaultFrameHeight = *(int32_t*)(metadata + offset + sizeof(int32_t));
+                    sprite->defaultFrameWidth = *reinterpret_cast<const int32_t*>(metadata + offset);
+                    sprite->defaultFrameHeight = *reinterpret_cast<const int32_t*>(metadata + offset + sizeof(int32_t));
 
                     if (chunkSize >= 17)
                     {
@@ -573,16 +573,16 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
                         if (nine[0])
                         {
                             sprite->hasNineSlice = true;
-                            sprite->nineSliceLeft = *(uint16_t*)(nine + 1);
-                            sprite->nineSliceRight = *(uint16_t*)(nine + 3);
-                            sprite->nineSliceTop = *(uint16_t*)(nine + 5);
-                            sprite->nineSliceBottom = *(uint16_t*)(nine + 7);
+                            sprite->nineSliceLeft = *reinterpret_cast<const uint16_t*>(nine + 1);
+                            sprite->nineSliceRight = *reinterpret_cast<const uint16_t*>(nine + 3);
+                            sprite->nineSliceTop = *reinterpret_cast<const uint16_t*>(nine + 5);
+                            sprite->nineSliceBottom = *reinterpret_cast<const uint16_t*>(nine + 7);
                         }
                     }
                 }
                 else if (chunkType == 2 && chunkSize >= 2)
                 {
-                    uint16_t frameCount = *(uint16_t*)(metadata + offset);
+                    uint16_t frameCount = *reinterpret_cast<const uint16_t*>(metadata + offset);
                     uint32_t frameOffset = sizeof(uint16_t);
                     const uint32_t frameEntrySize = 36 + 4 * sizeof(int32_t);
 
@@ -595,13 +595,13 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
                             memcpy(frame.guid, metadata + offset + frameOffset, 36);
                             frame.guid[36] = '\0';
                             frameOffset += 36;
-                            frame.x = *(int32_t*)(metadata + offset + frameOffset);
+                            frame.x = *reinterpret_cast<const int32_t*>(metadata + offset + frameOffset);
                             frameOffset += sizeof(int32_t);
-                            frame.y = *(int32_t*)(metadata + offset + frameOffset);
+                            frame.y = *reinterpret_cast<const int32_t*>(metadata + offset + frameOffset);
                             frameOffset += sizeof(int32_t);
-                            frame.width = *(int32_t*)(metadata + offset + frameOffset);
+                            frame.width = *reinterpret_cast<const int32_t*>(metadata + offset + frameOffset);
                             frameOffset += sizeof(int32_t);
-                            frame.height = *(int32_t*)(metadata + offset + frameOffset);
+                            frame.height = *reinterpret_cast<const int32_t*>(metadata + offset + frameOffset);
                             frameOffset += sizeof(int32_t);
                         }
                         ReadFrameNineSlices(sprite->frames, metadata + offset, chunkSize, frameOffset);
@@ -618,7 +618,7 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
                         sprite->transparentG = p[2];
                         sprite->transparentB = p[3];
                     }
-                    uint32_t spansCount = *(const uint32_t*)(p + 4);
+                    uint32_t spansCount = *reinterpret_cast<const uint32_t*>(p + 4);
                     // Divided, not multiplied: spansCount comes from the file, and
                     // `spansCount * sizeof(int16_t)` is a 32-bit size_t on the device,
                     // where a large count wraps to a small one and passes the check.
@@ -634,14 +634,14 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
                         {
                             DEKI_LOG_WARNING("Sprite: no room for %u chroma spans; "
                                              "the slower per-pixel compare will be used",
-                                             (unsigned)spansCount);
+                                             static_cast<unsigned>(spansCount));
                         }
                     }
                 }
                 else if (chunkType == 4 && chunkSize >= 8)  // Source size (Max Size)
                 {
-                    imageWidth = *(int32_t*)(metadata + offset);
-                    imageHeight = *(int32_t*)(metadata + offset + sizeof(int32_t));
+                    imageWidth = *reinterpret_cast<const int32_t*>(metadata + offset);
+                    imageHeight = *reinterpret_cast<const int32_t*>(metadata + offset + sizeof(int32_t));
                 }
                 offset += chunkSize;
             }
@@ -656,7 +656,7 @@ Sprite* Sprite::LoadFromFileData(const uint8_t* fileData, size_t fileSize)
 
     FinishPixels(*sprite, header.flags);
 
-    return sprite;
+    return sprite.release();
 }
 
 bool Sprite::LoadFromMemory(const Deki::Texture2D::Header& header, const uint8_t* pixelData)
@@ -690,7 +690,7 @@ Sprite* Sprite::CreateSolid(int32_t width, int32_t height, uint8_t r, uint8_t g,
         return nullptr;
     }
 
-    Sprite* sprite = new Sprite();
+    std::unique_ptr<Sprite> sprite(new Sprite());
     sprite->width = width;
     sprite->height = height;
     sprite->format = Deki::Texture2D::TextureFormat::RGB565;  // native format, no conversion
@@ -700,7 +700,7 @@ Sprite* Sprite::CreateSolid(int32_t width, int32_t height, uint8_t r, uint8_t g,
     size_t dataSize = width * height * 2;  // RGB565 format = 2 bytes per pixel
     DEKI_LOG_INTERNAL("Sprite::CreateSolid - Allocating %zu bytes for RGB565 data", dataSize);
 
-    sprite->data = (uint8_t*)Deki::Memory::Allocate(dataSize, Deki::Memory::External);
+    sprite->data = static_cast<uint8_t*>(Deki::Memory::Allocate(dataSize, Deki::Memory::External));
 #ifdef DEKI_EDITOR
     sprite->allocatedWithBackend = true;  // freed with Deki::Memory, as the loaders' are
 #endif
@@ -708,7 +708,6 @@ Sprite* Sprite::CreateSolid(int32_t width, int32_t height, uint8_t r, uint8_t g,
     if (!sprite->data)
     {
         DEKI_LOG_ERROR("Sprite::CreateSolid - Failed to allocate memory!");
-        delete sprite;
         return nullptr;
     }
 
@@ -718,14 +717,14 @@ Sprite* Sprite::CreateSolid(int32_t width, int32_t height, uint8_t r, uint8_t g,
     // blend or chroma key quantises to; in memory's byte order.
     const uint16_t rgb565 = DekiPixel::ToMemory565(DekiPixel::PackRGB565(r, g, b));
 
-    uint16_t* data16 = (uint16_t*)sprite->data;
+    uint16_t* data16 = reinterpret_cast<uint16_t*>(sprite->data);
     for (int32_t i = 0; i < width * height; i++)
     {
         data16[i] = rgb565;
     }
 
-    DEKI_LOG_INTERNAL("Sprite::CreateSolid - Sprite created successfully at %p", sprite);
-    return sprite;
+    DEKI_LOG_INTERNAL("Sprite::CreateSolid - Sprite created successfully at %p", sprite.get());
+    return sprite.release();
 }
 
 Sprite* Sprite::CreateSolidRGBA(int32_t width, int32_t height, uint8_t r, uint8_t g, uint8_t b, uint8_t a)
@@ -735,7 +734,7 @@ Sprite* Sprite::CreateSolidRGBA(int32_t width, int32_t height, uint8_t r, uint8_
         return nullptr;
     }
 
-    Sprite* sprite = new Sprite();
+    std::unique_ptr<Sprite> sprite(new Sprite());
     sprite->width = width;
     sprite->height = height;
     sprite->format = Deki::Texture2D::TextureFormat::RGB565A8;
@@ -744,14 +743,13 @@ Sprite* Sprite::CreateSolidRGBA(int32_t width, int32_t height, uint8_t r, uint8_
 
     size_t dataSize = width * height * 3;  // RGB565A8 format (2 bytes RGB565 + 1 byte alpha)
 
-    sprite->data = (uint8_t*)Deki::Memory::Allocate(dataSize, Deki::Memory::External);
+    sprite->data = static_cast<uint8_t*>(Deki::Memory::Allocate(dataSize, Deki::Memory::External));
 #ifdef DEKI_EDITOR
     sprite->allocatedWithBackend = true;  // freed with Deki::Memory, as the loaders' are
 #endif
 
     if (!sprite->data)
     {
-        delete sprite;
         return nullptr;
     }
 
@@ -764,7 +762,7 @@ Sprite* Sprite::CreateSolidRGBA(int32_t width, int32_t height, uint8_t r, uint8_
         sprite->data[byteIndex + 2] = a;                        // Alpha
     }
 
-    return sprite;
+    return sprite.release();
 }
 
 void Sprite::BakeTiledInto(uint8_t* dst, int32_t dstW, int32_t dstH, const Sprite* source)
@@ -804,7 +802,7 @@ Sprite* Sprite::CreateTiled(Sprite* source, int32_t targetWidth, int32_t targetH
         return nullptr;
     }
 
-    Sprite* tiled = new Sprite();
+    std::unique_ptr<Sprite> tiled(new Sprite());
     tiled->width = targetWidth;
     tiled->height = targetHeight;
     tiled->format = source->format;
@@ -825,19 +823,18 @@ Sprite* Sprite::CreateTiled(Sprite* source, int32_t targetWidth, int32_t targetH
 
     uint32_t bytesPerPixel = Deki::Texture2D::GetBytesPerPixel(source->format);
     size_t tiledDataSize = targetWidth * targetHeight * bytesPerPixel;
-    tiled->data = (uint8_t*)Deki::Memory::Allocate(tiledDataSize, Deki::Memory::External);
+    tiled->data = static_cast<uint8_t*>(Deki::Memory::Allocate(tiledDataSize, Deki::Memory::External));
 #ifdef DEKI_EDITOR
     tiled->allocatedWithBackend = true;  // freed with Deki::Memory, as the loaders' are
 #endif
 
     if (!tiled->data)
     {
-        delete tiled;
         return nullptr;
     }
 
     BakeTiledInto(tiled->data, targetWidth, targetHeight, source);
-    return tiled;
+    return tiled.release();
 }
 
 // 9-slice implementation
@@ -1018,7 +1015,7 @@ Sprite* Sprite::CreateNineSlice(Sprite* source, int32_t targetWidth, int32_t tar
         return nullptr;
     }
 
-    Sprite* result = new Sprite();
+    std::unique_ptr<Sprite> result(new Sprite());
     result->width = targetWidth;
     result->height = targetHeight;
     result->format = source->format;
@@ -1042,7 +1039,7 @@ Sprite* Sprite::CreateNineSlice(Sprite* source, int32_t targetWidth, int32_t tar
 
     uint32_t bytesPerPixel = Deki::Texture2D::GetBytesPerPixel(source->format);
     size_t resultDataSize = targetWidth * targetHeight * bytesPerPixel;
-    result->data = (uint8_t*)Deki::Memory::Allocate(resultDataSize, Deki::Memory::External);
+    result->data = static_cast<uint8_t*>(Deki::Memory::Allocate(resultDataSize, Deki::Memory::External));
 #ifdef DEKI_EDITOR
     result->allocatedWithBackend = true;  // freed with Deki::Memory, as the loaders' are
 #endif
@@ -1050,7 +1047,6 @@ Sprite* Sprite::CreateNineSlice(Sprite* source, int32_t targetWidth, int32_t tar
     if (!result->data)
     {
         DEKI_LOG_ERROR("CreateNineSlice: Failed to allocate memory for scaled sprite");
-        delete result;
         return nullptr;
     }
 
@@ -1059,7 +1055,7 @@ Sprite* Sprite::CreateNineSlice(Sprite* source, int32_t targetWidth, int32_t tar
     DEKI_LOG_INTERNAL("Created 9-slice sprite: %dx%d -> %dx%d", source->width, source->height, targetWidth,
                       targetHeight);
 
-    return result;
+    return result.release();
 }
 
 // Registers the sprite loader with the AssetManager at static init.

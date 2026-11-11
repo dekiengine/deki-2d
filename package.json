@@ -17,7 +17,8 @@
       "buildDefine": "DEKI_FEATURE_SPRITE",
       "defaultEnabled": true,
       "componentTypes": [
-        "SpriteComponent"
+        "SpriteComponent",
+        "SpriteBatchComponent"
       ]
     },
     {

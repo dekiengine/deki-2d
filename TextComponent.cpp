@@ -6,9 +6,11 @@
 #include "deki-rendering/CameraComponent.h"
 #include <deki/LogSystem.h>
 #include "deki-rendering/QuadBlit.h"
+#include "deki-rendering/Fingerprint.h"
 #include <deki/profiling/Profiler.h>
 #include "Sprite.h"  // for reading chroma-key fields off the font atlas
 #include "TextCrop.h"
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <vector>
@@ -380,6 +382,38 @@ void TextComponent::CalculateGlyphLayout(const BitmapFont* fontPtr, std::vector<
     }
 }
 
+bool TextComponent::GetDrawKey(uint64_t& outKey) const
+{
+    // The editor's hook may pick another font than the reference holds.
+    const auto* fontPtr = static_cast<const BitmapFont*>(font.ptr);
+    if (s_FontResolveCallback || text.empty() || !fontPtr)
+    {
+        return false;
+    }
+    DekiRendering::Fingerprint f;
+    for (size_t i = 0; i < text.size(); i += 4)
+    {
+        uint32_t w = 0;
+        std::memcpy(&w, text.data() + i, std::min<size_t>(4, text.size() - i));
+        f.Add(w);
+    }
+    f.Add(static_cast<uint32_t>(text.size()));
+    f.Add(width);
+    f.Add(height);
+    f.Add(Deki::EngineSettings::Global().pixelsPerMeter);
+    f.Add(static_cast<uint32_t>(color.r) | (static_cast<uint32_t>(color.g) << 8) |
+          (static_cast<uint32_t>(color.b) << 16) | (static_cast<uint32_t>(color.a) << 24));
+    f.Add(static_cast<uint32_t>(decorationColor.r) | (static_cast<uint32_t>(decorationColor.g) << 8) |
+          (static_cast<uint32_t>(decorationColor.b) << 16) | (static_cast<uint32_t>(decorationColor.a) << 24));
+    f.Add(static_cast<uint32_t>(align) | (static_cast<uint32_t>(verticalAlign) << 8));
+    f.Add(pixelScale);
+    f.Add(static_cast<const void*>(fontPtr));
+    f.Add(static_cast<const void*>(fontPtr->GetAtlas()));
+    f.Add(m_BakeVersion);
+    outKey = f.Value();
+    return true;
+}
+
 bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& outSource, float& outPivotX,
                                   float& outPivotY, uint8_t& outTintR, uint8_t& outTintG, uint8_t& outTintB,
                                   uint8_t& outTintA)
@@ -458,7 +492,7 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
     {
         DEKI_LOG_WARNING("TextComponent: no room for a %dx%d text bake (%u bytes); "
                          "not drawing it",
-                         (int)widthPx, (int)heightPx, (unsigned)bufferSize);
+                         static_cast<int>(widthPx), static_cast<int>(heightPx), static_cast<unsigned>(bufferSize));
         return false;
     }
     memset(m_CachedBuffer.Data(), 0, bufferSize);  // Clear to transparent

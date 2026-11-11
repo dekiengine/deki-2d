@@ -8,6 +8,28 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
+## Unreleased
+
+### Added
+- `SpriteComponent` gives a draw key (`RendererComponent::GetDrawKey`): with
+  the project's `redrawChanges` on, a sprite whose sprite, frame, tint, mode,
+  flips and size stay the same is not measured again each frame, only where
+  it is.
+- `ShapeComponent` and `TextComponent` give draw keys too: a shape whose kind,
+  size, radius, line width, angles and colour stay the same, and text whose
+  string, box, colours, alignment, font and scale stay the same, are not
+  measured again each frame either. A HUD of panels and labels was measured
+  in full every frame.
+- **Raised procedural sprites.** A procedural sprite can have an outline all
+  round (`outline_width`, `outline_color`) and a band along its bottom
+  (`depth`, `depth_color`) under a face that much shorter: the raised look of
+  a key or a HUD panel, in one sprite instead of three stacked shapes, and
+  stretched in NineSlice mode. The inspector's **Raised** section sets them.
+  Sprites without them bake as before.
+
+### Fixed
+- The sprite sheet and animation editor windows no longer risk a crash: the package now takes the editor's ImGui context.
+
 ## 0.30.0
 
 ### Changed

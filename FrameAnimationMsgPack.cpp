@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
+#include <memory>
 #include <vector>
 
 #ifdef DEKI_EDITOR
@@ -172,23 +173,21 @@ void RegisterAnimationLoader()
 
     auto loader = [](const char* p) -> void*
     {
-        auto* data = new FrameAnimationData();
-        if (FrameAnimationMsgPackHelper::LoadAnimation(p, data))
+        std::unique_ptr<FrameAnimationData> data(new FrameAnimationData());
+        if (FrameAnimationMsgPackHelper::LoadAnimation(p, data.get()))
         {
-            return data;
+            return data.release();
         }
-        delete data;
         return nullptr;
     };
     auto unloader = [](void* a) { delete static_cast<FrameAnimationData*>(a); };
     auto memLoader = [](const uint8_t* d, size_t n) -> void*
     {
-        auto* data = new FrameAnimationData();
-        if (FrameAnimationMsgPackHelper::LoadAnimationFromMemory(d, n, data))
+        std::unique_ptr<FrameAnimationData> data(new FrameAnimationData());
+        if (FrameAnimationMsgPackHelper::LoadAnimationFromMemory(d, n, data.get()))
         {
-            return data;
+            return data.release();
         }
-        delete data;
         return nullptr;
     };
     Deki::AssetManager::RegisterLoader(FrameAnimationData::kAssetTypeName, loader, unloader, memLoader);

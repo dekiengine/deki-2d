@@ -323,9 +323,9 @@ DEKI_FAST_ATTR void GradientComponent::InterpolateColor(float position, uint8_t*
             float range = stops[i + 1].position - stops[i].position;
             float t = (position - stops[i].position) / range;
 
-            *r = (uint8_t)(stops[i].color.r + t * (stops[i + 1].color.r - stops[i].color.r));
-            *g = (uint8_t)(stops[i].color.g + t * (stops[i + 1].color.g - stops[i].color.g));
-            *b = (uint8_t)(stops[i].color.b + t * (stops[i + 1].color.b - stops[i].color.b));
+            *r = static_cast<uint8_t>(stops[i].color.r + t * (stops[i + 1].color.r - stops[i].color.r));
+            *g = static_cast<uint8_t>(stops[i].color.g + t * (stops[i + 1].color.g - stops[i].color.g));
+            *b = static_cast<uint8_t>(stops[i].color.b + t * (stops[i + 1].color.b - stops[i].color.b));
             return;
         }
     }
@@ -419,7 +419,7 @@ void GradientComponent::RenderPixel(int32_t x, int32_t y, uint16_t color, uint8_
         return;
     }
 
-    uint16_t* buffer16 = (uint16_t*)renderBuffer;
+    uint16_t* buffer16 = reinterpret_cast<uint16_t*>(renderBuffer);
     buffer16[y * screenWidth + x] = color;
 }
 
@@ -464,9 +464,9 @@ float GradientComponent::NormAlong(int32_t i, int32_t full, int32_t tile, bool t
     if (tileMode == GradientTileMode::Mirror)
     {
         const int32_t t = i % (tile * 2);
-        return t < tile ? (float)t / tile : 1.0f - (float)(t - tile) / tile;
+        return t < tile ? static_cast<float>(t) / tile : 1.0f - static_cast<float>(t - tile) / tile;
     }
-    return tiled ? (float)(i % tile) / tile : (float)i / full;
+    return tiled ? static_cast<float>(i % tile) / tile : static_cast<float>(i) / full;
 }
 
 void GradientComponent::FindStraightAxes(int32_t artW, int32_t artH, bool& sameAcross, bool& sameDown)
@@ -598,7 +598,8 @@ bool GradientComponent::RenderToBuffer(uint8_t* buffer, int32_t outW, int32_t ou
     const size_t tableColumns = static_cast<size_t>(renderWidth);
     if (!table.Allocate(tableColumns * (2 * sizeof(float) + sizeof(uint16_t)), Deki::Memory::External))
     {
-        DEKI_LOG_WARNING("GradientComponent: no room for the %d columns of a bake; not drawing it", (int)renderWidth);
+        DEKI_LOG_WARNING("GradientComponent: no room for the %d columns of a bake; not drawing it",
+                         static_cast<int>(renderWidth));
         return false;
     }
     float* columns = reinterpret_cast<float*>(table.Data());
@@ -906,7 +907,7 @@ bool GradientComponent::RenderContent(const Deki::Object* owner, QuadBlit::Sourc
         {
             DEKI_LOG_WARNING("GradientComponent: no room for a %dx%d bake (%u bytes); "
                              "not drawing it",
-                             (int)bakeW, (int)bakeH, (unsigned)need);
+                             static_cast<int>(bakeW), static_cast<int>(bakeH), static_cast<unsigned>(need));
             m_BakeFailed = true;
             m_BakeFailedKey = key;
             return false;

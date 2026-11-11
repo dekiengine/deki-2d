@@ -12,8 +12,8 @@
 
 struct FT_LibraryRec_;
 struct FT_FaceRec_;
-typedef struct FT_LibraryRec_* FT_Library;  // NOLINT(readability-identifier-naming): FreeType's name
-typedef struct FT_FaceRec_* FT_Face;        // NOLINT(readability-identifier-naming): FreeType's name
+using FT_Library = struct FT_LibraryRec_*;  // NOLINT(readability-identifier-naming): FreeType's name
+using FT_Face = struct FT_FaceRec_*;        // NOLINT(readability-identifier-naming): FreeType's name
 
 namespace DekiEditor
 {
@@ -107,7 +107,7 @@ private:
         Done,
         Error
     };
-    std::atomic<int> m_DownloadState{ (int)DownloadState::Idle };
+    std::atomic<int> m_DownloadState{ static_cast<int>(DownloadState::Idle) };
     std::mutex m_DownloadMutex;
     // English, with an optional %s filled by the matching Arg; translated
     // when drawn, since the download thread must not call Tr.

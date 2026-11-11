@@ -1,5 +1,6 @@
 #include "SpriteComponent.h"
 #include "SpriteRowSpans.h"
+#include "deki-rendering/Fingerprint.h"
 #include <deki/providers/Memory.h>
 #include "PixelFormat.h"
 #include <deki/Object.h>
@@ -232,6 +233,142 @@ SpriteComponent::~SpriteComponent()
 // UNIFIED RENDERING (QuadBlit)
 // ============================================================
 
+bool SpriteComponent::FrameSource(const Sprite* spr, int32_t rectX, int32_t rectY, int32_t rectWidth,
+                                  int32_t rectHeight, QuadBlit::Source& outSource, float& outPivotX,
+                                  float& outPivotY)
+{
+    const int32_t bpp = Deki::Texture2D::GetBytesPerPixel(spr->format);
+    // The component's frame, or the sprite's default frame when it sets none.
+    int32_t effectiveFrameWidth = (rectWidth > 0) ? rectWidth : spr->defaultFrameWidth;
+    int32_t effectiveFrameHeight = (rectHeight > 0) ? rectHeight : spr->defaultFrameHeight;
+
+    bool hasFrame = (rectX != 0 || rectY != 0 || effectiveFrameWidth > 0 || effectiveFrameHeight > 0);
+
+    if (!hasFrame)
+    {
+        // The whole sprite: point straight at its pixels.
+        outSource = QuadBlit::MakeSource(spr->data, spr->width, spr->height,
+                                         QuadBlit::PixelLayout::FromTexture(spr->format, spr->hasAlpha),
+                                         false,  // ownsPixels = false - sprite owns its data
+                                         spr->alphaRowSpans.Data());
+        // Same rows as the sprite, so its spans and runs apply.
+        outSource.clearRowSpans = spr->clearRowSpans.Data();
+        outSource.uniformRuns = spr->uniformRuns.Data();
+        ApplyChromaKey(outSource, spr, /*attachRowSpans=*/true);
+        outSource.pixelsPerMeter = spr->pixelsPerMeter;
+        outSource.filter = spr->filter;
+        // The sprite's pixels stay as they are while it lives (~Sprite
+        // forgets the copies), so a scaled draw may be cached, and a GPU
+        // keeps its upload.
+        outSource.cacheScaled = true;
+        outSource.revision = spr->Revision();
+        outPivotX = spr->pivotX;
+        outPivotY = spr->pivotY;
+    }
+    else
+    {
+        // An animation frame.
+        int32_t fw = (effectiveFrameWidth > 0) ? effectiveFrameWidth : spr->width;
+        int32_t fh = (effectiveFrameHeight > 0) ? effectiveFrameHeight : spr->height;
+
+        // Clamp the frame to the sprite.
+        if (rectX < 0 || rectY < 0 || rectX >= spr->width || rectY >= spr->height)
+        {
+            return false;
+        }
+        if (rectX + fw > spr->width)
+        {
+            fw = spr->width - rectX;
+        }
+        if (rectY + fh > spr->height)
+        {
+            fh = spr->height - rectY;
+        }
+        if (fw <= 0 || fh <= 0)
+        {
+            return false;
+        }
+
+        // Point QuadBlit at the frame inside the sprite's own pixels. The
+        // stride keeps the atlas row pitch, so nothing is copied.
+        outSource =
+            QuadBlit::MakeSource(spr->data + (static_cast<size_t>(rectY) * spr->width + rectX) * bpp, fw,
+                                 fh, QuadBlit::PixelLayout::FromTexture(spr->format, spr->hasAlpha),
+                                 false  // ownsPixels = false - sprite owns its data
+            );
+        outSource.stride = spr->width * bpp;
+        outSource.cacheScaled = true;  // the sprite's own pixels, as above
+        outSource.revision = spr->Revision();
+        // The frame's rows do not match the sprite's chromaRowSpans (other y
+        // origin and width), so frames use the per-pixel chroma compare.
+        ApplyChromaKey(outSource, spr, /*attachRowSpans=*/false);
+        outSource.pixelsPerMeter = spr->pixelsPerMeter;
+        outSource.filter = spr->filter;
+        // Frames pivot on their centre.
+        outPivotX = 0.5f;
+        outPivotY = 0.5f;
+    }
+
+    return true;
+}
+
+bool SpriteComponent::FrameExtents(const Sprite* spr, int32_t rectX, int32_t rectY, int32_t rectWidth,
+                                   int32_t rectHeight, float& outWidth, float& outHeight)
+{
+    // Normal: the drawn region at the sprite's own pixels-per-meter. A frame
+    // (the component's or the sprite's default) is smaller than the texture.
+    // This follows RenderContent's frame choice, before its clamp to the
+    // texture edge, which only makes the drawn frame smaller.
+    const float ppm = (spr->pixelsPerMeter > 0.0f) ? spr->pixelsPerMeter : 1.0f;
+    const int32_t fwEff = (rectWidth > 0) ? rectWidth : spr->defaultFrameWidth;
+    const int32_t fhEff = (rectHeight > 0) ? rectHeight : spr->defaultFrameHeight;
+    const bool hasFrame = (rectX != 0 || rectY != 0 || fwEff > 0 || fhEff > 0);
+    const int32_t drawnW = (hasFrame && fwEff > 0) ? fwEff : spr->width;
+    const int32_t drawnH = (hasFrame && fhEff > 0) ? fhEff : spr->height;
+    outWidth = static_cast<float>(drawnW) / ppm;
+    outHeight = static_cast<float>(drawnH) / ppm;
+    return true;
+}
+
+bool SpriteComponent::GetDrawKey(uint64_t& outKey) const
+{
+    // The sprite as last resolved: the renderer measures in full whenever
+    // the asset epoch moves, which is when it would resolve to another.
+    const Sprite* spr = static_cast<const Sprite*>(sprite.ptr);
+    if (!spr || !spr->data)
+    {
+        return false;
+    }
+    DekiRendering::Fingerprint f;
+    f.Add(static_cast<const void*>(spr));
+    f.Add(static_cast<const void*>(spr->data));
+    f.Add(spr->Revision());
+    f.Add(spr->width);
+    f.Add(spr->height);
+    f.Add(spr->pivotX);
+    f.Add(spr->pivotY);
+    f.Add(spr->pixelsPerMeter);
+    f.Add(spr->defaultFrameWidth);
+    f.Add(spr->defaultFrameHeight);
+    f.Add(frameX);
+    f.Add(frameY);
+    f.Add(frameWidth);
+    f.Add(frameHeight);
+    f.Add(static_cast<uint32_t>(tintColor.r) | (static_cast<uint32_t>(tintColor.g) << 8) |
+          (static_cast<uint32_t>(tintColor.b) << 16) | (static_cast<uint32_t>(tintColor.a) << 24));
+    f.Add(static_cast<uint32_t>(renderMode) | (static_cast<uint32_t>(flipHorizontal) << 8) |
+          (static_cast<uint32_t>(flipVertical) << 9));
+    f.Add(width);
+    f.Add(height);
+    f.Add(m_BakeVersion);
+    if (renderMode != SpriteRenderMode::Normal)
+    {
+        f.Add(Deki::EngineSettings::Global().pixelsPerMeter);  // the bake's size
+    }
+    outKey = f.Value();
+    return true;
+}
+
 bool SpriteComponent::GetContentExtents(float& outWidth, float& outHeight) const
 {
     const Sprite* spr = sprite.Get();
@@ -251,19 +388,7 @@ bool SpriteComponent::GetContentExtents(float& outWidth, float& outHeight) const
         outHeight = (height > 0.0f) ? height : static_cast<float>(region.height) / (ppm > 0.0f ? ppm : 1.0f);
         return true;
     }
-    // Normal: the drawn region at the sprite's own pixels-per-meter. A frame
-    // (the component's or the sprite's default) is smaller than the texture.
-    // This follows RenderContent's frame choice, before its clamp to the
-    // texture edge, which only makes the drawn frame smaller.
-    const float ppm = (spr->pixelsPerMeter > 0.0f) ? spr->pixelsPerMeter : 1.0f;
-    const int32_t fwEff = (frameWidth > 0) ? frameWidth : spr->defaultFrameWidth;
-    const int32_t fhEff = (frameHeight > 0) ? frameHeight : spr->defaultFrameHeight;
-    const bool hasFrame = (frameX != 0 || frameY != 0 || fwEff > 0 || fhEff > 0);
-    const int32_t drawnW = (hasFrame && fwEff > 0) ? fwEff : spr->width;
-    const int32_t drawnH = (hasFrame && fhEff > 0) ? fhEff : spr->height;
-    outWidth = static_cast<float>(drawnW) / ppm;
-    outHeight = static_cast<float>(drawnH) / ppm;
-    return true;
+    return FrameExtents(spr, frameX, frameY, frameWidth, frameHeight, outWidth, outHeight);
 }
 
 Sprite::SliceRegion SpriteComponent::SliceSource(const Sprite* spr, bool& hasBorders) const
@@ -403,7 +528,8 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
         if (m_CachedRenderSrc != spr || m_CachedRenderW != targetW || m_CachedRenderH != targetH ||
             m_CachedRenderMode != renderMode || regionChanged || tintChanged)
         {
-            size_t need = (size_t)targetW * (size_t)targetH * (size_t)bytesPerPixel;
+            size_t need =
+                static_cast<size_t>(targetW) * static_cast<size_t>(targetH) * static_cast<size_t>(bytesPerPixel);
             // Allocate() leaves an unchanged size alone, so reuse costs
             // nothing. The size follows the object on screen, which a device
             // may not have room for; skipping the draw beats a reboot.
@@ -411,7 +537,7 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
             {
                 DEKI_LOG_WARNING("SpriteComponent: no room for a %dx%d bake (%u bytes); "
                                  "not drawing it",
-                                 (int)targetW, (int)targetH, (unsigned)need);
+                                 static_cast<int>(targetW), static_cast<int>(targetH), static_cast<unsigned>(need));
                 return false;
             }
             if (renderMode == SpriteRenderMode::NineSlice)
@@ -425,11 +551,11 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
 
             if (bakeTint.r != 255 || bakeTint.g != 255 || bakeTint.b != 255)
             {
-                TintBake(m_CachedRenderBuffer.Data(), (size_t)targetW * (size_t)targetH, bytesPerPixel, bakeTint.r,
-                         bakeTint.g, bakeTint.b);
+                TintBake(m_CachedRenderBuffer.Data(), static_cast<size_t>(targetW) * static_cast<size_t>(targetH),
+                         bytesPerPixel, bakeTint.r, bakeTint.g, bakeTint.b);
             }
             const bool spans = spr->format == Deki::Texture2D::TextureFormat::RGB565A8 && spr->hasAlpha;
-            if (spans && m_CachedRowSpans.Allocate((size_t)targetH * 2, Deki::Memory::External))
+            if (spans && m_CachedRowSpans.Allocate(static_cast<size_t>(targetH) * 2, Deki::Memory::External))
             {
                 FindOpaqueRuns(m_CachedRenderBuffer.Data(), targetW, targetH, m_CachedRowSpans.Data());
             }
@@ -437,7 +563,7 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
             {
                 m_CachedRowSpans.Reset();
             }
-            if (spans && m_CachedClearSpans.Allocate((size_t)targetH * 2, Deki::Memory::External))
+            if (spans && m_CachedClearSpans.Allocate(static_cast<size_t>(targetH) * 2, Deki::Memory::External))
             {
                 BuildClearRowSpans(m_CachedRenderBuffer.Data(), targetW, targetH, targetW * 3,
                                    m_CachedClearSpans.Data());
@@ -446,7 +572,7 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
             {
                 m_CachedClearSpans.Reset();
             }
-            if (spans && m_CachedUniformRuns.Allocate((size_t)targetH, Deki::Memory::External))
+            if (spans && m_CachedUniformRuns.Allocate(static_cast<size_t>(targetH), Deki::Memory::External))
             {
                 QuadBlit::FindUniformRuns(m_CachedRenderBuffer.Data(), targetW, targetH, targetW * 3,
                                           m_CachedUniformRuns.Data());
@@ -489,76 +615,10 @@ bool SpriteComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source&
         return true;
     }
 
-    // The component's frame, or the sprite's default frame when it sets none.
-    int32_t effectiveFrameWidth = (frameWidth > 0) ? frameWidth : spr->defaultFrameWidth;
-    int32_t effectiveFrameHeight = (frameHeight > 0) ? frameHeight : spr->defaultFrameHeight;
-
-    bool hasFrame = (frameX != 0 || frameY != 0 || effectiveFrameWidth > 0 || effectiveFrameHeight > 0);
-
-    if (!hasFrame)
+    if (!FrameSource(spr, frameX, frameY, frameWidth, frameHeight, outSource, outPivotX, outPivotY))
     {
-        // The whole sprite: point straight at its pixels.
-        outSource = QuadBlit::MakeSource(spr->data, spr->width, spr->height,
-                                         QuadBlit::PixelLayout::FromTexture(spr->format, spr->hasAlpha),
-                                         false,  // ownsPixels = false - sprite owns its data
-                                         spr->alphaRowSpans.Data());
-        // Same rows as the sprite, so its spans and runs apply.
-        outSource.clearRowSpans = spr->clearRowSpans.Data();
-        outSource.uniformRuns = spr->uniformRuns.Data();
-        ApplyChromaKey(outSource, spr, /*attachRowSpans=*/true);
-        outSource.pixelsPerMeter = spr->pixelsPerMeter;
-        outSource.filter = spr->filter;
-        // The sprite's pixels stay as they are while it lives (~Sprite
-        // forgets the copies), so a scaled draw may be cached, and a GPU
-        // keeps its upload.
-        outSource.cacheScaled = true;
-        outSource.revision = spr->Revision();
-        outPivotX = spr->pivotX;
-        outPivotY = spr->pivotY;
+        return false;
     }
-    else
-    {
-        // An animation frame.
-        int32_t fw = (effectiveFrameWidth > 0) ? effectiveFrameWidth : spr->width;
-        int32_t fh = (effectiveFrameHeight > 0) ? effectiveFrameHeight : spr->height;
-
-        // Clamp the frame to the sprite.
-        if (frameX < 0 || frameY < 0 || frameX >= spr->width || frameY >= spr->height)
-        {
-            return false;
-        }
-        if (frameX + fw > spr->width)
-        {
-            fw = spr->width - frameX;
-        }
-        if (frameY + fh > spr->height)
-        {
-            fh = spr->height - frameY;
-        }
-        if (fw <= 0 || fh <= 0)
-        {
-            return false;
-        }
-
-        // Point QuadBlit at the frame inside the sprite's own pixels. The
-        // stride keeps the atlas row pitch, so nothing is copied.
-        outSource = QuadBlit::MakeSource(spr->data + ((size_t)frameY * spr->width + frameX) * bytesPerPixel, fw, fh,
-                                         QuadBlit::PixelLayout::FromTexture(spr->format, spr->hasAlpha),
-                                         false  // ownsPixels = false - sprite owns its data
-        );
-        outSource.stride = spr->width * bytesPerPixel;
-        outSource.cacheScaled = true;  // the sprite's own pixels, as above
-        outSource.revision = spr->Revision();
-        // The frame's rows do not match the sprite's chromaRowSpans (other y
-        // origin and width), so frames use the per-pixel chroma compare.
-        ApplyChromaKey(outSource, spr, /*attachRowSpans=*/false);
-        outSource.pixelsPerMeter = spr->pixelsPerMeter;
-        outSource.filter = spr->filter;
-        // Frames pivot on their centre.
-        outPivotX = 0.5f;
-        outPivotY = 0.5f;
-    }
-
     ApplyFlip(outSource);
     return true;
 }

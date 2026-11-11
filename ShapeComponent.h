@@ -133,6 +133,11 @@ public:
     bool RenderContent(const Deki::Object* owner, QuadBlit::Source& outSource, float& outPivotX, float& outPivotY,
                        uint8_t& outTintR, uint8_t& outTintG, uint8_t& outTintB, uint8_t& outTintA) override;
 
+    /// What its drawing depends on beyond its transform: its fields and the
+    /// mask's bake (RendererComponent::GetDrawKey), so the renderer reuses
+    /// what it measured of an unchanged shape.
+    bool GetDrawKey(uint64_t& outKey) const override;
+
 private:
     // The coverage mask, a byte a pixel. It only grows: a smaller bake uses
     // the front of it, so a shape that changes size every frame does not

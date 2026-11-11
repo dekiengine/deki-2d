@@ -4,6 +4,8 @@
 #include "SpritesheetEditorWindow.h"
 #include <deki/assets/Texture2D.h>
 #include <deki-editor/EditorUI.h>
+#include "imgui_internal.h"
+#include <deki/interop/Plugin.h>
 #include <deki-editor/EditorTheme.h>
 #include <deki-editor/Localization.h>
 #include <deki-editor/IconsTabler.h>
@@ -178,8 +180,8 @@ void DrawChecker(ImDrawList* dl, ImVec2 a, ImVec2 b, float cell)
     }
     // Only the cells that show: a zoomed-in image can be far larger than the canvas.
     const ImVec2 clipMin = dl->GetClipRectMin(), clipMax = dl->GetClipRectMax();
-    const int i0 = (int)std::max(0.0f, std::floor((clipMin.x - a.x) / cell));
-    const int j0 = (int)std::max(0.0f, std::floor((clipMin.y - a.y) / cell));
+    const int i0 = static_cast<int>(std::max(0.0f, std::floor((clipMin.x - a.x) / cell)));
+    const int j0 = static_cast<int>(std::max(0.0f, std::floor((clipMin.y - a.y) / cell)));
     for (int j = j0; a.y + j * cell < std::min(b.y, clipMax.y); ++j)
     {
         for (int i = i0; a.x + i * cell < std::min(b.x, clipMax.x); ++i)
@@ -445,8 +447,8 @@ void SpritesheetEditorWindow::DrawSlicingControls()
         const float side = 46.0f * dpi;
         if (m_TextureId != 0)
         {
-            DrawThumb(dl, tex, ImVec2(p.x + pad, p.y), side, (float)m_TextureWidth, (float)m_TextureHeight,
-                      ImVec2(0, 0), ImVec2(1, 1), dpi);
+            DrawThumb(dl, tex, ImVec2(p.x + pad, p.y), side, static_cast<float>(m_TextureWidth),
+                      static_cast<float>(m_TextureHeight), ImVec2(0, 0), ImVec2(1, 1), dpi);
         }
         const float tx = p.x + pad + side + 12.0f * dpi;
         const float lineH = ImGui::GetTextLineHeight();
@@ -622,11 +624,12 @@ void SpritesheetEditorWindow::DrawSlicingControls()
 
             if (m_TextureId != 0)
             {
-                const ImVec2 uv0((float)frame.x / m_TextureWidth, (float)frame.y / m_TextureHeight);
-                const ImVec2 uv1((float)(frame.x + frame.width) / m_TextureWidth,
-                                 (float)(frame.y + frame.height) / m_TextureHeight);
-                DrawThumb(dl, tex, ImVec2(rowMin.x + pad, rowMin.y + (rowH - thumb) * 0.5f), thumb, (float)frame.width,
-                          (float)frame.height, uv0, uv1, dpi);
+                const ImVec2 uv0(static_cast<float>(frame.x) / m_TextureWidth,
+                                 static_cast<float>(frame.y) / m_TextureHeight);
+                const ImVec2 uv1(static_cast<float>(frame.x + frame.width) / m_TextureWidth,
+                                 static_cast<float>(frame.y + frame.height) / m_TextureHeight);
+                DrawThumb(dl, tex, ImVec2(rowMin.x + pad, rowMin.y + (rowH - thumb) * 0.5f), thumb,
+                          static_cast<float>(frame.width), static_cast<float>(frame.height), uv0, uv1, dpi);
             }
             const float lineH = ImGui::GetTextLineHeight();
             const float tx = rowMin.x + pad + thumb + 10.0f * dpi;
@@ -674,8 +677,8 @@ void SpritesheetEditorWindow::DrawTexturePreview()
     {
         m_FitPending = false;
         const float margin = 48.0f * dpi;
-        const float fit = std::min((avail.x - margin * 2.0f) / (float)m_TextureWidth,
-                                   (avail.y - margin * 2.0f) / (float)m_TextureHeight);
+        const float fit = std::min((avail.x - margin * 2.0f) / static_cast<float>(m_TextureWidth),
+                                   (avail.y - margin * 2.0f) / static_cast<float>(m_TextureHeight));
         m_Zoom = std::clamp(fit, 0.1f, 32.0f);
         m_PanOffsetX = m_PanOffsetY = 0.0f;
     }
@@ -1257,3 +1260,23 @@ REGISTER_EDITOR_WINDOW(SpritesheetEditorWindow, "Sprite Slicer", "2D/Sprite Slic
 }  // namespace DekiEditor
 
 #endif  // DEKI_EDITOR
+
+// This package calls ImGui directly, which runs on this DLL's own copy of it. The
+// editor hands that copy its context here; without these the first call writes
+// through a null context.
+extern "C"
+{
+    DEKI_PLUGIN_API void DekiPluginSetImGuiContext(void* context)
+    {
+        ImGui::SetCurrentContext(static_cast<ImGuiContext*>(context));
+        if (context != nullptr)
+        {
+            ImTextInitClassifiers();
+        }
+    }
+
+    DEKI_PLUGIN_API unsigned int DekiPluginGetImGuiContextSize(void)
+    {
+        return sizeof(ImGuiContext);
+    }
+}

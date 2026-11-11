@@ -21,6 +21,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <functional>
+#include <memory>
 #include <unordered_map>
 
 #include <deki-editor/EditorTexture.h>
@@ -146,7 +147,7 @@ bool SetPreviewFontFromData(const std::string& sourceGuid, int fontSize, const u
         ClearPreviewFont();
     }
 
-    Deki::Texture2D* atlas = new Deki::Texture2D();
+    std::unique_ptr<Deki::Texture2D> atlas(new Deki::Texture2D());
     atlas->width = atlasWidth;
     atlas->height = atlasHeight;
     atlas->format = Deki::Texture2D::TextureFormat::RGBA8888;
@@ -166,7 +167,6 @@ bool SetPreviewFontFromData(const std::string& sourceGuid, int fontSize, const u
 
     if (!atlas->data)
     {
-        delete atlas;
         return false;
     }
     memcpy(atlas->data, atlasRGBA, atlasSize);
@@ -174,13 +174,12 @@ bool SetPreviewFontFromData(const std::string& sourceGuid, int fontSize, const u
     Deki::Buffer<Deki2D::GlyphInfo> glyphsCopy(glyphCount, Deki::Memory::Internal);
     if (!glyphsCopy)
     {
-        delete atlas;
         return false;
     }
     memcpy(glyphsCopy.Data(), glyphs, glyphsCopy.Bytes());
 
-    Deki2D::BitmapFont* font =
-        Deki2D::BitmapFont::CreateFromMemory(atlas, std::move(glyphsCopy), firstChar, lastChar, lineHeight, baseline);
+    Deki2D::BitmapFont* font = Deki2D::BitmapFont::CreateFromMemory(atlas.release(), std::move(glyphsCopy), firstChar,
+                                                                    lastChar, lineHeight, baseline);
 
     if (!font)
     {

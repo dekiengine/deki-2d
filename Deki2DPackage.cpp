@@ -37,6 +37,7 @@
 #include <deki/LogSystem.h>
 #include <cstdlib>
 #include <functional>
+#include <memory>
 #endif
 
 #ifdef DEKI_EDITOR
@@ -105,7 +106,7 @@ extern "C"
                     return nullptr;
                 }
 
-                Deki2D::BitmapFont* font = Deki2D::BitmapFont::Load(dfontPath);
+                std::unique_ptr<Deki2D::BitmapFont> font(Deki2D::BitmapFont::Load(dfontPath));
                 if (!font)
                 {
                     return nullptr;
@@ -114,7 +115,6 @@ extern "C"
                 const std::string& atlasAbsPath = font->GetAtlasPath();
                 if (atlasAbsPath.empty())
                 {
-                    delete font;
                     return nullptr;
                 }
 
@@ -123,7 +123,6 @@ extern "C"
                 uint8_t* rgba = Deki::Texture2D::LoadAsRGBA(atlasAbsPath.c_str(), atlasW, atlasH, hasAlpha);
                 if (!rgba)
                 {
-                    delete font;
                     return nullptr;
                 }
 
@@ -137,7 +136,7 @@ extern "C"
                 }
                 outW = atlasW;
                 outH = atlasH;
-                return font;
+                return font.release();
             },
             [](void* f) { delete static_cast<Deki2D::BitmapFont*>(f); });
 
@@ -281,7 +280,7 @@ extern "C"
         (void)firstChar;
         (void)lastChar;
 
-        auto* result = new Deki2D::FontCompiler::CompileResult();
+        std::unique_ptr<Deki2D::FontCompiler::CompileResult> result(new Deki2D::FontCompiler::CompileResult());
         Deki2D::FontCompiler::CompileOptions options = Deki2D::LoadFontCompileOptions(ttfPath);
         options.fontSize = fontSize;
         options.padding = padding;
@@ -289,11 +288,10 @@ extern "C"
 
         if (!Deki2D::FontCompiler::CompileTrueTypeFont(ttfPath, options, *result))
         {
-            delete result;
             return nullptr;
         }
 
-        return result;
+        return result.release();
     }
 
     DEKI_PLUGIN_API bool DekiPluginGetCompiledFontAtlas(const void* handle, const uint8_t** atlasData, int* width,

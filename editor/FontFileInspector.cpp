@@ -358,7 +358,8 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
             std::snprintf(buf, sizeof(buf), "%d px", m_LastPreviewSize);
             ui.PropertyRow("Previewed");
             ui.ValueText(buf);
-            ui.Image(m_PreviewTextureId, (float)m_PreviewTextureWidth, (float)m_PreviewTextureHeight);
+            ui.Image(m_PreviewTextureId, static_cast<float>(m_PreviewTextureWidth),
+                     static_cast<float>(m_PreviewTextureHeight));
         }
     }
 

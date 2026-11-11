@@ -88,7 +88,7 @@ void IconFontExporter::OnUpdate(float /*deltaTime*/)
 {
     // Check if download completed
     int state = m_DownloadState.load();
-    if (state == (int)DownloadState::Done)
+    if (state == static_cast<int>(DownloadState::Done))
     {
         IconFont font;
         {
@@ -103,9 +103,9 @@ void IconFontExporter::OnUpdate(float /*deltaTime*/)
 
         SaveFontMetadata(font);
         m_Fonts.push_back(font);
-        SwitchFont((int)m_Fonts.size() - 1);
+        SwitchFont(static_cast<int>(m_Fonts.size()) - 1);
 
-        m_DownloadState = (int)DownloadState::Idle;
+        m_DownloadState = static_cast<int>(DownloadState::Idle);
         m_ShowAddFont = false;
 
         // Re-load pending manifest to restore selection after auto-download
@@ -116,13 +116,13 @@ void IconFontExporter::OnUpdate(float /*deltaTime*/)
             LoadExportManifest(pending);
         }
     }
-    else if (state == (int)DownloadState::Error)
+    else if (state == static_cast<int>(DownloadState::Error))
     {
         if (m_DownloadThread.joinable())
         {
             m_DownloadThread.join();
         }
-        m_DownloadState = (int)DownloadState::Idle;
+        m_DownloadState = static_cast<int>(DownloadState::Idle);
     }
 }
 
@@ -243,7 +243,7 @@ void IconFontExporter::LoadCachedFonts()
 
 void IconFontExporter::SwitchFont(int index)
 {
-    if (index < 0 || index >= (int)m_Fonts.size())
+    if (index < 0 || index >= static_cast<int>(m_Fonts.size()))
     {
         return;
     }
@@ -268,7 +268,7 @@ void IconFontExporter::SwitchFont(int index)
 
 void IconFontExporter::RemoveCurrentFont()
 {
-    if (m_CurrentFontIndex < 0 || m_CurrentFontIndex >= (int)m_Fonts.size())
+    if (m_CurrentFontIndex < 0 || m_CurrentFontIndex >= static_cast<int>(m_Fonts.size()))
     {
         return;
     }
@@ -365,12 +365,12 @@ bool IconFontExporter::RasterizeGlyph(uint32_t codepoint, int size, std::vector<
 
     // Blit into hi-res buffer
     std::vector<uint8_t> hiBuf(hiSize * hiSize, 0);
-    int offsetX = (hiSize - (int)bitmap.width) / 2;
-    int offsetY = (hiSize - (int)bitmap.rows) / 2;
+    int offsetX = (hiSize - static_cast<int>(bitmap.width)) / 2;
+    int offsetY = (hiSize - static_cast<int>(bitmap.rows)) / 2;
 
-    for (int y = 0; y < (int)bitmap.rows; y++)
+    for (int y = 0; y < static_cast<int>(bitmap.rows); y++)
     {
-        for (int x = 0; x < (int)bitmap.width; x++)
+        for (int x = 0; x < static_cast<int>(bitmap.width); x++)
         {
             int destX = offsetX + x;
             int destY = offsetY + y;
@@ -400,7 +400,7 @@ bool IconFontExporter::RasterizeGlyph(uint32_t codepoint, int size, std::vector<
                 }
             }
 
-            uint8_t alpha = (uint8_t)(sum / (scale * scale));
+            uint8_t alpha = static_cast<uint8_t>(sum / (scale * scale));
             int idx = (dy * size + dx) * 4;
             outRGBA[idx + 0] = 255;
             outRGBA[idx + 1] = 255;
@@ -421,7 +421,7 @@ void IconFontExporter::BuildIconAtlas()
     }
 
     auto& icons = m_Fonts[m_CurrentFontIndex].icons;
-    int totalIcons = (int)icons.size();
+    int totalIcons = static_cast<int>(icons.size());
     if (totalIcons == 0)
     {
         return;
@@ -457,12 +457,12 @@ void IconFontExporter::BuildIconAtlas()
         if (glyphIndex != 0 && FT_Load_Glyph(m_FtFace, glyphIndex, loadFlags) == 0)
         {
             FT_Bitmap& bitmap = m_FtFace->glyph->bitmap;
-            int offsetX = (cellSize - (int)bitmap.width) / 2;
-            int offsetY = (cellSize - (int)bitmap.rows) / 2;
+            int offsetX = (cellSize - static_cast<int>(bitmap.width)) / 2;
+            int offsetY = (cellSize - static_cast<int>(bitmap.rows)) / 2;
 
-            for (int y = 0; y < (int)bitmap.rows; y++)
+            for (int y = 0; y < static_cast<int>(bitmap.rows); y++)
             {
-                for (int x = 0; x < (int)bitmap.width; x++)
+                for (int x = 0; x < static_cast<int>(bitmap.width); x++)
                 {
                     int destX = baseX + offsetX + x;
                     int destY = baseY + offsetY + y;
@@ -483,10 +483,10 @@ void IconFontExporter::BuildIconAtlas()
         }
 
         auto& entry = m_AtlasEntries[i];
-        entry.u0 = (float)baseX / (float)kAtlasMaxWidth;
-        entry.v0 = (float)baseY / (float)atlasH;
-        entry.u1 = (float)(baseX + cellSize) / (float)kAtlasMaxWidth;
-        entry.v1 = (float)(baseY + cellSize) / (float)atlasH;
+        entry.u0 = static_cast<float>(baseX) / static_cast<float>(kAtlasMaxWidth);
+        entry.v0 = static_cast<float>(baseY) / static_cast<float>(atlasH);
+        entry.u1 = static_cast<float>(baseX + cellSize) / static_cast<float>(kAtlasMaxWidth);
+        entry.v1 = static_cast<float>(baseY + cellSize) / static_cast<float>(atlasH);
     }
 
     m_AtlasTexture = DekiEditor::EditorTexture::CreateRgba(kAtlasMaxWidth, atlasH, atlasData.data());
@@ -546,7 +546,7 @@ void IconFontExporter::StartNpmDownload(const std::string& packageName)
     }
 
     m_CancelDownload = false;
-    m_DownloadState = (int)DownloadState::Downloading;
+    m_DownloadState = static_cast<int>(DownloadState::Downloading);
     {
         std::lock_guard<std::mutex> lock(m_DownloadMutex);
         m_DownloadStatus = TrMark("Fetching package info...");
@@ -570,7 +570,7 @@ void IconFontExporter::StartNpmDownload(const std::string& packageName)
                 {
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
                     m_DownloadError = TrMark("Failed to fetch package info from jsDelivr");
-                    m_DownloadState = (int)DownloadState::Error;
+                    m_DownloadState = static_cast<int>(DownloadState::Error);
                     return;
                 }
 
@@ -590,7 +590,7 @@ void IconFontExporter::StartNpmDownload(const std::string& packageName)
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
                     m_DownloadError = TrMark("Could not resolve latest version for %s");
                     m_DownloadErrorArg = packageName;
-                    m_DownloadState = (int)DownloadState::Error;
+                    m_DownloadState = static_cast<int>(DownloadState::Error);
                     return;
                 }
 
@@ -613,7 +613,7 @@ void IconFontExporter::StartNpmDownload(const std::string& packageName)
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
                     m_DownloadError = TrMark("Failed to fetch file listing for %s");
                     m_DownloadErrorArg = packageName + "@" + version;
-                    m_DownloadState = (int)DownloadState::Error;
+                    m_DownloadState = static_cast<int>(DownloadState::Error);
                     return;
                 }
 
@@ -678,14 +678,14 @@ void IconFontExporter::StartNpmDownload(const std::string& packageName)
                 {
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
                     m_DownloadError = TrMark("No TTF file found in package");
-                    m_DownloadState = (int)DownloadState::Error;
+                    m_DownloadState = static_cast<int>(DownloadState::Error);
                     return;
                 }
                 if (cssFile.empty())
                 {
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
                     m_DownloadError = TrMark("No CSS file found in package");
-                    m_DownloadState = (int)DownloadState::Error;
+                    m_DownloadState = static_cast<int>(DownloadState::Error);
                     return;
                 }
 
@@ -719,7 +719,7 @@ void IconFontExporter::StartNpmDownload(const std::string& packageName)
                 {
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
                     m_DownloadError = TrMark("Failed to download TTF");
-                    m_DownloadState = (int)DownloadState::Error;
+                    m_DownloadState = static_cast<int>(DownloadState::Error);
                     return;
                 }
 
@@ -741,7 +741,7 @@ void IconFontExporter::StartNpmDownload(const std::string& packageName)
                 {
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
                     m_DownloadError = TrMark("Failed to fetch CSS");
-                    m_DownloadState = (int)DownloadState::Error;
+                    m_DownloadState = static_cast<int>(DownloadState::Error);
                     return;
                 }
 
@@ -750,14 +750,14 @@ void IconFontExporter::StartNpmDownload(const std::string& packageName)
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
                     m_DownloadStatus = TrMark("Parsing icons...");
                 }
-                m_DownloadState = (int)DownloadState::Parsing;
+                m_DownloadState = static_cast<int>(DownloadState::Parsing);
 
                 auto icons = ParseCssForIcons(cssContent);
                 if (icons.empty())
                 {
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
                     m_DownloadError = TrMark("No icons found in CSS");
-                    m_DownloadState = (int)DownloadState::Error;
+                    m_DownloadState = static_cast<int>(DownloadState::Error);
                     return;
                 }
 
@@ -775,14 +775,14 @@ void IconFontExporter::StartNpmDownload(const std::string& packageName)
                     m_DownloadResult = std::move(result);
                     m_DownloadStatus = TrMark("Done!");
                 }
-                m_DownloadState = (int)DownloadState::Done;
+                m_DownloadState = static_cast<int>(DownloadState::Done);
             }
             catch (const std::exception& e)
             {
                 std::lock_guard<std::mutex> lock(m_DownloadMutex);
                 m_DownloadError = TrMark("Error: %s");
                 m_DownloadErrorArg = e.what();
-                m_DownloadState = (int)DownloadState::Error;
+                m_DownloadState = static_cast<int>(DownloadState::Error);
             }
         });
 }
@@ -796,7 +796,7 @@ void IconFontExporter::StartDirectDownload(const std::string& ttfUrl, const std:
     }
 
     m_CancelDownload = false;
-    m_DownloadState = (int)DownloadState::Downloading;
+    m_DownloadState = static_cast<int>(DownloadState::Downloading);
     {
         std::lock_guard<std::mutex> lock(m_DownloadMutex);
         m_DownloadStatus = TrMark("Downloading TTF...");
@@ -815,7 +815,7 @@ void IconFontExporter::StartDirectDownload(const std::string& ttfUrl, const std:
                 {
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
                     m_DownloadError = TrMark("Failed to download TTF");
-                    m_DownloadState = (int)DownloadState::Error;
+                    m_DownloadState = static_cast<int>(DownloadState::Error);
                     return;
                 }
 
@@ -834,11 +834,11 @@ void IconFontExporter::StartDirectDownload(const std::string& ttfUrl, const std:
                 {
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
                     m_DownloadError = TrMark("Failed to fetch CSS");
-                    m_DownloadState = (int)DownloadState::Error;
+                    m_DownloadState = static_cast<int>(DownloadState::Error);
                     return;
                 }
 
-                m_DownloadState = (int)DownloadState::Parsing;
+                m_DownloadState = static_cast<int>(DownloadState::Parsing);
                 auto icons = ParseCssForIcons(cssContent);
 
                 IconFont result;
@@ -851,14 +851,14 @@ void IconFontExporter::StartDirectDownload(const std::string& ttfUrl, const std:
                     std::lock_guard<std::mutex> lock(m_DownloadMutex);
                     m_DownloadResult = std::move(result);
                 }
-                m_DownloadState = (int)DownloadState::Done;
+                m_DownloadState = static_cast<int>(DownloadState::Done);
             }
             catch (const std::exception& e)
             {
                 std::lock_guard<std::mutex> lock(m_DownloadMutex);
                 m_DownloadError = TrMark("Error: %s");
                 m_DownloadErrorArg = e.what();
-                m_DownloadState = (int)DownloadState::Error;
+                m_DownloadState = static_cast<int>(DownloadState::Error);
             }
         });
 }
@@ -884,7 +884,7 @@ void IconFontExporter::ExportSelectedAsPNGs()
 
     for (int idx : m_SelectedIcons)
     {
-        if (idx >= (int)icons.size())
+        if (idx >= static_cast<int>(icons.size()))
         {
             continue;
         }
@@ -922,10 +922,10 @@ void IconFontExporter::ExportSelectedAsAtlas()
     int cellSize = m_ExportSize;
     int padding = 2;
     int cellWithPad = cellSize + padding;
-    int totalIcons = (int)m_SelectedIcons.size();
+    int totalIcons = static_cast<int>(m_SelectedIcons.size());
 
     // Size atlas to fit: try square-ish layout, capped at kAtlasMaxWidth
-    int cols = (int)std::ceil(std::sqrt((double)totalIcons));
+    int cols = static_cast<int>(std::ceil(std::sqrt(static_cast<double>(totalIcons))));
     if (cols < 1)
     {
         cols = 1;
@@ -954,7 +954,7 @@ void IconFontExporter::ExportSelectedAsAtlas()
     int i = 0;
     for (int idx : m_SelectedIcons)
     {
-        if (idx >= (int)icons.size())
+        if (idx >= static_cast<int>(icons.size()))
         {
             continue;
         }
@@ -1057,7 +1057,7 @@ void IconFontExporter::ExportSelectedAsAtlas()
         int fi = 0;
         for (int idx : m_SelectedIcons)
         {
-            if (idx >= (int)icons.size())
+            if (idx >= static_cast<int>(icons.size()))
             {
                 continue;
             }
@@ -1105,7 +1105,7 @@ void IconFontExporter::SaveExportManifest()
     nlohmann::json iconNames = nlohmann::json::array();
     for (int idx : m_SelectedIcons)
     {
-        if (idx < (int)icons.size())
+        if (idx < static_cast<int>(icons.size()))
         {
             iconNames.push_back(icons[idx].name);
         }
@@ -1129,7 +1129,7 @@ void IconFontExporter::LoadExportManifest(const std::string& manifestPath)
         // Restore font
         std::string fontName = j.value("font", "");
         bool fontFound = false;
-        for (int i = 0; i < (int)m_Fonts.size(); i++)
+        for (int i = 0; i < static_cast<int>(m_Fonts.size()); i++)
         {
             if (m_Fonts[i].name == fontName)
             {
@@ -1143,7 +1143,7 @@ void IconFontExporter::LoadExportManifest(const std::string& manifestPath)
         if (!fontFound)
         {
             std::string npmPkg = j.value("npmPackage", "");
-            if (!npmPkg.empty() && m_DownloadState.load() == (int)DownloadState::Idle)
+            if (!npmPkg.empty() && m_DownloadState.load() == static_cast<int>(DownloadState::Idle))
             {
                 m_PendingManifestPath = manifestPath;
                 StartNpmDownload(npmPkg);
@@ -1164,7 +1164,7 @@ void IconFontExporter::LoadExportManifest(const std::string& manifestPath)
             for (auto& nameVal : j["icons"])
             {
                 std::string name = nameVal.get<std::string>();
-                for (int i = 0; i < (int)icons.size(); i++)
+                for (int i = 0; i < static_cast<int>(icons.size()); i++)
                 {
                     if (icons[i].name == name)
                     {
@@ -1236,7 +1236,7 @@ void IconFontExporter::DrawFontSelector()
     ui.SetNextItemWidth(250);
     if (ui.BeginCombo("##font", currentName))
     {
-        for (int i = 0; i < (int)m_Fonts.size(); i++)
+        for (int i = 0; i < static_cast<int>(m_Fonts.size()); i++)
         {
             std::string label = m_Fonts[i].name;
             if (!m_Fonts[i].version.empty())
@@ -1288,7 +1288,7 @@ void IconFontExporter::DrawDownloadSection()
             ui.SetNextItemWidth(300);
             ui.InputTextWithHint("##npm", "@tabler/icons-webfont", m_NpmPackageInput, sizeof(m_NpmPackageInput));
 
-            bool downloading = m_DownloadState.load() != (int)DownloadState::Idle;
+            bool downloading = m_DownloadState.load() != static_cast<int>(DownloadState::Idle);
 
             ui.SameLine();
             if (downloading)
@@ -1320,7 +1320,7 @@ void IconFontExporter::DrawDownloadSection()
             ui.SetNextItemWidth(200);
             ui.InputTextWithHint(TrLabel("Font Name"), "my-icons", m_FontNameInput, sizeof(m_FontNameInput));
 
-            bool downloading = m_DownloadState.load() != (int)DownloadState::Idle;
+            bool downloading = m_DownloadState.load() != static_cast<int>(DownloadState::Idle);
 
             if (downloading)
             {
@@ -1346,7 +1346,7 @@ void IconFontExporter::DrawDownloadSection()
 
     // Download status
     int state = m_DownloadState.load();
-    if (state == (int)DownloadState::Downloading || state == (int)DownloadState::Parsing)
+    if (state == static_cast<int>(DownloadState::Downloading) || state == static_cast<int>(DownloadState::Parsing))
     {
         char status[1024];
         {
@@ -1361,7 +1361,7 @@ void IconFontExporter::DrawDownloadSection()
             m_CancelDownload = true;
         }
     }
-    else if (state == (int)DownloadState::Error)
+    else if (state == static_cast<int>(DownloadState::Error))
     {
         char error[1024];
         {
@@ -1381,7 +1381,7 @@ void IconFontExporter::DrawToolbar()
 
     ui.SameLine();
     char buf[256];
-    std::snprintf(buf, sizeof(buf), Tr("%d selected"), (int)m_SelectedIcons.size());
+    std::snprintf(buf, sizeof(buf), Tr("%d selected"), static_cast<int>(m_SelectedIcons.size()));
     ui.Text(buf);
 
     ui.SameLine();
@@ -1710,7 +1710,7 @@ void IconFontExporter::DrawIconGrid()
                        [](unsigned char c) { return std::tolower(c); });
     }
 
-    for (int i = 0; i < (int)icons.size(); i++)
+    for (int i = 0; i < static_cast<int>(icons.size()); i++)
     {
         if (filterLower.empty() || icons[i].name.find(filterLower) != std::string::npos)
         {
@@ -1731,7 +1731,7 @@ void IconFontExporter::DrawIconGrid()
     }
 
     char shownBuf[128];
-    std::snprintf(shownBuf, sizeof(shownBuf), Tr("%d icons shown"), (int)filtered.size());
+    std::snprintf(shownBuf, sizeof(shownBuf), Tr("%d icons shown"), static_cast<int>(filtered.size()));
     ui.Text(shownBuf);
 
     if (filtered.empty())
@@ -1739,12 +1739,12 @@ void IconFontExporter::DrawIconGrid()
         return;
     }
 
-    float iconSize = (float)m_IconDisplaySize;
+    float iconSize = static_cast<float>(m_IconDisplaySize);
     float rowHeight = iconSize + 4.0f;
 
     ui.BeginChild("IconList", 0, 0, false);
 
-    ui.BeginListClipper((int)filtered.size(), rowHeight);
+    ui.BeginListClipper(static_cast<int>(filtered.size()), rowHeight);
 
     int s, e;
     while (ui.ListClipperStep(&s, &e))
@@ -1782,7 +1782,7 @@ void IconFontExporter::DrawIconGrid()
             }
 
             // Draw icon image over the button
-            if (iconIdx < (int)m_AtlasEntries.size())
+            if (iconIdx < static_cast<int>(m_AtlasEntries.size()))
             {
                 auto& entry = m_AtlasEntries[iconIdx];
                 ui.DrawImage(m_AtlasTexture, rowStartX + 2.0f, rowStartY + 2.0f, rowStartX + 2.0f + iconSize,

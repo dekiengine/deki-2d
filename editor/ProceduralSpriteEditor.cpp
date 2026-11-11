@@ -4,6 +4,8 @@
 
 #ifdef DEKI_EDITOR
 
+#include "ProceduralSpriteRaised.h"
+
 #include <deki-editor/EditorExtension.h>
 #include <deki-editor/EditorRegistry.h>
 #include <deki-editor/EditorApplication.h>
@@ -522,6 +524,19 @@ public:
                                          bbB, bbA, blR, blG, blB, blA, radiusTL, radiusTR, radiusBR, radiusBL,
                                          antialiased);
 
+            // The raised look, over the bake: a band along the bottom and an
+            // outline (absent from assets made before it: nothing changes).
+            Deki2D::RaisedLook raised;
+            raised.outlineWidth = data.value("outline_width", 0);
+            ParseColor(data, "outline_color", raised.outlineColor[0], raised.outlineColor[1], raised.outlineColor[2],
+                       raised.outlineColor[3]);
+            raised.depth = data.value("depth", 0);
+            ParseColor(data, "depth_color", raised.depthColor[0], raised.depthColor[1], raised.depthColor[2],
+                       raised.depthColor[3]);
+            const float radii[4] = { static_cast<float>(radiusTL), static_cast<float>(radiusTR),
+                                     static_cast<float>(radiusBR), static_cast<float>(radiusBL) };
+            Deki2D::ApplyRaisedLook(rgba.data(), totalW, totalH, radii, antialiased, raised);
+
             width = totalW;
             height = totalH;
             return true;
@@ -712,6 +727,56 @@ public:
                 {
                     data["border_radius"] = { brTL, brTR, brBR, brBL };
                     modified = true;
+                }
+
+                // ── Raised ───────────────────────────────────────────────
+                // An outline round the edge and a band along the bottom, under
+                // a face that much shorter: the look of a key or a HUD panel.
+                SectionHeader(Tr("Raised"));
+                {
+                    auto colorField = [&](const char* label, const char* id, const char* key)
+                    {
+                        float c[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+                        if (data.contains(key) && data[key].is_array() && data[key].size() >= 4)
+                        {
+                            for (int i = 0; i < 4; ++i)
+                            {
+                                c[i] = data[key][i].get<int>() / 255.0f;
+                            }
+                        }
+                        ui.AlignTextToFramePadding();
+                        ui.Text(label);
+                        ui.SameLine(lw);
+                        ui.SetNextItemWidth(-1);
+                        if (ui.ColorEdit4(id, c))
+                        {
+                            data[key] = { static_cast<int>(c[0] * 255), static_cast<int>(c[1] * 255),
+                                          static_cast<int>(c[2] * 255), static_cast<int>(c[3] * 255) };
+                            modified = true;
+                        }
+                    };
+                    int outlineWidth = data.value("outline_width", 0);
+                    ui.AlignTextToFramePadding();
+                    ui.Text(Tr("Outline Width"));
+                    ui.SameLine(lw);
+                    ui.SetNextItemWidth(-1);
+                    if (ui.DragInt("##outlineWidth", &outlineWidth, 1.0f, 0, 64))
+                    {
+                        data["outline_width"] = outlineWidth;
+                        modified = true;
+                    }
+                    colorField(Tr("Outline Color"), "##outlineColor", "outline_color");
+                    int depth = data.value("depth", 0);
+                    ui.AlignTextToFramePadding();
+                    ui.Text(Tr("Depth"));
+                    ui.SameLine(lw);
+                    ui.SetNextItemWidth(-1);
+                    if (ui.DragInt("##depth", &depth, 1.0f, 0, 64))
+                    {
+                        data["depth"] = depth;
+                        modified = true;
+                    }
+                    colorField(Tr("Depth Color"), "##depthColor", "depth_color");
                 }
 
                 // ── 9-Slice ──────────────────────────────────────────────

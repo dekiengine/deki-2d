@@ -110,6 +110,21 @@ public:
         return true;
     }
 
+    /// What drawing a rect of `spr` (in its stored pixels; a width or height
+    /// of 0 is the sprite's default frame, or all of it) hands QuadBlit, flips
+    /// aside, exactly as RenderContent does in Normal mode, and the size it
+    /// draws at, in meters: what SpriteBatchComponent draws each piece with.
+    /// False when the rect lies outside the sprite.
+    static bool FrameSource(const Sprite* spr, int32_t rectX, int32_t rectY, int32_t rectWidth, int32_t rectHeight,
+                            QuadBlit::Source& outSource, float& outPivotX, float& outPivotY);
+    static bool FrameExtents(const Sprite* spr, int32_t rectX, int32_t rectY, int32_t rectWidth, int32_t rectHeight,
+                             float& outWidth, float& outHeight);
+
+    /// Everything its drawing depends on, from its own fields and the
+    /// sprite's (RendererComponent::GetDrawKey). False while the sprite is
+    /// not loaded.
+    bool GetDrawKey(uint64_t& outKey) const override;
+
     // Hands QuadBlit the sprite's pixels.
     bool RenderContent(const Deki::Object* owner, QuadBlit::Source& outSource, float& outPivotX, float& outPivotY,
                        uint8_t& outTintR, uint8_t& outTintG, uint8_t& outTintB, uint8_t& outTintA) override;

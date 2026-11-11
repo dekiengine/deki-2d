@@ -676,7 +676,7 @@ static bool ParseBdfFile(const std::string& path, BdfFontData& outFont)
 
             // One hex row of the bitmap.
             int bytesPerRow = (currentGlyph.bbxW + 7) / 8;
-            for (int byteIdx = 0; byteIdx < bytesPerRow && (byteIdx * 2 + 1) < (int)line.size(); byteIdx++)
+            for (int byteIdx = 0; byteIdx < bytesPerRow && (byteIdx * 2 + 1) < static_cast<int>(line.size()); byteIdx++)
             {
                 uint8_t hi = HexCharToNibble(line[byteIdx * 2]);
                 uint8_t lo = HexCharToNibble(line[byteIdx * 2 + 1]);
@@ -782,7 +782,7 @@ bool FontCompiler::CompileBdfFont(const std::string& bdfPath, const BdfCompileOp
 
     // Codepoint to index in bdfData.glyphs.
     std::unordered_map<int, int> codepointToGlyph;
-    for (int i = 0; i < (int)bdfData.glyphs.size(); i++)
+    for (int i = 0; i < static_cast<int>(bdfData.glyphs.size()); i++)
     {
         codepointToGlyph[bdfData.glyphs[i].encoding] = i;
     }
