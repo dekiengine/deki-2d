@@ -11,6 +11,13 @@ alongside one that has them.
 ## Unreleased
 
 ### Added
+- **`SpriteBatchComponent`.** Draws many pieces of one sprite from one
+  component, each with its own place, frame, flips, tint and sorting order
+  (`Add`, `SetPlace`, `SetFrameRect`, `SetVisible`, `SetFlip`, `SetTint`), with
+  the same pixels as that many sprite objects and far less to walk each
+  frame. Each piece sorts on its own, so a character can pass in front of one
+  and behind another. Pieces are added from code and are not saved with the
+  scene. The first game guide's soil and turnips are two batches.
 - `SpriteComponent` gives a draw key (`RendererComponent::GetDrawKey`): with
   the project's `redrawChanges` on, a sprite whose sprite, frame, tint, mode,
   flips and size stay the same is not measured again each frame, only where
