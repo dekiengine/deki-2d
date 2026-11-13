@@ -697,5 +697,8 @@
     "A disabled list ignores taps and keys.": "禁用的列表会忽略点击和按键。",
     "Width of the list, in meters.": "列表的宽度（米）。",
     "Height of each row, in meters.": "每行的高度（米）。",
-    "Its looks are on the child parts Back, Highlight, Thumb, Focus and the rows. Titles and a disabled list get the dimmed text colour.": "外观在子部件 Back、Highlight、Thumb、Focus 和各行上。标题和禁用的列表使用暗淡的文字颜色。"
+    "Its looks are on the child parts Back, Highlight, Thumb, Focus and the rows. Titles and a disabled list get the dimmed text colour.": "外观在子部件 Back、Highlight、Thumb、Focus 和各行上。标题和禁用的列表使用暗淡的文字颜色。",
+    "Draws many pieces of one sprite, each with its own place, frame and sorting order.": "绘制同一精灵的许多份，每份都有自己的位置、帧和排序顺序。",
+    "Sprite Batch Component": "精灵批次组件",
+    "The image every piece is cut from, whole or out of a spritesheet.": "每一份所取自的图像，可以是整张图，也可以从精灵图集中切出。"
 }

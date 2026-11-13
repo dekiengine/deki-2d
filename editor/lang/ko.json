@@ -697,5 +697,8 @@
     "A disabled list ignores taps and keys.": "비활성화된 리스트는 탭과 키를 무시합니다.",
     "Width of the list, in meters.": "리스트의 너비(미터).",
     "Height of each row, in meters.": "각 행의 높이(미터).",
-    "Its looks are on the child parts Back, Highlight, Thumb, Focus and the rows. Titles and a disabled list get the dimmed text colour.": "모양은 자식 파트 Back, Highlight, Thumb, Focus와 각 행에 있습니다. 제목과 비활성화된 리스트는 흐린 글자색을 씁니다."
+    "Its looks are on the child parts Back, Highlight, Thumb, Focus and the rows. Titles and a disabled list get the dimmed text colour.": "모양은 자식 파트 Back, Highlight, Thumb, Focus와 각 행에 있습니다. 제목과 비활성화된 리스트는 흐린 글자색을 씁니다.",
+    "Draws many pieces of one sprite, each with its own place, frame and sorting order.": "스프라이트 하나의 여러 조각을 각각 자체 위치, 프레임, 정렬 순서로 그립니다.",
+    "Sprite Batch Component": "스프라이트 배치 컴포넌트",
+    "The image every piece is cut from, whole or out of a spritesheet.": "모든 조각을 잘라 내는 이미지입니다. 이미지 전체나 스프라이트 시트에서 잘라 냅니다."
 }

@@ -697,5 +697,8 @@
     "A disabled list ignores taps and keys.": "無効なリストはタップとキーを無視します。",
     "Width of the list, in meters.": "リストの幅（メートル）。",
     "Height of each row, in meters.": "各行の高さ（メートル）。",
-    "Its looks are on the child parts Back, Highlight, Thumb, Focus and the rows. Titles and a disabled list get the dimmed text colour.": "見た目は子パーツ Back、Highlight、Thumb、Focus と各行にあります。見出しと無効なリストは淡い文字色になります。"
+    "Its looks are on the child parts Back, Highlight, Thumb, Focus and the rows. Titles and a disabled list get the dimmed text colour.": "見た目は子パーツ Back、Highlight、Thumb、Focus と各行にあります。見出しと無効なリストは淡い文字色になります。",
+    "Draws many pieces of one sprite, each with its own place, frame and sorting order.": "1 つのスプライトから多数のピースを描画します。ピースごとに位置、フレーム、描画順を持ちます。",
+    "Sprite Batch Component": "スプライトバッチコンポーネント",
+    "The image every piece is cut from, whole or out of a spritesheet.": "すべてのピースの切り出し元となる画像です。画像全体でも、スプライトシートからでも使えます。"
 }
