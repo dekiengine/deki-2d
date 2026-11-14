@@ -10,6 +10,9 @@
 <meta name="generator" content="Doxygen 1.18.0"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>deki-2d: deki-2d</title>
+<link rel="icon" href="https://dekiengine.com/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" href="https://dekiengine.com/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="https://dekiengine.com/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
@@ -25,14 +28,51 @@
 <link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
 <link href="deki.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript">
+/* Pressing a group in the sidebar opens the page and its list too. The tree is
+   built after load, hence the retries. */
+window.addEventListener('load', function () {
+  var tries = 0;
+  var timer = setInterval(function () {
+    var closed = document.querySelector('#nav-tree-contents .selected .arrowhead.closed');
+    if (closed) {
+      closed.closest('a').click();
+    }
+    if (closed || ++tries > 30) {
+      clearInterval(timer);
+    }
+  }, 100);
+});
+</script>
 </head>
 <body>
 <div class="deki-bar">
   <a class="deki-brand" href="https://dekiengine.com/ko/">
-    <span class="deki-mark"><span class="deki-dot"></span></span>
+    <!-- The site's cat, hugo-dekiengine/layouts/partials/deki-cat.html, kept still by deki.css.
+         Its clip path is gone: only the entrance animation needs it. -->
+    <svg class="brand-mark deki-cat" aria-hidden="true" focusable="false" viewBox="0 0 16 9" width="32" height="18" shape-rendering="crispEdges"><style>.deki-cat .cat-paws{opacity:1}
+@keyframes deki-cat-paws-in{0%{opacity:0}30.77%{opacity:1}100%{opacity:1}}
+.deki-cat .cat-paws{animation:deki-cat-paws-in 1.3s step-end 0s both}
+.deki-cat .cat-peek{transform:none}
+@keyframes deki-cat-peek-in{0%{transform:translateY(8px)}46.15%{transform:translateY(7px)}53.85%{transform:translateY(6px)}61.54%{transform:translateY(5px)}69.23%{transform:translateY(4px)}76.92%{transform:translateY(3px)}84.62%{transform:translateY(2px)}92.31%{transform:translateY(1px)}100%{transform:none}}
+.deki-cat .cat-peek{animation:deki-cat-peek-in 1.3s step-end 0s both}
+.deki-cat .cat-shut{opacity:0}
+@keyframes deki-cat-shut-idle{0%{opacity:0}8.53%{opacity:1}8.81%{opacity:0}41.96%{opacity:1}42.24%{opacity:0}42.58%{opacity:1}42.87%{opacity:0}77.26%{opacity:1}79.82%{opacity:0}100%{opacity:0}}
+.deki-cat .cat-shut{animation:deki-cat-shut-idle 35.18s step-end 1.3s infinite}
+.deki-cat .cat-face{transform:none}
+@keyframes deki-cat-face-idle{0%{transform:none}18.76%{transform:translate(-1px,0px)}22.74%{transform:none}51.39%{transform:translate(1px,0px)}55.37%{transform:none}65.32%{transform:translate(0px,-1px)}68.73%{transform:none}88.35%{transform:translate(-1px,0px)}90.62%{transform:translate(1px,0px)}92.89%{transform:none}100%{transform:none}}
+.deki-cat .cat-face{animation:deki-cat-face-idle 35.18s step-end 1.3s infinite}
+.deki-cat .cat-ear{transform:none}
+@keyframes deki-cat-ear-idle{0%{transform:none}31.27%{transform:translateY(1px)}31.5%{transform:none}31.78%{transform:translateY(1px)}32.01%{transform:none}100%{transform:none}}
+.deki-cat .cat-ear{animation:deki-cat-ear-idle 35.18s step-end 1.3s infinite}
+@media (prefers-reduced-motion:reduce){.deki-cat *{animation:none!important}}</style><g><g><g class="cat-peek"><g class="cat-ear"><rect x="12" y="0" width="1" height="1" fill="#3bc3ff"/><rect x="11" y="1" width="2" height="1" fill="#3bc3ff"/></g><rect x="3" y="0" width="1" height="1" fill="#3bc3ff"/><rect x="3" y="1" width="2" height="1" fill="#3bc3ff"/><rect x="3" y="2" width="10" height="1" fill="#3bc3ff"/><rect x="2" y="3" width="12" height="1" fill="#3bc3ff"/><rect x="2" y="4" width="12" height="1" fill="#3bc3ff"/><rect x="2" y="5" width="12" height="1" fill="#3bc3ff"/><rect x="2" y="6" width="12" height="1" fill="#3bc3ff"/><rect x="2" y="7" width="12" height="1" fill="#3bc3ff"/><g class="cat-face"><rect x="4" y="4" width="1" height="1" fill="#0a0b0d"/><rect x="5" y="4" width="1" height="1" fill="#e8e6e1"/><rect x="10" y="4" width="1" height="1" fill="#0a0b0d"/><rect x="11" y="4" width="1" height="1" fill="#e8e6e1"/><rect x="4" y="5" width="2" height="1" fill="#0a0b0d"/><rect x="10" y="5" width="2" height="1" fill="#0a0b0d"/><rect x="7" y="6" width="2" height="1" fill="#ff8fb8"/><g class="cat-shut"><rect x="4" y="4" width="2" height="1" fill="#3bc3ff"/><rect x="10" y="4" width="2" height="1" fill="#3bc3ff"/></g></g></g></g><g class="cat-paws"><rect x="3" y="7" width="2" height="1" fill="#9de1ff"/><rect x="11" y="7" width="2" height="1" fill="#9de1ff"/></g><rect x="0" y="8" width="16" height="1" fill="#0c82bf"/></g></svg>
     <span class="deki-brand-name">DEKI<span class="deki-slash">/</span>ENGINE</span>
   </a>
   <span class="deki-bar-tag">문서</span>
+  <div class="deki-tabs">
+    <a class="deki-tab deki-tab-manual" href="https://dekiengine.github.io/docs/ko/index.html"><span class="deki-nav-label">매뉴얼</span></a>
+    <a class="deki-tab deki-tab-api" href="https://dekiengine.github.io/docs/annotated.html"><span class="deki-nav-label">API 참조</span></a>
+  </div>
   <div class="deki-bar-links">
     <a href="https://dekiengine.com/ko/"><span class="deki-nav-label">사이트</span></a>
     <a href="https://dekiengine.com/ko/packages/"><span class="deki-nav-label">패키지</span></a>
@@ -40,7 +80,8 @@
     <span class="deki-bar-sep"></span>
     <a class="deki-chip" href="https://github.com/orgs/dekiengine/repositories" rel="noopener"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg><span>github</span></a>
     <a class="deki-chip deki-chip-accent" href="https://dekiengine.com/ko/discord/" rel="noopener"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></svg><span>discord</span></a>
-    <a class="deki-chip deki-chip-solid" href="https://dekiengine.com/ko/donate/"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5 3.9 12.4a4.8 4.8 0 0 1 0-6.8 4.8 4.8 0 0 1 6.8 0l1.3 1.3 1.3-1.3a4.8 4.8 0 0 1 6.8 0 4.8 4.8 0 0 1 0 6.8Z"/></svg><span>후원</span></a>
+    <a class="deki-chip deki-chip-solid" href="https://dekiengine.com/editor/#download"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12m-5-5 5 5 5-5M5 20h14"/></svg><span>다운로드</span></a>
+    <a class="deki-chip" href="https://dekiengine.com/ko/donate/"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5 3.9 12.4a4.8 4.8 0 0 1 0-6.8 4.8 4.8 0 0 1 6.8 0l1.3 1.3 1.3-1.3a4.8 4.8 0 0 1 6.8 0 4.8 4.8 0 0 1 0 6.8Z"/></svg><span>후원</span></a>
     <details class="deki-lang"><summary aria-label="언어: 한국어"><span class="deki-nav-label">한국어</span></summary><div class="deki-lang-menu"><a href="../index.html" data-deki-root="../" hreflang="en" lang="en">English</a><a href="../ja/index.html" data-deki-root="../ja/" hreflang="ja" lang="ja">日本語</a><a href="../zh/index.html" data-deki-root="../zh/" hreflang="zh" lang="zh">简体中文</a><a href="../ko/index.html" data-deki-root="../ko/" hreflang="ko" lang="ko" aria-current="true">한국어</a></div></details>
     <script>(function () {
       var page = location.pathname.split('/').pop() || 'index.html';
@@ -57,7 +98,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">deki-2d<span id="projectnumber">&#160;0.30.3</span>
+   <div id="projectname">deki-2d<span id="projectnumber">&#160;0.40.0</span>
    </div>
    <div id="projectbrief">Deki 패키지 레퍼런스</div>
   </td>
@@ -114,8 +155,8 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 <div class="image">
 <img src="deki-2d.png" alt=""/>
 </div>
-    <p>2D 콘텐츠 컴포넌트: 스프라이트, 텍스트(BitmapFont + TTF 베이킹), 애니메이션, 그라데이션, 버튼, 스크롤, 클리핑, 롤러.</p>
-<p>저장소: <a href="https://github.com/dekiengine/deki-2d">github.com/dekiengine/deki-2d</a> · 최신 릴리스: 0.30.0 · 엔진 0.30.0 이상 필요 · 의존: <a href="https://dekiengine.github.io/deki-rendering/ko/">deki-rendering</a>, <a href="https://dekiengine.github.io/deki-input/ko/">deki-input</a></p>
+    <p>2D 콘텐츠 컴포넌트: 스프라이트와 스프라이트 배치, 텍스트(BitmapFont + TTF 베이킹), 애니메이션, 그라데이션, 버튼, 스크롤, 클리핑, 롤러.</p>
+<p>저장소: <a href="https://github.com/dekiengine/deki-2d">github.com/dekiengine/deki-2d</a> · 최신 릴리스: 0.40.0 · 엔진 0.40.0 이상 필요 · 의존: <a href="https://dekiengine.github.io/deki-rendering/ko/">deki-rendering</a>, <a href="https://dekiengine.github.io/deki-input/ko/">deki-input</a></p>
 <p><span class="tt">DekiEditor --packages-add deki-2d &lt;project&gt;</span> 또는 패키지 관리자로 설치합니다. 엔진 자체의 컴포넌트와 C++ API는 <a href="https://dekiengine.github.io/docs/ko/">Deki 문서</a>에 있습니다.</p>
 <p>에디터에는 <b>2D</b>(으)로 표시됩니다.</p>
 <h1 class="doxsection"><a class="anchor" id="components"></a>
@@ -170,14 +211,16 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><a class="el" href="#c-spinnercomponent" title="SpinnerComponent">SpinnerComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">처리 중임을 알리는 표시입니다. 호가 링을 따라 돕니다.  </td></tr>
 <tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-spritebatchcomponent" title="SpriteBatchComponent">SpriteBatchComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">스프라이트 하나의 여러 조각을 각각 자체 위치, 프레임, 정렬 순서로 그립니다.  </td></tr>
+<tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><a class="el" href="#c-spritecomponent" title="SpriteComponent">SpriteComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">스프라이트를 그립니다. 틴트, 뒤집기, 타일 및 9-슬라이스 모드를 지원합니다.  </td></tr>
-<tr class="markdownTableRowOdd">
+<tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><a class="el" href="#c-switchcomponent" title="SwitchComponent">SwitchComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">노브가 미끄러지는 켬/끔 스위치입니다.  </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><a class="el" href="#c-tabviewcomponent" title="TabviewComponent">TabviewComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">페이지 위에 늘어선 탭입니다. 한 번에 한 페이지만 보입니다.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><a class="el" href="#c-textcomponent" title="TextComponent">TextComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">비트맵 폰트로 텍스트를 그립니다. 정렬과 단어 단위 줄 바꿈을 지원합니다.  </td></tr>
+<td class="markdownTableBodyNone"><a class="el" href="#c-tabviewcomponent" title="TabviewComponent">TabviewComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">페이지 위에 늘어선 탭입니다. 한 번에 한 페이지만 보입니다.  </td></tr>
 <tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-textcomponent" title="TextComponent">TextComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">비트맵 폰트로 텍스트를 그립니다. 정렬과 단어 단위 줄 바꿈을 지원합니다.  </td></tr>
+<tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><a class="el" href="#c-textareacomponent" title="TextareaComponent">TextareaComponent</a>  </td><td class="markdownTableBodyNone">2D  </td><td class="markdownTableBodyNone">텍스트를 입력하는 상자입니다. 키보드나 화면 키보드로 입력합니다.  </td></tr>
 </table>
 <h1 class="doxsection"><a class="anchor" id="feature-flags"></a>
@@ -786,6 +829,17 @@ SpinnerComponent</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><span class="tt">isSpinning</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">true</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">끄면 그 자리에서 멈춥니다.  </td></tr>
 </table>
+<h2 class="doxsection"><a class="anchor" id="c-spritebatchcomponent"></a>
+SpriteBatchComponent</h2>
+<p>스프라이트 하나의 여러 조각을 각각 자체 위치, 프레임, 정렬 순서로 그립니다.</p>
+<p>인스펙터 이름: 스프라이트 배치 컴포넌트 · 카테고리: 2D · 유형: <span class="tt">Deki2D::SpriteBatchComponent</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">속성  </th><th class="markdownTableHeadNone">유형  </th><th class="markdownTableHeadNone">기본값  </th><th class="markdownTableHeadNone">설명  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">sprite</span>  </td><td class="markdownTableBodyNone">AssetRef (Sprite)  </td><td class="markdownTableBodyNone"><span class="tt">""</span>  </td><td class="markdownTableBodyNone">모든 조각을 잘라 내는 이미지입니다. 이미지 전체나 스프라이트 시트에서 잘라 냅니다.  </td></tr>
+</table>
+<p><a href="https://dekiengine.github.io/docs/ko/engine-core.html#engine-renderercomponent">RendererComponent</a>에서 <span class="tt">sortingOrder</span>, <span class="tt">ignoreClip</span>, <span class="tt">pixelSnap</span>, <span class="tt">alphaMode</span>을(를) 상속합니다.</p>
 <h2 class="doxsection"><a class="anchor" id="c-spritecomponent"></a>
 SpriteComponent</h2>
 <p>스프라이트를 그립니다. 틴트, 뒤집기, 타일 및 9-슬라이스 모드를 지원합니다.</p>
@@ -914,34 +968,47 @@ TextareaComponent</h2>
 변경 내역</h1>
 <p>변경 내역은 영어로 되어 있습니다.</p>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md0"></a>
-0.30.0</h2>
+0.40.0</h2>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md1"></a>
+Changed</h2>
+<ul>
+<li><span class="tt">minEngine</span> 0.40.0: built against engine 0.40.0. A build of this package from before does not load and is rebuilt.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
+Added</h2>
+<ul>
+<li><b><span class="tt">SpriteBatchComponent</span>.</b> Draws many pieces of one sprite from one component, each with its own place, frame, flips, tint and sorting order (<span class="tt">Add</span>, <span class="tt">SetPlace</span>, <span class="tt">SetFrameRect</span>, <span class="tt">SetVisible</span>, <span class="tt">SetFlip</span>, <span class="tt">SetTint</span>), with the same pixels as that many sprite objects and far less to walk each frame. Each piece sorts on its own, so a character can pass in front of one and behind another. Pieces are added from code and are not saved with the scene. The first game guide's soil and turnips are two batches.</li>
+<li><span class="tt">SpriteComponent</span> gives a draw key (<span class="tt">RendererComponent::GetDrawKey</span>): with the project's <span class="tt">redrawChanges</span> on, a sprite whose sprite, frame, tint, mode, flips and size stay the same is not measured again each frame, only where it is.</li>
+<li><span class="tt">ShapeComponent</span> and <span class="tt">TextComponent</span> give draw keys too: a shape whose kind, size, radius, line width, angles and colour stay the same, and text whose string, box, colours, alignment, font and scale stay the same, are not measured again each frame either. A HUD of panels and labels was measured in full every frame.</li>
+<li><b>Raised procedural sprites.</b> A procedural sprite can have an outline all round (<span class="tt">outline_width</span>, <span class="tt">outline_color</span>) and a band along its bottom (<span class="tt">depth</span>, <span class="tt">depth_color</span>) under a face that much shorter: the raised look of a key or a HUD panel, in one sprite instead of three stacked shapes, and stretched in NineSlice mode. The inspector's <b>Raised</b> section sets them. Sprites without them bake as before.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
+Fixed</h2>
+<ul>
+<li>The sprite sheet and animation editor windows no longer risk a crash: the package now takes the editor's ImGui context.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
+0.30.0</h2>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
 Changed</h2>
 <ul>
 <li><span class="tt">minEngine</span> 0.30.0: built against engine 0.30.0. A build of this package from before does not load and is rebuilt.</li>
 <li>The animation loader is registered once, as "Animation" (<span class="tt">FrameAnimationData::kAssetTypeName</span>); its second name, "FrameAnimationData", was only for the reflection's old naming (engine changelog). The asset picker of an animation reference now lists animations, where it listed every asset.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md6"></a>
 Added</h2>
 <ul>
 <li>Images have a Filter, per platform (Point, Bilinear, Trilinear), in the image's inspector, which can set several selected images at once. A sprite carries it (<span class="tt">Sprite::filter</span>, from its header) into the sources it hands QuadBlit, so a GPU draws it filtered; a platform without one draws Point, and the image's card for it says so. An image compiled before reads as Point.</li>
 <li>Every source the components hand QuadBlit carries a revision (<span class="tt">QuadBlit::Source::revision</span>): new at each bake of text, a gradient, a shape, a sliced or tiled sprite, and one per sprite for its own pixels (<span class="tt">Sprite::Revision()</span>). A GPU drawing the 2D (deki-rendering's <span class="tt">GLBlitSink</span>) uploads each once, and again only when it changes. <span class="tt">GetContentVersion</span> returns the same number.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md7"></a>
 Fixed</h2>
 <ul>
 <li>deki-2d builds with internal logging on: <span class="tt">BitmapFont::CreateFromMemory</span>, a static function, logged <span class="tt">m_LineHeight</span> rather than the new font's.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
-0.22.1</h2>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
-Fixed</h2>
-<ul>
-<li>Clip and Sorting Group work on boards. Their renderer hookup was only registered by a static initialiser, which an ESP-IDF link drops, so on a board every Clip drew its children uncut (a roller's hidden rows above and below it) and every Sorting Group sorted as a plain parent. Deki2DInitSystem now registers both.</li>
-</ul>
 <p>이전 릴리스: <a href="https://github.com/dekiengine/deki-2d/blob/master/CHANGELOG.md">CHANGELOG.md</a></p>
 <hr  />
-<p>패키지의 리플렉션 데이터에서 생성했습니다(엔진 0.30.3). 속성 이름은 씬 파일에서 쓰는 키입니다. 이름을 바꿔도 별칭이 유지됩니다(<a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">호환성</a>). </p>
+<p>패키지의 리플렉션 데이터에서 생성했습니다(엔진 0.40.0). 속성 이름은 씬 파일에서 쓰는 키입니다. 이름을 바꿔도 별칭이 유지됩니다(<a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">호환성</a>). </p>
 </div></div><!-- PageDoc -->
 <a href="doxygen_crawl.html"></a>
 </div><!-- contents -->

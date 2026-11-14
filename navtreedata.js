@@ -51,6 +51,7 @@ var NAVTREE =
       [ "SortingGroupComponent", "index.html#c-sortinggroupcomponent", null ],
       [ "SpinboxComponent", "index.html#c-spinboxcomponent", null ],
       [ "SpinnerComponent", "index.html#c-spinnercomponent", null ],
+      [ "SpriteBatchComponent", "index.html#c-spritebatchcomponent", null ],
       [ "SpriteComponent", "index.html#c-spritecomponent", null ],
       [ "SwitchComponent", "index.html#c-switchcomponent", null ],
       [ "TabviewComponent", "index.html#c-tabviewcomponent", null ],
@@ -58,12 +59,14 @@ var NAVTREE =
       [ "TextareaComponent", "index.html#c-textareacomponent", null ]
     ] ],
     [ "Changelog", "index.html#changelog", [
-      [ "0.30.0", "index.html#autotoc_md0", null ],
+      [ "0.40.0", "index.html#autotoc_md0", null ],
       [ "Changed", "index.html#autotoc_md1", null ],
       [ "Added", "index.html#autotoc_md2", null ],
       [ "Fixed", "index.html#autotoc_md3", null ],
-      [ "0.22.1", "index.html#autotoc_md4", null ],
-      [ "Fixed", "index.html#autotoc_md5", null ]
+      [ "0.30.0", "index.html#autotoc_md4", null ],
+      [ "Changed", "index.html#autotoc_md5", null ],
+      [ "Added", "index.html#autotoc_md6", null ],
+      [ "Fixed", "index.html#autotoc_md7", null ]
     ] ]
   ] ]
 ];
