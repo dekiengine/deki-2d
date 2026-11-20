@@ -444,7 +444,20 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
                                   uint8_t& outTintA)
 {
     DEKI_PROFILE_SCOPE_N("TextComponent::RenderContent");
-    if (!owner || text.empty())
+    if (!owner)
+    {
+        return false;
+    }
+
+    // The editor's hook resolves the font first (GUID sync, preview, baking),
+    // an empty text's too: the reference it saves is the one a device loads
+    // when the text gets words, and the one an export ships.
+    BitmapFont* fontPtr = nullptr;
+    if (s_FontResolveCallback)
+    {
+        fontPtr = s_FontResolveCallback(this);
+    }
+    if (text.empty())
     {
         return false;
     }
@@ -457,14 +470,6 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
     if (widthPx <= 0 || heightPx <= 0)
     {
         return false;
-    }
-
-    BitmapFont* fontPtr = nullptr;
-
-    // The editor's hook resolves the font first (GUID sync, preview, baking).
-    if (s_FontResolveCallback)
-    {
-        fontPtr = s_FontResolveCallback(this);
     }
 
     // Otherwise, and at runtime, the AssetRef loads it.

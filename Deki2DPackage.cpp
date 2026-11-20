@@ -241,9 +241,17 @@ extern "C"
                     isBdf = (ext == ".bdf");
                 }
 
-                std::string seed = isBdf ? (textComp->font.source + ":bdf")
-                                         : (textComp->font.source + ":" + std::to_string(textComp->fontSize));
-                textComp->font.guid = Deki::GenerateDeterministicGuid(seed);
+                // An Any Size font is one file of outlines, whatever the size.
+                if (!isBdf && Deki2D::IsAnySizeFont(textComp->font.source))
+                {
+                    textComp->font.guid = Deki2D::OutlineFontGuid(textComp->font.source);
+                }
+                else
+                {
+                    std::string seed = isBdf ? (textComp->font.source + ":bdf")
+                                             : (textComp->font.source + ":" + std::to_string(textComp->fontSize));
+                    textComp->font.guid = Deki::GenerateDeterministicGuid(seed);
+                }
             }
 
             for (Deki::Object* child : obj->GetChildren())

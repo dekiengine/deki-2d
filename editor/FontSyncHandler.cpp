@@ -827,9 +827,17 @@ void RegisterFontSyncHandlers()
                     valid.insert(VariantGuid(info.guid, sz));
                     valid.insert(AtlasGuid(info.guid, sz));
                 }
+                // An Any Size font's outlines, or the cleanup deletes them
+                // after every sync writes them.
+                valid.insert(OutlineFontGuid(info.guid));
             };
             pipeline->RegisterCacheVariantProvider(".ttf", ttfProvider);
             pipeline->RegisterCacheVariantProvider(".otf", ttfProvider);
+            // A compiled scene's text loads an Any Size font's outlines,
+            // not a bake of its size.
+            DekiEditor::AssetPipeline::SetTextFontResolver(
+                [](const std::string& sourceGuid, int) -> std::string
+                { return IsAnySizeFont(sourceGuid) ? OutlineFontGuid(sourceGuid) : std::string(); });
             pipeline->RegisterCacheVariantProvider(
                 ".bdf",
                 [](const DekiEditor::AssetInfo& info, std::unordered_set<std::string>& valid)
@@ -1063,6 +1071,8 @@ void PumpFontBakes()
 
 void StopFontBaker()
 {
+    // The resolver is code in this package, about to unload.
+    DekiEditor::AssetPipeline::SetTextFontResolver(nullptr);
     std::unique_lock<std::mutex> lock(s_BakeMutex);
     s_Stopping = true;
     s_BakeQueue.clear();
