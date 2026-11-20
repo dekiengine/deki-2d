@@ -20,6 +20,25 @@
 namespace Deki2D
 {
 
+namespace
+{
+
+// How many screen pixels the view draws for each of the project's: 2 for a
+// 320x240 layout shown on a 640x480 screen. Rounded to halves, so a zoom that
+// moves a little does not draw the text again, and kept between 1 and 4.
+float ViewDensity()
+{
+    const float viewPpm = DekiRendering::CurrentDrawView().pixelsPerMeter;
+    const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
+    if (viewPpm <= 0.0f || ppm <= 0.0f)
+    {
+        return 1.0f;
+    }
+    return std::clamp(std::round(viewPpm / ppm * 2.0f) / 2.0f, 1.0f, 4.0f);
+}
+
+}  // namespace
+
 // Set by the editor to handle GUID sync, preview and baking.
 TextComponent::FontResolveCallback TextComponent::s_FontResolveCallback = nullptr;
 void TextComponent::SetFontResolveCallback(FontResolveCallback cb)
@@ -160,12 +179,12 @@ int32_t TextComponent::GetTextHeight() const
     return fontPtr->GetLineHeight();
 }
 
-std::vector<std::string> TextComponent::WrapTextWithFont(const BitmapFont* fontPtr) const
+std::vector<std::string> TextComponent::WrapTextWithFont(const BitmapFont* fontPtr, float pixelsPerMeter) const
 {
     std::vector<std::string> result;
 
     // The width is in meters; glyphs are measured in pixels.
-    const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
+    const float ppm = pixelsPerMeter > 0.0f ? pixelsPerMeter : Deki::EngineSettings::Global().pixelsPerMeter;
     const int32_t widthPx = static_cast<int32_t>(width * ppm);
 
     if (!fontPtr || text.empty() || widthPx <= 0)
@@ -278,7 +297,8 @@ std::vector<std::string> TextComponent::WrapTextWithFont(const BitmapFont* fontP
     return result;
 }
 
-void TextComponent::CalculateGlyphLayout(const BitmapFont* fontPtr, std::vector<GlyphLayout>& outGlyphs) const
+void TextComponent::CalculateGlyphLayout(const BitmapFont* fontPtr, std::vector<GlyphLayout>& outGlyphs,
+                                         float pixelsPerMeter) const
 {
     outGlyphs.clear();
 
@@ -288,11 +308,11 @@ void TextComponent::CalculateGlyphLayout(const BitmapFont* fontPtr, std::vector<
     }
 
     // width/height are world meters; the layout works in pixels.
-    const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
+    const float ppm = pixelsPerMeter > 0.0f ? pixelsPerMeter : Deki::EngineSettings::Global().pixelsPerMeter;
     float containerW = width * ppm;
     float containerH = height * ppm;
 
-    std::vector<std::string> lines = WrapTextWithFont(fontPtr);
+    std::vector<std::string> lines = WrapTextWithFont(fontPtr, ppm);
 
     float ps = static_cast<float>((std::max)(int32_t{ 1 }, pixelScale));
 
@@ -407,9 +427,10 @@ bool TextComponent::GetDrawKey(uint64_t& outKey) const
 {
     // The editor's hook may pick another font than the reference holds.
     const auto* fontPtr = static_cast<const BitmapFont*>(font.ptr);
+    const float density = fontPtr && fontPtr->IsScalable() ? ViewDensity() : 1.0f;
     if (fontPtr && fontPtr->IsScalable())
     {
-        fontPtr = fontPtr->AtSize(fontSize);
+        fontPtr = fontPtr->AtSize(static_cast<int32_t>(std::lround(static_cast<float>(fontSize) * density)));
     }
     if (s_FontResolveCallback || text.empty() || !fontPtr)
     {
@@ -425,7 +446,7 @@ bool TextComponent::GetDrawKey(uint64_t& outKey) const
     f.Add(static_cast<uint32_t>(text.size()));
     f.Add(width);
     f.Add(height);
-    f.Add(Deki::EngineSettings::Global().pixelsPerMeter);
+    f.Add(Deki::EngineSettings::Global().pixelsPerMeter * density);
     f.Add(static_cast<uint32_t>(color.r) | (static_cast<uint32_t>(color.g) << 8) |
           (static_cast<uint32_t>(color.b) << 16) | (static_cast<uint32_t>(color.a) << 24));
     f.Add(static_cast<uint32_t>(decorationColor.r) | (static_cast<uint32_t>(decorationColor.g) << 8) |
@@ -462,16 +483,6 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
         return false;
     }
 
-    // width/height are world meters; the bake works in pixels.
-    const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
-    const int32_t widthPx = static_cast<int32_t>(width * ppm);
-    const int32_t heightPx = static_cast<int32_t>(height * ppm);
-
-    if (widthPx <= 0 || heightPx <= 0)
-    {
-        return false;
-    }
-
     // Otherwise, and at runtime, the AssetRef loads it.
     if (!fontPtr)
     {
@@ -482,11 +493,23 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
         fontPtr = font.Get();
     }
 
-    // A font kept as outlines: the font at this size, its glyphs for this
-    // text drawn before the atlas is read, as drawing them can move it.
+    // width/height are world meters; the bake works in pixels. A font kept as
+    // outlines is drawn at the screen's own density, so it lands 1:1 instead
+    // of being scaled up: Font Size times the view's pixels for each of the
+    // project's. Its glyphs for this text are drawn before the atlas is read,
+    // as drawing them can move it.
+    float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
     if (fontPtr && fontPtr->IsScalable())
     {
-        fontPtr = fontPtr->AtSize(fontSize);
+        const float density = ViewDensity();
+        ppm *= density;
+        fontPtr = fontPtr->AtSize(static_cast<int32_t>(std::lround(static_cast<float>(fontSize) * density)));
+    }
+    const int32_t widthPx = static_cast<int32_t>(width * ppm);
+    const int32_t heightPx = static_cast<int32_t>(height * ppm);
+    if (widthPx <= 0 || heightPx <= 0)
+    {
+        return false;
     }
     if (fontPtr)
     {
@@ -542,7 +565,7 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
     m_BakeVersion = QuadBlit::NextRevision();
 
     std::vector<GlyphLayout> glyphLayouts;
-    CalculateGlyphLayout(fontPtr, glyphLayouts);
+    CalculateGlyphLayout(fontPtr, glyphLayouts, ppm);
 
     uint32_t atlasBpp = Deki::Texture2D::GetBytesPerPixel(atlas->format);
 

@@ -25,7 +25,9 @@ alongside one that has them.
   at that size shows it, by our own rasterizer (`OutlineFont.h`): each
   pixel covered by its share of the outline, the x-height fitted to whole
   pixels so small text stays sharp. `fontSize` is now kept on the device
-  too.
+  too. On a screen that shows the layout bigger (320x240 on 640x480), it
+  is drawn with the screen's own pixels, so it stays sharp instead of
+  being scaled up.
 - The on-screen keyboard passes a real keyboard's keys to its text box, so
   a desktop's or a T-Deck's keys still type while it has the focus.
 

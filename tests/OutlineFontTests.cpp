@@ -289,3 +289,41 @@ TEST(OutlineFont, ANewColourKeepsTheBake)
     EXPECT_EQ(r, 0xF8);  // the new colour, as the tint
     EXPECT_EQ(g, 0);
 }
+
+TEST(OutlineFont, ATextOnABiggerScreenIsDrawnAtItsPixels)
+{
+    // A 320x240 layout shown on a 640x480 screen: the text is drawn with the
+    // screen's pixels, at twice the size, instead of scaled up blurred.
+    const std::vector<uint8_t> bytes = InterOutlines();
+    std::unique_ptr<BitmapFont> font(BitmapFont::LoadFromFileData(bytes.data(), bytes.size()));
+    ASSERT_TRUE(font);
+    Deki::Object obj("Label");
+    auto* text = obj.AddComponent<TextComponent>();
+    text->SetFont(font.get());
+    text->SetText("Sharp");
+    text->SetWidth(10.0f);
+    text->SetHeight(3.0f);
+    text->SetFontSize(12);
+
+    QuadBlit::Source source;
+    float pivotX = 0.0f;
+    float pivotY = 0.0f;
+    uint8_t r = 0, g = 0, b = 0, a = 0;
+    const float ppm = Deki::EngineSettings::Global().pixelsPerMeter;
+    DekiRendering::SetCurrentDrawView({ ppm, 320, 240 });
+    ASSERT_TRUE(text->RenderContent(&obj, source, pivotX, pivotY, r, g, b, a));
+    const int32_t onePixelWidth = source.width;
+    EXPECT_EQ(source.pixelsPerMeter, ppm);
+
+    DekiRendering::SetCurrentDrawView({ ppm * 2.0f, 640, 480 });
+    ASSERT_TRUE(text->RenderContent(&obj, source, pivotX, pivotY, r, g, b, a));
+    EXPECT_EQ(source.pixelsPerMeter, ppm * 2.0f);  // drawn at the screen's density
+    EXPECT_NEAR(static_cast<double>(source.width) / onePixelWidth, 2.0, 0.2);
+    EXPECT_EQ(text->GetTextWidth(), font->AtSize(12)->MeasureWidth("Sharp"));  // measured as laid out
+
+    // Zoomed out past the project's pixels, it stays at Font Size.
+    DekiRendering::SetCurrentDrawView({ ppm * 0.5f, 160, 120 });
+    ASSERT_TRUE(text->RenderContent(&obj, source, pivotX, pivotY, r, g, b, a));
+    EXPECT_EQ(source.width, onePixelWidth);
+    DekiRendering::SetCurrentDrawView({});
+}

@@ -185,11 +185,13 @@ public:
     /// `fontPtr` may differ from the component's font (the editor passes its
     /// own). The runtime uses the positions as they are; the editor scales
     /// them by its zoom.
-    void CalculateGlyphLayout(const BitmapFont* fontPtr, std::vector<GlyphLayout>& outGlyphs) const;
+    /// `pixelsPerMeter` is the density laid out at; 0 for the project's.
+    void CalculateGlyphLayout(const BitmapFont* fontPtr, std::vector<GlyphLayout>& outGlyphs,
+                              float pixelsPerMeter = 0.0f) const;
 
     /// The text split into lines: at each newline, and word-wrapped to the
     /// box width as measured with `fontPtr`. Public for the editor.
-    std::vector<std::string> WrapTextWithFont(const BitmapFont* fontPtr) const;
+    std::vector<std::string> WrapTextWithFont(const BitmapFont* fontPtr, float pixelsPerMeter = 0.0f) const;
 
     // ========================================================================
     // Editor-visible properties (public for reflection)
