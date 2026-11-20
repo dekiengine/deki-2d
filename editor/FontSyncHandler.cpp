@@ -34,7 +34,8 @@ namespace
 {
 
 // Goes up when baking changes what it writes, so older caches bake again.
-constexpr int kBakeVersion = 2;
+// 3: big sizes were packed into an atlas narrower than their widest letter.
+constexpr int kBakeVersion = 3;
 
 std::string VariantGuid(const std::string& fontGuid, int fontSize)
 {

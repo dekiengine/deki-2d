@@ -434,16 +434,21 @@ bool FontCompiler::CompileTrueTypeFont(const std::string& ttfPath, const Compile
     std::sort(sortedIndices.begin(), sortedIndices.end(),
               [&](int a, int b) { return glyphData[a].height > glyphData[b].height; });
 
-    // Try several atlas widths and keep the one with the smallest area.
-    int bestWidth = 64;
+    // Try several atlas widths and keep the one with the smallest area. A
+    // width narrower than a glyph is left out: that glyph would run past the
+    // edge into the next row, and from about 100 px such a narrow atlas came
+    // out smallest, its glyphs drawn over each other.
+    int bestWidth = options.maxAtlasSize;
     int bestArea = INT_MAX;
     for (int tryWidth = 64; tryWidth <= options.maxAtlasSize; tryWidth *= 2)
     {
         int cx = padding, cy = padding, rh = 0;
+        bool fits = true;
         for (int idx : sortedIndices)
         {
             int gw = glyphData[idx].width + padding * 2;
             int gh = glyphData[idx].height + padding * 2;
+            fits = fits && padding + gw <= tryWidth;
             if (cx + gw > tryWidth)
             {
                 cx = padding;
@@ -458,7 +463,7 @@ bool FontCompiler::CompileTrueTypeFont(const std::string& ttfPath, const Compile
         }
         int h = cy + rh + padding;
         int area = tryWidth * h;
-        if (area < bestArea)
+        if (fits && area < bestArea)
         {
             bestArea = area;
             bestWidth = tryWidth;
@@ -957,12 +962,16 @@ bool FontCompiler::CompileBdfFont(const std::string& bdfPath, const BdfCompileOp
     std::sort(sortedIndices.begin(), sortedIndices.end(),
               [&](int a, int b) { return packedGlyphs[a].height > packedGlyphs[b].height; });
 
-    // Try several atlas widths and keep the one with the smallest area.
-    int bestWidth = 64;
+    // Try several atlas widths and keep the one with the smallest area. A
+    // width narrower than a glyph is left out: that glyph would run past the
+    // edge into the next row, and from about 100 px such a narrow atlas came
+    // out smallest, its glyphs drawn over each other.
+    int bestWidth = options.maxAtlasSize;
     int bestArea = INT_MAX;
     for (int tryWidth = 64; tryWidth <= options.maxAtlasSize; tryWidth *= 2)
     {
         int cx = padding, cy = padding, rh = 0;
+        bool fits = true;
         for (int idx : sortedIndices)
         {
             if (!packedGlyphs[idx].hasData)
@@ -971,6 +980,7 @@ bool FontCompiler::CompileBdfFont(const std::string& bdfPath, const BdfCompileOp
             }
             int gw = packedGlyphs[idx].width + padding * 2;
             int gh = packedGlyphs[idx].height + padding * 2;
+            fits = fits && padding + gw <= tryWidth;
             if (cx + gw > tryWidth)
             {
                 cx = padding;
@@ -985,7 +995,7 @@ bool FontCompiler::CompileBdfFont(const std::string& bdfPath, const BdfCompileOp
         }
         int h = cy + rh + padding;
         int area = tryWidth * h;
-        if (area < bestArea)
+        if (fits && area < bestArea)
         {
             bestArea = area;
             bestWidth = tryWidth;

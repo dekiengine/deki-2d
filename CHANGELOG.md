@@ -8,6 +8,14 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
+## 0.40.1
+
+### Fixed
+- Fonts baked at about 100 px and more draw their letters apart again. The
+  baker could pick an atlas narrower than its widest letter, and letters ran
+  over each other. Fonts are baked again by themselves when the editor opens
+  a project with this version.
+
 ## 0.40.0
 
 ### Changed
