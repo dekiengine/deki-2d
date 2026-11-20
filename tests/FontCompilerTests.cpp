@@ -113,3 +113,31 @@ TEST(FontCompiler, OversampledGlyphsSitWhereFreeTypePutsThem)
         ExpectGlyphsInPlace(size);
     }
 }
+
+TEST(FontCompiler, BigSizesKeepEveryGlyphInsideTheAtlasApart)
+{
+    // From about 100 px the narrowest atlas tried was narrower than the
+    // widest glyph, came out the smallest, and the glyphs overlapped.
+    for (int size : { 64, 100, 112, 128 })
+    {
+        FontCompiler::CompileOptions options;
+        options.fontSize = size;
+        FontCompiler::CompileResult result;
+        ASSERT_TRUE(FontCompiler::CompileTrueTypeFont(DEKI_TEST_FONT, options, result));
+        const auto& glyphs = result.glyphs;
+        for (size_t a = 0; a < glyphs.size(); ++a)
+        {
+            const GlyphInfo& g = glyphs[a];
+            EXPECT_LE(g.x + g.width, static_cast<int>(result.atlasWidth)) << size << " px, glyph " << a;
+            EXPECT_LE(g.y + g.height, static_cast<int>(result.atlasHeight)) << size << " px, glyph " << a;
+            for (size_t b = a + 1; b < glyphs.size(); ++b)
+            {
+                const GlyphInfo& h = glyphs[b];
+                const bool apart =
+                    g.x + g.width <= h.x || h.x + h.width <= g.x || g.y + g.height <= h.y || h.y + h.height <= g.y;
+                EXPECT_TRUE(apart || g.width == 0 || h.width == 0)
+                    << size << " px: glyphs " << a << " and " << b << " overlap";
+            }
+        }
+    }
+}

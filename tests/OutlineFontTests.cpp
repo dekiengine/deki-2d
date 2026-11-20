@@ -147,7 +147,7 @@ TEST(OutlineFont, ASizedFontMeasuresAsABakedOne)
     ASSERT_TRUE(font);
     ASSERT_TRUE(font->IsScalable());
 
-    for (const int size : { 10, 16, 24 })
+    for (const int size : { 10, 16, 24, 128 })
     {
         FontCompiler::CompileOptions options;
         options.fontSize = size;
@@ -168,6 +168,13 @@ TEST(OutlineFont, ASizedFontMeasuresAsABakedOne)
             EXPECT_NEAR(glyph->advance, baked.glyphs[c - options.firstChar].advance, 1)
                 << "'" << static_cast<char>(c) << "' at " << size << " px";
         }
+    }
+    // The largest size a text can ask for draws every letter.
+    EXPECT_EQ(BitmapFont::kMaxScalableSize, 128);
+    const BitmapFont* largest = font->AtSize(BitmapFont::kMaxScalableSize);
+    for (int c = '!'; c <= '~'; ++c)
+    {
+        EXPECT_GT(largest->GetGlyphByCodepoint(static_cast<uint32_t>(c))->height, 0) << static_cast<char>(c);
     }
     // Any size in between too, and sizes past the range are held to it.
     EXPECT_TRUE(font->AtSize(13));
@@ -211,8 +218,7 @@ TEST(OutlineFont, OnlyTheGlyphsATextUsesAreDrawn)
     }
     const auto started = std::chrono::steady_clock::now();
     sized->PrepareText(all.data(), all.size());
-    const double micros =
-        std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - started).count();
+    const double micros = std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - started).count();
     std::printf("[ INFO     ] the other 93 glyphs at 20 px drawn in %.0f us on this computer\n", micros);
     EXPECT_GT(atlas->height, rowsForTwo);
     std::vector<uint8_t> after;

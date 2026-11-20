@@ -1042,6 +1042,7 @@ BitmapFont* BitmapFont::AtSize(int32_t pixels) const
 
     // Every glyph's box and advance now; its pixels when a text first uses
     // it. The box takes in every pixel the outline touches.
+    uint32_t tooLarge = 0;
     for (uint32_t i = 0; i < count; ++i)
     {
         const OutlineGlyph& outline = m_Outline->Glyph(i);
@@ -1057,10 +1058,24 @@ BitmapFont* BitmapFont::AtSize(int32_t pixels) const
         const float right = std::ceil(static_cast<float>(outline.xMax) * scale);
         const float top = std::ceil(static_cast<float>(outline.yMax) * scaleY);
         const float bottom = std::floor(static_cast<float>(outline.yMin) * scaleY);
+        // Held in bytes: a glyph whose box or offsets do not fit is left out
+        // rather than drawn somewhere else.
+        if (right - left > 255.0f || top - bottom > 255.0f || left < -128.0f || left > 127.0f || top > 128.0f ||
+            top < -127.0f)
+        {
+            font->m_Drawn[i] = 1;
+            ++tooLarge;
+            continue;
+        }
         glyph.width = toByte(right - left);
         glyph.height = toByte(top - bottom);
-        glyph.offsetX = static_cast<int8_t>(std::clamp(left, -128.0f, 127.0f));
-        glyph.offsetY = static_cast<int8_t>(std::clamp(-top, -128.0f, 127.0f));
+        glyph.offsetX = static_cast<int8_t>(left);
+        glyph.offsetY = static_cast<int8_t>(-top);
+    }
+    if (tooLarge > 0)
+    {
+        DEKI_LOG_WARNING("BitmapFont: %u glyphs are too large to draw at %d px and are left out",
+                         static_cast<unsigned>(tooLarge), static_cast<int>(pixels));
     }
 
     // The atlas: a fixed width, growing down as glyphs are drawn. Empty until

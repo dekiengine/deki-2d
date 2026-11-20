@@ -33,6 +33,10 @@ alongside one that has them.
 - A one-colour text keeps its bake when only its colour changes: it is
   tinted as it is drawn.
 
+### Fixed
+- Fonts baked at about 100 px and more drew their letters over each other:
+  the baker picked an atlas narrower than its widest letter.
+
 ## 0.40.0
 
 ### Changed

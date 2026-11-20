@@ -233,10 +233,11 @@ public:
     /// and AtSize gives the font for each size a text asks for.
     bool IsScalable() const { return m_Outline != nullptr; }
 
-    /// The smallest and largest size AtSize draws: a glyph's size and offsets
-    /// are kept in a byte.
+    /// The smallest and largest size AtSize draws, the largest as a text's
+    /// Font Size goes. A glyph's size and offsets are kept in a byte; one too
+    /// large for that at some size is left out there, with a warning.
     static constexpr int32_t kMinScalableSize = 4;
-    static constexpr int32_t kMaxScalableSize = 96;
+    static constexpr int32_t kMaxScalableSize = 128;
 
     /// This scalable font at `pixels` (its em that many pixels, as a TTF set
     /// to that size), made the first time and kept with it. Its metrics are
