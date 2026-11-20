@@ -386,7 +386,6 @@ void KeyboardComponent::OnFocusChanged(bool focused)
 
 bool KeyboardComponent::OnFocusKey(uint32_t key, uint32_t character)
 {
-    (void)character;
     namespace Keys = DekiInput::Keys;
     if (m_Highlight < 0)
     {
@@ -413,6 +412,13 @@ bool KeyboardComponent::OnFocusKey(uint32_t key, uint32_t character)
     {
         PressKey(m_Highlight);
         return true;
+    }
+    else if (TextareaComponent* box = target.Get(); box && isEnabled)
+    {
+        // A real keyboard types and deletes while this one has the focus:
+        // a desktop's or a T-Deck's, or a handheld's button sent as
+        // Backspace.
+        return box->OnFocusKey(key, character);
     }
     if (next < 0)
     {

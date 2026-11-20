@@ -46,7 +46,8 @@ enum class KeyboardAction : uint8_t
 /// A keyboard on the screen, for boards with a touch screen and no keys of
 /// their own. It types into the TextareaComponent named by `target`. With
 /// keyboard focus (a trackball, say) the arrows move between its keys and
-/// Enter presses one.
+/// Enter presses one; other keys go to the text box, so a real keyboard
+/// still types and deletes.
 ///
 /// All the key caps are one mask (Caps, and Specials for shift, delete and
 /// the like), so the keyboard draws as two shapes however many keys it has;

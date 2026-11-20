@@ -169,6 +169,32 @@ TEST(Keyboard, ArrowsWalkTheKeys)
     keyboard->OnFocusChanged(false);
 }
 
+TEST(Keyboard, ARealKeyboardTypesThroughIt)
+{
+    // With the focus on the keys on screen, a desktop's or a T-Deck's own
+    // keys still type into the box, and Backspace deletes.
+    Deki::Object root("Screen");
+    auto* boxObj = new Deki::Object("Box");
+    root.AddChild(boxObj);
+    auto* area = boxObj->AddComponent<TextareaComponent>();
+    auto* keysObj = new Deki::Object("Keys");
+    root.AddChild(keysObj);
+    auto* keyboard = keysObj->AddComponent<KeyboardComponent>();
+    keyboard->target.Set(boxObj);
+    keyboard->OnFocusChanged(true);
+    EXPECT_TRUE(keyboard->OnFocusKey('f', 'f'));
+    EXPECT_TRUE(keyboard->OnFocusKey('a', 0));  // a key with no character types its letter
+    EXPECT_TRUE(keyboard->OnFocusKey('r', 'R'));
+    EXPECT_EQ(area->text, "faR");
+    EXPECT_TRUE(keyboard->OnFocusKey(Keys::Backspace, 0));
+    EXPECT_EQ(area->text, "fa");
+    // Enter still presses the key picked (q), and Esc is left for the app.
+    EXPECT_TRUE(keyboard->OnFocusKey(Keys::Enter, 0));
+    EXPECT_EQ(area->text, "faq");
+    EXPECT_FALSE(keyboard->OnFocusKey(Keys::Esc, 0));
+    keyboard->OnFocusChanged(false);
+}
+
 TEST(Chart, AddingPastTheCountScrolls)
 {
     ChartComponent chart;
