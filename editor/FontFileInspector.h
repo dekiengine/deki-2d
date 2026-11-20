@@ -25,9 +25,13 @@ namespace Deki2D
 ///     "hinting": "light",
 ///     "oversample": 2,
 ///     "decoration": "none",
-///     "extraSizes": [40]
+///     "extraSizes": [40],
+///     "anySize": true
 ///   }
 /// }
+///
+/// With anySize the font ships as one file of outlines (.dvec) that the
+/// device draws at whatever size a text asks for, and no sizes are baked.
 ///
 /// A size's variant and atlas are cache files named by GUIDs made from the
 /// font GUID and the size, with no extension.
@@ -45,6 +49,7 @@ public:
 private:
     // Current settings, loaded from the .data file.
     std::vector<int> m_ExtraSizes;
+    bool m_AnySize = false;  // one file of outlines, drawn at any size, instead of a bake per size
     int m_FirstChar = 32;
     int m_LastChar = 126;
     FontCompiler::HintingMode m_Hinting = FontCompiler::HintingMode::Light;

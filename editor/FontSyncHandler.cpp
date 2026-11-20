@@ -51,6 +51,9 @@ std::string BakeKey(const std::string& fontGuid, int fontSize)
     return fontGuid + ":" + std::to_string(fontSize);
 }
 
+// Goes up whenever a font's settings sync.
+uint32_t s_SettingsEpoch = 1;
+
 std::string LowerExtension(const std::string& path)
 {
     std::string ext = fs::path(path).extension().string();
@@ -428,6 +431,45 @@ std::vector<int> CachedSizes(const std::string& fontGuid, const std::string& cac
 
 }  // namespace
 
+// Writes the outlines of the font at `fontPath` to the cache for an Any Size
+// font, unless the file there was made from this font file and these
+// characters. Returns true when the file is there.
+static bool WriteOutlineFont(const std::string& fontGuid, const std::string& fontPath, const std::string& projectPath)
+{
+    const FontCompiler::CompileOptions options = LoadFontCompileOptions(fontPath);
+    const std::string stamp = "dvec1:" + std::to_string(options.firstChar) + "-" + std::to_string(options.lastChar) +
+                              ":" + SourceStamp(fontPath);
+    const std::string key = fontGuid + ":outline";
+    const std::string cacheDir = DekiEditor::GetCacheDirectory(projectPath);
+    const std::string path = cacheDir + "/" + OutlineFontGuid(fontGuid);
+    auto found = s_BakedStamps.find(key);
+    if (found != s_BakedStamps.end() && found->second == stamp && fs::exists(path))
+    {
+        return true;
+    }
+
+    std::vector<uint8_t> bytes;
+    if (!FontCompiler::CompileOutlineFont(fontPath, options.firstChar, options.lastChar, bytes))
+    {
+        DEKI_LOG_WARNING("FontSync: could not read the outlines of %s", fontPath.c_str());
+        return false;
+    }
+    fs::create_directories(cacheDir);
+    {
+        std::ofstream out(path, std::ios::binary | std::ios::trunc);
+        if (!out.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size())))
+        {
+            DEKI_LOG_WARNING("FontSync: could not write the outlines of %s to the cache", fontPath.c_str());
+            return false;
+        }
+    }
+    Deki::AssetManager::Get()->RegisterGuid(OutlineFontGuid(fontGuid), OutlineFontGuid(fontGuid));
+    s_BakedStamps[key] = stamp;
+    SaveBakedStamps(projectPath);
+    DEKI_LOG_EDITOR("FontSync: %s at any size, %zu bytes of outlines", fontPath.c_str(), bytes.size());
+    return true;
+}
+
 // Registers a font's baked variants as sub-assets and with AssetManager.
 // Doing it here lets HandleFontSync run only when the source changes
 // (OnSourceChange policy) instead of on every project open.
@@ -437,6 +479,22 @@ static void RegisterFontSubAssets(const std::string& fontGuid, const std::string
     std::string cachePath = DekiEditor::GetCacheDirectory(projectPath);
     std::vector<DekiEditor::SubAssetInfo> subAssets;
     int index = 0;
+
+    // An Any Size font's file of outlines.
+    const std::string outlineGuid = OutlineFontGuid(fontGuid);
+    const std::string outlinePath = cachePath + "/" + outlineGuid;
+    if (fs::exists(outlinePath))
+    {
+        Deki::AssetManager::Get()->RegisterGuid(outlineGuid, outlineGuid);
+        DekiEditor::SubAssetInfo outlineSub;
+        outlineSub.guid = outlineGuid;
+        outlineSub.parentGuid = fontGuid;
+        outlineSub.subAssetIndex = index++;
+        outlineSub.name = "Any size";
+        outlineSub.depth = 0;
+        outlineSub.cachePath = outlinePath;
+        subAssets.push_back(outlineSub);
+    }
 
     for (int sz = kMinFontSize; sz <= kMaxFontSize; sz++)
     {
@@ -491,6 +549,11 @@ static void RegisterFontSubAssets(const std::string& fontGuid, const std::string
 static void HandleFontSync(const std::string& absolutePath, const std::string& fontGuid, const std::string& projectPath)
 {
     LoadBakedStamps(projectPath);
+    ++s_SettingsEpoch;
+    if (LoadFontAnySize(absolutePath) && WriteOutlineFont(fontGuid, absolutePath, projectPath))
+    {
+        RegisterFontSubAssets(fontGuid, projectPath);
+    }
 
     FontCompiler::CompileOptions options = LoadFontCompileOptions(absolutePath);
     const std::string stamp = MakeTtfStamp(absolutePath, options);
@@ -812,6 +875,11 @@ void EnsureFontSizeBaked(const std::string& sourceGuid, int fontSize, const void
     {
         return;
     }
+    if (LoadFontAnySize(fontPath))
+    {
+        EnsureOutlineFont(sourceGuid);
+        return;
+    }
 
     const std::string cacheDir = DekiEditor::GetCacheDirectory(pipeline->GetProjectPath());
     if (fs::exists(cacheDir + "/" + VariantGuid(sourceGuid, fontSize)) &&
@@ -1049,6 +1117,57 @@ std::vector<int> LoadFontExtraSizes(const std::string& fontPath)
     std::sort(sizes.begin(), sizes.end());
     sizes.erase(std::unique(sizes.begin(), sizes.end()), sizes.end());
     return sizes;
+}
+
+bool LoadFontAnySize(const std::string& fontPath)
+{
+    json j = ReadDataFile(fontPath + ".data");
+    if (!j.contains("fontSettings") || !j["fontSettings"].is_object())
+    {
+        return false;
+    }
+    const json& settings = j["fontSettings"];
+    return settings.contains("anySize") && settings["anySize"].is_boolean() && settings["anySize"].get<bool>();
+}
+
+bool IsAnySizeFont(const std::string& sourceGuid)
+{
+    const std::string fontPath = TtfPathForGuid(sourceGuid);
+    return !fontPath.empty() && LoadFontAnySize(fontPath);
+}
+
+std::string OutlineFontGuid(const std::string& fontGuid)
+{
+    return Deki::GenerateDeterministicGuid(fontGuid + ":outline");
+}
+
+bool EnsureOutlineFont(const std::string& sourceGuid)
+{
+    auto* pipeline = DekiEditor::AssetPipeline::Instance();
+    const std::string fontPath = TtfPathForGuid(sourceGuid);
+    if (!pipeline || fontPath.empty())
+    {
+        return false;
+    }
+    const std::string projectPath = pipeline->GetProjectPath();
+    LoadBakedStamps(projectPath);
+    const bool existed = fs::exists(DekiEditor::GetCacheDirectory(projectPath) + "/" + OutlineFontGuid(sourceGuid));
+    if (!WriteOutlineFont(sourceGuid, fontPath, projectPath))
+    {
+        return false;
+    }
+    if (!existed)
+    {
+        RegisterFontSubAssets(sourceGuid, projectPath);
+        pipeline->UpdateAssetTable();
+        Deki::AssetManager::Get()->AdvanceEpoch();  // texts that found no font try again
+    }
+    return true;
+}
+
+uint32_t GetFontSettingsEpoch()
+{
+    return s_SettingsEpoch;
 }
 
 }  // namespace Deki2D

@@ -61,6 +61,12 @@ static bool IsBdfFont(const std::string& sourceGuid)
 
 static std::string ComputeBakedFontGuid(const std::string& sourceGuid, int fontSize)
 {
+    // An Any Size font is one file of outlines for every size: the text
+    // draws itself at its Font Size from it.
+    if (Deki2D::IsAnySizeFont(sourceGuid))
+    {
+        return Deki2D::OutlineFontGuid(sourceGuid);
+    }
     std::string seed = IsBdfFont(sourceGuid) ? (sourceGuid + ":bdf") : (sourceGuid + ":" + std::to_string(fontSize));
     return Deki::GenerateDeterministicGuid(seed);
 }
@@ -71,10 +77,13 @@ static std::string ComputeBakedFontGuid(const std::string& sourceGuid, int fontS
 // builds strings, hashes a GUID and resolves an asset path each time.
 static const std::string& SyncedBakedFontGuid(Deki2D::TextComponent* tc)
 {
-    if (tc->editorSyncedFontSize != tc->fontSize || tc->editorSyncedFontSource != tc->font.source)
+    const uint32_t epoch = Deki2D::GetFontSettingsEpoch();
+    if (tc->editorSyncedFontSize != tc->fontSize || tc->editorSyncedFontSource != tc->font.source ||
+        tc->editorSyncedSettingsEpoch != epoch)
     {
         tc->editorSyncedFontSource = tc->font.source;
         tc->editorSyncedFontSize = tc->fontSize;
+        tc->editorSyncedSettingsEpoch = epoch;
         tc->editorSyncedFontGuid = ComputeBakedFontGuid(tc->font.source, tc->fontSize);
     }
     return tc->editorSyncedFontGuid;

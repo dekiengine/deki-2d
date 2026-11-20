@@ -252,6 +252,20 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
 
     if (ui.SectionHeader(DekiEditor::Tr("Sizes")))
     {
+        ui.PropertyRow("Any Size");
+        if (ui.Checkbox("##anySize", &m_AnySize))
+        {
+            changed = true;
+        }
+        if (m_AnySize)
+        {
+            ui.Hint(DekiEditor::Tr("Ships the letters' outlines once, and the device draws each letter at whatever "
+                                   "size a text asks for, the first time it is shown. Hinting, oversample and "
+                                   "decoration are for fonts baked per size."));
+        }
+    }
+    if (!m_AnySize && ui.SectionHeader(DekiEditor::Tr("Baked Sizes")))
+    {
         std::string baked;
         for (int size : m_BakedSizes)
         {
@@ -374,6 +388,7 @@ void FontFileInspector::OnInspectorGUI(const std::string& assetPath, const std::
 void FontFileInspector::LoadSettings(const std::string& assetPath)
 {
     m_ExtraSizes.clear();
+    m_AnySize = false;
     m_FirstChar = 32;
     m_LastChar = 126;
     m_Hinting = FontCompiler::HintingMode::Light;
@@ -403,6 +418,7 @@ void FontFileInspector::LoadSettings(const std::string& assetPath)
         {
             auto& settings = j["fontSettings"];
 
+            m_AnySize = settings.value("anySize", false);
             if (settings.contains("extraSizes") && settings["extraSizes"].is_array())
             {
                 for (const auto& size : settings["extraSizes"])
@@ -535,6 +551,10 @@ void FontFileInspector::SaveSettings(const std::string& assetPath, const std::st
     if (!m_ExtraSizes.empty())
     {
         j["fontSettings"]["extraSizes"] = m_ExtraSizes;
+    }
+    if (m_AnySize)
+    {
+        j["fontSettings"]["anySize"] = true;
     }
     j.erase("variants");
 

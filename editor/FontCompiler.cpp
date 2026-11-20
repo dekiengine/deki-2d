@@ -3,9 +3,11 @@
 #ifdef DEKI_EDITOR
 
 #include "BitmapFont.h"
+#include "OutlineFont.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include FT_OUTLINE_H
 
 #include <filesystem>
 #include <fstream>
@@ -1150,6 +1152,126 @@ bool FontCompiler::WriteDfontFile(const std::string& path, const CompileResult& 
     fontFile.write(atlasFilename.c_str(), atlasFilename.length() + 1);
     fontFile.close();
 
+    return true;
+}
+
+bool FontCompiler::CompileOutlineFont(const std::string& fontPath, int firstChar, int lastChar,
+                                      std::vector<uint8_t>& outBytes)
+{
+    outBytes.clear();
+    FT_Library ft;
+    if (FT_Init_FreeType(&ft))
+    {
+        return false;
+    }
+    FT_Face face;
+    if (FT_New_Face(ft, fontPath.c_str(), 0, &face))
+    {
+        FT_Done_FreeType(ft);
+        return false;
+    }
+    if (!FT_IS_SCALABLE(face) || face->units_per_EM == 0)
+    {
+        FT_Done_Face(face);
+        FT_Done_FreeType(ft);
+        return false;
+    }
+
+    std::vector<uint32_t> codepoints;
+    std::vector<OutlineGlyph> glyphs;
+    std::vector<uint16_t> contourEnds;
+    std::vector<OutlinePoint> points;
+    const auto clamp16 = [](long value) { return static_cast<int16_t>(std::clamp<long>(value, INT16_MIN, INT16_MAX)); };
+    int16_t capHeight = 0;
+    int16_t xHeight = 0;
+
+    for (int cp = firstChar; cp <= lastChar; ++cp)
+    {
+        const FT_UInt index = FT_Get_Char_Index(face, static_cast<FT_ULong>(cp));
+        if (index == 0 && cp != ' ')
+        {
+            continue;  // the font lacks it
+        }
+        // Font units, as drawn: no scaling, no hinting.
+        if (FT_Load_Glyph(face, index, FT_LOAD_NO_SCALE | FT_LOAD_NO_HINTING | FT_LOAD_NO_BITMAP))
+        {
+            continue;
+        }
+        const FT_GlyphSlot slot = face->glyph;
+        if (slot->format != FT_GLYPH_FORMAT_OUTLINE && slot->format != FT_GLYPH_FORMAT_COMPOSITE)
+        {
+            continue;
+        }
+        const FT_Outline& outline = slot->outline;
+        OutlineGlyph glyph{};
+        glyph.firstContour = static_cast<uint32_t>(contourEnds.size());
+        glyph.firstPoint = static_cast<uint32_t>(points.size());
+        glyph.contourCount = static_cast<uint16_t>(outline.n_contours);
+        glyph.advance = static_cast<uint16_t>(std::clamp<long>(slot->metrics.horiAdvance, 0, UINT16_MAX));
+        if (outline.n_points > 0)
+        {
+            FT_BBox box;
+            FT_Outline_Get_CBox(&outline, &box);
+            glyph.xMin = clamp16(box.xMin);
+            glyph.yMin = clamp16(box.yMin);
+            glyph.xMax = clamp16(box.xMax);
+            glyph.yMax = clamp16(box.yMax);
+        }
+        for (int c = 0; c < outline.n_contours; ++c)
+        {
+            contourEnds.push_back(static_cast<uint16_t>(outline.contours[c]));
+        }
+        for (int i = 0; i < outline.n_points; ++i)
+        {
+            OutlinePoint point{};
+            point.x = clamp16(outline.points[i].x);
+            point.y = clamp16(outline.points[i].y);
+            const int tag = FT_CURVE_TAG(outline.tags[i]);
+            point.kind = static_cast<uint8_t>(tag == FT_CURVE_TAG_ON      ? OutlinePointKind::On
+                                              : tag == FT_CURVE_TAG_CUBIC ? OutlinePointKind::Cubic
+                                                                          : OutlinePointKind::Quadratic);
+            points.push_back(point);
+        }
+        if (cp == 'H')
+        {
+            capHeight = glyph.yMax;
+        }
+        else if (cp == 'x')
+        {
+            xHeight = glyph.yMax;
+        }
+        codepoints.push_back(static_cast<uint32_t>(cp));
+        glyphs.push_back(glyph);
+    }
+
+    OutlineFontHeader header{};
+    memcpy(header.magic, "DVEC", 4);
+    header.version = 1;
+    header.unitsPerEm = face->units_per_EM;
+    header.ascender = face->ascender;
+    header.descender = face->descender;
+    header.capHeight = capHeight > 0 ? capHeight : static_cast<int16_t>(face->ascender * 7 / 10);
+    header.xHeight = xHeight > 0 ? xHeight : static_cast<int16_t>(face->ascender / 2);
+    header.glyphCount = static_cast<uint32_t>(glyphs.size());
+    header.contourCount = static_cast<uint32_t>(contourEnds.size());
+    header.pointCount = static_cast<uint32_t>(points.size());
+    FT_Done_Face(face);
+    FT_Done_FreeType(ft);
+    if (glyphs.empty())
+    {
+        return false;
+    }
+
+    const auto append = [&outBytes](const void* data, size_t size)
+    {
+        const auto* bytes = static_cast<const uint8_t*>(data);
+        outBytes.insert(outBytes.end(), bytes, bytes + size);
+    };
+    append(&header, sizeof(header));
+    append(codepoints.data(), codepoints.size() * sizeof(uint32_t));
+    append(glyphs.data(), glyphs.size() * sizeof(OutlineGlyph));
+    append(contourEnds.data(), contourEnds.size() * sizeof(uint16_t));
+    append(points.data(), points.size() * sizeof(OutlinePoint));
     return true;
 }
 

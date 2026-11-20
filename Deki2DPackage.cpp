@@ -36,6 +36,7 @@
 #include <deki/Object.h>
 #include <deki/LogSystem.h>
 #include <cstdlib>
+#include <fstream>
 #include <functional>
 #include <memory>
 #endif
@@ -340,6 +341,33 @@ extern "C"
             outSizes[i] = sizes[i];
         }
         return static_cast<int>(sizes.size());
+    }
+
+    /// True when the TrueType font at `ttfPath` is set to Any Size: it ships
+    /// as one file of outlines, drawn at any size on the device.
+    DEKI_PLUGIN_API bool DekiPluginIsFontAnySize(const char* ttfPath)
+    {
+        return ttfPath && Deki2D::LoadFontAnySize(ttfPath);
+    }
+
+    /// Writes the outlines of the TrueType font at `ttfPath`, for the
+    /// characters its settings name, to `outPath` (a .dvec file). Returns
+    /// false on failure.
+    DEKI_PLUGIN_API bool DekiPluginWriteOutlineFont(const char* ttfPath, const char* outPath)
+    {
+        if (!ttfPath || !outPath)
+        {
+            return false;
+        }
+        const Deki2D::FontCompiler::CompileOptions options = Deki2D::LoadFontCompileOptions(ttfPath);
+        std::vector<uint8_t> bytes;
+        if (!Deki2D::FontCompiler::CompileOutlineFont(ttfPath, options.firstChar, options.lastChar, bytes))
+        {
+            return false;
+        }
+        std::ofstream out(outPath, std::ios::binary | std::ios::trunc);
+        return static_cast<bool>(
+            out.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size())));
     }
 
 #endif  // DEKI_PLUGIN_EXPORTS

@@ -60,6 +60,26 @@ FontCompiler::CompileOptions LoadFontCompileOptions(const std::string& fontPath)
 /// sizes only code sets. `fontPath` is the font's absolute path.
 std::vector<int> LoadFontExtraSizes(const std::string& fontPath);
 
+/// True when a TrueType font's .data sidecar sets it to Any Size: it ships as
+/// one file of outlines that the device draws at whatever size a text asks
+/// for, and no size is baked. `fontPath` is the font's absolute path.
+bool LoadFontAnySize(const std::string& fontPath);
+
+/// True when the font asset `sourceGuid` is a TrueType font set to Any Size.
+bool IsAnySizeFont(const std::string& sourceGuid);
+
+/// The GUID of a font's file of outlines, the one an Any Size font ships.
+std::string OutlineFontGuid(const std::string& fontGuid);
+
+/// Writes the outlines of the font `sourceGuid` (set to Any Size) to the
+/// cache when they are missing or older than the font and its settings.
+/// Returns true when the file is there.
+bool EnsureOutlineFont(const std::string& sourceGuid);
+
+/// Changes whenever a font's settings sync, so texts look again at which
+/// file their font draws from.
+uint32_t GetFontSettingsEpoch();
+
 }  // namespace Deki2D
 
 #endif  // DEKI_EDITOR

@@ -57,16 +57,17 @@ public:
     DEKI_TOOLTIP("A TrueType or BDF font asset. Font Size picks the size a TrueType font is drawn at.")
     Deki::AssetRef<BitmapFont> font;
 
-#ifdef DEKI_EDITOR
-    /// Font size in pixels; picks the baked variant of that size. The editor
-    /// bakes a size the first time a text uses it.
+    /// Font size in pixels. A font set to Any Size is drawn at it on the
+    /// device; for one baked per size the editor bakes this size the first
+    /// time a text uses it.
     DEKI_EXPORT
-    DEKI_TOOLTIP("Font size in pixels. The editor bakes the font at this size the first time a text uses it, and a "
-                 "build ships the sizes its texts use.")
+    DEKI_TOOLTIP("Font size in pixels. A font set to Any Size is drawn at this size wherever the text runs; for a "
+                 "font baked per size, the editor bakes this size the first time a text uses it, and a build ships "
+                 "the sizes its texts use.")
     DEKI_RANGE(6, 128)
-    DEKI_EDITOR_ONLY
     int32_t fontSize = 16;
 
+#ifdef DEKI_EDITOR
     /// True when no baked variant of fontSize exists.
     bool fontSizeUnavailable = false;
 
@@ -78,6 +79,7 @@ public:
     std::string editorSyncedFontSource;
     int32_t editorSyncedFontSize = -1;
     std::string editorSyncedFontGuid;
+    uint32_t editorSyncedSettingsEpoch = 0;  // font settings may switch a font to Any Size and back
 #endif
 
     void SetText(const char* text);
@@ -98,6 +100,13 @@ public:
     /// The font, or nullptr.
     BitmapFont* GetFont() { return font.Get(); }
     const BitmapFont* GetFont() const { return font.Get(); }
+
+    /// The font the text is drawn with: for a font kept as outlines, that
+    /// font at Font Size. For measuring text as it will be drawn.
+    const BitmapFont* GetDrawnFont() const;
+
+    /// Sets Font Size and draws the text again at it.
+    void SetFontSize(int32_t pixels);
 
     void SetColor(const Deki::Color& color);
 

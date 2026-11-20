@@ -108,35 +108,56 @@ void TextComponent::SetFont(BitmapFont* f)
 
 void TextComponent::SetColor(const Deki::Color& newColor)
 {
+    // A one-colour bake is only coverage, tinted as it is drawn: a new colour
+    // needs no new bake.
     color = newColor;
-    InvalidateRenderCache();
+    if (!m_CachedAlphaOnly)
+    {
+        InvalidateRenderCache();
+    }
 }
 
 void TextComponent::SetColor(uint8_t r, uint8_t g, uint8_t b)
 {
-    color = Deki::Color(r, g, b, 255);
-    InvalidateRenderCache();
+    SetColor(Deki::Color(r, g, b, 255));
+}
+
+void TextComponent::SetFontSize(int32_t pixels)
+{
+    if (fontSize != pixels)
+    {
+        fontSize = pixels;
+        InvalidateRenderCache();
+    }
+}
+
+const BitmapFont* TextComponent::GetDrawnFont() const
+{
+    const BitmapFont* fontPtr = font.Get();
+    return fontPtr && fontPtr->IsScalable() ? fontPtr->AtSize(fontSize) : fontPtr;
 }
 
 int32_t TextComponent::GetTextWidth() const
 {
-    if (!font || text.empty())
+    const BitmapFont* fontPtr = GetDrawnFont();
+    if (!fontPtr || text.empty())
     {
         return 0;
     }
 
-    return font->MeasureWidth(text.c_str());
+    return fontPtr->MeasureWidth(text.c_str());
 }
 
 int32_t TextComponent::GetTextHeight() const
 {
-    if (!font || text.empty())
+    const BitmapFont* fontPtr = GetDrawnFont();
+    if (!fontPtr || text.empty())
     {
         return 0;
     }
 
     // TODO: count the wrapped lines; this is one line's height.
-    return font->GetLineHeight();
+    return fontPtr->GetLineHeight();
 }
 
 std::vector<std::string> TextComponent::WrapTextWithFont(const BitmapFont* fontPtr) const
@@ -386,6 +407,10 @@ bool TextComponent::GetDrawKey(uint64_t& outKey) const
 {
     // The editor's hook may pick another font than the reference holds.
     const auto* fontPtr = static_cast<const BitmapFont*>(font.ptr);
+    if (fontPtr && fontPtr->IsScalable())
+    {
+        fontPtr = fontPtr->AtSize(fontSize);
+    }
     if (s_FontResolveCallback || text.empty() || !fontPtr)
     {
         return false;
@@ -452,6 +477,17 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
         fontPtr = font.Get();
     }
 
+    // A font kept as outlines: the font at this size, its glyphs for this
+    // text drawn before the atlas is read, as drawing them can move it.
+    if (fontPtr && fontPtr->IsScalable())
+    {
+        fontPtr = fontPtr->AtSize(fontSize);
+    }
+    if (fontPtr)
+    {
+        fontPtr->PrepareText(text.data(), text.size());
+    }
+
     if (!fontPtr || !fontPtr->GetAtlas())
     {
         return false;
@@ -463,14 +499,16 @@ bool TextComponent::RenderContent(const Deki::Object* owner, QuadBlit::Source& o
         return false;
     }
 
+    // A one-colour bake is tinted as it is drawn, so its colour may change.
     bool cacheValid = static_cast<bool>(m_CachedBuffer) && m_CachedText == text && m_CachedWidth == widthPx &&
-                      m_CachedHeight == heightPx && m_CachedColor == color &&
+                      m_CachedHeight == heightPx && (m_CachedColor == color || m_CachedAlphaOnly) &&
                       m_CachedDecorationColor == decorationColor && m_CachedAlign == align &&
                       m_CachedVerticalAlign == verticalAlign && m_CachedFont == fontPtr &&
                       m_CachedPixelScale == pixelScale;
 
     if (cacheValid)
     {
+        m_CachedColor = color;
         outSource = CroppedSource(widthPx);
         outSource.pixelsPerMeter = ppm;
         outPivotX = m_CropPivotX;

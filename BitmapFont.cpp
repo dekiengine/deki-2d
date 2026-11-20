@@ -7,6 +7,9 @@
 #include <deki/Time.h>
 #include <deki/assets/AssetManager.h>
 #include <deki/assets/AssetPackReader.h>
+#include "OutlineFont.h"
+#include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <utility>
 
@@ -32,6 +35,11 @@ BitmapFont::BitmapFont()
 BitmapFont::~BitmapFont()
 {
     delete m_Atlas;
+    for (const SizedFont& sized : m_Sizes)
+    {
+        delete sized.font;
+    }
+    delete m_Outline;
 }
 
 BitmapFont* BitmapFont::Load(const char* filePath)
@@ -82,6 +90,12 @@ BitmapFont* BitmapFont::Load(const char* filePath)
     {
         DEKI_LOG_ERROR("BitmapFont::Load: Failed to read file '%s'", filePath);
         return nullptr;
+    }
+
+    // A font kept as outlines, drawn at any size.
+    if (OutlineFont::IsOutlineFile(fileData, static_cast<size_t>(fileSize)))
+    {
+        return FromOutlineData(fileData, static_cast<size_t>(fileSize));
     }
 
     if (static_cast<size_t>(fileSize) < sizeof(FontHeader))
@@ -343,6 +357,10 @@ BitmapFont* BitmapFont::Load(const char* filePath)
 
 BitmapFont* BitmapFont::LoadFromFileData(const uint8_t* data, size_t size)
 {
+    if (OutlineFont::IsOutlineFile(data, size))
+    {
+        return FromOutlineData(data, size);
+    }
     if (!data || size < sizeof(FontHeader))
     {
         DEKI_LOG_ERROR("BitmapFont::LoadFromFileData: invalid data");
@@ -690,18 +708,20 @@ const GlyphInfo* BitmapFont::GetGlyphByCodepoint(uint32_t codepoint) const
         return nullptr;
     }
 
-    if (m_IsSparse && m_Codepoints)
+    // A sized outline font shares its outlines' codepoints.
+    const uint32_t* codepoints = m_SizedFrom ? m_SizedFrom->Codepoints() : m_Codepoints.Data();
+    if (m_IsSparse && codepoints)
     {
         // Binary search in the sorted codepoint table
         int lo = 0, hi = static_cast<int>(m_GlyphCount) - 1;
         while (lo <= hi)
         {
             int mid = lo + (hi - lo) / 2;
-            if (m_Codepoints[mid] == codepoint)
+            if (codepoints[mid] == codepoint)
             {
                 return &m_Glyphs[mid];
             }
-            else if (m_Codepoints[mid] < codepoint)
+            else if (codepoints[mid] < codepoint)
             {
                 lo = mid + 1;
             }
@@ -935,6 +955,223 @@ uint32_t BitmapFont::DecodeUtf8(const char* str, size_t len, size_t& i)
     }
     i += 1;  // skip the invalid byte
     return 0xFFFD;
+}
+
+// ---- Fonts kept as outlines ----
+
+BitmapFont* BitmapFont::FromOutlineData(const uint8_t* data, size_t size)
+{
+    OutlineFont* outline = OutlineFont::FromFileData(data, size);
+    if (!outline)
+    {
+        return nullptr;
+    }
+    if (outline->GlyphCount() > UINT16_MAX)
+    {
+        DEKI_LOG_ERROR("BitmapFont: an outline font of %u glyphs is more than a font holds",
+                       static_cast<unsigned>(outline->GlyphCount()));
+        delete outline;
+        return nullptr;
+    }
+    BitmapFont* font = new BitmapFont();
+    font->m_Outline = outline;
+    font->m_FirstChar = outline->Codepoints()[0];
+    font->m_LastChar = outline->Codepoints()[outline->GlyphCount() - 1];
+    font->m_IsSparse = true;
+    return font;
+}
+
+BitmapFont* BitmapFont::AtSize(int32_t pixels) const
+{
+    if (!m_Outline)
+    {
+        return nullptr;
+    }
+    pixels = std::clamp(pixels, kMinScalableSize, kMaxScalableSize);
+    for (const SizedFont& sized : m_Sizes)
+    {
+        if (sized.pixels == pixels)
+        {
+            return sized.font;
+        }
+    }
+
+    const OutlineFontHeader& header = m_Outline->Header();
+    const uint32_t count = m_Outline->GlyphCount();
+    BitmapFont* font = new BitmapFont();
+    if (!font->m_Glyphs.Allocate(count, Deki::Memory::External) ||
+        !font->m_Drawn.Allocate(count, Deki::Memory::External))
+    {
+        DEKI_LOG_ERROR("BitmapFont: no room for %u glyphs at %d px", static_cast<unsigned>(count),
+                       static_cast<int>(pixels));
+        delete font;
+        return nullptr;
+    }
+    font->m_SizedFrom = m_Outline;
+    font->m_IsSparse = true;
+    font->m_GlyphCount = static_cast<uint16_t>(count);
+    font->m_FirstChar = m_FirstChar;
+    font->m_LastChar = m_LastChar;
+
+    // An em of `pixels`. Down the page the scale is nudged so the x-height
+    // is whole pixels: the tops of the lower-case letters then land on one
+    // row, which keeps small text sharp. Across, the scale is left alone, as
+    // FreeType's light hinting does.
+    const float scale = static_cast<float>(pixels) / static_cast<float>(header.unitsPerEm);
+    float scaleY = scale;
+    if (header.xHeight > 0)
+    {
+        const float xHeight = std::round(static_cast<float>(header.xHeight) * scale);
+        if (xHeight >= 1.0f)
+        {
+            scaleY = xHeight / static_cast<float>(header.xHeight);
+        }
+    }
+    font->m_ScaleX = scale;
+    font->m_ScaleY = scaleY;
+
+    // Line metrics as FreeType gives them for a size: the ascender rounded
+    // up and the descender down, the line their sum.
+    const auto toByte = [](float value) { return static_cast<uint8_t>(std::clamp(value, 0.0f, 255.0f)); };
+    const float ascender = std::ceil(static_cast<float>(header.ascender) * scaleY);
+    const float descender = std::ceil(static_cast<float>(-header.descender) * scaleY);
+    font->m_Baseline = toByte(ascender);
+    font->m_LineHeight = toByte(ascender + descender);
+    font->m_CapHeight = toByte(std::round(static_cast<float>(header.capHeight) * scaleY));
+    font->m_XHeight = toByte(std::round(static_cast<float>(header.xHeight) * scaleY));
+
+    // Every glyph's box and advance now; its pixels when a text first uses
+    // it. The box takes in every pixel the outline touches.
+    for (uint32_t i = 0; i < count; ++i)
+    {
+        const OutlineGlyph& outline = m_Outline->Glyph(i);
+        GlyphInfo& glyph = font->m_Glyphs[i];
+        glyph = GlyphInfo{};
+        glyph.advance = toByte(std::round(static_cast<float>(outline.advance) * scale));
+        if (outline.contourCount == 0 || outline.xMax <= outline.xMin || outline.yMax <= outline.yMin)
+        {
+            font->m_Drawn[i] = 1;  // nothing to draw: a space
+            continue;
+        }
+        const float left = std::floor(static_cast<float>(outline.xMin) * scale);
+        const float right = std::ceil(static_cast<float>(outline.xMax) * scale);
+        const float top = std::ceil(static_cast<float>(outline.yMax) * scaleY);
+        const float bottom = std::floor(static_cast<float>(outline.yMin) * scaleY);
+        glyph.width = toByte(right - left);
+        glyph.height = toByte(top - bottom);
+        glyph.offsetX = static_cast<int8_t>(std::clamp(left, -128.0f, 127.0f));
+        glyph.offsetY = static_cast<int8_t>(std::clamp(-top, -128.0f, 127.0f));
+    }
+
+    // The atlas: a fixed width, growing down as glyphs are drawn. Empty until
+    // the first one.
+    auto* atlas = new Sprite();
+    atlas->format = Deki::Texture2D::TextureFormat::ALPHA8;
+    atlas->width = std::clamp<int32_t>(pixels * 12, 128, 1024);
+    atlas->height = 0;
+    atlas->data = nullptr;
+    atlas->hasAlpha = true;
+    atlas->hasTransparency = false;
+    font->m_Atlas = atlas;
+
+    Deki::Buffer<SizedFont> sizes;
+    if (!sizes.Allocate(m_Sizes.Count() + 1, Deki::Memory::External))
+    {
+        delete font;
+        return nullptr;
+    }
+    std::copy(m_Sizes.begin(), m_Sizes.end(), sizes.begin());
+    sizes[m_Sizes.Count()] = SizedFont{ pixels, font };
+    m_Sizes = std::move(sizes);
+    return font;
+}
+
+bool BitmapFont::DrawGlyph(uint32_t index) const
+{
+    if (!m_SizedFrom || index >= m_GlyphCount || m_Drawn[index])
+    {
+        return true;
+    }
+    GlyphInfo& glyph = m_Glyphs[index];
+    Deki::Texture2D* atlas = m_Atlas;
+    const int32_t width = glyph.width;
+    const int32_t height = glyph.height;
+    if (width > atlas->width)
+    {
+        return false;
+    }
+
+    // Shelves: along a row, then a new row under the tallest so far. A
+    // pixel apart, so a glyph's edge never takes a neighbour's.
+    if (m_ShelfX + width > atlas->width)
+    {
+        m_ShelfY = static_cast<uint16_t>(m_ShelfY + m_ShelfHeight + 1);
+        m_ShelfX = 0;
+        m_ShelfHeight = 0;
+    }
+    const int32_t needed = m_ShelfY + height;
+    if (needed > UINT16_MAX)
+    {
+        return false;
+    }
+    if (needed > atlas->height)
+    {
+        // Grow to the rows needed, in steps of eight: a few small copies as
+        // new rows begin, and no rows held for glyphs never drawn.
+        const int32_t grown = (needed + 7) & ~7;
+        const size_t bytes = static_cast<size_t>(atlas->width) * static_cast<size_t>(grown);
+        auto* pixels = static_cast<uint8_t*>(Deki::Memory::Allocate(bytes, Deki::Memory::External));
+        if (!pixels)
+        {
+            DEKI_LOG_ERROR("BitmapFont: no room to grow a glyph atlas to %d rows", static_cast<int>(grown));
+            return false;
+        }
+        memset(pixels, 0, bytes);
+        if (atlas->data)
+        {
+            memcpy(pixels, atlas->data, static_cast<size_t>(atlas->width) * static_cast<size_t>(atlas->height));
+            Deki::Memory::Free(atlas->data);
+        }
+        atlas->data = pixels;
+        atlas->height = grown;
+#ifdef DEKI_EDITOR
+        atlas->allocatedWithBackend = true;  // freed with Deki::Memory
+#endif
+    }
+
+    // The glyph's box starts at (offsetX, offsetY) from the pen on the
+    // baseline: a font unit at (x, y) is pixel (x * scale - offsetX,
+    // -offsetY - y * scale) of the box.
+    uint8_t* image = atlas->data + static_cast<size_t>(m_ShelfY) * atlas->width + m_ShelfX;
+    if (!m_SizedFrom->Rasterize(index, m_ScaleX, m_ScaleY, -static_cast<float>(glyph.offsetX),
+                                -static_cast<float>(glyph.offsetY), image, width, height, atlas->width))
+    {
+        return false;
+    }
+    glyph.x = m_ShelfX;
+    glyph.y = m_ShelfY;
+    m_ShelfX = static_cast<uint16_t>(m_ShelfX + width + 1);
+    m_ShelfHeight = std::max<uint16_t>(m_ShelfHeight, static_cast<uint16_t>(height));
+    m_Drawn[index] = 1;
+    return true;
+}
+
+void BitmapFont::PrepareText(const char* text, size_t length) const
+{
+    if (!m_SizedFrom || !text)
+    {
+        return;
+    }
+    size_t i = 0;
+    while (i < length)
+    {
+        const uint32_t codepoint = DecodeUtf8(text, length, i);
+        const GlyphInfo* glyph = GetGlyphByCodepoint(codepoint);
+        if (glyph)
+        {
+            DrawGlyph(static_cast<uint32_t>(glyph - m_Glyphs.Data()));
+        }
+    }
 }
 
 }  // namespace Deki2D

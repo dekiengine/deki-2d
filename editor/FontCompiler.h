@@ -106,6 +106,13 @@ public:
     /// Writes a .dfont file. `atlasFilename` names the atlas and goes in the
     /// header. Returns false on failure.
     static bool WriteDfontFile(const std::string& path, const CompileResult& result, const std::string& atlasFilename);
+
+    /// The glyph outlines of a TTF/OTF for the characters `firstChar` to
+    /// `lastChar`, as a .dvec file's bytes (OutlineFont.h): one file the
+    /// device draws at any size. Characters the font lacks are left out.
+    /// Returns false on failure.
+    static bool CompileOutlineFont(const std::string& fontPath, int firstChar, int lastChar,
+                                   std::vector<uint8_t>& outBytes);
 };
 
 }  // namespace Deki2D

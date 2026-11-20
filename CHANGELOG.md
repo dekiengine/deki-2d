@@ -17,6 +17,21 @@ alongside one that has them.
   and shrinks as it reads, so a large picture never needs its full size in
   memory. It reads every PNG that is not interlaced (each colour type and
   bit depth, palettes, transparency) and refuses one it cannot read.
+- **Text at any size.** A TrueType font set to **Any Size** (in its
+  inspector) ships as one file of its letters' outlines (`.dvec`, about
+  16 KB for Inter's ASCII) instead of a bake per size, and a text draws at
+  whatever `fontSize` it has, set in the editor or from code
+  (`SetFontSize`). Each letter is drawn on the device the first time a text
+  at that size shows it, by our own rasterizer (`OutlineFont.h`): each
+  pixel covered by its share of the outline, the x-height fitted to whole
+  pixels so small text stays sharp. `fontSize` is now kept on the device
+  too.
+- The on-screen keyboard passes a real keyboard's keys to its text box, so
+  a desktop's or a T-Deck's keys still type while it has the focus.
+
+### Changed
+- A one-colour text keeps its bake when only its colour changes: it is
+  tinted as it is drawn.
 
 ## 0.40.0
 

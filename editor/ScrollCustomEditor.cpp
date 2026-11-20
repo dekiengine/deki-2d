@@ -13,6 +13,9 @@
 #include <deki/Object.h>
 #include <deki/Scene.h>
 
+// Said here, not left to another file of the same unity batch to say.
+using namespace Deki2D;
+
 namespace DekiEditor
 {
 

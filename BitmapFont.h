@@ -9,6 +9,8 @@
 namespace Deki2D
 {
 
+class OutlineFont;
+
 /// Where one character sits in the atlas and how to place it.
 struct GlyphInfo
 {
@@ -225,21 +227,65 @@ public:
     /// pixels, from GetVisualBounds.
     int32_t GetVisualCenterY() const;
 
+    // ---- Fonts kept as outlines (a .dvec file), drawn at any size ----
+
+    /// True for a font loaded from a .dvec file: it has no glyphs of its own,
+    /// and AtSize gives the font for each size a text asks for.
+    bool IsScalable() const { return m_Outline != nullptr; }
+
+    /// The smallest and largest size AtSize draws: a glyph's size and offsets
+    /// are kept in a byte.
+    static constexpr int32_t kMinScalableSize = 4;
+    static constexpr int32_t kMaxScalableSize = 96;
+
+    /// This scalable font at `pixels` (its em that many pixels, as a TTF set
+    /// to that size), made the first time and kept with it. Its metrics are
+    /// all known at once; each glyph is drawn into its atlas the first time
+    /// a text uses it (PrepareText). nullptr for a font that is not
+    /// scalable.
+    BitmapFont* AtSize(int32_t pixels) const;
+
+    /// Draws the glyphs `text` uses that this font (one AtSize made) has not
+    /// drawn yet. Nothing for any other font. The atlas can move as it grows,
+    /// so call it before reading the atlas.
+    void PrepareText(const char* text, size_t length) const;
+
 private:
+    // A scalable font made from .dvec bytes; nullptr when they are not one.
+    static BitmapFont* FromOutlineData(const uint8_t* data, size_t size);
+    // Draws glyph `index` of a sized font into its atlas.
+    bool DrawGlyph(uint32_t index) const;
+
+    struct SizedFont
+    {
+        int32_t pixels;
+        BitmapFont* font;
+    };
+
+    OutlineFont* m_Outline = nullptr;          // a scalable font's outlines, owned
+    const OutlineFont* m_SizedFrom = nullptr;  // the outlines a sized font draws from
+    mutable Deki::Buffer<SizedFont> m_Sizes;   // a scalable font's sizes made so far
+    float m_ScaleX = 0.0f;                     // font units to pixels, across
+    float m_ScaleY = 0.0f;                     // and down, fitted so x-height is whole pixels
+    mutable Deki::Buffer<uint8_t> m_Drawn;     // a sized font's glyphs: 1 once in the atlas
+    mutable uint16_t m_ShelfX = 0;             // where the next glyph goes in the atlas
+    mutable uint16_t m_ShelfY = 0;
+    mutable uint16_t m_ShelfHeight = 0;
+
     mutable Deki::Texture2D* m_Atlas;  // Glyph atlas texture, loaded lazily
     // Owned buffers, so every loader can bail out on any error without
     // cleanup code.
-    Deki::Buffer<GlyphInfo> m_Glyphs;
-    Deki::Buffer<uint32_t> m_Codepoints;  // Sorted; sparse fonts only
-    uint32_t m_FirstChar;                 // First character code (32-bit for v2)
-    uint32_t m_LastChar;                  // Last character code (32-bit for v2)
-    uint8_t m_LineHeight;                 // Line height in pixels
-    uint8_t m_Baseline;                   // Baseline offset
-    uint8_t m_CapHeight;                  // Capital letter height above the baseline (0 = unknown, use fallback)
-    uint8_t m_XHeight;                    // Lowercase 'x' height above the baseline (0 = unknown, use fallback)
-    uint8_t m_DecorationMode;             // v4+: FontDecorationMode (0 = None, the default)
-    int8_t m_DecorationA;                 // v4+: outline size or shadow dx
-    int8_t m_DecorationB;                 // v4+: shadow dy (unused for outline)
+    mutable Deki::Buffer<GlyphInfo> m_Glyphs;  // mutable: a sized outline font places glyphs as it draws them
+    Deki::Buffer<uint32_t> m_Codepoints;       // Sorted; sparse fonts only
+    uint32_t m_FirstChar;                      // First character code (32-bit for v2)
+    uint32_t m_LastChar;                       // Last character code (32-bit for v2)
+    uint8_t m_LineHeight;                      // Line height in pixels
+    uint8_t m_Baseline;                        // Baseline offset
+    uint8_t m_CapHeight;                       // Capital letter height above the baseline (0 = unknown, use fallback)
+    uint8_t m_XHeight;                         // Lowercase 'x' height above the baseline (0 = unknown, use fallback)
+    uint8_t m_DecorationMode;                  // v4+: FontDecorationMode (0 = None, the default)
+    int8_t m_DecorationA;                      // v4+: outline size or shadow dx
+    int8_t m_DecorationB;                      // v4+: shadow dy (unused for outline)
     uint16_t m_GlyphCount;
     bool m_IsSparse;          // True: sparse codepoint table. False: contiguous range
     std::string m_AtlasPath;  // Atlas path, kept for lazy loading
