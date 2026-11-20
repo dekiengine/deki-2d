@@ -45,6 +45,25 @@ under a shorter face: the raised look of a key or a HUD panel, in one sprite
 instead of three stacked shapes, and stretched in NineSlice mode. The
 Inspector's **Raised** section sets them.
 
+## Pictures from a PNG
+
+For a picture the app gets while it runs, such as a download:
+
+```cpp
+#include "PngSprite.h"
+
+Deki2D::Png::Result why;
+Deki2D::Sprite* picture = Deki2D::CreateSpriteFromPng(bytes, size, 320, 240, &why);
+if (!picture)
+{
+    DEKI_LOG_WARNING("Picture not shown: %s", Deki2D::Png::ResultName(why));
+}
+```
+
+It is shrunk to fit 320 x 240 keeping its shape, and never enlarged. The
+reader keeps two rows of the picture and 32 KiB besides the sprite it makes,
+so it suits small boards too. Interlaced PNGs are not read.
+
 ## Community
 
 Questions, ideas and what you made with Deki: [the Deki Discord](https://dekiengine.com/discord/).

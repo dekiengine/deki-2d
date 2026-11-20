@@ -8,6 +8,16 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
+## Unreleased
+
+### Added
+- **Pictures read while the app runs.** `CreateSpriteFromPng` makes a sprite
+  from a PNG in memory, such as a picture an app downloaded, shrunk to fit a
+  size you give. The reader (`PngDecoder.h`) is our own: it reads row by row
+  and shrinks as it reads, so a large picture never needs its full size in
+  memory. It reads every PNG that is not interlaced (each colour type and
+  bit depth, palettes, transparency) and refuses one it cannot read.
+
 ## 0.40.0
 
 ### Changed
