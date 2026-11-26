@@ -34,6 +34,32 @@ alongside one that has them.
 ### Changed
 - A one-colour text keeps its bake when only its colour changes: it is
   tinted as it is drawn.
+- An arc's mask (a `ShapeComponent` of kind Arc, the rings of `ArcComponent`)
+  is baked visiting only the ring's stretch of each row instead of every
+  pixel of its box, and with round caps works out the caps only near them,
+  with the same pixels (checked against `ShapeCoverage` at
+  every pixel, for arcs under and over half a turn, full turns and both
+  caps).
+
+### Fixed
+- Text could be drawn from freed memory, and came out garbled on a board:
+  `SetText`, `SetColor` and `SetFont` let the text's bake go (even when set
+  to what they already were), but its draw key did not change, so the
+  renderer kept drawing the pixels it held a pointer to instead of asking
+  for the text again. Letting the bake go now gives it a new version, which
+  the key holds; and setting a text, colour or font to what it already is
+  keeps the bake (`DrawKeys.ATextThatLetsItsBakeGoIsAskedForItAgain`).
+- Text with a character past 127 (the degree sign, accented letters, the
+  pound sign) was centred and right-aligned off to the left with a font of
+  a contiguous range (a TTF baked past 126): `BitmapFont::MeasureWidth` read
+  such fonts a byte at a time, so the two bytes of a degree sign in UTF-8
+  measured as two characters while the text drew one. It now decodes UTF-8 for every
+  font, as `TextComponent` lays text out (`DrawKeys.ALatinFontMeasuresUtf8AsItDrawsIt`).
+- A TrueType font's characters 128 to 255 (a font's Last Character above 126:
+  the degree sign, accented letters, the pound sign) baked as the font's
+  missing-glyph box on Windows, where `char` is signed. They now bake as the
+  font's own glyphs. Fonts baked before keep the box until they are baked
+  again (Rebake in the font's Inspector).
 
 ## 0.40.1
 
@@ -42,6 +68,7 @@ alongside one that has them.
   baker could pick an atlas narrower than its widest letter, and letters ran
   over each other. Fonts are baked again by themselves when the editor opens
   a project with this version.
+
 
 ## 0.40.0
 

@@ -58,6 +58,7 @@ float DefaultShapeLineWidth(const ShapeMaskParams& params);
 /// size is not positive.
 bool BakeShapeMask(uint8_t* mask, int32_t w, int32_t h, int32_t stride, const ShapeMaskParams& params);
 
+
 /// One pixel's coverage, 0 to 1, at (x, y) from the shape's centre in
 /// pixels, y up. What BakeShapeMask writes for each pixel centre.
 float ShapeCoverage(const ShapeMaskParams& params, float x, float y);

@@ -176,6 +176,46 @@ TEST(ShapeMask, RoundCapsReachPastTheEnds)
     EXPECT_GT(ShapeCoverage(p, x, y), 0.9f);
 }
 
+// An arc's mask, which visits only the ring's stretch of each row, holds for
+// every pixel what ShapeCoverage gives there, at odd and even sizes, thin and
+// thick, under and over half a turn, a full turn, round caps or square.
+TEST(ShapeMask, ArcMaskIsCoverageAtEveryPixel)
+{
+    struct Case
+    {
+        int32_t w, h;
+        float line, start, end;
+        bool caps;
+    };
+    const Case cases[] = {
+        { 40, 40, 4.0f, 0.0f, kPi * 0.5f, false },  { 41, 39, 3.0f, 0.3f, kPi * 1.7f, true },
+        { 148, 148, 12.0f, -kPi * 1.25f, kPi * 0.25f, true }, { 148, 148, 12.0f, 0.0f, 2.0f * kPi, false },
+        { 9, 9, 0.0f, 1.0f, 2.5f, true },           { 64, 30, 20.0f, -0.5f, kPi, false },
+        { 33, 33, 15.0f, 0.0f, 0.01f, true },       { 120, 120, 1.0f, 2.0f, 6.0f, false },
+    };
+    for (const Case& c : cases)
+    {
+        ShapeMaskParams p = Params(ShapeKind::Arc, static_cast<float>(c.w), static_cast<float>(c.h));
+        p.lineWidth = c.line;
+        p.startAngle = c.start;
+        p.endAngle = c.end;
+        p.roundCaps = c.caps;
+        const auto mask = Bake(p, c.w, c.h);
+        const float halfW = c.w * 0.5f, halfH = c.h * 0.5f;
+        int wrong = 0;
+        for (int32_t y = 0; y < c.h; ++y)
+        {
+            for (int32_t x = 0; x < c.w; ++x)
+            {
+                const float cover = ShapeCoverage(p, (x + 0.5f) - halfW, halfH - (y + 0.5f));
+                const auto want = static_cast<uint8_t>(cover * 255.0f + 0.5f);
+                wrong += At(mask, c.w, x, y) != want ? 1 : 0;
+            }
+        }
+        EXPECT_EQ(wrong, 0) << c.w << "x" << c.h << " line " << c.line << " from " << c.start << " to " << c.end;
+    }
+}
+
 TEST(ShapeMask, TrianglePointsTheWayAsked)
 {
     ShapeMaskParams p = Params(ShapeKind::Triangle, 20, 10);

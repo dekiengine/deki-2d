@@ -302,7 +302,9 @@ bool FontCompiler::CompileTrueTypeFont(const std::string& ttfPath, const Compile
 
     for (int i = 0; i < charCount; i++)
     {
-        char c = static_cast<char>(firstChar + i);
+        // Unsigned: a char is signed on MSVC, and 128 to 255 went to FreeType as
+        // huge numbers, so they baked as the missing-glyph box.
+        const FT_ULong c = static_cast<FT_ULong>(firstChar + i);
         if (FT_Load_Char(face, c, loadFlags))
         {
             glyphData[i].width = 0;

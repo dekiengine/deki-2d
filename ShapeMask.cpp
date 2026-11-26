@@ -200,21 +200,72 @@ void BakeArcMask(uint8_t* mask, int32_t w, int32_t h, int32_t stride, const Shap
     const ArcGeometry g = MakeArcGeometry(p, line);
     const float halfW = static_cast<float>(w) * 0.5f;
     const float halfH = static_cast<float>(h) * 0.5f;
-    for (int32_t j = 0; j < h; ++j)
+    // Round caps: outside the angles, a pixel is covered only within a cap's
+    // reach of its centre. Outside both boxes its distance is over a pixel,
+    // its coverage 0, so the two square roots are not taken there.
+    const bool capBoxes = g.roundCaps && !g.fullTurn && !g.empty;
+    const float reach = g.halfLine + 1.0f;
+    const float c0x = g.u0x * g.radius, c0y = g.u0y * g.radius;
+    const float c1x = g.u1x * g.radius, c1y = g.u1y * g.radius;
+    auto nearCap = [&](float x, float y)
     {
-        uint8_t* row = mask + static_cast<size_t>(j) * stride;
-        const float y = halfH - (static_cast<float>(j) + 0.5f);
-        for (int32_t i = 0; i < w; ++i)
+        return (std::fabs(x - c0x) <= reach && std::fabs(y - c0y) <= reach) ||
+               (std::fabs(x - c1x) <= reach && std::fabs(y - c1y) <= reach);
+    };
+    // The pixels of [from, to) of row j that the ring may cover, the rest 0.
+    auto span = [&](uint8_t* row, float y, int32_t from, int32_t to)
+    {
+        for (int32_t i = std::max<int32_t>(from, 0); i < std::min(to, w); ++i)
         {
             const float x = (static_cast<float>(i) + 0.5f) - halfW;
             const float r2 = x * x + y * y;
-            if (g.empty || r2 < g.coverMin2 || r2 > g.coverMax2)
+            if (r2 < g.coverMin2 || r2 > g.coverMax2)
             {
-                row[i] = 0;
                 continue;
+            }
+            if (capBoxes && !nearCap(x, y))
+            {
+                const float c0 = g.u0x * y - g.u0y * x;
+                const float c1 = x * g.u1y - y * g.u1x;
+                const bool within =
+                    g.sweep <= kTwoPi * 0.5f ? (c0 >= 0.0f && c1 >= 0.0f) : !(c0 < 0.0f && c1 < 0.0f);
+                if (!within)
+                {
+                    continue;  // off the arc and far from its caps: 0
+                }
             }
             row[i] = static_cast<uint8_t>(Clamp01(0.5f - ArcDistance(g, x, y)) * 255.0f + 0.5f);
         }
+    };
+    for (int32_t j = 0; j < h; ++j)
+    {
+        uint8_t* row = mask + static_cast<size_t>(j) * stride;
+        std::memset(row, 0, static_cast<size_t>(w));
+        const float y = halfH - (static_cast<float>(j) + 0.5f);
+        const float y2 = y * y;
+        if (g.empty || y2 > g.coverMax2)
+        {
+            continue;
+        }
+        // Only the ring's two stretches of the row, found from the circles
+        // around it and a pixel wider each way: the test above still decides
+        // each pixel, so the mask is the same as testing every one.
+        const float outer = std::sqrt(g.coverMax2 - y2);
+        const int32_t left = static_cast<int32_t>(std::floor(halfW - outer - 0.5f)) - 1;
+        const int32_t right = static_cast<int32_t>(std::ceil(halfW + outer - 0.5f)) + 2;
+        if (g.coverMin2 > y2)
+        {
+            const float inner = std::sqrt(g.coverMin2 - y2);
+            const int32_t holeLeft = static_cast<int32_t>(std::ceil(halfW - inner - 0.5f)) + 1;
+            const int32_t holeRight = static_cast<int32_t>(std::floor(halfW + inner - 0.5f)) - 1;
+            if (holeLeft < holeRight)
+            {
+                span(row, y, left, holeLeft);
+                span(row, y, holeRight, right);
+                continue;
+            }
+        }
+        span(row, y, left, right);
     }
 }
 

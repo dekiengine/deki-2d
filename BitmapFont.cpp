@@ -759,36 +759,23 @@ int32_t BitmapFont::MeasureWidth(const char* text, size_t length) const
         return 0;
     }
 
+    // UTF-8, decoded as TextComponent lays text out, for every font: a font
+    // of a contiguous range past 127 has its own glyphs for the degree sign
+    // and accented letters, and read a byte at a time their two bytes counted
+    // as two other characters.
     int32_t width = 0;
-    if (m_IsSparse)
+    size_t i = 0;
+    while (i < length)
     {
-        // Sparse fonts are Unicode, so decode UTF-8
-        size_t i = 0;
-        while (i < length)
+        const uint32_t cp = DecodeUtf8(text, length, i);
+        if (cp == 0xFFFD)
         {
-            const uint32_t cp = DecodeUtf8(text, length, i);
-            if (cp == 0xFFFD)
-            {
-                continue;  // invalid byte: skipped
-            }
-
-            const GlyphInfo* glyph = GetGlyphByCodepoint(cp);
-            if (glyph)
-            {
-                width += glyph->advance;
-            }
+            continue;  // invalid byte: skipped
         }
-    }
-    else
-    {
-        // Contiguous ASCII: one byte per character
-        for (size_t i = 0; i < length; i++)
+        const GlyphInfo* glyph = GetGlyphByCodepoint(cp);
+        if (glyph)
         {
-            const GlyphInfo* glyph = GetGlyph(text[i]);
-            if (glyph)
-            {
-                width += glyph->advance;
-            }
+            width += glyph->advance;
         }
     }
     return width;

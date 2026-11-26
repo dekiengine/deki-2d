@@ -178,6 +178,40 @@ uint64_t KeyOf(const RendererComponent& r)
 }
 }  // namespace
 
+// A font of a contiguous range past 127 (a TTF baked to 255: the degree
+// sign, accented letters) measures text as it lays it out, decoding UTF-8:
+// "\xC2\xB0" is one degree sign, not an A-circumflex and then it. Measured
+// a byte at a time, centred and right-aligned text with one was pushed left
+// by the circumflex's width.
+TEST(DrawKeys, ALatinFontMeasuresUtf8AsItDrawsIt)
+{
+    Deki::Texture2D::Header header{};
+    std::memcpy(header.magic, "2DTX", 4);
+    header.version = 1;
+    header.width = 4;
+    header.height = 4;
+    header.format = Deki::Texture2D::TextureFormat::ALPHA8;
+    header.dataSize = 16;
+    std::vector<uint8_t> file(sizeof(header) + 16, 255);
+    std::memcpy(file.data(), &header, sizeof(header));
+    Deki::Texture2D* atlas = Sprite::LoadFromFileData(file.data(), file.size());
+    ASSERT_NE(atlas, nullptr);
+    constexpr int kFirst = 'A', kLast = 0xFF;
+    Deki::Buffer<GlyphInfo> glyphs;
+    ASSERT_TRUE(glyphs.Allocate(kLast - kFirst + 1, Deki::Memory::Internal));
+    for (int c = kFirst; c <= kLast; ++c)
+    {
+        // A wide circumflex, a narrow degree sign, everything else 4.
+        const uint8_t advance = c == 0xC2 ? 11 : (c == 0xB0 ? 5 : 4);
+        glyphs[c - kFirst] = GlyphInfo{ 0, 0, 2, 2, 0, -2, advance };
+    }
+    std::unique_ptr<BitmapFont> font(BitmapFont::CreateFromMemory(atlas, std::move(glyphs), kFirst, kLast, 6, 5));
+    ASSERT_NE(font, nullptr);
+    EXPECT_EQ(font->MeasureWidth("AB"), 8);
+    EXPECT_EQ(font->MeasureWidth("A\xC2\xB0"), 4 + 5) << "the degree sign, once";
+    EXPECT_EQ(font->MeasureWidth("\xC3\xA9"), 4) << "e-acute is one letter";
+}
+
 TEST(DrawKeys, EveryInputOfAShapeChangesItsKey)
 {
     ShapeComponent s;
@@ -239,6 +273,40 @@ TEST(DrawKeys, EveryInputOfTextChangesItsKey)
     changes("vertical align", [&] { t.verticalAlign = TextVerticalAlign::Top; },
             [&] { t.verticalAlign = vertical0; });
     changes("pixel scale", [&] { t.pixelScale = scale0 + 1; }, [&] { t.pixelScale = scale0; });
+}
+
+// A text that lets its bake go (InvalidateRenderCache: a new text, colour or
+// font) has a new key, so the renderer asks it to bake again rather than
+// drawing the pixels it kept a pointer to, which were freed: on a board that
+// memory is soon someone else's, and the text came out garbled. The same
+// text or colour set again keeps the bake.
+TEST(DrawKeys, ATextThatLetsItsBakeGoIsAskedForItAgain)
+{
+    auto font = TinyFont();
+    ASSERT_TRUE(font);
+    Deki::Object owner("Label");
+    TextComponent t;
+    t.font = font.get();
+    t.text = "AB";
+    t.width = 1.0f;
+    t.height = 0.5f;
+    QuadBlit::Source src;
+    float px = 0, py = 0;
+    uint8_t r = 0, g = 0, b = 0, a = 0;
+    ASSERT_TRUE(t.RenderContent(&owner, src, px, py, r, g, b, a));
+    const uint64_t key = KeyOf(t);
+
+    t.SetText("AB");
+    t.SetColor(t.color);
+    ASSERT_TRUE(t.RenderContent(&owner, src, px, py, r, g, b, a));
+    EXPECT_EQ(KeyOf(t), key) << "set as it was: the bake kept, not made again";
+
+    t.InvalidateRenderCache();
+    EXPECT_NE(KeyOf(t), key) << "a bake let go is asked for again";
+    t.SetColor(Deki::Color(1, 2, 3));
+    const uint64_t recoloured = KeyOf(t);
+    t.SetText("BA");
+    EXPECT_NE(KeyOf(t), recoloured);
 }
 
 // A HUD of shapes and a label, redrawn only where it changed while the

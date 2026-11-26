@@ -1,4 +1,4 @@
-// Where an oversampled glyph lands.
+// Where an oversampled glyph lands, and that it is the right glyph.
 //
 // A TrueType glyph is drawn at twice its size and filtered down. Filtered from
 // its own corner, a glyph whose oversampled bitmap started on an odd column or
@@ -54,10 +54,11 @@ Centre InkCentre(int width, int height, Coverage coverage)
     return c;
 }
 
-void ExpectGlyphsInPlace(int fontSize)
+void ExpectGlyphsInPlace(int fontSize, int lastChar = 126)
 {
     FontCompiler::CompileOptions options;
     options.fontSize = fontSize;
+    options.lastChar = lastChar;
     options.oversample = 2;
     FontCompiler::CompileResult result;
     ASSERT_TRUE(FontCompiler::CompileTrueTypeFont(DEKI_TEST_FONT, options, result));
@@ -140,4 +141,11 @@ TEST(FontCompiler, BigSizesKeepEveryGlyphInsideTheAtlasApart)
             }
         }
     }
+}
+
+// 128 to 255 are their own glyphs, not the missing-glyph box: a degree sign
+// sits up by the cap height, where FreeType puts it.
+TEST(FontCompiler, CharactersPast127AreTheFontsOwn)
+{
+    ExpectGlyphsInPlace(20, 255);
 }

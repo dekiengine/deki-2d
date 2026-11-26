@@ -79,6 +79,10 @@ void TextComponent::UnloadAssets()
 void TextComponent::InvalidateRenderCache()
 {
     m_CachedBuffer.Reset();
+    // A new version: the draw key holds it, so the renderer asks for the text
+    // again instead of drawing the pixels it kept a pointer to, which are
+    // freed here (and on a board soon someone else's).
+    m_BakeVersion = QuadBlit::NextRevision();
 }
 
 QuadBlit::Source TextComponent::CroppedSource(int32_t bakeWidth) const
@@ -100,27 +104,28 @@ void TextComponent::BakeTint(uint8_t& r, uint8_t& g, uint8_t& b, uint8_t& a) con
     a = 255;
 }
 
+// Set as it was, the bake stands: games set a label every frame.
 void TextComponent::SetText(const char* newText)
 {
-    if (newText)
-    {
-        text = newText;
-    }
-    else
-    {
-        text.clear();
-    }
-    InvalidateRenderCache();
+    SetText(std::string(newText ? newText : ""));
 }
 
 void TextComponent::SetText(const std::string& newText)
 {
+    if (text == newText)
+    {
+        return;
+    }
     text = newText;
     InvalidateRenderCache();
 }
 
 void TextComponent::SetFont(BitmapFont* f)
 {
+    if (font.ptr == f)
+    {
+        return;
+    }
     font = f;
     InvalidateRenderCache();
 }
@@ -129,6 +134,10 @@ void TextComponent::SetColor(const Deki::Color& newColor)
 {
     // A one-colour bake is only coverage, tinted as it is drawn: a new colour
     // needs no new bake.
+    if (color == newColor)
+    {
+        return;
+    }
     color = newColor;
     if (!m_CachedAlphaOnly)
     {
